@@ -99,26 +99,26 @@
 
   
   
-    7 minute read
+    8 minute read
   
 
     </span>
   </div>
   
-        <p>SolidFire Management Node (aka mNode) is a VM that runs Hybrid Cloud Services (various “management stuff”.)</p>
+        <p>SolidFire Management Node (aka mNode) is a VM that runs Hybrid Cloud Services (various “management stuff”.) Let’s say we wanted to collect and analyze those logs.</p>
 
-<p>How to get the logs out the smart way?</p>
+<p>How could we get the logs out the smart way?</p>
 
-<p>As of today, we have two groups of logs on mNode:</p>
+<p>Before we begin, we need to know what we’re dealing with. As of today, we have two groups of logs on mNode:</p>
 
 <ul>
   <li>mNode system logs (the usual Linux stuff)</li>
   <li>HCC service logs (JBOC, just a bunch of containers)</li>
 </ul>
 
-<p>There are no local users so presumably everything that’s noteworthy is in the system and HCC log(s).</p>
+<p>There are no local users so presumably everything that’s worthy of our attention is in system and HCC log(s).</p>
 
-<p>Before we begin, here’s what we’re dealing with:</p>
+<p>Key software components:</p>
 
 <ul>
   <li>NetApp SolidFire Management Node (mNode) v12.2
@@ -132,29 +132,29 @@
 
 <h3 id="mnode">mNode</h3>
 
-<p>Backup your /etc/rsyslog.conf and hack away! I added these three rows for my $DST server running at $DST_PORT (<code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code> such as 2.2.2.2:2514):</p>
+<p>Backup your /etc/rsyslog.conf and hack away! I added these three rows for my $DST server reachable at $DST_PORT (<code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code> such as 2.2.2.2:2514):</p>
 
 <pre><code class="language-raw">*.* action(type="omfwd" target="$DST" port="$DST_PORT" protocol="tcp"
             action.resumeRetryCount="100"
             queue.type="linkedList" queue.size="10000")
 </code></pre>
 
-<p>There are fancy features in this module. You can compress the log, you can set re-try interval (for the 100 tries mentioned above; see <code class="language-plaintext highlighter-rouge">ActionSendTCPRebindInterval</code>), you can use a specific <code class="language-plaintext highlighter-rouge">device</code> (which may be useful if you have multiple NICs as uses who use mNode with Persistent Volumes do) and so on. RTFM!</p>
+<p>There are fancy features in this module. You can compress the log, you can set a re-try interval (for the 100 tries mentioned above; see <code class="language-plaintext highlighter-rouge">ActionSendTCPRebindInterval</code> the rsyslog documentation), you can use a specific <code class="language-plaintext highlighter-rouge">device</code> (which may be useful if you have multiple NICs as uses who use mNode with Persistent Volumes do) and so on. RTFM!</p>
 
-<p>With this set up we can monitor OS-level events like these, for example.</p>
+<p>With this set up, we can now monitor OS-level events:</p>
 
 <pre><code class="language-raw">Nov 27 10:30:21 192.168.1.31 sshd[19710]: Postponed keyboard-interactive for admin from 192.168.1.12 port 58430 ssh2 [preauth]
 Nov 27 10:30:23 192.168.1.31 sshd[19710]: Postponed keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2 [preauth]
 Nov 27 10:30:23 192.168.1.31 sshd[19710]: Accepted keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2
 </code></pre>
 
-<p>I should note that there are all sorts of logs under /var/log, some of which are probably not captured by rsyslog, so additional modifications would ber required if you wanted to capture those logs.</p>
+<p>I should note that there are all sorts of logs under /var/log, some of which are likely not captured by syslog, so additional modifications to rsyslog.conf would be required if we wanted to capture those logs.</p>
 
 <h3 id="hcc">HCC</h3>
 
 <p>This one seems easy. Backup <code class="language-plaintext highlighter-rouge">/etc/docker/daemon.json</code> and hack away, right? Wrong!</p>
 
-<p>Here I just send all the logs out to <code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code>. The <code class="language-plaintext highlighter-rouge">bip</code> thing was there before. I only added the log-related entries. The tag may be useful for classification and grouping at the destination. I should probably have done something similar for the rsyslog above.</p>
+<p>With log-related additions to daemon.json we can send Docker logs to <code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code>, also using TCP like with rsyslog.</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"bip"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"169.254.100.1/22"</span><span class="p">,</span><span class="w">
@@ -166,44 +166,22 @@ Nov 27 10:30:23 192.168.1.31 sshd[19710]: Accepted keyboard-interactive/pam for 
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>With that tag, Docker logs (here tagged with <code class="language-plaintext highlighter-rouge">hcc</code>) are easier to tell apart from mNode (OS) logs (<code class="language-plaintext highlighter-rouge">systemd</code>), although we could also use syslog at the destination to save each source to a different file:</p>
+<p>The <code class="language-plaintext highlighter-rouge">bip</code> thing was there before - I only added the log-related entries.</p>
 
-<pre><code class="language-raw">Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping SolidFire Top Daemon...
-Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Deploy Element Auth service...
+<p>The tag key may be useful for classification and grouping at the destination. I should probably have done something similar for the rsyslog above. With that tag Docker logs (below tagged with <code class="language-plaintext highlighter-rouge">hcc</code>) are easier to tell apart from mNode (OS) logs (<code class="language-plaintext highlighter-rouge">systemd</code>), although we could also use syslog at the destination to save each source to a different file:</p>
+
+<pre><code class="language-raw">Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Deploy Element Auth service...
 Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Login Service...
 Nov 27 10:28:27 192.168.1.31 hcc[20264]: killing the spooler with pid 6
-Nov 27 10:28:27 192.168.1.31 hcc[20264]: ...brutally killing workers...
-Nov 27 10:28:27 192.168.1.31 hcc[20264]: Stopping backend dockerbackend in
 </code></pre>
 
-<h4 id="logs-of-individual-containers">Logs of Individual Containers</h4>
-
-<p>Now that we got the VM and Docker service logs, we still need to do something about the container logs. (Yes - what only 30 minutes ago seemed like a trivial exercise is becoming a way to waste an entire evening!)</p>
-
-<p>These to <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/${Id}/${Id}-json.log</code> (where Id is the container ID). These ID’s change after each restart (for example, in the case of container image <code class="language-plaintext highlighter-rouge">logs-svc:1.1.2</code> you’d have a different ID every time the container is restarted.)</p>
-
-<p>The important part is that we can get to those logs:</p>
-
-<pre><code class="language-raw">{"log":"[pid: 9|app: 0|req: 972/1678] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:13 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:13.665314987Z"}
-{"log":"[pid: 9|app: 0|req: 973/1679] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:23 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:23.670857855Z"}
-</code></pre>
-
-<p>We can’t change HCC’s container startup parameters (not in a supported way anyway), but we can get the logs from containers like this (and the <a href="https://docs.netapp.com/us-en/hci/docs/task_hcc_collectlogs.html#use-the-rest-api-to-collect-logs">HCC API</a> offers the same feature which lets you poll the HCC API endpoint to pull those logs every $N seconds to get last $M lines.)</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker logs c43bcd1f0431 <span class="nt">--since</span> 2020-11-26
-</code></pre></div></div>
-
-<p>A better approach would be to run an agent that scans /var/lib/docker/containers/ and takes care of that for us.</p>
-
-<p>In any case, once we’re done, we can reboot mNode.</p>
+<p>Once we’re done with changes to rsyslog.conf and Docker’s daemon.json, we can reboot mNode.</p>
 
 <h3 id="wait-what-do-you-mean-reboot">Wait, what do you mean “reboot”</h3>
 
-<p>Yep, I just rebooted mNode to see if my settings worked. Based on a casual search there are ways to reload these settings without rebooting the OS, but I didn’t want to waste time on that.</p>
+<p>Yep, I just rebooted mNode to see if my settings worked. What if we wanted to reload rather than reboot? Feel free to JFGI (I’m not too curious how to do that on Docker v18.09.8!)</p>
 
-<p>What if you wanted to reload rather than reboot? Feel free to JFGI (I’m not too curious how to do that on Docker v18.09.8!)</p>
-
-<p>At the destination syslog server, tail the forwarded log(s):</p>
+<p>At the destination syslog server, tail the forwarded log(s) to see a combined log from mNode’s rsyslog and Docker:</p>
 
 <pre><code class="language-raw">Nov 27 08:16:01 192.168.1.31 CROND[30647]: (root) CMD (cd / &amp;&amp; /usr/bin/flock -x /var/lib/sftracing/lock -c 'logrotate --state=/var/lib/sftracing/status /var/lib/sftracing/logrotate.conf' &gt;/dev/null)
 Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time="2020-11-27T08:16:51.520518736Z" level=info msg="NetworkDB stats mnode(2e34102d1390) - netID:jsgguqh5mxhgjxxf1qkvlvs0t leaving:false netPeers:1 entries:43 Queue qLen:0 netMsg/s:0"
@@ -214,23 +192,44 @@ Nov 27 08:17:06 192.168.1.31 lldpd[21648]: unable to bind to raw socket for inte
 Nov 27 08:17:06 192.168.1.31 lldpd[21651]: unable to initialize veth20d4528
 </code></pre>
 
-<p>System and Docker service log are there, but where the hell are the container logs?</p>
+<p>System and Docker service log are there, but wait - those docker logs seem very sparse, what’s up with that?</p>
 
-<p>The answer is hidden under <code class="language-plaintext highlighter-rouge">/etc/rsyslog.d</code>, namely <code class="language-plaintext highlighter-rouge">30-docker.conf</code> to be precise:</p>
+<h4 id="logs-of-individual-containers">Logs of Individual Containers</h4>
+
+<p>We need to do something about the container logs. What only 30 minutes ago seemed like a trivial exercise is becoming a way to waste an entire evening…</p>
+
+<p>Container logs go to <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/${Id}/${Id}-json.log</code> (where ID is the container ID) as expected. These IDs change after each restart (for example, in the case of container image <code class="language-plaintext highlighter-rouge">logs-svc</code> , we’d get a different ID every time the OS or container are restarted.)</p>
+
+<p>For now the important part is that the information we need is there:</p>
+
+<pre><code class="language-raw">{"log":"[pid: 9|app: 0|req: 972/1678] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:13 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:13.665314987Z"}
+{"log":"[pid: 9|app: 0|req: 973/1679] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:23 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:23.670857855Z"}
+</code></pre>
+
+<p>Next we need to figure out why that stuff isn’t being forwarded out. The problem is we may not be able to do much with that information: we can’t change HCC’s container startup parameters (not in a supported way anyway).</p>
+
+<p>We don’t have to be worried about that scenario because we can always get to the container logs via the <a href="https://docs.netapp.com/us-en/hci/docs/task_hcc_collectlogs.html#use-the-rest-api-to-collect-logs">HCC API</a> which lets us poll the HCC API endpoint and those logs every $N seconds (or get last $M lines from particular container log). That functionality reflects the logs command of Docker:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker logs c43bcd1f0431 <span class="nt">--since</span> 2020-11-26
+</code></pre></div></div>
+
+<p>While we can poll the API for container logs this way, a better approach would be to run an agent that scans /var/lib/docker/containers/ and takes care of everything.</p>
+
+<p>But <em>why</em> are the logs not sent together with Docker logs? The answer is under <code class="language-plaintext highlighter-rouge">/etc/rsyslog.d</code> - in the file named <code class="language-plaintext highlighter-rouge">30-docker.conf</code>, to be precise:</p>
 
 <pre><code class="language-raw">:syslogtag, startswith, "docker" /var/log/docker.info
 &amp; stop
 </code></pre>
 
-<p>We’d have to hack that file or come up with another file (<code class="language-plaintext highlighter-rouge">40-hcc.conf</code>, for example) where we’d <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/*/*-json.log</code>. But - alas! - this version of rsyslog doesn’t do directory name wildcards so that’s out of the question as well.</p>
+<p>We’d have to hack that file or come up with another file (<code class="language-plaintext highlighter-rouge">40-hcc.conf</code>, for example) where we’d ask rsyslog to find our logs in <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/*/*-json.log</code>. But - alas! - this version of rsyslog doesn’t do directory name wildcards so that’s out of the question as well.</p>
 
-<p>We could write a new rsyslog rule, but that wouldn’t be pain-free either because interesting HCC container logs are all owned by <code class="language-plaintext highlighter-rouge">root:root</code> which wouldn’t work for rsyslog.conf (another can of worms.)</p>
+<p>We could write a new fancy rsyslog rule and dynamically reload rsyslog.conf, but that wouldn’t be pain-free either because interesting HCC container logs are all owned by <code class="language-plaintext highlighter-rouge">root:root</code> which wouldn’t work for rsyslog.conf (another can of worms.)</p>
 
 <p>Time to take another look at that HCC API method…</p>
 
 <h4 id="hcc-get-logs">HCC <code class="language-plaintext highlighter-rouge">GET /logs</code></h4>
 
-<p>HCC logs seem to be rotated slowly so it’s appears quite safe to fetch these every X minutes or hours. We can use the <code class="language-plaintext highlighter-rouge">since</code> parameter to dyanmically get log entries from past X hours not fetch the logs of <code class="language-plaintext highlighter-rouge">stopped</code> containers named <code class="language-plaintext highlighter-rouge">logs-svc</code>.</p>
+<p>HCC logs seem to be rotated very slowly (weeks) so it appears quite safe to fetch them every X minutes or hours. We can use the <code class="language-plaintext highlighter-rouge">since</code> parameter to dynamically get log entries created in last X minutes or hours, and avoid fetching the logs of stopped containers named <code class="language-plaintext highlighter-rouge">logs-svc</code> (we only want the logs of a running <code class="language-plaintext highlighter-rouge">logs-svc</code> container).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> GET <span class="s2">"https://</span><span class="k">${</span><span class="nv">mNode</span><span class="p">-IP</span><span class="k">}</span><span class="s2">/mnode/logs?since=2020-11-26T06%3A00%3A00Z&amp;service-name=logs-svc&amp;stopped=false ...
 </span></code></pre></div></div>
@@ -254,7 +253,37 @@ current working directory: /app
 detected binary path: /usr/local/bin/uwsgi
 </code></pre>
 
-<p>This particular log isn’t structured but some other services that deal with API calls have nicely formatted logs.</p>
+<p>This particular log isn’t structured, but some other services that deal with API calls have structured logs.</p>
+
+<p>Another detail we should consider is if we want to get logs from particular service, or “all”. We should definitively gather logs one by one. If we look at all <code class="language-plaintext highlighter-rouge">Up</code> containers in the output of <code class="language-plaintext highlighter-rouge">docker ps -a</code>, our initial list may look like this:</p>
+
+<pre><code class="language-raw">node-api-gateway
+hcc-ui
+credential-svc
+vcp-sioc
+mongo
+redis
+logs-svc
+hci-monitor
+mnode-api
+mnode-svc-mon-grafana
+package-svc
+hardware-svc
+vcenter-svc
+telemetry-service
+storage-service
+mnode-svc-authz
+inventory-service
+mnode-svc-mon-prometheus
+docker-proxy
+mnode-svc-task-monitor
+k8sdeployer
+mnode-svc-aiq-collector
+</code></pre>
+
+<p>We could now look at the mNode and HCC documentation and decide which logs we’re not interested in. For example we may take a look at the logs of <code class="language-plaintext highlighter-rouge">mnode-svc-mon-prometheus</code> and decide we don’t want those.</p>
+
+<p>With that information we should be able to prune the list to a more manageable length and create a script that loops through a list of container services and every N minutes fetches last (N+1) minutes of service logs.</p>
 
 <h3 id="fowarding-to-multiple-destinations">Fowarding to Multiple Destinations</h3>
 
@@ -378,7 +407,7 @@ detected binary path: /usr/local/bin/uwsgi
 
     
   </div><footer class= "footer">
-    <p>2020-11-27 19:21 </p>
+    <p>2020-11-27 23:43 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
