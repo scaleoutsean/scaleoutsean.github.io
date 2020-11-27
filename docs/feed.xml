@@ -1,4 +1,175 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en_US"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://scaleoutsean.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://scaleoutsean.github.io/" rel="alternate" type="text/html" hreflang="en_US" /><updated>2020-11-27T13:07:11+08:00</updated><id>https://scaleoutsean.github.io/feed.xml</id><title type="html">Acting Technologist</title><subtitle>human action through technology</subtitle><author><name>scaleoutSean</name></author><entry><title type="html">SolidFire Provider for Terraform</title><link href="https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider.html" rel="alternate" type="text/html" title="SolidFire Provider for Terraform" /><published>2020-11-26T00:00:00+08:00</published><updated>2020-11-26T00:00:00+08:00</updated><id>https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider</id><content type="html" xml:base="https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider.html">&lt;p&gt;The Provider is now available from the official Terraform registry. This means we no longer need to download and build it manually. It is also easy to use it from Terraform scripts because it is deployed automatically like other providers available from the registry.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en_US"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://scaleoutsean.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://scaleoutsean.github.io/" rel="alternate" type="text/html" hreflang="en_US" /><updated>2020-11-27T19:21:37+08:00</updated><id>https://scaleoutsean.github.io/feed.xml</id><title type="html">Acting Technologist</title><subtitle>human action through technology</subtitle><author><name>scaleoutSean</name></author><entry><title type="html">SolidFire mNode and HCC Log Fowarding</title><link href="https://scaleoutsean.github.io/2020/11/27/solidfire-mnode-hcc-log-forwarding.html" rel="alternate" type="text/html" title="SolidFire mNode and HCC Log Fowarding" /><published>2020-11-27T00:00:00+08:00</published><updated>2020-11-27T00:00:00+08:00</updated><id>https://scaleoutsean.github.io/2020/11/27/solidfire-mnode-hcc-log-forwarding</id><content type="html" xml:base="https://scaleoutsean.github.io/2020/11/27/solidfire-mnode-hcc-log-forwarding.html">&lt;p&gt;SolidFire Management Node (aka mNode) is a VM that runs Hybrid Cloud Services (various “management stuff”.)&lt;/p&gt;
+
+&lt;p&gt;How to get the logs out the smart way?&lt;/p&gt;
+
+&lt;p&gt;As of today, we have two groups of logs on mNode:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;mNode system logs (the usual Linux stuff)&lt;/li&gt;
+  &lt;li&gt;HCC service logs (JBOC, just a bunch of containers)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There are no local users so presumably everything that’s noteworthy is in the system and HCC log(s).&lt;/p&gt;
+
+&lt;p&gt;Before we begin, here’s what we’re dealing with:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;NetApp SolidFire Management Node (mNode) v12.2
+    &lt;ul&gt;
+      &lt;li&gt;Docker v18.09.8&lt;/li&gt;
+      &lt;li&gt;rsyslogd 8.1904.0&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;NetApp Hybrid Cloud Control (HCC) v2.16.66&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;mnode&quot;&gt;mNode&lt;/h3&gt;
+
+&lt;p&gt;Backup your /etc/rsyslog.conf and hack away! I added these three rows for my $DST server running at $DST_PORT (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$DST:$DST_PORT&lt;/code&gt; such as 2.2.2.2:2514):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;*.* action(type=&quot;omfwd&quot; target=&quot;$DST&quot; port=&quot;$DST_PORT&quot; protocol=&quot;tcp&quot;
+            action.resumeRetryCount=&quot;100&quot;
+            queue.type=&quot;linkedList&quot; queue.size=&quot;10000&quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are fancy features in this module. You can compress the log, you can set re-try interval (for the 100 tries mentioned above; see &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ActionSendTCPRebindInterval&lt;/code&gt;), you can use a specific &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;device&lt;/code&gt; (which may be useful if you have multiple NICs as uses who use mNode with Persistent Volumes do) and so on. RTFM!&lt;/p&gt;
+
+&lt;p&gt;With this set up we can monitor OS-level events like these, for example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;Nov 27 10:30:21 192.168.1.31 sshd[19710]: Postponed keyboard-interactive for admin from 192.168.1.12 port 58430 ssh2 [preauth]
+Nov 27 10:30:23 192.168.1.31 sshd[19710]: Postponed keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2 [preauth]
+Nov 27 10:30:23 192.168.1.31 sshd[19710]: Accepted keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I should note that there are all sorts of logs under /var/log, some of which are probably not captured by rsyslog, so additional modifications would ber required if you wanted to capture those logs.&lt;/p&gt;
+
+&lt;h3 id=&quot;hcc&quot;&gt;HCC&lt;/h3&gt;
+
+&lt;p&gt;This one seems easy. Backup &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/docker/daemon.json&lt;/code&gt; and hack away, right? Wrong!&lt;/p&gt;
+
+&lt;p&gt;Here I just send all the logs out to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$DST:$DST_PORT&lt;/code&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bip&lt;/code&gt; thing was there before. I only added the log-related entries. The tag may be useful for classification and grouping at the destination. I should probably have done something similar for the rsyslog above.&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;bip&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;169.254.100.1/22&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;log-driver&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;syslog&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;log-opts&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;syslog-address&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;tcp://$DST:$DST_PORT&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+           &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;tag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;solidfire&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that tag, Docker logs (here tagged with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hcc&lt;/code&gt;) are easier to tell apart from mNode (OS) logs (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd&lt;/code&gt;), although we could also use syslog at the destination to save each source to a different file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping SolidFire Top Daemon...
+Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Deploy Element Auth service...
+Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Login Service...
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: killing the spooler with pid 6
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: ...brutally killing workers...
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: Stopping backend dockerbackend in
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&quot;logs-of-individual-containers&quot;&gt;Logs of Individual Containers&lt;/h4&gt;
+
+&lt;p&gt;Now that we got the VM and Docker service logs, we still need to do something about the container logs. (Yes - what only 30 minutes ago seemed like a trivial exercise is becoming a way to waste an entire evening!)&lt;/p&gt;
+
+&lt;p&gt;These to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker/containers/${Id}/${Id}-json.log&lt;/code&gt; (where Id is the container ID). These ID’s change after each restart (for example, in the case of container image &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logs-svc:1.1.2&lt;/code&gt; you’d have a different ID every time the container is restarted.)&lt;/p&gt;
+
+&lt;p&gt;The important part is that we can get to those logs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;{&quot;log&quot;:&quot;[pid: 9|app: 0|req: 972/1678] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:13 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n&quot;,&quot;stream&quot;:&quot;stderr&quot;,&quot;time&quot;:&quot;2020-11-27T08:33:13.665314987Z&quot;}
+{&quot;log&quot;:&quot;[pid: 9|app: 0|req: 973/1679] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:23 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n&quot;,&quot;stream&quot;:&quot;stderr&quot;,&quot;time&quot;:&quot;2020-11-27T08:33:23.670857855Z&quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can’t change HCC’s container startup parameters (not in a supported way anyway), but we can get the logs from containers like this (and the &lt;a href=&quot;https://docs.netapp.com/us-en/hci/docs/task_hcc_collectlogs.html#use-the-rest-api-to-collect-logs&quot;&gt;HCC API&lt;/a&gt; offers the same feature which lets you poll the HCC API endpoint to pull those logs every $N seconds to get last $M lines.)&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;docker logs c43bcd1f0431 &lt;span class=&quot;nt&quot;&gt;--since&lt;/span&gt; 2020-11-26
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A better approach would be to run an agent that scans /var/lib/docker/containers/ and takes care of that for us.&lt;/p&gt;
+
+&lt;p&gt;In any case, once we’re done, we can reboot mNode.&lt;/p&gt;
+
+&lt;h3 id=&quot;wait-what-do-you-mean-reboot&quot;&gt;Wait, what do you mean “reboot”&lt;/h3&gt;
+
+&lt;p&gt;Yep, I just rebooted mNode to see if my settings worked. Based on a casual search there are ways to reload these settings without rebooting the OS, but I didn’t want to waste time on that.&lt;/p&gt;
+
+&lt;p&gt;What if you wanted to reload rather than reboot? Feel free to JFGI (I’m not too curious how to do that on Docker v18.09.8!)&lt;/p&gt;
+
+&lt;p&gt;At the destination syslog server, tail the forwarded log(s):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;Nov 27 08:16:01 192.168.1.31 CROND[30647]: (root) CMD (cd / &amp;amp;&amp;amp; /usr/bin/flock -x /var/lib/sftracing/lock -c 'logrotate --state=/var/lib/sftracing/status /var/lib/sftracing/logrotate.conf' &amp;gt;/dev/null)
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time=&quot;2020-11-27T08:16:51.520518736Z&quot; level=info msg=&quot;NetworkDB stats mnode(2e34102d1390) - netID:jsgguqh5mxhgjxxf1qkvlvs0t leaving:false netPeers:1 entries:43 Queue qLen:0 netMsg/s:0&quot;
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time=&quot;2020-11-27T08:16:51.520610196Z&quot; level=info msg=&quot;NetworkDB stats mnode(2e34102d1390) - netID:moxqzm0ca0yon5wgri3yyty94 leaving:false netPeers:1 entries:3 Queue qLen:0 netMsg/s:0&quot;
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time=&quot;2020-11-27T08:16:51.520624912Z&quot; level=info msg=&quot;NetworkDB stats mnode(2e34102d1390) - netID:lp5fpj7cqik3pqsqsg7o56xsi leaving:false netPeers:1 entries:8 Queue qLen:0 netMsg/s:0&quot;
+Nov 27 08:17:01 192.168.1.31 CROND[30752]: (root) CMD (cd / &amp;amp;&amp;amp; /usr/bin/flock -x /var/lib/sftracing/lock -c 'logrotate --state=/var/lib/sftracing/status /var/lib/sftracing/logrotate.conf' &amp;gt;/dev/null)
+Nov 27 08:17:06 192.168.1.31 lldpd[21648]: unable to bind to raw socket for interface veth20d4528: No such device
+Nov 27 08:17:06 192.168.1.31 lldpd[21651]: unable to initialize veth20d4528
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;System and Docker service log are there, but where the hell are the container logs?&lt;/p&gt;
+
+&lt;p&gt;The answer is hidden under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/rsyslog.d&lt;/code&gt;, namely &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;30-docker.conf&lt;/code&gt; to be precise:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;:syslogtag, startswith, &quot;docker&quot; /var/log/docker.info
+&amp;amp; stop
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We’d have to hack that file or come up with another file (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;40-hcc.conf&lt;/code&gt;, for example) where we’d &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker/containers/*/*-json.log&lt;/code&gt;. But - alas! - this version of rsyslog doesn’t do directory name wildcards so that’s out of the question as well.&lt;/p&gt;
+
+&lt;p&gt;We could write a new rsyslog rule, but that wouldn’t be pain-free either because interesting HCC container logs are all owned by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root:root&lt;/code&gt; which wouldn’t work for rsyslog.conf (another can of worms.)&lt;/p&gt;
+
+&lt;p&gt;Time to take another look at that HCC API method…&lt;/p&gt;
+
+&lt;h4 id=&quot;hcc-get-logs&quot;&gt;HCC &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET /logs&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;HCC logs seem to be rotated slowly so it’s appears quite safe to fetch these every X minutes or hours. We can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;since&lt;/code&gt; parameter to dyanmically get log entries from past X hours not fetch the logs of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stopped&lt;/code&gt; containers named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logs-svc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-X&lt;/span&gt; GET &lt;span class=&quot;s2&quot;&gt;&quot;https://&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;mNode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;-IP&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/mnode/logs?since=2020-11-26T06%3A00%3A00Z&amp;amp;service-name=logs-svc&amp;amp;stopped=false ...
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That would query mNode for the log of a running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logs-svc&lt;/code&gt; container and return something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-raw&quot;&gt;Response body
+Download
+=========================================================
+    mnode_logs-svc.1.nxk8szxmjuuiyo30frxdltcel
+=========================================================
+[uWSGI] getting INI configuration from uwsgi_app.ini
+*** Starting uWSGI 2.0.19.1 (64bit) on [Fri Nov 27 10:57:26 2020] ***
+compiled with version: 9.3.0 on 08 October 2020 02:01:58
+os: Linux-4.19.37-solidfire7 #1 SMP Wed Jun 24 20:10:57 UTC 2020
+nodename: 42d366150c41
+machine: x86_64
+clock source: unix
+detected number of CPU cores: 6
+current working directory: /app
+detected binary path: /usr/local/bin/uwsgi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This particular log isn’t structured but some other services that deal with API calls have nicely formatted logs.&lt;/p&gt;
+
+&lt;h3 id=&quot;fowarding-to-multiple-destinations&quot;&gt;Fowarding to Multiple Destinations&lt;/h3&gt;
+
+&lt;p&gt;For rsyslog I would assume one can simply repeat the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;action&lt;/code&gt; twice.&lt;/p&gt;
+
+&lt;p&gt;For Docker, depending on the version and configuration, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker logs&lt;/code&gt; may &lt;a href=&quot;https://docs.docker.com/config/containers/logging/dual-logging/&quot;&gt;or may not&lt;/a&gt; work the way you expect - and that also depends upon your expectations.)&lt;/p&gt;
+
+&lt;p&gt;As you can see at that page, Docker &lt;em&gt;cannot&lt;/em&gt; log to multiple destinations. Oops! It also can’t retry like rsyslog can. So it appears for some folks it may be better to log to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;local&lt;/code&gt; and have a 3rd party agent (or just rsyslog) gather those logs and send them to multiple destinations.&lt;/p&gt;
+
+&lt;h3 id=&quot;what-about-solidfire-storage-cluster-logs&quot;&gt;What about SolidFire storage cluster logs&lt;/h3&gt;
+
+&lt;p&gt;Short version: you can set one or more syslog destinations with a simple CLI or API call to MVIP.&lt;/p&gt;
+
+&lt;p&gt;See my repo Awesome SolidFire and related videos at the YouTube channel.&lt;/p&gt;
+
+&lt;p&gt;No official SolidFire documentation has been consulted for this post. It might be a good idea to check those docs and any KB articles at the NetApp support site.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;mNode system and Docker service logs can be forwarded with ease, but at this time logs of individual containers should be gathered by using the HCC API.&lt;/p&gt;
+
+&lt;p&gt;While that is not very inconvenient, we should also investigate 3rd party log forwarding tools that could be deployed inside of mNode VM and eliminate the need to use the API.&lt;/p&gt;</content><author><name>scaleoutSean</name></author><summary type="html">SolidFire Management Node (aka mNode) is a VM that runs Hybrid Cloud Services (various “management stuff”.)</summary></entry><entry><title type="html">SolidFire Provider for Terraform</title><link href="https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider.html" rel="alternate" type="text/html" title="SolidFire Provider for Terraform" /><published>2020-11-26T00:00:00+08:00</published><updated>2020-11-26T00:00:00+08:00</updated><id>https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider</id><content type="html" xml:base="https://scaleoutsean.github.io/2020/11/26/solidfire-terraform-provider.html">&lt;p&gt;The Provider is now available from the official Terraform registry. This means we no longer need to download and build it manually. It is also easy to use it from Terraform scripts because it is deployed automatically like other providers available from the registry.&lt;/p&gt;
 
 &lt;p&gt;For now it can manage (create, delete) essential resources:&lt;/p&gt;
 

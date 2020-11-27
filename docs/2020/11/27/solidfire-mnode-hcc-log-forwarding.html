@@ -1,0 +1,389 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, noarchive">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:20">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:20">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            SolidFire mNode and HCC Log Fowarding | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     syslog forwarding for SolidFire mNode and Hybrid Cloud Control
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">SolidFire mNode and HCC Log Fowarding</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>27 Nov 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>SolidFire Management Node (aka mNode) is a VM that runs Hybrid Cloud Services (various “management stuff”.)</p>
+
+<p>How to get the logs out the smart way?</p>
+
+<p>As of today, we have two groups of logs on mNode:</p>
+
+<ul>
+  <li>mNode system logs (the usual Linux stuff)</li>
+  <li>HCC service logs (JBOC, just a bunch of containers)</li>
+</ul>
+
+<p>There are no local users so presumably everything that’s noteworthy is in the system and HCC log(s).</p>
+
+<p>Before we begin, here’s what we’re dealing with:</p>
+
+<ul>
+  <li>NetApp SolidFire Management Node (mNode) v12.2
+    <ul>
+      <li>Docker v18.09.8</li>
+      <li>rsyslogd 8.1904.0</li>
+    </ul>
+  </li>
+  <li>NetApp Hybrid Cloud Control (HCC) v2.16.66</li>
+</ul>
+
+<h3 id="mnode">mNode</h3>
+
+<p>Backup your /etc/rsyslog.conf and hack away! I added these three rows for my $DST server running at $DST_PORT (<code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code> such as 2.2.2.2:2514):</p>
+
+<pre><code class="language-raw">*.* action(type="omfwd" target="$DST" port="$DST_PORT" protocol="tcp"
+            action.resumeRetryCount="100"
+            queue.type="linkedList" queue.size="10000")
+</code></pre>
+
+<p>There are fancy features in this module. You can compress the log, you can set re-try interval (for the 100 tries mentioned above; see <code class="language-plaintext highlighter-rouge">ActionSendTCPRebindInterval</code>), you can use a specific <code class="language-plaintext highlighter-rouge">device</code> (which may be useful if you have multiple NICs as uses who use mNode with Persistent Volumes do) and so on. RTFM!</p>
+
+<p>With this set up we can monitor OS-level events like these, for example.</p>
+
+<pre><code class="language-raw">Nov 27 10:30:21 192.168.1.31 sshd[19710]: Postponed keyboard-interactive for admin from 192.168.1.12 port 58430 ssh2 [preauth]
+Nov 27 10:30:23 192.168.1.31 sshd[19710]: Postponed keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2 [preauth]
+Nov 27 10:30:23 192.168.1.31 sshd[19710]: Accepted keyboard-interactive/pam for admin from 192.168.1.12 port 58430 ssh2
+</code></pre>
+
+<p>I should note that there are all sorts of logs under /var/log, some of which are probably not captured by rsyslog, so additional modifications would ber required if you wanted to capture those logs.</p>
+
+<h3 id="hcc">HCC</h3>
+
+<p>This one seems easy. Backup <code class="language-plaintext highlighter-rouge">/etc/docker/daemon.json</code> and hack away, right? Wrong!</p>
+
+<p>Here I just send all the logs out to <code class="language-plaintext highlighter-rouge">$DST:$DST_PORT</code>. The <code class="language-plaintext highlighter-rouge">bip</code> thing was there before. I only added the log-related entries. The tag may be useful for classification and grouping at the destination. I should probably have done something similar for the rsyslog above.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"bip"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"169.254.100.1/22"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log-driver"</span><span class="p">:</span><span class="w"> </span><span class="s2">"syslog"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log-opts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"syslog-address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp://$DST:$DST_PORT"</span><span class="p">,</span><span class="w">
+           </span><span class="nl">"tag"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>With that tag, Docker logs (here tagged with <code class="language-plaintext highlighter-rouge">hcc</code>) are easier to tell apart from mNode (OS) logs (<code class="language-plaintext highlighter-rouge">systemd</code>), although we could also use syslog at the destination to save each source to a different file:</p>
+
+<pre><code class="language-raw">Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping SolidFire Top Daemon...
+Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Deploy Element Auth service...
+Nov 27 10:28:27 192.168.1.31 systemd[1]: Stopping Login Service...
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: killing the spooler with pid 6
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: ...brutally killing workers...
+Nov 27 10:28:27 192.168.1.31 hcc[20264]: Stopping backend dockerbackend in
+</code></pre>
+
+<h4 id="logs-of-individual-containers">Logs of Individual Containers</h4>
+
+<p>Now that we got the VM and Docker service logs, we still need to do something about the container logs. (Yes - what only 30 minutes ago seemed like a trivial exercise is becoming a way to waste an entire evening!)</p>
+
+<p>These to <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/${Id}/${Id}-json.log</code> (where Id is the container ID). These ID’s change after each restart (for example, in the case of container image <code class="language-plaintext highlighter-rouge">logs-svc:1.1.2</code> you’d have a different ID every time the container is restarted.)</p>
+
+<p>The important part is that we can get to those logs:</p>
+
+<pre><code class="language-raw">{"log":"[pid: 9|app: 0|req: 972/1678] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:13 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:13.665314987Z"}
+{"log":"[pid: 9|app: 0|req: 973/1679] 10.0.0.40 () {32 vars in 1303 bytes} [Fri Nov 27 08:33:23 2020] GET /1/assets/storage-clusters/5a6502a3-8bcb-4617-8cce-64127996545c =\u003e generated 735 bytes in 6 msecs (HTTP/1.1 200) 5 headers in 154 bytes (1 switches on core 0)\n","stream":"stderr","time":"2020-11-27T08:33:23.670857855Z"}
+</code></pre>
+
+<p>We can’t change HCC’s container startup parameters (not in a supported way anyway), but we can get the logs from containers like this (and the <a href="https://docs.netapp.com/us-en/hci/docs/task_hcc_collectlogs.html#use-the-rest-api-to-collect-logs">HCC API</a> offers the same feature which lets you poll the HCC API endpoint to pull those logs every $N seconds to get last $M lines.)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker logs c43bcd1f0431 <span class="nt">--since</span> 2020-11-26
+</code></pre></div></div>
+
+<p>A better approach would be to run an agent that scans /var/lib/docker/containers/ and takes care of that for us.</p>
+
+<p>In any case, once we’re done, we can reboot mNode.</p>
+
+<h3 id="wait-what-do-you-mean-reboot">Wait, what do you mean “reboot”</h3>
+
+<p>Yep, I just rebooted mNode to see if my settings worked. Based on a casual search there are ways to reload these settings without rebooting the OS, but I didn’t want to waste time on that.</p>
+
+<p>What if you wanted to reload rather than reboot? Feel free to JFGI (I’m not too curious how to do that on Docker v18.09.8!)</p>
+
+<p>At the destination syslog server, tail the forwarded log(s):</p>
+
+<pre><code class="language-raw">Nov 27 08:16:01 192.168.1.31 CROND[30647]: (root) CMD (cd / &amp;&amp; /usr/bin/flock -x /var/lib/sftracing/lock -c 'logrotate --state=/var/lib/sftracing/status /var/lib/sftracing/logrotate.conf' &gt;/dev/null)
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time="2020-11-27T08:16:51.520518736Z" level=info msg="NetworkDB stats mnode(2e34102d1390) - netID:jsgguqh5mxhgjxxf1qkvlvs0t leaving:false netPeers:1 entries:43 Queue qLen:0 netMsg/s:0"
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time="2020-11-27T08:16:51.520610196Z" level=info msg="NetworkDB stats mnode(2e34102d1390) - netID:moxqzm0ca0yon5wgri3yyty94 leaving:false netPeers:1 entries:3 Queue qLen:0 netMsg/s:0"
+Nov 27 08:16:51 192.168.1.31 dockerd[20264]: time="2020-11-27T08:16:51.520624912Z" level=info msg="NetworkDB stats mnode(2e34102d1390) - netID:lp5fpj7cqik3pqsqsg7o56xsi leaving:false netPeers:1 entries:8 Queue qLen:0 netMsg/s:0"
+Nov 27 08:17:01 192.168.1.31 CROND[30752]: (root) CMD (cd / &amp;&amp; /usr/bin/flock -x /var/lib/sftracing/lock -c 'logrotate --state=/var/lib/sftracing/status /var/lib/sftracing/logrotate.conf' &gt;/dev/null)
+Nov 27 08:17:06 192.168.1.31 lldpd[21648]: unable to bind to raw socket for interface veth20d4528: No such device
+Nov 27 08:17:06 192.168.1.31 lldpd[21651]: unable to initialize veth20d4528
+</code></pre>
+
+<p>System and Docker service log are there, but where the hell are the container logs?</p>
+
+<p>The answer is hidden under <code class="language-plaintext highlighter-rouge">/etc/rsyslog.d</code>, namely <code class="language-plaintext highlighter-rouge">30-docker.conf</code> to be precise:</p>
+
+<pre><code class="language-raw">:syslogtag, startswith, "docker" /var/log/docker.info
+&amp; stop
+</code></pre>
+
+<p>We’d have to hack that file or come up with another file (<code class="language-plaintext highlighter-rouge">40-hcc.conf</code>, for example) where we’d <code class="language-plaintext highlighter-rouge">/var/lib/docker/containers/*/*-json.log</code>. But - alas! - this version of rsyslog doesn’t do directory name wildcards so that’s out of the question as well.</p>
+
+<p>We could write a new rsyslog rule, but that wouldn’t be pain-free either because interesting HCC container logs are all owned by <code class="language-plaintext highlighter-rouge">root:root</code> which wouldn’t work for rsyslog.conf (another can of worms.)</p>
+
+<p>Time to take another look at that HCC API method…</p>
+
+<h4 id="hcc-get-logs">HCC <code class="language-plaintext highlighter-rouge">GET /logs</code></h4>
+
+<p>HCC logs seem to be rotated slowly so it’s appears quite safe to fetch these every X minutes or hours. We can use the <code class="language-plaintext highlighter-rouge">since</code> parameter to dyanmically get log entries from past X hours not fetch the logs of <code class="language-plaintext highlighter-rouge">stopped</code> containers named <code class="language-plaintext highlighter-rouge">logs-svc</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> GET <span class="s2">"https://</span><span class="k">${</span><span class="nv">mNode</span><span class="p">-IP</span><span class="k">}</span><span class="s2">/mnode/logs?since=2020-11-26T06%3A00%3A00Z&amp;service-name=logs-svc&amp;stopped=false ...
+</span></code></pre></div></div>
+
+<p>That would query mNode for the log of a running <code class="language-plaintext highlighter-rouge">logs-svc</code> container and return something like this:</p>
+
+<pre><code class="language-raw">Response body
+Download
+=========================================================
+    mnode_logs-svc.1.nxk8szxmjuuiyo30frxdltcel
+=========================================================
+[uWSGI] getting INI configuration from uwsgi_app.ini
+*** Starting uWSGI 2.0.19.1 (64bit) on [Fri Nov 27 10:57:26 2020] ***
+compiled with version: 9.3.0 on 08 October 2020 02:01:58
+os: Linux-4.19.37-solidfire7 #1 SMP Wed Jun 24 20:10:57 UTC 2020
+nodename: 42d366150c41
+machine: x86_64
+clock source: unix
+detected number of CPU cores: 6
+current working directory: /app
+detected binary path: /usr/local/bin/uwsgi
+</code></pre>
+
+<p>This particular log isn’t structured but some other services that deal with API calls have nicely formatted logs.</p>
+
+<h3 id="fowarding-to-multiple-destinations">Fowarding to Multiple Destinations</h3>
+
+<p>For rsyslog I would assume one can simply repeat the <code class="language-plaintext highlighter-rouge">action</code> twice.</p>
+
+<p>For Docker, depending on the version and configuration, <code class="language-plaintext highlighter-rouge">docker logs</code> may <a href="https://docs.docker.com/config/containers/logging/dual-logging/">or may not</a> work the way you expect - and that also depends upon your expectations.)</p>
+
+<p>As you can see at that page, Docker <em>cannot</em> log to multiple destinations. Oops! It also can’t retry like rsyslog can. So it appears for some folks it may be better to log to <code class="language-plaintext highlighter-rouge">local</code> and have a 3rd party agent (or just rsyslog) gather those logs and send them to multiple destinations.</p>
+
+<h3 id="what-about-solidfire-storage-cluster-logs">What about SolidFire storage cluster logs</h3>
+
+<p>Short version: you can set one or more syslog destinations with a simple CLI or API call to MVIP.</p>
+
+<p>See my repo Awesome SolidFire and related videos at the YouTube channel.</p>
+
+<p>No official SolidFire documentation has been consulted for this post. It might be a good idea to check those docs and any KB articles at the NetApp support site.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>mNode system and Docker service logs can be forwarded with ease, but at this time logs of individual containers should be gathered by using the HCC API.</p>
+
+<p>While that is not very inconvenient, we should also investigate 3rd party log forwarding tools that could be deployed inside of mNode VM and eliminate the need to use the API.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#automation">automation</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/26/solidfire-terraform-provider.html">• SolidFire Provider for Terraform</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2020-11-27 19:21 </p>
+    <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
