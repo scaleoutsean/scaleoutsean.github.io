@@ -13,11 +13,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Helpful waste of time | Acting Technologist
+            Set Temporary Storge QoS Policy for SolidFire Volume | Acting Technologist
       
     </title>
     <meta name="description" content="
-     You too can save time by following helpful UI hints
+     A way to set a temporary storage QoS policy on a SolidFire volume
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -89,12 +89,12 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Helpful waste of time</h2>
+        <h2 id = "post-title">Set Temporary Storge QoS Policy for SolidFire Volume</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>24 Nov 2020</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>28 Nov 2020</span> - <i class="far fa-clock"></i> 
 
 
   
@@ -105,33 +105,27 @@
     </span>
   </div>
   
-        <p>When dealing with input that consists of unweildy TLS certificates Postman can helpfully hint at potential JSON validity problems and save you time. I’m sure some other tools are like that as well.</p>
+        <p>Let’s say we have a Volume ID 321 with a storage QoS Policy ID 5, and need to run a temporary job that would benefit from a different Storage QoS Policy (higher or lower, it doesn’t matter).</p>
 
-<p><img src="/assets/images/postman-scary-bs-setsslcertificate.png" alt="Scary Bullshit" /></p>
+<p>With PowerShell we’d normally use <code class="language-plaintext highlighter-rouge">Get-SFVolume</code> to get the current QoS settings (could be a dictionary of custom Min, Max and Burst values, or a Storage QoS Policy ID (single value)), store that somewhere and set a new policy (e.g. 7). After we’re done we can restore the old QoS setting using <code class="language-plaintext highlighter-rouge">Set-SFVolume</code>.</p>
 
-<p>With such help, instead of trying like an idiot you can fix your inputs before that, get things done and have a nice rest of the day.</p>
+<p>With <code class="language-plaintext highlighter-rouge">Set-SFQosException</code> (find the module in my repo Awesome SolidFire) we can do this:</p>
 
-<p>All right, let’s try to remove all line breaks until Postman stops hinting.</p>
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Set-SFQosException</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">321</span><span class="w"> </span><span class="nt">-SFQosPolicyId</span><span class="w"> </span><span class="nx">7</span><span class="w">
+</span></code></pre></div></div>
 
-<p>After having removed 10 lines, I start thinking “oh man, this is slow! Let’s automate!”</p>
+<p>We check the situation, find that Volume ID 321 has QoS Policy ID 5, we take that value and store it in the volume’s attributes (<code class="language-plaintext highlighter-rouge">"SfQosId": "5"</code>).</p>
 
-<p>Try sed, get stuck, Google it, done!</p>
+<p>Then we run our task. After we’re done, we run:</p>
 
-<p>Back to Postman. No hints. Send. Yikes!!! Invalid cert!</p>
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Set-SFQosException</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">321</span><span class="w">
+</span></code></pre></div></div>
 
-<p>Aha! Back to checking if my cert is in the right format. DER. PEM, etc. What a hassle!</p>
+<p>There’s no <code class="language-plaintext highlighter-rouge">-SFQosPolicyId</code> so <code class="language-plaintext highlighter-rouge">Set-SFQosException</code> simply resets the Volume QoS Policy to the value stored in <code class="language-plaintext highlighter-rouge">SfQosId</code>. That’s it.</p>
 
-<p>All right, the certs are fine as I had thought. I see - I should replace line breaks with <code class="language-plaintext highlighter-rouge">\n</code>’s, says a helpful Stack Overflow answer.</p>
+<p>To make it simple and robust, it comes without the ability to work with Volumes with Custom Storage QoS Policy.</p>
 
-<p>More sed. Done! Damn, it still doesn’t work!</p>
-
-<p>Let’s recheck those certs…</p>
-
-<p>Eventually I got desperate and tried to work by <a href="https://github.com/scaleoutsean/awesome-solidfire/blob/master/encryption/kmip-thales-keysecure.md">my own notes</a> from Github which led me to believe I should simply paste that junk as-is and hit Send. It worked.</p>
-
-<p>I don’t blame Postman, those visual hints probably saved me more than 30 minutes over the years.</p>
-
-<p>But why things have to be so complicated?</p>
+<p>There may be some quirks (especially if you screw around with QoS policy in between the two steps above) but it seems to work.</p>
 
 
       </article>
@@ -142,7 +136,7 @@
     
     
       <a href="
-      /categories/#random">random</a>
+      /categories/#automation">automation</a>
        
     
   </span>
@@ -175,23 +169,11 @@
         
     
         
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
+          <div class = "related-posts">
+          <h5><a href="/2020/11/27/solidfire-mnode-hcc-log-forwarding.html">• SolidFire mNode and HCC Log Fowarding</a></h5>
+          </div>
+          
+          
         
     
       
@@ -203,7 +185,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/20/solidfire-netapp-hci-dark-mode.html">• Dark Mode for NetApp HCI and SolidFire</a></h5>
+          <h5><a href="/2020/11/26/solidfire-terraform-provider.html">• SolidFire Provider for Terraform</a></h5>
           </div>
           
           
@@ -226,11 +208,23 @@
         
     
         
-          <div class = "related-posts">
-          <h5><a href="/2020/11/17/muddying-gh-page-waters.html">• Muddying the gh-pages waters</a></h5>
-          </div>
-          
-          
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
         
     
       
