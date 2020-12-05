@@ -99,7 +99,7 @@
 
   
   
-    8 minute read
+    11 minute read
   
 
     </span>
@@ -307,6 +307,94 @@ mnode-svc-aiq-collector
 
 <p>If you make any changes on your production system, don’t work by these blog posts. Consult the documentation, read the KB articles and check with Support.</p>
 
+<h3 id="follow-up-20201205">Follow-up (2020/12/05)</h3>
+
+<p>As mentioned earlier, it’s not supported to add your own containers to mNode VM. Why? It doesn’t matter, what matters is it’s not supported. It likely has to do with VM capacity and resources, as well as unpredictable interactions with existing container and non-container workloads. But whatever it is, the point is there’s no need to create a how-to because the right how-to is “don’t do it” so I’ll just add some notes on how I made it work in a non-supported manner.</p>
+
+<h4 id="input">Input</h4>
+
+<p>Filebeat documentation for Docker isn’t great, but (h/t: logz.io) I used <code class="language-plaintext highlighter-rouge">prima/filebeat</code> and didn’t want to spend much time on making it look and work nice. My inputs were all Docker logs:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">filebeat.prospectors</span><span class="pi">:</span>
+ <span class="pi">-</span> <span class="na">input_type</span><span class="pi">:</span> <span class="s">log</span>
+  <span class="na">paths</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">/var/lib/docker/containers/*/*-json.log</span>
+  <span class="s">...</span>
+</code></pre></div></div>
+
+<p>The above, once it starts churning through logs, can eat up 2 CPU cores <em>easily</em>. Similarly for RAM and disk space. In other words, if you don’t incrase mNode VM resources or restrict this container’s resources, it can easily take down your mNode.</p>
+
+<p>What if you want to collect just some, rather than all, logs? The list of containers is in this post and what they do is in the documentation. Create multiple filebeat containers or create multiple definitions (YAML format), one per each individual container, and load them like so:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">filebeat.config.inputs</span><span class="pi">:</span>
+  <span class="na">enabled</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">path</span><span class="pi">:</span> <span class="s">hcc.d/*.yml</span>
+</code></pre></div></div>
+
+<p>You’d probably have to read the docs to figure the above out.</p>
+
+<p>After a bit of googling and RTFM I also managed to capture individual container logs (hcc-ui, in this example) with this:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">filebeat.autodiscover</span><span class="pi">:</span>
+  <span class="na">providers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">docker</span>
+      <span class="na">templates</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">condition</span><span class="pi">:</span>
+            <span class="na">contains</span><span class="pi">:</span>
+              <span class="s">docker.container.image</span><span class="pi">:</span> <span class="s">hcc-ui</span>
+          <span class="na">config</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">container</span>
+              <span class="na">paths</span><span class="pi">:</span>
+                <span class="pi">-</span> <span class="s">/var/lib/docker/containers/${data.docker.container.id}/*.log</span>
+              <span class="na">exclude_lines</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">^</span><span class="se">\\</span><span class="s">s+[</span><span class="se">\\</span><span class="s">-`('.|_]"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h4 id="output">Output</h4>
+
+<p>Filebeat can send container logs to external recepients.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">output.elasticsearch</span><span class="pi">:</span>
+  <span class="na">hosts</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">192.168.1.146:9200"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>If you want to send it to two destinations, run two filebeat containers with identical configuration.</p>
+
+<p>Or, if you wanted to store logs locally, add this file to be processed by rsyslog, and leave the forwarding to multiple destinations to rsyslog:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">output.file</span><span class="pi">:</span>
+  <span class="na">path</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/logs/docker/filebeat/"</span>
+  <span class="na">filename</span><span class="pi">:</span> <span class="s">filebeat</span>
+  <span class="na">rotate_every_kb</span><span class="pi">:</span> <span class="m">1000</span>
+  <span class="na">number_of_files</span><span class="pi">:</span> <span class="m">7</span>
+  <span class="na">permissions</span><span class="pi">:</span> <span class="m">0644</span>
+</code></pre></div></div>
+
+<p>In this example retain only 7 x 1 MiB files. That’s probably not what you want to do.</p>
+
+<h4 id="result">Result</h4>
+
+<p>You’ll get some extra junk you may not want, but Filebeat has options and processors that let you strip that, and so does rsyslog. By the looks of it (see the values like <code class="language-plaintext highlighter-rouge">jit</code> in this JSON file) you may want to ensure that logs are either stripped of confidential info at the source, or sent to destination over encrypted connection.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+	</span><span class="nl">"@timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-12-04T17:06:02.511Z"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"@metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+		</span><span class="nl">"beat"</span><span class="p">:</span><span class="w"> </span><span class="s2">"filebeat"</span><span class="p">,</span><span class="w">
+		</span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"doc"</span><span class="p">,</span><span class="w">
+		</span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6.2.3"</span><span class="w">
+	</span><span class="p">},</span><span class="w">
+	</span><span class="nl">"source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/lib/docker/containers/f14f10d6aefccf3be511c259a79e1cdae46f6f1da24479704392e3852cd45aa8/f14f10d6aefccf3be511c259a79e1cdae46f6f1da24479704392e3852cd45aa8-json.log"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"offset"</span><span class="p">:</span><span class="w"> </span><span class="mi">73282162</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"log"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-11-28T23:49:25.683922Z |     6 | 132721654 |    MainProcess-uWSGIWorker1Core0  |         flask_authtools:117  | DEBUG   | Authenticated user with claims: {'nbf': 1606607365, 'exp': 1606607485, 'iss': 'https://192.168.1.30/auth', 'aud': ['mnode_api', 'mnode_credential'], 'client_id': 'hci-monitor', 'iat': 1606607365, 'jti': 'YECZS3fkjxfpPx38gofKlg', 'scope': ['mnode_api:r', 'mnode_credential:r']}</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stderr"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-11-28T23:49:25.684342722Z"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"beat"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+		</span><span class="nl">"hostname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59e98457dadf"</span><span class="p">,</span><span class="w">
+		</span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6.2.3"</span><span class="p">,</span><span class="w">
+		</span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59e98457dadf"</span><span class="w">
+	</span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
       </article>
     </div>
     
@@ -332,6 +420,15 @@ mnode-svc-aiq-collector
     
     
     
+    
+        
+        
+    
+        
+    
+        
+    
+      
     
         
         
@@ -422,7 +519,7 @@ mnode-svc-aiq-collector
 
     
   </div><footer class= "footer">
-    <p>2020-11-28 21:15 </p>
+    <p>2020-12-05 13:46 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
