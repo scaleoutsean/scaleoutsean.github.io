@@ -10,6 +10,7 @@
     <meta name="bingbot" content="max-snippet:20">
     <meta name="bingbot" content="max-image-preview:small">
     <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:20">
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
@@ -113,7 +114,7 @@
 
 <h3 id="nva-1152-design">NVA-1152-DESIGN</h3>
 
-<p>I sometimes work with NetApp E/EF-Series arrays and for a while now I’ve been waiting to find out how well it works with 25 GigE iSCSI, especially since NetApp has added Mellanox Ethernet switches to its solutions. That has finally happened in NetApp NVA-1152-DESIGN. In this document a NetApp HCI server and the EF280 all-flash array were tested to provide an idea of how these building blocks perform and for comparison purposes (NetApp HCI servers don’t come with FC HBAs) FC was tested along iSCSI.</p>
+<p>I sometimes work with NetApp E/EF-Series arrays and for a while now I’ve been waiting to find out how well it works with 25 GigE iSCSI, especially since NetApp has added Mellanox Ethernet switches to its solutions. That has finally happened in NetApp NVA-1152-DESIGN. In this document a NetApp HCI server and the EF280 all-flash array were tested to provide an idea of how these building blocks perform and for comparison purposes (NetApp HCI servers don’t come with FC HBAs) FC was tested with the same server and array as iSCSI.</p>
 
 <p><a href="https://www.netapp.com/pdf.html?item=/media/21016-nva-1152-design.pdf">NVA-1152-DESIGN</a> isn’t long (just the way I like it!), so give it a quick look. It answers precisely that question.</p>
 
@@ -129,29 +130,29 @@
 
 <p>When I say “for application &amp; iSCSI workload” I mean your application could consume up 50% of that network bandwidth (when data is written to storage), but it could also use 1% (when data is queried, a 10 byte JSON search query can result in 100 Gbps of iSCSI throughput with H410C &amp; the EF300, for example.)</p>
 
-<p>Which reminds me: if you need even more performance from iSCSI storage consider the latest mid-range EF model, EF300 (or the E5760, if you want HDDs or hybrid HDD/SSD storage). The E/EF Series <a href="https://www.netapp.com/data-storage/e-series/">product page</a> has more details on all these models (as of now, the datasheets are at the bottom of the page.)</p>
+<p>Which reminds me: if you need even more performance from iSCSI storage consider the latest mid-range EF model, EF300 (or the E5760, if you want HDDs or hybrid HDD/SSD storage). The E-Series <a href="https://www.netapp.com/data-storage/e-series/">product page</a> has more details on the HDD and Hybrid models (datasheets are at the bottom of the page) while <a href="https://netapp.com/data-storage/ef-series">the EF-Series product page</a> is about the all-flash models. The EF600 doesn’t support iSCSI, so that particular model cannot be attached to NetApp HCI series servers.</p>
 
 <h3 id="scaling-out">Scaling out</h3>
 
-<p>Another thing to note is many apps are <strong>not</strong> limited to the performance of a single H-Series server or E/EF Series array. If the application itself is scalable, you can consider using its native scale-out features (example: Splunk). If it’s not, you can consider using <a href="https://www.google.com/search?hl=en&amp;q=netapp%20beegfs">BeeGFS</a> with multiple servers or disk arrays to get high performance to/from a single namespace.</p>
+<p>Another thing to note is many apps are <strong>not</strong> limited to the performance of a single H-Series server or E/EF Series array. If the application itself is scalable, you can consider using its native scale-out features (example: Splunk). If it’s not, you can consider using <a href="https://www.google.com/search?hl=en&amp;q=netapp%20beegfs">BeeGFS</a> with multiple servers or disk arrays to get a high performance to/from a single namespace.</p>
 
-<p>Among other things, BeeGFS allows you to get to your data in a scale-out manner. An example for an HCI environment: say we have a small NetApp HCI cluster made with three H615C compute nodes and we need to ingest IoT data at 5 GB/s. If data is coming from different sources, we don’t need to buy a pair of servers each of which (for High Availability) can do 5 GB/s, or even worse (for many other HCI environments) three such servers. Enterprise users would be much better off with a BeeGFS support contract and a fast enough E/EF array (or two slower arrays, as those too can scale out with BeeGFS.)</p>
+<p>Among other things, BeeGFS allows you to get to your data in a scale-out manner. An example for an HCI environment: say we have a small NetApp HCI cluster with three H615C compute nodes and we need to ingest IoT data at 5 GB/s. If data is coming from different sources, we don’t need to buy a pair of servers each of which (for High Availability) can do 5 GB/s, or even worse (for many other HCI environments) - three such servers. Enterprise users would be much better off with a BeeGFS support contract and a fast enough E/EF array (or two slower arrays, as those too can scale out with BeeGFS.)</p>
 
 <ul>
-  <li>3 x H615C; only 2 x H615C are necessary for 5 GB/s, we can tolerate the loss of one node (N+1)</li>
+  <li>3 x (existing) H615C servers; only 2 x H615C are necessary for 5 GB/s, we can tolerate the loss of one node (N+1)</li>
   <li>1 x BeeGFS support contract; to let VMs running on HCI compute write to shared file system</li>
   <li>1 x E/EF array (E5760 or EF570, for example) to share data to BeeGFS VMs</li>
 </ul>
 
-<p>This approach also makes it easier to scale your workloads. If you need 8 GB/s, just add a server. If you need 20 GB/s, add several servers and one or two additional array.</p>
+<p>This approach also makes it easier to scale your workloads. If you need 8 GB/s, just add another server. If you need 20 GB/s, add several servers and one or two additional array(s).</p>
 
-<p>Some applications scale out without a shared file system because they can parallelize their workload and do not require shared file system. To scale with those, you’d just add servers or storage as necessary.</p>
+<p>Some applications scale out without a shared file system because they can parallelize their workload and do not require shared data. To scale HCI performance with such apps you’d just add servers or storage, as necessary.</p>
 
 <h3 id="networking">Networking</h3>
 
 <p>Don’t forget to use proper Ethernet switches such as NVIDIA Networking (Mellanox) SN-2010, SN-2100, and SN-2700, to get a network setup that can handle high throughput and low latency workloads, whether it’s <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">backup</a>, analytics, video streaming or any other non-HPC workload that can work with iSCSI.</p>
 
-<p>All currently available NetApp HCI servers use Mellanox 25 GigE NICs which means less time wasted on reading compatibiltiy and interoperability documentation.</p>
+<p>All currently available NetApp HCI servers use Mellanox 25 GigE NICs which means less time wasted on reading compatibility and interoperability documentation.</p>
 
 <h3 id="hpc">HPC</h3>
 
@@ -162,6 +163,7 @@
 <p>Many enterprises have migrated or want to migrate their workloads to HCI, but high performance workloads can still be challenging, or cost more to run in HCI environments. NetApp HCI’s disaggregated design makes it possible to easily and economically handle such workloads by adding E/EF-Series arrays to your NetApp HCI, while retaining the agility and convenience of HCI.</p>
 
 <p>It’s rarely justifiable to introduce novel or complex protocols or create management islands. Even if your high-throughput applications run in containers, you can still make use of E/EF-Series (NetApp Trident used by NetApp HCI and ONTAP can also <a href="https://netapp-trident.readthedocs.io/en/latest/support/requirements.html#supported-backends-storage">provision iSCSI container storage on E/EF arrays</a>.)</p>
+
 
       </article>
     </div>
@@ -293,7 +295,7 @@
 
     
   </div><footer class= "footer">
-    <p>2020-12-05 18:40 </p>
+    <p>2020-12-07 12:17 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
