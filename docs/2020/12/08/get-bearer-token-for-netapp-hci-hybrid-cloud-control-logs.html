@@ -100,7 +100,7 @@
 
   
   
-    8 minute read
+    9 minute read
   
 
     </span>
@@ -108,7 +108,7 @@
   
         <p>Hybrid Cloud Control (HCC) is a group of services - management plane, if you will - for out-of-band management of NetApp HCI, SolidFire and eSDS. Currently it’s a bunch of containers that runs in a VM commonly called mNode (short for Management Node).</p>
 
-<p>As noted in last week’s post on HCC and mNode log forwarding (you may read it for additional context), right now we can’t forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest.</p>
+<p>As noted in last week’s <a href="https://scaleoutsean.github.io/2020/11/27/solidfire-mnode-hcc-log-forwarding.html">post on HCC and mNode log forwarding</a> (you may want to read it if you want additional context), right now we can’t forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest.</p>
 
 <h3 id="get-logs"><code class="language-plaintext highlighter-rouge">GET /logs</code></h3>
 
@@ -213,9 +213,9 @@
 
 <p>This isn’t really service name (<code class="language-plaintext highlighter-rouge">api-gateway</code>, for example) but a <em>container</em> name.</p>
 
-<p>This works: <code class="language-plaintext highlighter-rouge">https://192.168.1.31/mnode/1/logs?lines=1000&amp;service-name=mnode_package-svc&amp;type=service</code></p>
+<p>This works: <code class="language-plaintext highlighter-rouge">https://192.168.1.31/mnode/1/logs?lines=1000&amp;service-name=mnode_package-svc&amp;type=service</code> (assuming you provide a valid bearer token.)</p>
 
-<p>How to get ‘em? You can get a list of running container ID’s and names like this:</p>
+<p>How to get the names? You can get a list of running container ID’s and names like this:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker ps <span class="nt">-a</span> <span class="nt">--filter</span> <span class="s2">"name=mnode_"</span> <span class="nt">--format</span> <span class="s2">"{{.ID}}: {{.Names}}"</span>
 5e69af253a54: mnode_api-gateway.1.gking7pxr280mpd97d1ho2z85
@@ -251,9 +251,9 @@ f51e30b65600: mnode_mnode-svc-mon-prometheus.1.3uepjf4y6phfqbddvqzqn48pt
 
 <p>I was surprised to discover that filtering for <code class="language-plaintext highlighter-rouge">exited=0</code> didn’t filter out exited containers (<code class="language-plaintext highlighter-rouge">docker ps --filter 'status=running'</code> shows only running containers, so there’s that.)</p>
 
-<p>If your mNode is called <code class="language-plaintext highlighter-rouge">mnode</code> then “service” names would be <code class="language-plaintext highlighter-rouge">mNode_$SERVICE_NAME</code> where $SERVICE_NAME is a list of (actual) service names you care about. Once you have mNode name and that list, you can get loop through it and get Container IDs which we’ll use to get the logs.</p>
+<p>If your mNode is called <code class="language-plaintext highlighter-rouge">mnode</code> then “service” names would be <code class="language-plaintext highlighter-rouge">mNode_$SERVICE_NAME</code> where $SERVICE_NAME is a list of (actual) service names you care about. Once you have mNode name and that list, you can get loop through it and get Container IDs which can be use to get the logs.</p>
 
-<p>You want to loop through the list because otherwise you’ll get all container logs at the same time, which seems like a bad idea to me.</p>
+<p>You want to loop through the list because otherwise you get all the container logs at the same time, which seems like a bad idea to me.</p>
 
 <p>What to do about the logs of exited containers? We could get those as well, or we could watch Docker service and write a handler for those situations (for example, fetch and forward their log, and then remove the exited container so that we don’t have to deal with exited containers.)</p>
 
@@ -403,13 +403,45 @@ client_secret: ******              # leave empty
 
 <p>You need to refresh the token within <code class="language-plaintext highlighter-rouge">expires_in</code> seconds. Or not, if you fetch logs once every 30 minutes or longer, because you can get a new token every time.</p>
 
-<p>With all parts and parameters clear and a valid bearer token, the rest is generic: we can create REST API requests to get the log for each service. Axample for “service” (container) <code class="language-plaintext highlighter-rouge">mnode_api-gateway</code>, since Dec 8, 2020 00:00:00 UTC time:</p>
+<p>With all parts and parameters clear and a valid bearer token, the rest is generic: we can create REST API requests to get the log for each service. An example for “service” (container) <code class="language-plaintext highlighter-rouge">mnode_api-gateway</code>, since Dec 8, 2020 00:00:00 UTC time:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-k</span> <span class="nt">-X</span> GET <span class="se">\</span>
 <span class="s2">"https://192.168.1.31/mnode/1/logs?service-name=mnode_api-gateway&amp;type=service&amp;since=2020-12-08T00%3A00%3A00Z"</span> <span class="se">\</span>
 <span class="nt">-H</span>  <span class="s2">"accept: */*"</span> <span class="se">\</span>
 <span class="nt">-H</span>  <span class="s2">"Authorization: Bearer eyJhbGciOiJSUzI....8a"</span>
 </code></pre></div></div>
+
+<h4 id="getting-logs-with-python-or-powershell">Getting logs with Python or PowerShell</h4>
+
+<p>Now that we got a valid token we just need to pass it in headers like so:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="c1"># Loop over a list of HCC services to get the log each
+# Assemble a per-service URL where service string is something like mnode_api-gateway
+# service_url = url_base + time_since + service_string + service + ending
+# example of service_url: 
+# https://192.168.1.31/mnode/logs?since=2020-12-08T00%3A00%3A00Z&amp;service-name=mnode_api-gateway&amp;stopped=false
+</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">'Authorization'</span> <span class="p">:</span> <span class="p">(</span><span class="s">'Bearer '</span> <span class="o">+</span> <span class="n">token</span><span class="p">),</span>
+    <span class="s">'accept'</span> <span class="p">:</span> <span class="s">'*/*'</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">requests</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">service_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>PowerShell would work exactly the same: loop over a list of services, create custom URLs and hit each per-service URL with that token in request headers.</p>
+
+<p>If everything works out you can save the response to a file. You can strip the first three rows if you don’t want them (hard line breaks below were inserted by me for better readability), but it doesn’t hurt to leave them as-is, especially if the logs must not be tampered with.</p>
+
+<pre><code class="language-raw">&gt;&gt;&gt; result.text
+'\n=========================================================
+\n    mnode_api-gateway.1.gking7pxr280mpd97d1ho2z85
+\n=========================================================
+\n10.0.0.23 - - [08/Dec/2020:11:34:09 +0000] "GET /metrics HTTP/1.1" 200 2476 "-" ...
+'
+</code></pre>
+
 
       </article>
     </div>
@@ -550,7 +582,7 @@ client_secret: ******              # leave empty
 
     
   </div><footer class= "footer">
-    <p>2020-12-08 16:03 </p>
+    <p>2020-12-08 22:12 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
