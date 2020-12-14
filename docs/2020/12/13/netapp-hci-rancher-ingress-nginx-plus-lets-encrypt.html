@@ -95,12 +95,12 @@
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>14 Dec 2020</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>13 Dec 2020</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    16 minute read
+    17 minute read
   
 
     </span>
@@ -108,7 +108,7 @@
   
         <ul>
   <li><a href="#tldr">tl;dr</a></li>
-  <li><a href="#introduction-and-requirements">Introduction and Requirements</a></li>
+  <li><a href="#introduction-and-requirements">Introduction and requirements</a></li>
   <li><a href="#resources">Resources</a></li>
   <li><a href="#deploy-linux-vm-and-n">Deploy Linux VM and N+</a></li>
   <li><a href="#create-dns-entries-get-tls-certificates-configure-nginx">Create DNS entries, get TLS certificates, configure NGINX</a>
@@ -121,7 +121,7 @@
     <ul>
       <li><a href="#configure-n">Configure N+</a>
         <ul>
-          <li><a href="#upstream-rancher-servers-on-different-network">Upstream (Rancher servers) on Different Network</a></li>
+          <li><a href="#upstream-rancher-servers-on-different-network">Upstream (Rancher) servers on different network</a></li>
         </ul>
       </li>
     </ul>
@@ -135,7 +135,9 @@
 
 <p>Start with <a href="https://rancher.com/docs/rancher/v2.x/en/installation/resources/advanced/single-node-install-external-lb/">this</a> NGINX config file.</p>
 
-<h2 id="introduction-and-requirements">Introduction and Requirements</h2>
+<p>Read the below or search the Internet if you can’t get it to work.</p>
+
+<h2 id="introduction-and-requirements">Introduction and requirements</h2>
 
 <p>NetApp HCI users who run Rancher may need to expose K8s service or even their management plane to the Internet.</p>
 
@@ -152,9 +154,9 @@
 
 <ul>
   <li>Because this is a publicly available service, we want enhanced security and enterprise support so we use <a href="https://www.nginx.com/products/nginx/">F5 NGINX Plus</a> (aka “N+”) and <a href="https://www.nginx.com/products/nginx-app-protect/">NGINX AppProtect</a></li>
-  <li>N+ terminates TLS on port 443 (example: rancher.doma.in:443) and proxies requsts to Rancher servers’s port 443. External incoming HTTP requests to N+ are simply forwarded to port 443 to have external traffic encrypted. Internally, N+ to Rancher still uses self-signed TLS certificates based on default Rancher setup (and self-created CA), so while not ideal (something for another blog post), this is considered acceptable prior to onboarding critical production services.</li>
+  <li>N+ terminates TLS on port 443 (example: <code class="language-plaintext highlighter-rouge">rancher.doma.in:443</code>) and proxies requsts to Rancher servers’s port 443. External incoming HTTP requests to N+ are simply forwarded to port 443 to have external traffic encrypted. Internally, N+ to Rancher still uses self-signed TLS certificates based on default Rancher setup (and self-signed CA), so while not ideal (something for another blog post), that will have to suffice for now.</li>
   <li>VMware HA is chosen to provide High Availability for N+. We could set up a pair of VMs and use <a href="https://www.nginx.com/products/nginx/high-availability">NGINX High Availability</a> with <a href="https://docs.nginx.com/nginx/admin-guide/high-availability/ha-keepalived/">keepalived</a>, but considering our bandwidth and uptime requirements that is not necessary and can be done at a later time should our uptime or performance requirements change. (A single mid-sized VM instance (8 vCPUs) can foward-proxy HTTPS at a rate way higher than Internet-facing bandwidth most small and medium enterprises have at their disposal and estimated availability of VMware HA meets our current requirements)</li>
-  <li>We have the option to use a wildcard certificate (*.rancher.doma.in) or create several subdomains (rancher.doma.in, cluster[01-05].doma.in). Note that this is where things can get complicated, depending on your situation with regards to DNS service you use, number of External IP addresses, CA issuance and so on. When we plan for this we should also consider how many Internet-facing services from user clusters we plan to deploy and what kind of degree of isolation (i.e. how many clusters, IPs, domain names) will be required.</li>
+  <li>We have the option to use a wildcard certificate (<code class="language-plaintext highlighter-rouge">*.rancher.doma.in</code>) or create several subdomains (<code class="language-plaintext highlighter-rouge">rancher.doma.in</code>, <code class="language-plaintext highlighter-rouge">cluster[01-05].doma.in</code>). Note that this is where things can get complicated, depending on your situation with regards to DNS service you use, number of External IP addresses, CA issuance and so on. When we plan for this we should also consider how many Internet-facing services from user clusters we plan to deploy and what kind of degree of isolation (i.e. how many clusters, IPs, domain names) will be required.</li>
 </ul>
 
 <h2 id="resources">Resources</h2>
@@ -349,13 +351,13 @@ http {
 }
 </code></pre>
 
-<p>I deliberately left out the details of SSL and Reverse Proxy (from N+ VM to Rancher servers) configuration. The reason is options appear and disappear from N+ depending on what’s considered secure (e.g. today that’s TLSv1.3) and what OpenSSL or some other library, software or service involved supports at given moment. There are too many useless or outdated nginx.conf examples on the Web already - we don’t want to contribute to that mess.</p>
+<p>I deliberately left out the details of SSL and Reverse Proxy (from N+ VM to Rancher servers) configuration. The reason is options appear and disappear from N+ depending on what’s considered secure (e.g. today we’d avoid TLSv1.1 unless we had no choice) and what OpenSSL or some other library, software or service present on your system supports. There are already too many useless or outdated nginx.conf examples on the Web and I don’t want to contribute to that mess - I’d rather have us contribute to Rancher documentation.</p>
 
-<p>Instead, we should start with the example provided by Rancher in their documentation (link at the top) and then look at the N+ documentation for the version you use to see if any option has been deprecated or removed.</p>
+<p>Instead, we should start with the example provided by Rancher (link at the top) and then look at the N+ documentation for the version of N+/NGINX we have to check whether they apply and what values can be used.</p>
 
-<p>The official N+ documentation can be found <a href="https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/">here</a>. If you find a problem, check in the Rancher 2.x or NGINX community (or contact NGINX support, if you use N+.)</p>
+<p>The official N+ documentation can be found <a href="https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/">here</a>. If you have problems setting things up check in the Rancher 2.x or NGINX community (or contact NGINX support, if you use N+.)</p>
 
-<p>Add Let’s Encrypt (or other) certificates to your NGINX VM by copying them to a location such as <code class="language-plaintext highlighter-rouge">/etc/ssl/certs/rancher.doma.in/</code>, secure the permissions (NGINX user must be able to read them), edit the NGINX config file so that the HTTP(S) server section used to proxy requests Rancher servers makes use of these certificates (other services may use other certificates).</p>
+<p>Add Let’s Encrypt (or other) certificates to your NGINX VM by copying them to a location such as <code class="language-plaintext highlighter-rouge">/etc/ssl/certs/rancher.doma.in/</code>, secure the permissions (NGINX service user must be able to read them), edit the NGINX config file so that the HTTP(S) server section used to proxy requests Rancher servers makes use of these certificates (other services may use other certificates).</p>
 
 <pre><code class="language-raw">ssl_trusted_certificate /etc/ssl/certs/rancher.doma.in/fullchain.crt;
 ssl_certificate         /etc/ssl/certs/rancher.doma.in/server.crt;
@@ -414,7 +416,7 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
 
 <p><img src="/assets/images/nginx-lets-encrypt-certificate.png" alt="Rancher behind NGINX Plus L7 TLS-Terminating Proxy" /></p>
 
-<h4 id="upstream-rancher-servers-on-different-network">Upstream (Rancher servers) on Different Network</h4>
+<h4 id="upstream-rancher-servers-on-different-network">Upstream (Rancher) servers on different network</h4>
 
 <p>Earlier I mentioned how I would make use of the second interface in my N+ VM, if upstream servers were on another network.</p>
 
@@ -427,7 +429,7 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
 }
 </code></pre>
 
-<p>See the NGINX documentation for more.</p>
+<p>Read about these options in the the NGINX documentation if you need to do this.</p>
 
 <h2 id="use-n-to-reverse-proxy-multiple-rancher-clusters-or-services">Use N+ to reverse-proxy multiple Rancher clusters or services</h2>
 
@@ -435,7 +437,7 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
 
 <p>Ideally you’d have multiple addresses and different TLS certificates, but workarounds may be possible too: use different IP address for each cluster, use same IPv4 address but different port for each cluster, or run N+ in nearby Public Cloud and forward requests to your on-premises Rancher through VPN.)</p>
 
-<p>Of course we should get familiar with K8s networking and security before doing this.</p>
+<p>Of course we should get familiar with K8s networking and security before doing this. Believe it or not, it’s complicated…</p>
 
 <h2 id="use-n-to-reverse-proxy-other-api-or-service-endpoints">Use N+ to reverse-proxy other API or service endpoints</h2>
 
@@ -453,7 +455,7 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
 
 <p><img src="/assets/images/nginx-api-gateway-dashboard-internal.png" alt="Internal API endpoint exposed via HTTP behind NGINX Plus" /></p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  server {
+<pre><code class="language-raw">  server {
     listen 8080;
     location /api {
       api write=off;
@@ -465,7 +467,7 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
       return 301 /dashboard.html;
     }
   }
-</code></pre></div></div>
+</code></pre>
 
 <p>Write-enabled API access should be exposed only via trusted HTTPS or via <code class="language-plaintext highlighter-rouge">localhost</code> (CI/CD scenario where N+ configuration is deployed via SSH and then applied over the loopback interface.)</p>
 
@@ -522,6 +524,12 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
         
     
         
+          <div class = "related-posts">
+          <h5><a href="/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html">• Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt</a></h5>
+          </div>
+          
+          
+        
     
       
     
@@ -530,12 +538,6 @@ ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
     
         
     
-        
-          <div class = "related-posts">
-          <h5><a href="/2020/12/13/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html">• Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt</a></h5>
-          </div>
-          
-          
         
     
       
