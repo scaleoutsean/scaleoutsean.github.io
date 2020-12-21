@@ -1,0 +1,406 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:20">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:20">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:20">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Protect your Kubernetes applications and data with Kasten and SolidFire | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     How Kasten leverages Netapp Trident to manage data protection on NetApp HCI and SolidFire
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Protect your Kubernetes applications and data with Kasten and SolidFire</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Dec 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>Rancher and other Kubernetes users want to protect their applications and data. NetApp HCI and its underlying SolidFire storage are used by NetApp Trident to provide a CSI-compatible API to Kubernetes-based orchestrators.</p>
+
+<p>NetApp Trident lets Kuberntes users take snapshots and import existing volumes to Kubernetes.</p>
+
+<p>Kubernetes <a href="https://github.com/kubernetes-csi/external-snapshotter">external snapshotter</a> “watches Kubernetes Snapshot CRD objects and triggers CreateSnapshot/DeleteSnapshot against a CSI endpoint” (such as NetApp Trident.)</p>
+
+<p>In the case of the snapshot feature, Kubernetes v1.20 would need a VolumeSnapshotClass such as this one:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshotClass</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">csi-trident</span>
+<span class="na">driver</span><span class="pi">:</span> <span class="s">csi.trident.netapp.io</span>
+<span class="na">deletionPolicy</span><span class="pi">:</span> <span class="s">Delete</span>
+</code></pre></div></div>
+
+<p>We could use it to take a snapshot of PVC <code class="language-plaintext highlighter-rouge">db01</code> (again, using API v1 for K8s v1.20):</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshot</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">db01-snap01</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">volumeSnapshotClassName</span><span class="pi">:</span> <span class="s">csi-trident</span>
+  <span class="na">source</span><span class="pi">:</span>
+    <span class="na">persistentVolumeClaimName</span><span class="pi">:</span> <span class="s">db01</span>
+</code></pre></div></div>
+
+<p>SolidFire snapshots are read-only. We can use them two ways:</p>
+
+<ul>
+  <li>Restore a volume from a snapshot - mainly for dealing with unplanned screw-ups</li>
+  <li>Clone a volume from a snapshot - useful for DevTest, application patching and backups. Say you want to test a new application patch: make a clone from a snapshot or clone a volume (which uses snapshots on the fly) and give it a try in a test environment.</li>
+</ul>
+
+<p>In a Kubernetes environment, you’d spin a new volume from a snapshot <code class="language-plaintext highlighter-rouge">db01-snap01</code> like this:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">db01-clone-from-db01-snap01</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">solidfire-bronze</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">3Gi</span>
+  <span class="na">dataSource</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">db01-snap01</span>
+    <span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshot</span>
+    <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io</span>
+</code></pre></div></div>
+
+<p>Trident can import such volumes, as long as SolidFire Volume Name is unique (so rename the volume when making a clone). For example a <code class="language-plaintext highlighter-rouge">db01</code> replica clone on DR site could be imported to Trident like so:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tridentctl import volume <span class="k">${</span><span class="nv">SOLIDFIRE</span><span class="p">-BACK-END</span><span class="k">}</span> <span class="nt">-f</span> db01-dr.yaml
+</code></pre></div></div>
+
+<p>Where <code class="language-plaintext highlighter-rouge">db01-dr.yaml</code> is:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">db01-dr</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">dbaas</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">solidfire-silver</span>
+</code></pre></div></div>
+
+<p>If we wanted to fail-over Rancher-on-NetApp HCI from Site A to Site B:</p>
+
+<ul>
+  <li>We’d replicate data from NetApp HCI storage on Site A to NetApp HCI storage on Site B</li>
+  <li>In the case of site failure, we would make NetApp HCI on Site B active, create clones from storage snapshots and import them as explained above</li>
+</ul>
+
+<p>While this all works, sometimes you just want an application to take care of that for you. Kasten makes use of CSI and other features to manage Kubernetes application and data protection.</p>
+
+<p>Kasten supports NetApp Trident but thanks to the many moving parts in Kubernetes it can be tricky to get everything to work together. First make sure Trident snapshots to work with SolidFire without Kasten, and then annotate the VolumeSnapshotClass from above to include the Kasten snapshot class annotation. With that you should be able to pass Kasten’s pre-flight check script.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshotClass</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">csi-trident</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="s">k10.kasten.io/is-snapshot-class</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+<span class="na">driver</span><span class="pi">:</span> <span class="s">csi.trident.netapp.io</span>
+<span class="na">deletionPolicy</span><span class="pi">:</span> <span class="s">Delete</span>
+</code></pre></div></div>
+
+<p>Then just follow the Kasten documentation <a href="https://docs.kasten.io/latest/install/storage.html">here</a>.</p>
+
+<p>Components I used:</p>
+
+<ul>
+  <li>Kubernetes v1.19.4 (Rancher 2.5.3)</li>
+  <li>NetApp Trident v20.10 with CSI external snapshotter v2.1 (old but still supported; v4 just came out)</li>
+  <li>SolidFire v12.2</li>
+  <li>Kasten 3.0.3</li>
+</ul>
+
+<p>I may be wrong about this, but it looks that - due to how Kubernetes CSI snapshots work (maybe other factors too) - one has to be careful about volume and snapshot sprawl.</p>
+
+<p>For example, if your application protection policy protects a database app with a PV <code class="language-plaintext highlighter-rouge">db01-32428</code> and that results in snapshots named db01-snap1, db01-snap2, db1-snap3, if you drop a wrong table and need to restore data from one of those snapshots:</p>
+
+<ul>
+  <li>Kasten uses that snapshot to create a new volume (e.g. <code class="language-plaintext highlighter-rouge">db01-738000</code>)</li>
+  <li>Kasten applies existing app protection policy to the new volume</li>
+</ul>
+
+<p>This means your <code class="language-plaintext highlighter-rouge">db01-32428</code> remains. Also its 3 snapshots. So now you have two db01 volumes, and each has 3 snapshots. After a failed restore (which was done deliberately), I ended up with 3 volumes (one original, one from a failed restore, and another from a successful restore, and - because they weren’t cleaned - three snapshots per each.)</p>
+
+<p><img src="/asssets/images/kasten-solidfire-snapshots.png" alt="Watch out for Snapshot Sprawl" /></p>
+
+<p>The Kasten documentation reminds to set a limit to the maximum number of snapshots per volume, but Kasten is shy about cleaning old snapshots that you may not need so the user should check the situation every now and then. To be fair to Kasten, I don’t know if they can know what should be cleaned and to what extent - you’d have the same problem without Kasten.</p>
+
+<p>In any case, if you spot too many old volumes and snapshots, you can remove them starting with Kasten application policies, followed by K8s/Trident snapshots, underlying PVs (remove PVCs first) and lastly with SolidFire.</p>
+
+<p><img src="/assets/images/kasten-rancher-pv.png" alt="Released PVs can probably be removed" /></p>
+
+<p>Apart from volume snapshots, Kasten can also take snapshots of applications and their settings. That doesn’t belong to storage provisioning, obviously, so Trident doesn’t attempt to do that.</p>
+
+<p>If you protect applications, their settings, and Trident data, you can export such “bundles” to outside of the cluster or to another location (such as the proverbial “Site B”) to migrate or recover data and applications. Take a look at <a href="https://docs.kasten.io/latest/kanister/kanister.html">Kanister</a> to find out more. I didn’t have sufficient resources to try those advanced features but they’re surely going to be interesting to many users.</p>
+
+<p>NetApp HCI users interested in evaluating “Rancher on NetApp HCI” may also be interested in protecting that data with the <a href="https://www.kasten.io/try-kasten-k10">free Kasten K10</a>. That will work - currently you can evaluate Rancher and use Kasten K10 to protect up to 10 Rancher nodes at no cost.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html">• Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/20/rancher-and-drs.html">• Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2020-12-21 19:22 </p>
+    <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
