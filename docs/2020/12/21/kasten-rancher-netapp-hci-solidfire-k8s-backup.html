@@ -100,7 +100,7 @@
 
   
   
-    4 minute read
+    6 minute read
   
 
     </span>
@@ -108,11 +108,13 @@
   
         <p>Rancher and other Kubernetes users want to protect their applications and data. NetApp HCI and its underlying SolidFire storage are used by NetApp Trident to provide a CSI-compatible API to Kubernetes-based orchestrators.</p>
 
-<p>NetApp Trident lets Kuberntes users take snapshots and import existing volumes to Kubernetes.</p>
+<h2 id="kubernetes-csi-snapshots">Kubernetes CSI Snapshots</h2>
 
-<p>Kubernetes <a href="https://github.com/kubernetes-csi/external-snapshotter">external snapshotter</a> “watches Kubernetes Snapshot CRD objects and triggers CreateSnapshot/DeleteSnapshot against a CSI endpoint” (such as NetApp Trident.)</p>
+<p>NetApp Trident lets Kuberntes users take snapshots and import existing volumes to Kubernetes. In order to not wipe the snapshots together with deleted parent volumes, we set Storage Classes that will support snapshot to <code class="language-plaintext highlighter-rouge">ReclaimPolicy</code> to <code class="language-plaintext highlighter-rouge">Retain</code>. Snapshots themselves do have the policy set to <code class="language-plaintext highlighter-rouge">Delete</code> because we do want them to be deleted on reclaim (so that we avoid hitting the SolidFire limit of 32 per volume, and just lessen the sprawl in any case).</p>
 
-<p>In the case of the snapshot feature, Kubernetes v1.20 would need a VolumeSnapshotClass such as this one:</p>
+<p>Kubernetes <a href="https://github.com/kubernetes-csi/external-snapshotter">external snapshotter</a> “<em>watches Kubernetes Snapshot CRD objects and triggers CreateSnapshot/DeleteSnapshot against a CSI endpoint</em>” (such as NetApp Trident.)</p>
+
+<p>In the case of the snapshot feature, Kubernetes v1.20 we’d need a VolumeSnapshotClass such as this one:</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
 <span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshotClass</span>
@@ -133,6 +135,8 @@
   <span class="na">source</span><span class="pi">:</span>
     <span class="na">persistentVolumeClaimName</span><span class="pi">:</span> <span class="s">db01</span>
 </code></pre></div></div>
+
+<p>(Trident doesn’t support it yet, but K8s v1.20 just came out and Trident will support it in next release; check the Trident docs for older releases(https://netapp-trident.readthedocs.io/)</p>
 
 <p>SolidFire snapshots are read-only. We can use them two ways:</p>
 
@@ -182,35 +186,32 @@
 
 <ul>
   <li>We’d replicate data from NetApp HCI storage on Site A to NetApp HCI storage on Site B</li>
-  <li>In the case of site failure, we would make NetApp HCI on Site B active, create clones from storage snapshots and import them as explained above</li>
+  <li>In the case of a site failure, we would make NetApp HCI (and SolidFire) on Site B active (meaning stop replication and convert SolidFire volumes from ReplicationTarget to Read/Write), use SolidFire UI, CLI or API to create clones from storage snapshots, and finally on K8s workers do a rescan, and use Trident to import them as explained above</li>
 </ul>
 
-<p>While this all works, sometimes you just want an application to take care of that for you. Kasten makes use of CSI and other features to manage Kubernetes application and data protection.</p>
+<h2 id="kasten-k10--csi-snapshots-with-netapp-trident">Kasten K10 + CSI Snapshots with NetApp Trident</h2>
 
-<p>Kasten supports NetApp Trident but thanks to the many moving parts in Kubernetes it can be tricky to get everything to work together. First make sure Trident snapshots to work with SolidFire without Kasten, and then annotate the VolumeSnapshotClass from above to include the Kasten snapshot class annotation. With that you should be able to pass Kasten’s pre-flight check script.</p>
+<p>While this all works, sometimes you just want an nice application to take care of that for you. We can script our own VMware site failover, but we rarely do - we buy Cleondris HCC or VMware SRM for that.</p>
+
+<p>Likewise, most will want to leave backup and recovery of Rancher-on-NetApp HCI data to Veeam and Kasten - the latter makes use of CSI and other features to manage application and data protection in Kubernetes environments. (Scale-out backup of a NetApp HCI VMware environment with Veeam can be seen <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">here</a>.)</p>
+
+<p>Kasten supports NetApp Trident but thanks to the many moving parts in Kubernetes it can be tricky to get everything to work together.</p>
+
+<p>First make sure Trident snapshots to work with SolidFire <em>without</em> Kasten (read the Trident documentation for that), and then annotate the Trident VolumeSnapshotClass to include the Kasten snapshot class annotation. With that you should be able to pass Kasten’s pre-flight check script and deploy Kasten using Helm.</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
 <span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshotClass</span>
 <span class="na">metadata</span><span class="pi">:</span>
   <span class="na">name</span><span class="pi">:</span> <span class="s">csi-trident</span>
   <span class="na">annotations</span><span class="pi">:</span>
-    <span class="s">k10.kasten.io/is-snapshot-class</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+    <span class="s">k10.kasten.io/is-snapshot-class</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span> <span class="c1"># K10 annotation</span>
 <span class="na">driver</span><span class="pi">:</span> <span class="s">csi.trident.netapp.io</span>
 <span class="na">deletionPolicy</span><span class="pi">:</span> <span class="s">Delete</span>
 </code></pre></div></div>
 
 <p>Then just follow the Kasten documentation <a href="https://docs.kasten.io/latest/install/storage.html">here</a>.</p>
 
-<p>Components I used:</p>
-
-<ul>
-  <li>Kubernetes v1.19.4 (Rancher 2.5.3)</li>
-  <li>NetApp Trident v20.10 with CSI external snapshotter v2.1 (old but still supported; v4 just came out)</li>
-  <li>SolidFire v12.2</li>
-  <li>Kasten 3.0.3</li>
-</ul>
-
-<p>I may be wrong about this, but it looks that - due to how Kubernetes CSI snapshots work (maybe other factors too) - one has to be careful about volume and snapshot sprawl.</p>
+<p>I may be wrong about this, but it looks that - thanks to how Kubernetes CSI snapshots work (maybe other factors too) - one has to be careful about volume and snapshot sprawl.</p>
 
 <p>For example, if your application protection policy protects a database app with a PV <code class="language-plaintext highlighter-rouge">db01-32428</code> and that results in snapshots named db01-snap1, db01-snap2, db1-snap3, if you drop a wrong table and need to restore data from one of those snapshots:</p>
 
@@ -219,21 +220,46 @@
   <li>Kasten applies existing app protection policy to the new volume</li>
 </ul>
 
-<p>This means your <code class="language-plaintext highlighter-rouge">db01-32428</code> remains. Also its 3 snapshots. So now you have two db01 volumes, and each has 3 snapshots. After a failed restore (which was done deliberately), I ended up with 3 volumes (one original, one from a failed restore, and another from a successful restore, and - because they weren’t cleaned - three snapshots per each.)</p>
+<p>This means your <code class="language-plaintext highlighter-rouge">db01-32428</code> remains. Also its 3 snapshots. So now you have two db01 volumes, and each has three snapshots.</p>
 
-<p><img src="/asssets/images/kasten-solidfire-snapshots.png" alt="Watch out for Snapshot Sprawl" /></p>
+<p>After a failed restore (due to my deliberate mistake), I ended up with three volumes (one original, one from a failed restore, and another from a successful restore), and - because they weren’t cleaned - three snapshots per each of those volumes.)</p>
 
-<p>The Kasten documentation reminds to set a limit to the maximum number of snapshots per volume, but Kasten is shy about cleaning old snapshots that you may not need so the user should check the situation every now and then. To be fair to Kasten, I don’t know if they can know what should be cleaned and to what extent - you’d have the same problem without Kasten.</p>
-
-<p>In any case, if you spot too many old volumes and snapshots, you can remove them starting with Kasten application policies, followed by K8s/Trident snapshots, underlying PVs (remove PVCs first) and lastly with SolidFire.</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">cf0</code>: original volume</li>
+  <li><code class="language-plaintext highlighter-rouge">4ea</code>: (deliberately) failed restore attempt from a <code class="language-plaintext highlighter-rouge">cf0</code> snapshot</li>
+  <li><code class="language-plaintext highlighter-rouge">a05</code>: successful restore attempt from a <code class="language-plaintext highlighter-rouge">cf0</code> snapshot</li>
+</ul>
 
 <p><img src="/assets/images/kasten-rancher-pv.png" alt="Released PVs can probably be removed" /></p>
 
+<p>The Kasten documentation reminds to set a limit to the maximum number of snapshots per volume, but Kasten doesn’t seem to have the ability to tell what should be deleted and just remove those snapshots. To be fair to Kasten, it doesn’t seem obvious how they could know what should be cleaned- you’d probably have the same problem without Kasten.</p>
+
+<p>In any case, if you spot too many old volumes and snapshots (screenshot below), you can remove them starting with Kasten application policies (first expire the snapshots there), followed by K8s/Trident snapshots, underlying PVs (remove PVCs first) and finally SolidFire. If you reverse this order you could end up with a mess.</p>
+
+<p><img src="/assets/images/kasten-solidfire-snapshots.png" alt="Watch out for Snapshot Sprawl" /></p>
+
+<p>It’s not a big problem if you don’t have hundreds of protected apps, but if you do, you’d have to pay attention and plan carefully.</p>
+
 <p>Apart from volume snapshots, Kasten can also take snapshots of applications and their settings. That doesn’t belong to storage provisioning, obviously, so Trident doesn’t attempt to do that.</p>
+
+<h3 id="demo">Demo</h3>
+
+<p>I recorded <a href="https://www.youtube.com/watch?v=zZzWjENgB0g">a video</a> of the process of protecting an app, its settings and data using Kasten K10, Rancher and SolidFire. It’s fairly short (5 minutes), so if you’re a visual person give it a quick look. Components I used:</p>
+
+<ul>
+  <li>Kubernetes v1.19.4 user cluster (Rancher 2.5.3)</li>
+  <li>NetApp Trident v20.10 with CSI external snapshotter v2.1 (old, but still supported; v4 just came out)</li>
+  <li>SolidFire v12.2</li>
+  <li>Kasten K10 3.0.3</li>
+</ul>
 
 <p>If you protect applications, their settings, and Trident data, you can export such “bundles” to outside of the cluster or to another location (such as the proverbial “Site B”) to migrate or recover data and applications. Take a look at <a href="https://docs.kasten.io/latest/kanister/kanister.html">Kanister</a> to find out more. I didn’t have sufficient resources to try those advanced features but they’re surely going to be interesting to many users.</p>
 
-<p>NetApp HCI users interested in evaluating “Rancher on NetApp HCI” may also be interested in protecting that data with the <a href="https://www.kasten.io/try-kasten-k10">free Kasten K10</a>. That will work - currently you can evaluate Rancher and use Kasten K10 to protect up to 10 Rancher nodes at no cost.</p>
+<h2 id="protect-rancher-on-netapp-hci-with-kasten">Protect Rancher on NetApp HCI with Kasten</h2>
+
+<p>NetApp HCI users interested in evaluating “Rancher on NetApp HCI” may also be interested in protecting that data with the <a href="https://www.kasten.io/try-kasten-k10">free Kasten K10</a>.</p>
+
+<p>That will work - as things stand right now, you can evaluate Rancher on NetApp HCI and use Kasten K10 to protect up to 10 Rancher nodes at no cost. You can buy support/subscription any time you like.</p>
 
       </article>
     </div>
@@ -395,7 +421,7 @@
 
     
   </div><footer class= "footer">
-    <p>2020-12-21 19:22 </p>
+    <p>2020-12-21 21:11 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
