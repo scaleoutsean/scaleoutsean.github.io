@@ -100,7 +100,7 @@
 
   
   
-    6 minute read
+    7 minute read
   
 
     </span>
@@ -114,7 +114,7 @@
 
 <p>Kubernetes <a href="https://github.com/kubernetes-csi/external-snapshotter">external snapshotter</a> “<em>watches Kubernetes Snapshot CRD objects and triggers CreateSnapshot/DeleteSnapshot against a CSI endpoint</em>” (such as NetApp Trident.)</p>
 
-<p>In the case of the snapshot feature, Kubernetes v1.20 we’d need a VolumeSnapshotClass such as this one:</p>
+<p>In the case of the snapshot feature, Kubernetes v1.20 would need a VolumeSnapshotClass such as this one:</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
 <span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshotClass</span>
@@ -136,7 +136,7 @@
     <span class="na">persistentVolumeClaimName</span><span class="pi">:</span> <span class="s">db01</span>
 </code></pre></div></div>
 
-<p>(Trident doesn’t support it yet, but K8s v1.20 just came out and Trident will support it in next release; check the Trident docs for older releases(https://netapp-trident.readthedocs.io/)</p>
+<p>NetApp Trident v20.10 doesn’t support Kubernetes v.1.20, but K8s v1.20 just came out and Trident will support it in next release. Check <a href="https://netapp-trident.readthedocs.io/">the Trident documentation site</a> for YAML files suitable for pre-v1.20 snapshots APIs.</p>
 
 <p>SolidFire snapshots are read-only. We can use them two ways:</p>
 
@@ -164,7 +164,9 @@
     <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io</span>
 </code></pre></div></div>
 
-<p>Trident can import such volumes, as long as SolidFire Volume Name is unique (so rename the volume when making a clone). For example a <code class="language-plaintext highlighter-rouge">db01</code> replica clone on DR site could be imported to Trident like so:</p>
+<p>Trident can import such volumes as long as SolidFire Volume Name is unique (so rename the volume when making a clone).</p>
+
+<p>For example a <code class="language-plaintext highlighter-rouge">db01</code> replica clone on DR site could be imported to Trident like so:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tridentctl import volume <span class="k">${</span><span class="nv">SOLIDFIRE</span><span class="p">-BACK-END</span><span class="k">}</span> <span class="nt">-f</span> db01-dr.yaml
 </code></pre></div></div>
@@ -189,11 +191,13 @@
   <li>In the case of a site failure, we would make NetApp HCI (and SolidFire) on Site B active (meaning stop replication and convert SolidFire volumes from ReplicationTarget to Read/Write), use SolidFire UI, CLI or API to create clones from storage snapshots, and finally on K8s workers do a rescan, and use Trident to import them as explained above</li>
 </ul>
 
+<p>This isn’t very hard to automate either.</p>
+
 <h2 id="kasten-k10--csi-snapshots-with-netapp-trident">Kasten K10 + CSI Snapshots with NetApp Trident</h2>
 
-<p>While this all works, sometimes you just want an nice application to take care of that for you. We can script our own VMware site failover, but we rarely do - we buy Cleondris HCC or VMware SRM for that.</p>
+<p>While the above all works, sometimes you just want an nice application to take care of all that for you. Or there’s a backup guy who takes care of 10 different environments and can’t deep dive into the subtleties of each.</p>
 
-<p>Likewise, most will want to leave backup and recovery of Rancher-on-NetApp HCI data to Veeam and Kasten - the latter makes use of CSI and other features to manage application and data protection in Kubernetes environments. (Scale-out backup of a NetApp HCI VMware environment with Veeam can be seen <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">here</a>.)</p>
+<p>We can script our own VMware site failover, but we rarely do - we buy Cleondris HCC or VMware SRM for that. Likewise, most will want to leave backup and recovery of Rancher-on-NetApp HCI data to Veeam and Kasten - the latter makes use of CSI and other features to manage application and data protection in Kubernetes environments. (Veeam is already frequently used to protect VMware with NetAPp HCI; a demo of scale-out backup of a NetApp HCI VMware environment with Veeam can be seen <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">here</a>.)</p>
 
 <p>Kasten supports NetApp Trident but thanks to the many moving parts in Kubernetes it can be tricky to get everything to work together.</p>
 
@@ -211,16 +215,18 @@
 
 <p>Then just follow the Kasten documentation <a href="https://docs.kasten.io/latest/install/storage.html">here</a>.</p>
 
-<p>I may be wrong about this, but it looks that - thanks to how Kubernetes CSI snapshots work (maybe other factors too) - one has to be careful about volume and snapshot sprawl.</p>
+<h3 id="things-to-watch-out-for">Things to watch out for</h3>
 
-<p>For example, if your application protection policy protects a database app with a PV <code class="language-plaintext highlighter-rouge">db01-32428</code> and that results in snapshots named db01-snap1, db01-snap2, db1-snap3, if you drop a wrong table and need to restore data from one of those snapshots:</p>
+<p>I may be wrong about this but it seems that - thanks to how Kubernetes CSI snapshots work (maybe there are other factors too) - one has to be careful about volume and snapshot sprawl.</p>
+
+<p>For example, if your application protection policy protects a database app with a PV <code class="language-plaintext highlighter-rouge">db01-32428</code> and a “take and keep three snapshots” policy results in snapshots named db01-snap1, db01-snap2, db1-snap3, if you drop a wrong table and need to restore data from one of those snapshots:</p>
 
 <ul>
   <li>Kasten uses that snapshot to create a new volume (e.g. <code class="language-plaintext highlighter-rouge">db01-738000</code>)</li>
-  <li>Kasten applies existing app protection policy to the new volume</li>
+  <li>Kasten applies existing app protection policy to bind to the new volume</li>
 </ul>
 
-<p>This means your <code class="language-plaintext highlighter-rouge">db01-32428</code> remains. Also its 3 snapshots. So now you have two db01 volumes, and each has three snapshots.</p>
+<p>This means your <code class="language-plaintext highlighter-rouge">db01-32428</code> remains. Also its three snapshots. While new snapshtos are being taken on <code class="language-plaintext highlighter-rouge">db01-738000</code> too. So now you have two db01 volumes, and each has three snapshots.</p>
 
 <p>After a failed restore (due to my deliberate mistake), I ended up with three volumes (one original, one from a failed restore, and another from a successful restore), and - because they weren’t cleaned - three snapshots per each of those volumes.)</p>
 
@@ -248,7 +254,7 @@
 
 <ul>
   <li>Kubernetes v1.19.4 user cluster (Rancher 2.5.3)</li>
-  <li>NetApp Trident v20.10 with CSI external snapshotter v2.1 (old, but still supported; v4 just came out)</li>
+  <li>NetApp Trident v20.10 with CSI external snapshotter v2.1 (old, but still supported; v3 is currently mainstream and v4 just came out earlier this week)</li>
   <li>SolidFire v12.2</li>
   <li>Kasten K10 3.0.3</li>
 </ul>
@@ -260,6 +266,7 @@
 <p>NetApp HCI users interested in evaluating “Rancher on NetApp HCI” may also be interested in protecting that data with the <a href="https://www.kasten.io/try-kasten-k10">free Kasten K10</a>.</p>
 
 <p>That will work - as things stand right now, you can evaluate Rancher on NetApp HCI and use Kasten K10 to protect up to 10 Rancher nodes at no cost. You can buy support/subscription any time you like.</p>
+
 
       </article>
     </div>
@@ -421,7 +428,7 @@
 
     
   </div><footer class= "footer">
-    <p>2020-12-21 21:11 </p>
+    <p>2020-12-22 13:17 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
