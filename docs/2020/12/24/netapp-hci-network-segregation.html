@@ -169,13 +169,13 @@
   <li>vSwitch2: 2 x 10/25 G - iSCSI (separated by VLANs, while Access Mode can be used, usually you want to use Trunk Mode so that you can have multiple VLANs for different clusters or hypervisors); SFP28</li>
 </ul>
 
-<p>VDS can make use of six network interfaces as well, but needs careful management. With VSS you kind of know “don’t touch vSwitch0” and you’ve sort of solved 90% of management networking issues.</p>
+<p>VDS can make use of six network interfaces as well, but needs careful management. With VSS, once you set it up, the rest is just “don’t touch vSwitch0 configuration”.</p>
 
-<p>VDS provides more features and is more efficient in how it uses uplinks, but also has better overall manageability. But if you want to easily separate all Management traffic and don’t need VDS features, VDS and 6 port configuration are quite decent.</p>
+<p>VDS provides more features and is more efficient in how it uses uplinks, but also has better overall manageability. But if you want to easily separate all Management traffic and don’t need VDS features, VDS and 6 port configuration provide physical and logical traffic segregation for Management networks.</p>
 
 <h3 id="what-else-is-the-6-cable-vss-config-good-for">What else is the 6-cable VSS config good for</h3>
 
-<p>As you can see above, VSS vSwitch0 uses 2 x 1/10 G NICs, which means you can connect them to a 10 GigE switch and get up to 2 GB/s of backup performance from them, while still leaving few hundred MB/s for the rest. Assuming you can use vSwitch0 for Backup (usually it’s Management Only), that is. A similar use case would be SnapMirror replication to ONTAP, if you don’t want to use other networks for that. The third in this category could be Fabric Pool tiering for ONTAP Select 9 on NetApp HCI.</p>
+<p>As you can see above, VSS vSwitch0 uses 2 x 1/10 G NICs, which means you can connect them to a 10 GigE switch and get up to 2 GB/s of backup performance from them, while still leaving few hundred MB/s for the rest. Assuming you can use vSwitch0 for Backup (usually it’s used only for Management traffic), that is. A similar use case would be SolidFire SnapMirror replication to ONTAP, if you don’t want to, or cannot, use other networks for that. The third in this category could be Fabric Pool tiering from ONTAP Select 9 on NetApp HCI (that VLAN would connect to Public Cloud VPN Gateway, or on-premises StorageGRID load balancers which could serve FabricPool users on dedicated VLAN).</p>
 
 <p>You can also use VSS for Kubernetes on VMware-based NetApp HCI; Rancher on NetApp HCI supports vSphere Standard Edition (and VSS), you just need to make sure all ESXi hosts you deploy Rancher VMs to have symmetric network configuration (which is why VDS is good, as it makes that happen for you.) The other two Kubernetes-on-VMware solutions (Google Athos and Red Hat OpenShift) are designed for VDS as most enterprise users do not use VDS.</p>
 
@@ -212,10 +212,10 @@
   <li>Operations Team has a jump/bastion VM or physical node which runs signed Microsoft PowerShell, Ansible Tower, HashiCorp Terraform and other automation</li>
   <li>Operations Team needs to gather logs from SolidFire and mNode, so these need to be able to send logs to a syslog server (which those can forward upstream)</li>
   <li>Cross-Availability Zone communication between SolidFire clusters, or SolidFire and ONTAP (with SnapMirror) for storage replication - the APIs need to talk to each other (data traffic goes via other links)</li>
-  <li>mNode needs access to SolidFire MVIP to manage SolidFire storage, perform storage node and storage OS updates, gather system and hardware logs and performance data and send it to NetApp ActiveIQ (if enabled; it’s optional to enable unless you use Term Capacity Licensing (a new SolidFire licensing model, similar to old SolidFire Software Capacity Licensing)</li>
+  <li>mNode needs access to SolidFire MVIP to manage SolidFire storage, perform storage node and storage OS updates, gather system and hardware logs and performance data and send it to NetApp ActiveIQ (if enabled; it’s optional to enable unless you use Term Capacity Licensing - that’s a new NetApp HCI and SolidFire storage licensing model, similar to old SolidFire Software Capacity Licensing, by the way)</li>
 </ul>
 
-<p>There’s probably more but this, I think, illustrates the point: sooner or later someone out there will ask for something that can’t be done because your network configuration is too open or too closed, and you or they will have to reconfigure. It’s probably better to consider these scenarios and accommodate them before they happen - don’t use whatever is easiest to get by just to save 10 minutes of planning.</p>
+<p>There’s probably more but this, I think, illustrates the point: sooner or later someone out there will ask for something that can’t be done because your network configuration is too open or too closed, and you or they will have to reconfigure. It’s probably better to consider these scenarios and accommodate them before they happen - don’t use whatever is easiest to get by just to save 10 minutes of planning time.</p>
 
 <p>What if you need to change your configuration in a major way? Well, at least your data is outside of your compute nodes. If you have four or more compute nodes in one vCenter cluster, you may be able to take 2 out, stand up a new cluster and move the workloads by re-assigning SolidFire volumes to the new cluster (set up a new vCenter accounts, VAG, (re)move the IQNs from old cluster’s VAG, etc.) A partial workaround might be to configure ACLs on network switch ports to limit access to certain IPs.</p>
 
@@ -385,7 +385,7 @@
 
     
   </div><footer class= "footer">
-    <p>2020-12-24 14:44 </p>
+    <p>2020-12-24 14:53 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
