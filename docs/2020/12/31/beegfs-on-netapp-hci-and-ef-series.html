@@ -1,0 +1,425 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:20">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:20">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:20">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Create scale-out storage clusters on your NetApp HCI compute stack
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>31 Dec 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#why-and-when-run-beegfs-in-netapp-hci-vms">Why and when run BeeGFS in NetApp HCI VMs</a></li>
+  <li><a href="#arent-shared-file-systems-complex-to-deploy-and-manage">Aren’t shared file systems complex to deploy and manage</a></li>
+  <li><a href="#how-do-automation-and-virtualization-help">How do automation and virtualization help</a></li>
+  <li><a href="#performance">Performance</a>
+    <ul>
+      <li><a href="#considerations">Considerations</a></li>
+    </ul>
+  </li>
+  <li><a href="#what-next">What next</a></li>
+  <li><a href="#references">References</a></li>
+</ul>
+
+<h2 id="summary">Summary</h2>
+
+<ul>
+  <li>If you need fast sequential access from NetApp HCI VMs to a shared data pool in a NetApp HCI environment, take a look at <a href="https://beegfs.io/">BeeGFS</a></li>
+  <li>BeegGFS data can reside on VMware Datastores or iSCSI Raw Devices provided by NetApp HCI or E/EF Series storages</li>
+  <li>Externally-attached E/EF Series iSCSI arrays are most suitable for high-throughput or large scale applications, especially those that have own efficiencies (compressed file formats)</li>
+</ul>
+
+<h2 id="why-and-when-run-beegfs-in-netapp-hci-vms">Why and when run BeeGFS in NetApp HCI VMs</h2>
+
+<p>Sometimes multiple VMs need to quickly access medium and large files. Examples:</p>
+
+<ul>
+  <li>Access one file from one or several VMs at over 1 GB/s (single file performance)</li>
+  <li>Access 10 files from 10 VMs at 10 GB/s (aggregate performance to one file or one filesystem)</li>
+</ul>
+
+<p>When you need this and don’t have complex data management requirements, take a look at BeeGFS.</p>
+
+<p>What kind of workloads are we talking about?</p>
+
+<p>Think video streaming or image processing, or technical computing with simple data management and loose filesystem compatibility requirements: generally you may have a copy of such data elsewhere (in an S3-based media archive, for example), and your applications don’t use fancy filesystem features or have specific support requirements (example: Oracle RAC).</p>
+
+<p>One popular example is AI/ML workloads that read or process videos and images. You can read about that application in [3] (see References). The BeeGFS/E-Series Solution Brief ([1], in References) has some other examples (keep in mind,however, that High Performance Computing workloads aren’t suitable for BeeGFS on NetApp HCI).</p>
+
+<h2 id="arent-shared-file-systems-complex-to-deploy-and-manage">Aren’t shared file systems complex to deploy and manage</h2>
+
+<p>That is the case with bare metal servers and physical networking used in HPC environments. For VM-based BeeGFS you still need skills, but:</p>
+
+<ul>
+  <li>There’s no hard-to-get hardware and you can test, prototype and deploy using existing skills</li>
+  <li>Automation and virtualization solve 80% of the problem: you can deploy BeeGFS in minutes (more on that later) and virtualization on NetApp creates predictability because your vSphere network layout and settings are fairly fixed (there are only three network layout options as of today with NetApp Deployment Engine 1.8P1, and all are plain TCP/IP on top of VSS or VDS networks)</li>
+  <li>If you need help with design, implementation and support, you can purchase BeeGFS implementation and support services from NetApp</li>
+</ul>
+
+<h2 id="how-do-automation-and-virtualization-help">How do automation and virtualization help</h2>
+
+<p>First, you create VM templates using any tool you like, from VMware or any other vendor or open source project. You can even create these manually. You can pre-install BeeGFS packages (free download) and use one “common” VM template for all types of BeeGFS nodes, or two (client/server), or even three templates (client, metadata servers, storage servers - yes, I’m using incorrect BeeGFS terminology).</p>
+
+<p>Then you deploy these VMs and configure them with freely available Ansible modules for BeeGFS, from community or NetApp (see [3] in References). This can be done in less than 10 minutes.</p>
+
+<p>This 90s (it will loop automatically, so don’t get stuck watching) animated GIF shows a deployment done with one client, one metadata and two storage nodes (c1, m1, s1, s2). We start at 10:16 and finish by 10:24.</p>
+
+<p><img src="/assets/images/beegfs-on-hci-with-e-series-ansible-vagrant.gif" alt="BeeGFS Deployment with Ansible on NetApp HCI with EF280" /></p>
+
+<p>I cheated (in terms of the speed of deployment) because EF280 storage was already presented to ESXi and Datastores created, but if you had E/EF Series storage for BeeGFS applications, you’d likely configure it once.</p>
+
+<p>Or, if you choose to use VMware Datastores (rather than iSCSI access to Raw Devices on E/EF Series or NetApp HCI storage), you could use PowerCLI or other tool to automate that as well - that wouldn’t add more than 60 seconds to this process.</p>
+
+<p>In the case you’re not familiar with BeeGFS, all the software used in my demo can be downloaded for free and without registration, so it’s very convenient to try. Before you download the software get familiar with the BeeGFS licenses and for production use consider getting proper support.</p>
+
+<h2 id="performance">Performance</h2>
+
+<p>I haven’t tried to “read 10 files from 10 VMs at 10 GB/s” because I don’t have access to that kind of hardware (10 GB/s), but I suspect that is possible. I did try to read one file at 1 GB/s, though.</p>
+
+<ul>
+  <li>1 BeeGFS client VM (used to run I/O)</li>
+  <li>1 BeeGFS metadata server VM (with 1 small VMDK-based volume for metadata)</li>
+  <li>2 BeeGFS storage nodes serving data (each had 2 VMDK-based volumes)</li>
+  <li>Hardware: 1 x ESXi 6.5U3 on H615C (Xeon Gold 6242) attached to 1 x EF280 via Fibre Channel SAN (both H410C and H615C models are sold only with 25G iSCSI, so server-side protocol support isn’t available as-tested - iSCSI is the only option)</li>
+</ul>
+
+<p>Client access was distributed across two storage nodes, each of which had two disks, which in effect striped client workload over four Datastores and four EF280 volumes.</p>
+
+<p>The first screenshot I captured shows storage-side throughput created by BeeGFS client.</p>
+
+<p><img src="/assets/images/beegfs-on-netapp-hci-ef280-1-client-perf-01.png" alt="" /></p>
+
+<p>That result is also reflected in <code class="language-plaintext highlighter-rouge">fio</code> output at the very top of the screenshot below, which I included for reference purpose while trying to keep image size small. This image includes per-volume performance that shows how client I/O is evenly distributed among all servers and volumes.</p>
+
+<p><img src="/assets/images/beegfs-on-netapp-hci-ef280-1-client-perf-02.png" alt="" /></p>
+
+<p>Storage latency remained low throughout, especially for reads (this is that moment where you squint to verify).</p>
+
+<p><img src="/assets/images/beegfs-on-netapp-hci-ef280-1-client-perf-03.png" alt="" /></p>
+
+<p>Based on DiskSpd tests I did in this same environment yesterday, I know that close to 1 GB/s per EF280 volume is possible, so I figure if I deployed nine BeeGFS VMs (4 clients, 4 storage servers, 1 MD server) and used 512kB request sizses, aggregate client throughput of 3-4 GB/s ought to be possible.</p>
+
+<p>If you’re not familiar with EF-Series, the EF280 is the smallest EF Series model. All of the models’ specifictions can be seen on the last page of <a href="https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf">this PDF</a>).</p>
+
+<h3 id="considerations">Considerations</h3>
+
+<p>You won’t get a good performance with MPI, shared-memory workloads with NetApp HCI-based BeeGFS because NetApp HCI uses TCP/IP networking. But non-parallel workloads that consume medium and large files should work similar to what I described above.</p>
+
+<p>Rapid access to a changing set of very small files or many KB-sized I/O requests probably wouldn’t work great without BeeGFS and VM tuning (or maybe even with) because of the relatively more (compared to a regular file server) network round-trips involved in each request.</p>
+
+<p>BeeGFS servers and clients rely on a properly functioning network. If you run BeeGFS on your NetApp HCI cluster, pay attention to network planning so that you do not impact other workloads or fail to provide sufficient performance to BeeGFS. When buying new switches for BeeGFS on NetApp HCI, get NVIDIA Mellanox SN2100 or SN2700 switches from NetApp and have it all delivered, deployed and tested together.</p>
+
+<h2 id="what-next">What next</h2>
+
+<p>If you have a virtualized workload that could potentially benefit from parallel access with BeeGFS, give BeeGFS and E/EF Series a try. NetApp HCI customers can evaluate BeeGFS with NetApp HCI (SolidFire) storage, and one BeeGFS cluster can be attached to multiple storage back-ends at the same time.</p>
+
+<p>You can start with a virtual BeeGFS cluster attached to NetApp HCI storage and later expand or even migrate some of that data to E/EF Series.</p>
+
+<p>E/EF Series storage does not provide storage efficiency and automation features of NetApp HCI (SolidFire), but is suitable for high-throughput and high-performance applications where $/MB/s or $/IOPS matter and files either large or already compressed.</p>
+
+<h2 id="references">References</h2>
+
+<p>[1] Solution brief: <a href="https://www.netapp.com/media/7461-sb-beegfs.pdf">NetApp E-Series Storage with BeeGFS</a></p>
+
+<p>[2] TR-4856, <a href="https://www.netapp.com/pdf.html?item=/media/19407-tr-4856-deploy.pdf">BeeGFS High Availability with NetApp E-Series Using Red Hat Enterprise Linux Server</a></p>
+
+<p>[3] TR-4785, <a href="https://www.netapp.com/media/17040-tr4785.pdf">AI Deployment with NetApp E-Series and BeeGFS</a></p>
+
+<p>[4] Ansible <a href="https://github.com/netappeseries/beegfs/">scripts</a> for automated deployment of BeeGFS with NetApp E/EF Series. For community scripts, see Ansible Galaxy</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">• Virtualized Splunk on NetApp HCI and EF Series iSCSI storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html">• DiskSpd performance from NetApp HCI VM to EF280</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/24/netapp-hci-network-segregation.html">• Adapter, network and VLAN isolation on NetApp HCI</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/20/rancher-and-drs.html">• Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2020-12-31 17:13 </p>
+    <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

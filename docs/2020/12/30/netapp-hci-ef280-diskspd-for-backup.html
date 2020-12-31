@@ -100,7 +100,7 @@
 
   
   
-    21 minute read
+    23 minute read
   
 
     </span>
@@ -108,13 +108,13 @@
   
         <ul>
   <li><a href="#summary">Summary</a></li>
-  <li><a href="#why-test-ef280-from-vm">Why test EF280 from VM</a>
+  <li><a href="#why-test-ef280-performance-from-a-vm">Why test EF280 performance from a VM</a>
     <ul>
       <li><a href="#vmfs-vs-raw-devices">VMFS vs. Raw Devices</a></li>
       <li><a href="#manageability-and-iscsi">Manageability and iSCSI</a></li>
     </ul>
   </li>
-  <li><a href="#cost-of-all-flash-backup-media">Cost of All Flash backup media</a></li>
+  <li><a href="#cost-of-an-all-flash-backup-tier">Cost of an All Flash backup tier</a></li>
   <li><a href="#reference">Reference</a></li>
   <li><a href="#appendix-configuration-and-diskspd-logs">Appendix: Configuration and DiskSpd logs</a>
     <ul>
@@ -128,34 +128,35 @@
 <h2 id="summary">Summary</h2>
 
 <ul>
-  <li>A VM running on NetApp HCI compute node can get about 1 GB/s throughput to/from a Datastore or Raw Devices on EF280, making it an effective primary backup storage</li>
+  <li>A VM running on NetApp HCI compute node can get about 1 GB/s sequential throughput to/from a Datastore or Raw Device on EF280, making it an effective primary backup storage target</li>
   <li>Per-filesystem (NTFS, ReFS) and per-workload performance can be doubled by striping across Datastores or Raw Devices</li>
+  <li>Users wishing even more performance can use RAID10 for selected disks (testing was done with RAID 6-like DDP)</li>
   <li>Aggregate backup and restore throughput can be increased by using multiple backup repositories (see my earlier <a href="https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html">post on iSCSI vs. FC</a> or NetApp EF-Series <a href="https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf">data sheet</a> to get an idea of potential upper limits) and multiple backup servers</li>
 </ul>
 
-<h2 id="why-test-ef280-from-vm">Why test EF280 from VM</h2>
+<h2 id="why-test-ef280-performance-from-a-vm">Why test EF280 performance from a VM</h2>
 
-<p>By simply reading the EF-Series data sheet we can tell the current lineup of all-flash models can deliver multiple GB/s. But what about VMware environments? What about performance levels we can expect from a <em>single</em> VM?</p>
+<p>By simply reading the EF-Series data sheet we can tell the current lineup of all-flash models can deliver multiple GB/s. But what about VMware environments? What about the performance we can expect from a <em>single</em> VM?</p>
 
-<p>Such information is hard to find and I get the feeling that nobody wants to tests that because you know you’ll probably get less than you get with a bare metal server (sometimes you can get more performance from virtualized workloads, but it’s very rare).</p>
+<p>Such information is hard to find and I get the feeling that nobody wants to tests that because you know you’ll probably get less than you get with a bare metal server (sometimes you can get more performance from a virtualized environment, but that is rare). So if I wanted to demonstrate storage performance, I wouldn’t test the performance of a single VM with modest CPU and RAM resources. The other reason may be that E/EF Series are quite usually used with workloads where performance is top priority, and that doesn’t mean Virtual Machines.</p>
 
-<p>I think there’s a lot of value in knowing how much you can get from a single VM because not everyone runs bare metal servers, or wants or needs to max out their storage. Sometimes people just want to know “is one VM-based Backup Server with EF280 (50 TB usable) enough to perfom Full Backup of my NetApp HCI storage (100 TB effective) in 36 hours?” or something like that. 100 TB over 36 hours is 770 MB/s, so if you knew a VM can write to EF280 at 1 GB/s you’d have a pretty good idea of whether it’s doable.</p>
+<p>I think there’s a lot of value in knowing how much you can get from a single VM because not everyone runs bare metal servers, or wants (needs) to max out their storage. Sometimes people just want to know “is one VM-based Backup Server with EF280 (50 TB usable) enough to perfom Full Backup of my NetApp HCI storage (100 TB effective) in 36 hours?” or something like that. 100 TB over 36 hours is 770 MB/s, so if you knew a VM can write to EF280 at 1 GB/s you’d have a pretty good idea of whether that’s doable or not.</p>
 
-<p>Last year I did a video with Veeam parallel backup using a NetApp HCI cluster attached to an E2824 array (EF2824 is a “hybrid brother” of EF280; I had access to a HDD-only, iSCSI configuration) in which I got around 700-800 MB/s (full backup performance with four Veeam proxy VMs). But I wasn’t happy about that test because the environment had some problems outside of my control. (The video is on YouTube, if you’re interested in Veeam parallel backup.)</p>
+<p>Last year I did a video with Veeam parallel backup using a NetApp HCI cluster attached to an E2800 array (EF2800 is a hybrid version of EF280; I had access to an HDD-only configuration with iSCSI interfaces) in which I got around 700-800 MB/s full backup performance with four Veeam proxy VMs. But I wasn’t happy about that test because the environment had some problems that were outside of my control. (That video can be viewed <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">here</a>, if you’re interested.)</p>
 
-<p>This time I had access to a non-retail H615C server (with FC HBA, rather than the usual iSCSI storage), but I didn’t use that much throughput anyway so I think it doesn’t matter.</p>
+<p>This time I had access to a non-retail version of NetApp HCI H615C server (equipped with a FC HBA), but none of the tests needed more than 1 x 25G throughput so I think I would have obtained similar results with iSCSI.</p>
 
-<p>I performed four groups of tests with EF280 (24 SSDs, DDP):</p>
+<p>I performed four groups of DiskSpd tests with that H615C attached to EF280 (24 SSDs, DDP data protection):</p>
 
-<p>a) NTFS striped volume (8kB block size, striped across two VMDKs, each on a separate Datastore)</p>
+<p>a) Striped NTFS volume (8kB block size, striped across two VMDKs, each on a separate ESXi Datastore/EF280 volume)</p>
 
-<p>b) ReFS (64kB block sizes, single raw device)</p>
+<p>b) ReFS (64kB block size, single raw device on EF280)</p>
 
-<p>c) ReFS (64kB block size, striped across 4 raw devices, each a separate EF280 volume)</p>
+<p>c) Striped ReFS volume (64kB block size, striped across 4 raw devices, each a separate EF280 volume)</p>
 
-<p>d) [non-DiskSpd test] ReFS read performance (restore a native, non-compressed SQL Server backup to SQL Server 2019 on NTFS striped volume from (a), above)</p>
+<p>d) [non-DiskSpd test] ReFS read performance (restore native, non-compressed SQL Server backup to SQL Server 2019 with database residing on the NTFS striped volume from (a) above)</p>
 
-<p>I didn’t perform any tuning for these tests.</p>
+<p>No tuning whatsoever was performed for these tests.</p>
 
 <p>I think the results show that a VM connected to EF280 can easily deliver 1 GB/s Full Backup performance to a single Datastore, and more with multiple Datastores (or Raw Devices). That means you can easily take a Full Backup of 86.4 TB in one day, and (for example) twice as much assuming 2x compression of backup data.</p>
 
@@ -163,41 +164,45 @@
 
 <h3 id="vmfs-vs-raw-devices">VMFS vs. Raw Devices</h3>
 
-<p>I got similar Full Backup performance to/from VMDK/Datastore and Raw Device, so I wouldn’t consider using Raw Devices for the sake of performance - a 10% faster (or slower) backup and restore performance rarely matter.</p>
+<p>I got similar Full Backup performance to and from VMDK/Datastore and Raw Devices, so I wouldn’t consider using Raw Devices just for the sake of performance.</p>
 
-<p>But If you have a single VM or application that’s very large and has to be backed up (or restored) as quickly as possible, you could back it up to (and restore from) a striped volume located either on VMware Datastores or Raw Devices.</p>
+<p>But if you have a single VM or application that’s very large and has to be backed up (or restored) as quickly as possible, you could back it up to (and restore from) a striped volume located either on VMware Datastores or Raw Devices.</p>
 
 <p>Test (d), for which I don’t have logs so I’ll explain it here, demonstrates that.</p>
 
 <ul>
   <li>SQL Server 2019 native backup file (75 GB) on striped ReFS volume (4 raw devices on EF280)</li>
-  <li>SQL Server (Data on 2-volume striped NTFS, volumes are VMDK files on VMFS, 2 Datastore volumes, also on EF280)</li>
+  <li>SQL Server (Data on 2-volume striped NTFS; 2 VMDKs are on 2 Datastores, also on EF280)</li>
 </ul>
 
 <p><img src="/assets/images/ef280-vm-restore-performance-striped-refs.png" alt="Restore Performance from 4-volume striped ReFS to 2-volume striped NTFS on EF280" /></p>
 
-<p>Even with restore Target on the same EF280, we could restore SQL datbase at 1.6 GB/s and have the entire database up and running in only 45 seconds. Even with iSCSI (2 x 25 G by default), a VM on the H615C could read data from EF280 at 2 GB/s and send it out to SQL Server VM at 2 GB/s.</p>
+<p>Even with restore Target on the same EF280, we could restore SQL database at 1.6 GB/s and have the entire database up and running in only 45 seconds. Even with iSCSI (all the H615C models come with 2 x 25G), a H615C-based VM could read data from EF280 at 2 GB/s and send it out to a SQL Server VM at 2 GB/s. It’s pretty cool that you can do a full restore of a 100 GB database just as fast as it’d take to recover it from a snapshot (assuming it takes 30 seconds to unmount and 30 seconds to mount the volume where snapshot is being restored)!</p>
+
+<p>One significant factor for VMFS vs. Raw Devices is resilience and recoverability: if you want to be able to restore when VMware is down, consider using physical Raw Devices.</p>
 
 <h3 id="manageability-and-iscsi">Manageability and iSCSI</h3>
 
-<p>Raw Devices make backup VM less dependent on VMware (should you need to restore the Backup VM itself).</p>
+<p>Raw Devices make backup VM and data less dependent on VMware (should you need to restore either your Backup application or access its data).</p>
 
-<p>In the case of retail H615C or H410C units (which attach to iSCSI, rather than FC HBA block storage), you’d probably want to connect your backup VM(s) to EF280 controllers via iSCSI (pRDM), so that there’s no dependency on vSphere. This is in the case you need to restore the VMware cluster itself. You could also make an OS backup of your Backup VM to EF-Series, in the case you needed to restore backup OS to a bare metal environment.</p>
+<p>In the case of retail H615C or H410C units (which consume iSCSI, rather than FC HBA block storage), you’d probably want to connect your backup VM(s) to EF280 controllers via iSCSI (pRDM), so that there’s no dependency on vSphere. This is in the case you need to restore the VMware cluster itself. You could also make an OS backup of your Backup VM to EF-Series, in the case you needed to restore backup OS to a bare metal environment.</p>
 
 <p>NetApp HCI needs two compute nodes to be reinstalled with NetApp Deployment Engine, so if you had at least three H615C (Compute Nodes) and lost the entire vSphere cluster, you could do this:</p>
 
 <ul>
   <li>Manually deploy the first ESXi to one of the H615C servers using ESXi ISO and then restore Backup OS (VM) to it</li>
   <li>Deploy NetApp HCI and vSphere to the rest of H615C servers using NetApp Deployment Engine</li>
-  <li>Use Backup OS/VM to restore VM data from EF280 Backup Repository, then shut down Backup OS and copy the VM to NetApp HCI vSphere cluster you recovered (remember to remove any CD-ROM from VM configuration beforehand, and attach its NICs to the right VSS/VDS networks after)</li>
-  <li>Add the last H615C (which you installed manually from ESXi ISO) to vSphere with NDE, which will re-install ESXi and configure this node to be consistent with the rest of NetApp HCI ESXi nodes</li>
+  <li>Use Backup OS/VM to restore VM data from a EF280-based Backup Repository, then shut down Backup OS and copy the VM to NetApp HCI vSphere cluster you just recovered (remember to remove any CD-ROM from VM configuration beforehand and attach its NICs to the right VSS/VDS networks after that)</li>
+  <li>Add the last H615C (which you installed manually from ESXi ISO) to vSphere with NDE, which will re-install ESXi and configure this node to be consistent with the rest of NetApp HCI compute nodes</li>
 </ul>
 
-<p>This sounds complicated, but it’s a worst case scenario and sounds easier than dealing with HCI clusters which store backup data on the same HCI cluster - while backups may be on a different disk pool, if the entire HCI cluster fails you’ll probably learn that procedure is even more complicated than the DIY workflow above.</p>
+<p>This sounds complicated, but it’s a worst case scenario and sounds easier than dealing with HCI clusters which store backup data on the same HCI cluster - while backups may be on dedicated disk pool, if the entire HCI cluster fails it won’t be pretty.</p>
 
-<h2 id="cost-of-all-flash-backup-media">Cost of All Flash backup media</h2>
+<p>A simpler way may be to stand up a new OS and restore backup VM configuration from your application configuration backup.</p>
 
-<p>All Flash arrays cost more, but have Backup &amp; Restore-related features that hybrid arrays simply cannot deliver:</p>
+<h2 id="cost-of-an-all-flash-backup-tier">Cost of an All Flash backup tier</h2>
+
+<p>All Flash arrays cost more than HDD or Hybrid arrays, but have Backup &amp; Restore-related features that arrays with HDDs simply cannot deliver:</p>
 
 <ul>
   <li>If your production environment is sized for All Flash storage performance, you need to run Live/Instant VM recovery at All Flash speeds</li>
@@ -206,7 +211,7 @@
   <li>EF-Series can offer enough random and sequential performance to economically host other workloads that need a lot of performance and don’t require a lot of storage features (such as SIEM and other Log Management and Analytics)</li>
 </ul>
 
-<p>While backup software can backup directly to object storage (whether it’s NetApp StorageGRID S3 storage or object storage in Public Cloud), smaller environments don’t necessarily have on-premises object storage and can’t get 2 GB/s restore speed from the Internet.</p>
+<p>While backup software can backup directly to object storage (whether it’s NetApp StorageGRID S3 storage or object storage in Public Cloud), smaller environments don’t necessarily have on-premises object storage and can’t get 2 GB/s restore speed from the Internet. You want one full backup of critical data on-premises, while the rest can be encrypted and tiered off to local or public S3 storage.</p>
 
 <h2 id="reference">Reference</h2>
 
@@ -230,17 +235,19 @@
 <p>Each configuration was subjected to three tests designed to simulate:</p>
 
 <ul>
-  <li>Active full or forward incremental</li>
-  <li>Reverse incremental</li>
-  <li>Transforms, merges, and other synthetic operations</li>
+  <li>Active full or forward incremental - 100% sequential write</li>
+  <li>Reverse incremental - 67% write, 4kB reads</li>
+  <li>Transforms, merges, and other synthetic operations - 50% write, 4kB reads</li>
 </ul>
 
 <p>Data set size was 64 GB (larger than EF280 controller cache). DiskSpd uses non-cached IO which effectively disables VM caching.</p>
 
+<p>The second and third test penalize striped RAID configurations and DDP is a variant of that, so if you needed more performance from certain repositories you could consider using RAID 10 for those (the cost is lower usable capacity vs. DDP) and DDP for the rest.</p>
+
 <h3 id="ntfs-striped-over-two-vmdkdatastores">NTFS striped over two VMDK/Datastores</h3>
 
 <ul>
-  <li>Striped NTFS (8kB block size, two VMDKs, each VMDK on a separate Datastore (VMFS6); results were approximately 2x of single-VMDK non-striped NTFS, as expected)</li>
+  <li>Striped NTFS (8kB block size, two VMDKs, each VMDK on a separate Datastore (VMFS6); results were approximately 2x of a single-VMDK, non-striped NTFS - as expected)</li>
   <li>Active full test:</li>
 </ul>
 
@@ -970,6 +977,36 @@ total:      175805300736 |       335322 |     558.86 |    1117.71
         
     
         
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">• Virtualized Splunk on NetApp HCI and EF Series iSCSI storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">• BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
     
       
     
@@ -1089,34 +1126,14 @@ total:      175805300736 |       335322 |     558.86 |    1117.71
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
+            
     
     </div>
     
 
     
   </div><footer class= "footer">
-    <p>2020-12-30 13:36 </p>
+    <p>2020-12-31 17:13 </p>
     <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
