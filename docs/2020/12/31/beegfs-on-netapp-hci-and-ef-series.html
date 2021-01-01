@@ -157,23 +157,25 @@
 
 <h2 id="how-do-automation-and-virtualization-help">How do automation and virtualization help</h2>
 
-<p>First, you create VM templates using any tool you like, from VMware or any other vendor or open source project. You can even create these manually. You can pre-install BeeGFS packages (free download) and use one “common” VM template for all types of BeeGFS nodes, or two (client/server), or even three templates (client, metadata servers, storage servers - yes, I’m using incorrect BeeGFS terminology).</p>
+<p>First, you create VM templates using any tool you like, from VMware or any other vendor or open source project. You can even create these manually. You can pre-install BeeGFS packages (free download) and use one “common” VM template for all types of BeeGFS nodes, or two (client/server), or even three templates (client, metadata server, storage server VM - and yes, I’m using incorrect BeeGFS terminology here).</p>
 
-<p>Then you deploy these VMs and configure them with freely available Ansible modules for BeeGFS, from community or NetApp (see [3] in References). This can be done in less than 10 minutes.</p>
+<p>Then you deploy these VMs and configure them with freely available Ansible modules for BeeGFS, either from community or NetApp (see [3] in References). This can be done in less than 10 minutes.</p>
 
-<p>This 90s (it will loop automatically, so don’t get stuck watching) animated GIF shows a deployment done with one client, one metadata and two storage nodes (c1, m1, s1, s2). We start at 10:16 and finish by 10:24.</p>
+<p>This 90s (animation will auto-loop so don’t get stuck watching for more than 2 minutes) animated GIF shows a deployment done with one client, one metadata and two storage nodes (<code class="language-plaintext highlighter-rouge">c1</code>, <code class="language-plaintext highlighter-rouge">m1</code>, <code class="language-plaintext highlighter-rouge">s1</code>, <code class="language-plaintext highlighter-rouge">s2</code>). We start at 10:16 and finish by 10:24.</p>
 
 <p><img src="/assets/images/beegfs-on-hci-with-e-series-ansible-vagrant.gif" alt="BeeGFS Deployment with Ansible on NetApp HCI with EF280" /></p>
 
-<p>I cheated (in terms of the speed of deployment) because EF280 storage was already presented to ESXi and Datastores created, but if you had E/EF Series storage for BeeGFS applications, you’d likely configure it once.</p>
+<p>I cheated (in terms of the speed of deployment) because EF280 storage was already presented to ESXi and Datastores used by BeeGFS created, but if you had E/EF Series storage for BeeGFS applications, you’d likely configure it once and leave it.</p>
 
 <p>Or, if you choose to use VMware Datastores (rather than iSCSI access to Raw Devices on E/EF Series or NetApp HCI storage), you could use PowerCLI or other tool to automate that as well - that wouldn’t add more than 60 seconds to this process.</p>
 
-<p>In the case you’re not familiar with BeeGFS, all the software used in my demo can be downloaded for free and without registration, so it’s very convenient to try. Before you download the software get familiar with the BeeGFS licenses and for production use consider getting proper support.</p>
+<p>If you need to get external data in or copy results out you can use freeware (<code class="language-plaintext highlighter-rouge">rsync</code>, <code class="language-plaintext highlighter-rouge">wget</code> and other), the fast and gratis NetApp XCP](https://xcp.netapp.com) or - especially in cross-protocol data copy scenarios - <a href="https://cloud.netapp.com/cloud-sync-service">NetApp CloudSync</a>.</p>
+
+<p>In the case you’re not familiar with BeeGFS, all the software used in my demo can be downloaded for free and without registration, so it’s very convenient to try. Before you download the software get familiar with the BeeGFS license(s) and for production use consider getting proper support.</p>
 
 <h2 id="performance">Performance</h2>
 
-<p>I haven’t tried to “read 10 files from 10 VMs at 10 GB/s” because I don’t have access to that kind of hardware (10 GB/s), but I suspect that is possible. I did try to read one file at 1 GB/s, though.</p>
+<p>I haven’t tried to “read 10 files from 10 VMs at 10 GB/s” because I don’t have access to that kind of hardware (10 GB/s - I’d need one any other EF-Series model for that), but I suspect that is possible. I did try to read one file at 1 GB/s, though.</p>
 
 <ul>
   <li>1 BeeGFS client VM (used to run I/O)</li>
@@ -198,7 +200,7 @@
 
 <p>Based on DiskSpd tests I did in this same environment yesterday, I know that close to 1 GB/s per EF280 volume is possible, so I figure if I deployed nine BeeGFS VMs (4 clients, 4 storage servers, 1 MD server) and used 512kB request sizses, aggregate client throughput of 3-4 GB/s ought to be possible.</p>
 
-<p>If you’re not familiar with EF-Series, the EF280 is the smallest EF Series model. All of the models’ specifictions can be seen on the last page of <a href="https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf">this PDF</a>).</p>
+<p>If you’re not familiar with EF-Series, the EF280 is the smallest (slowest) EF Series model. All of the EF models’ specifications can be seen on the last page of <a href="https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf">this PDF</a>).</p>
 
 <h3 id="considerations">Considerations</h3>
 
@@ -214,7 +216,7 @@
 
 <p>You can start with a virtual BeeGFS cluster attached to NetApp HCI storage and later expand or even migrate some of that data to E/EF Series.</p>
 
-<p>E/EF Series storage does not provide storage efficiency and automation features of NetApp HCI (SolidFire), but is suitable for high-throughput and high-performance applications where $/MB/s or $/IOPS matter and files either large or already compressed.</p>
+<p>E/EF Series storage does not provide storage efficiency and automation features of NetApp HCI (SolidFire), but is suitable for high-throughput and high-performance applications where $/MB/s or $/IOPS matter and files either large or already compressed. Once you provision E/EF storage, the rest is virtualization and automation - you can create a large cluster in minutes and even provision and destroy clusters on demand.</p>
 
 <h2 id="references">References</h2>
 
@@ -348,62 +350,8 @@
         
     
         
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
           <div class = "related-posts">
-          <h5><a href="/2020/11/20/rancher-and-drs.html">• Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</a></h5>
+          <h5><a href="/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html">• How much slower is iSCSI vs. Fibre Channel</a></h5>
           </div>
           
           
@@ -414,8 +362,8 @@
 
     
   </div><footer class= "footer">
-    <p>2020-12-31 17:13 </p>
-    <p>Copyright © 2020 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+    <p>2021-01-01 10:52 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
 <script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
