@@ -1,0 +1,350 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:20">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:20">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:20">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Elasticsearch on NetApp HCI H615C with EF-Series EF280 | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Elasticsearch on HCI done right, with NetApp HCI and EF-Series
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Elasticsearch on NetApp HCI H615C with EF-Series EF280</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>04 Jan 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#summary">Summary</a>
+    <ul>
+      <li><a href="#test-results">Test Results</a></li>
+    </ul>
+  </li>
+  <li><a href="#configuration">Configuration</a></li>
+  <li><a href="#workload">Workload</a></li>
+  <li><a href="#performance-bottlenecks">Performance bottlenecks</a></li>
+  <li><a href="#management">Management</a>
+    <ul>
+      <li><a href="#os-vm-deployment">OS (VM) deployment</a></li>
+      <li><a href="#elasticsearch-deployment">Elasticsearch deployment</a></li>
+      <li><a href="#storage-management">Storage management</a></li>
+    </ul>
+  </li>
+  <li><a href="#advantage-of-disaggregated-hci">Advantage of disaggregated HCI</a></li>
+</ul>
+
+<h2 id="summary">Summary</h2>
+
+<p>In <a href="https://scaleoutsean.github.io/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">this post</a> I laid out my arguments on why shared core HCI, although it <em>can</em> run structured log management applications, is inherently unsuitable for anything but small scale deployments of such workloads.</p>
+
+<p>Shared core HCI (VxRail, Nutanix) and general purpose DAS servers (“white box” servers with internal storage) are require relatively more hardware, software and management effort. White box servers become cost effective at scale not commonly found in Enterprises, but disadvantages of shared core HCI grow with its footprint.</p>
+
+<h3 id="test-results">Test Results</h3>
+
+<p>After that post I examined my preferred approach for medium-to-large deployments (NetApp HCI Compute with EF Series storage) using Elasticsearch and found that:</p>
+
+<ul>
+  <li>Three-node Elasticsearch cluster running on a H615C server attached to EF280 array can easily bulk-load uncompressed JSON-formatted structured logs at approximately 80 MB/s (&gt; 6 TB/day). Ingest speed was observed by monitoring NFS traffic from the server where JSON log was saved for ingest.</li>
+  <li>Testing was done without concurrent search workloads and performance monitoring (Elasticsearch cluster had only one workload), but EF280 was only moderately loaded and based on <a href="https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html">performance testing results with H615C and EF280 iSCSI</a> we should be able to get approximately twice as much from this storage system (10-15 TB/day, perhaps)</li>
+  <li>Data (index) was split in 9 shards and one replica (i.e. two copies) was created for additional data protection, as many users would do in production when Elasticsearch data is stored on protected storage. Due to sharding and replication, bulk loading at 80 MB/s resulted in approximately 1 GB/s throughput to back end storage (close to 100 MB/s was read from NFS server but the rest was  Elasticsearch).</li>
+</ul>
+
+<h2 id="configuration">Configuration</h2>
+
+<ul>
+  <li>1 x NetApp HCI H615C server (dual Xeon Gold 6242 with 512 GB RAM; HyperTheading is ON (64 CPU cores seen by ESXi 6.5U3)) running ESXi 6.5U3</li>
+  <li>1 x NetApp EF-Series EF280 array (24 SSDs in DDP (RAID 6-like array)) with FC interface</li>
+  <li>Workload VMs
+    <ul>
+      <li>1 x NFS VM with &gt; 100 GB of uncompressed JSON data to ingress</li>
+      <li>1 x Elasticsearch client VM reading JSON data and performing bulk submit to Elasticsearch cluster</li>
+      <li>3 x Elasticsearch VM (index with 9 shards and 1 replica (i.e. two copies) set to best (highest) compression)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Elasticsearch cluster configuration:</p>
+
+<ul>
+  <li>Each VM has 16 vCPUs (8 cores, 16 HT cores) and 32 GB RAM; 16GB vRAM
+    <ul>
+      <li>All VMs boot from same EF280 volume, OS swap is disabled</li>
+    </ul>
+  </li>
+  <li>Each VM has 2 x 256 GB data volumes, each volume is on separate Datastore (and each Datastore separate EF280 volume)</li>
+  <li>Each VM uses LVM to combine two data volumes into one striped volume group with logical volume mounted at <code class="language-plaintext highlighter-rouge">/elastic</code></li>
+  <li>One index configured with 9 shards and 1 replica (resulting in some 80 GB of “on-disk” data)</li>
+</ul>
+
+<p>JSON Data:</p>
+
+<ul>
+  <li>SIEM logs</li>
+  <li>Compressed log size (tar.gz): 4.5 GB</li>
+  <li>Uncompressed size (JSON): 120 GB</li>
+  <li>Elasticsearch size (compression with 2x due to 1 replica copy): 88 GB</li>
+</ul>
+
+<p>TODO: review notes and logs and update this information.</p>
+
+<h2 id="workload">Workload</h2>
+
+<ul>
+  <li>Elasticsearch client reads data off NFS server share and bulk-submits data to three VMs in Elasticsearch cluster using 8 workers. This results in approximately 80 MB/s read from NFS server</li>
+  <li>Three VMs in Elasticsearch cluster have to shard and replicate data and write two copies to storage. Bulk indexing with compression and replication results in approximately 800 MB/s aggregate write throughput to six EF280 volumes (10x from uncompressed JSON quantity). Another 100 MB/s can be attributed to NFS server which was using another Datastore on the same EF280</li>
+</ul>
+
+<h2 id="performance-bottlenecks">Performance bottlenecks</h2>
+
+<p>No particular bottleneck stood out. Some observations:</p>
+
+<ul>
+  <li>Client could probably submit data faster because some Elasticsearch client CPUs were occasionally waiting for NFS data (Linux VM running NFS server wasn’t slow, but wasn’t perfectly responsive)</li>
+  <li>Because best compression was enabled, Elasticsearch VMs’ CPUs were quite busy (70-80%)</li>
+  <li>Network traffic between Elasticsearch VMs (used for replication) was less than 1 Gbps (&lt; 100 MB/s)</li>
+  <li>Write I/O workload to EF280 peaked at close to 1 GB/s, result of several thousands IOPS (average I/O request size &gt; few hundred KB)</li>
+</ul>
+
+<p>Almost no tuning was performed. Elasticsearch VMs were set to use MTU 9000, and few other basic things like.</p>
+
+<p>Based tests with single and three-node Elasticsearch clusters, it appears that server CPUs would become a bottleneck before storage. But we could also choose to not us best compression by default.</p>
+
+<h2 id="management">Management</h2>
+
+<h3 id="os-vm-deployment">OS (VM) deployment</h3>
+
+<p>Elasticsearch VMs were deployed from OS (VM) templates in minutes. OS updates can be done by performing targeted updates to live VMs, by refreshing VM templates and performing rolling OS upgrades or some other way.</p>
+
+<p>Elasticsearch could also be deployed in containers - NetApp HCI comes with Rancher, but other Kubernetes solutions are available as well and Kubernetes can use NetApp Trident to automatically provision iSCSI storage from both NetApp HCI and EF arrays.</p>
+
+<h3 id="elasticsearch-deployment">Elasticsearch deployment</h3>
+
+<p>Initially I configured Elasticsearch cluster with Ansible, but as the module documentation wasn’t detailed enough, so I later used simple shell scripts to deploy configuration files to VMs (basically just <code class="language-plaintext highlighter-rouge">elasticsearch.yaml</code>, and Java heap (<code class="language-plaintext highlighter-rouge">Xmx</code>, <code class="language-plaintext highlighter-rouge">Xms</code>) settings).</p>
+
+<p>Those used to running Elasticsearch in Kubernetes or Docker would probably prefer to use <a href="https://www.youtube.com/watch?v=2CavtI4Hdh8">Rancher on NetApp HCI</a> with Trident, and just add EF Series as its second back-end.</p>
+
+<h3 id="storage-management">Storage management</h3>
+
+<p>Because our EF280 was configured in a very generic way (one large DDP pool), we can carve new volumes and present them to vSphere as long as there is available capacity in the pool. Volumes are automatically balanced across EF controllers. We could use a different approach (e.g. different, standard RAID groups, or a mix of DDP and different RAID groups) if we wanted to, although I wouldn’t do that for medium deployments because it complicates things.</p>
+
+<p>Elasticsearch VMs gain additional capacity by adding new VMware disks (VMDKs) and growing existing volume groups. Note that our Elasticsearch uses RAID 0 (striped) Logical Volumes (that live on two physical VMDKs on two VMware Datastores), so they should be grown by adding the same number of disks every time. But other approaches - such as concatenated - are available and an be easier to manage.</p>
+
+<p>Elasticsearch can spread data across multiple data paths and also migrate index data. It is also possible to have asymmetric Elasticsearch nodes (or node groups), so even if you have to change, move and reorganize storage layout, with EF Series that is relatively easier because:</p>
+
+<ul>
+  <li>New VMs with new disks can replace old VMs by copying data within one HCI compute node (reduced East-West traffic)</li>
+  <li>EF-Series volume clones don’t require physical migration of data to be presented to any VM in same vSphere cluster, regardless of volume or data size</li>
+  <li>Apart from iSCSI client traffic from HCI Compute to EF Series array(s), I/O is confined to EF-Series so the impact of I/O peaks is not amplified across compute nodes (which is the case with shared core HCI)</li>
+</ul>
+
+<p>In terms of backup and data protection, common Elasticsearch patterns apply: you could have the replica data on another site, or rack, or EF-Series array.</p>
+
+<h2 id="advantage-of-disaggregated-hci">Advantage of disaggregated HCI</h2>
+
+<p>Even with EF-Series in the picture, NetApp HCI Compute nodes at the same time maintain access to HCI Storage (iSCSI).</p>
+
+<p>NetApp HCI (Compute &amp; Storage ) is still deployed, scaled and upgraded the same way it’s normally done (using NetApp Deployment Engine and NetApp Hybrid Cloud control), which solves server, VI/K8s and storage management problems inherent to VI/K8s workloads. Even if your main workload is Elasticsearch, you still need to store OS and services (infrastructure services, Kibana, etc.) on efficient storage meant to manage VMs and containers, and NetApp HCI Storage clusters start at just two nodes.</p>
+
+<p>EF-Series storage attached to NetApp HCI cost-effectively addresses performance and storage management challenges <em>different</em> from those solved by HCI storage: you don’t need to deduplicate or automate; you need a fast storage service to quickly ingress and protect large amounts of data at a low cost of IOPS and MB/s. EF-Series provides exactly that, while shared core HCI does not. Shared core HCI also forces you to overbuy compute resources and software licenses.</p>
+
+<p>NetApp HCI Compute nodes serve as a server deployment pattern for VMs or Containers used to run Elasticsearch as well as other virtualized workloads. This frees you from a lot of maintenance and management effort common to regular servers, as well as hardware and license bloat associated with shared core HCI. Attached to two iSCSI back-ends (NetApp HCI Storage and EF-Series), NetApp HCI compute gives you the right mix of compute and storage for both light and heavy workloads.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">• Virtualized Splunk on NetApp HCI and EF Series iSCSI storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">• BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html">• DiskSpd performance from NetApp HCI VM to EF280</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/24/netapp-hci-network-segregation.html">• Adapter, network and VLAN isolation on NetApp HCI</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-01-04 17:40 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
