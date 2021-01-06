@@ -100,7 +100,7 @@
 
   
   
-    14 minute read
+    17 minute read
   
 
     </span>
@@ -165,9 +165,23 @@
   </li>
 </ul>
 
-<p>When a group of physical disks in an E/EF Series array is protected with DDP, data is striped across all pooled disks, allowing for a high usable-to-raw ratio, easy expansion and quick recovery from disk failures. Image below attempts to show that STRIPE’s, one blueish and one redish, get spread across different random disks, but not necessarily across <em>all</em> disks in the pool (which a RAID6 array would do, and when 24 disks-wide, it would randomize sequential writes). You can find more about DDP in <a href="https://www.netapp.com/media/12421-tr4652.pdf">NetApp TR-4652</a>.</p>
+<p>When a group of physical disks in an E/EF Series array is protected with DDP, data is striped across all pooled disks, allowing for a high usable-to-raw ratio, easy expansion and quick recovery from disk failures. Image below attempts to show that data STRIPE’s, one blueish and one redish, get spread across different, but not necessarily across <em>all</em> disks in the pool (which a RAID6 schema would do, and when 24 disks-wide it would randomize sequential writes). You can find more about DDP in <a href="https://www.netapp.com/media/12421-tr4652.pdf">NetApp TR-4652</a>.</p>
 
 <p><img src="/assets/images/elasticsearch-ef280-ddp.png" alt="E/EF-Series DDP Stripes" /></p>
+
+<p>Elastic has a very nice post on <a href="https://www.elastic.co/blog/how-to-design-your-elasticsearch-data-storage-architecture-for-scale">storage options in Elasticsearch</a>. While EF-Series supports DDP as well as different RAID levels, we used DDP which isn’t explicitly covered in the Elastic blog post, so I’ll only explain how it avoids RAID 6 disadvantages (“cons”) mentioned in that post:</p>
+
+<ul>
+  <li>Small to medium capacity loss (vs. RAID 0): the price of data protection is still to be paid, but DDP pays a smaller price than RAID 6; instead of paying the overhead of 2 disks over 10 (8+2 or 8D2P RAID 6), we put aside two disks worth of capacity from a pool of 24</li>
+  <li>Potentially long recovery: when a disk in a 8+2 RAID 6 array fails, 9 remaining disks rebuild lost data to a hot spare. In our case, 23 disks join DDP data reconstruction (“rebuild” in DDP speak)</li>
+  <li>During a recovery the array’s performance is reduced: that’s always the case, but DDP deals with this much better. These last two points unfortunately require a longer explanation. TR-4652 has the details, but for those skimming this post, here’s a comparison of DDP reconstruction vs to RAID 6 rebuild speed:</li>
+</ul>
+
+<p><img src="/assets/images/tr-4652-santricity-ddp-reconstruction-speed.png" alt="EF-Series DDP Reconstruction vs RAID 6 Rebuild Speed from TR4652" /></p>
+
+<p>One key point - apart from the obvious - is that with 24 SSDs we’d reasonably use two 12-disk groups to protect data with RAID 6. Then, if a disk failed, it’d take 10 hours (less with sequential workload, but the TR doesn’t have that chart) to rebuild that group during which time both RAID 6 groups would perform slower. Why? Because you’d likely have similar workloads, such as index replicas, using these groups so the healthy group couldn’t run faster than the one that’s rebuilding without impacting the health of Elasticsearch replicas.</p>
+
+<p>Whereas with 24 disks in a DDP you’d lose 30% performance-wise (Figure 14 in the TR, for 24-disk DDP) compared to a 40% loss with a 12-disk RAID 6, which is a 25% lower impact on the impacted group that likely translates to a 40% percent drop in performance across <em>both</em> RAID 6 groups, and you’d also recover 60% faster (10 vs. 4 hours from the image above). Sometimes even RAID 6 is better than other RAID levels, but I hope this adds to the Elastic post comparing pro- and contra-points of different data protection techiques.</p>
 
 <p>Elasticsearch cluster configuration:</p>
 
@@ -192,7 +206,7 @@
   <li>SIEM logs in the JSON format</li>
   <li>Compressed log size (tar.gz): 4.5 GiB</li>
   <li>Uncompressed size (JSON): 110 GiB (60 million “documents”)</li>
-  <li>Elasticsearch on-disk data size (after compression (“best compression”) and 2x due to 1 replica copy):
+  <li>Elasticsearch on-disk data size (2x due to 1 replica copy):
     <ul>
       <li>9 shards (2 copies): 130 GB (67 GB data size, 2 copies)</li>
     </ul>
@@ -210,9 +224,11 @@
 
 <p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-ef280-throughput.png" alt="Elasticsearch VMs" /></p>
 
-<p>Disk throughput of individual Elasticsearch VM as seen by ESXi where all three Elasticsearch VMs were running:</p>
+<p>Disk throughput of individual Elasticsearch node (VM) as seen by ESXi where all three Elasticsearch VMs were running:</p>
 
 <p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-elasticsearch-vm-throughput.png" alt="Disk throughput of Elasticsearch node observed from ESXi" /></p>
+
+<p>I didn’t have time to optimize anything, and I didn’t want to optimize anything because I just wanted to get a feel for this workload.</p>
 
 <h2 id="performance-related-observations">Performance-related observations</h2>
 
@@ -318,9 +334,13 @@
 
 <p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-cluster-cpu-and-disk-grafana.png" alt="Elasticsearch VMs in Grafana borrowed from HCI Collector" /></p>
 
+<p>As mentioned earlier 80 MB/s uncompressed JSON upload to this three node cluster didn’t generate a lot of network traffic, even with a replica copy “in” traffic was &lt; 100 MB/s per node, and “out” half of that. Of course this isn’t all there is to Elasticsearch network traffic (there’s also merging, tiering, etc), but considering how relatively small it was compared to disk I/O it made it hard for me to imagine that someone could run out of network (2 x 25 G) before CPU resources even if storage I/O was to use iSCSI rather than FC SAN (our unusual testbed).</p>
+
+<p><img src="/assets/images/elasticsearch-3vm-build-loading-1-replica-network-traffic-vs-write-throughput.png" alt="Low network utilization during bulk upload" /></p>
+
 <p>In vSphere environments HCI Collector could get ESXi and VM performance from vCenter, but we didn’t have a vCenter, so this was just a quick workaround. HCI Collector can also monitor Bare Metal H615C servers (see the HCICollector (v0.7 branch) for additional details) via IPMI or SNMP, if you decide use those.</p>
 
-<p>Kibana can of course monitor Elasticsearch nodes and service metrics, but it’s not supposed to be used on Elasticsearch cluster which is being benchmarked so while used it a little, I mostly refrained from running it all the time.</p>
+<p>Kibana can of course monitor Elasticsearch nodes, service and index metrics, but it’s not supposed to be used on Elasticsearch cluster which is being benchmarked so while used it a little, I mostly refrained from running it all the time.</p>
 
 <h2 id="advantage-of-disaggregated-hci">Advantage of disaggregated HCI</h2>
 
@@ -432,7 +452,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-06 01:30 </p>
+    <p>2021-01-06 12:18 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
