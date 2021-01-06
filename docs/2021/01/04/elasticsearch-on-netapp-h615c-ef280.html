@@ -337,28 +337,28 @@
   <li>Install Docker-CE on a “management workstation”</li>
   <li>Download <a href="https://github.com/scaleoutsean/hcicollector/">HCI Collector</a>, run setup script and randomly configure SolidFire and vCenter settings (as I didn’t have either in this environment)</li>
   <li>Delete VMware and SolidFire Collector containers from <code class="language-plaintext highlighter-rouge">docker-compose.yaml</code>, run <code class="language-plaintext highlighter-rouge">docker-compose up -d</code></li>
-  <li>Install <code class="language-plaintext highlighter-rouge">collectl</code>to Elasticsearch VMs, start collectl and send output to HCI Collector IP (my management workstation)</li>
+  <li>Install <code class="language-plaintext highlighter-rouge">collectl</code>to Elasticsearch VMs, start collectl and send output to Graphite DB of HCI Collector IP (my management workstation)</li>
 </ul>
 
-<p>That gave me a way to get basic VM information (CPU, Disk, Network) and in less than 30 minutes I had a simple dashboard for OS-level monitoring of Elasticsearch cluster.</p>
+<p>That gave me a way to get basic VM information (CPU, Disk, Network) and in less than 30 minutes I had a simple dashboard for OS-level monitoring of Elasticsearch cluster nodes.</p>
 
 <p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-cluster-cpu-and-disk-grafana.png" alt="Elasticsearch VMs in Grafana borrowed from HCI Collector" /></p>
 
-<p>As mentioned earlier 80 MB/s uncompressed JSON upload to this three node cluster didn’t generate a lot of network traffic, even with a replica copy “in” traffic was &lt; 100 MB/s per node, and “out” half of that. Of course this isn’t all there is to Elasticsearch network traffic (there’s also merging, tiering, etc), but considering how relatively small it was compared to disk I/O it made it hard for me to imagine that someone could run out of network (2 x 25 G) before CPU resources even if storage I/O was to use iSCSI rather than FC SAN (our unusual testbed).</p>
+<p>As mentioned earlier 80 MB/s uncompressed JSON upload to this three node cluster didn’t generate a lot of network traffic, even with a replica copy my “in” traffic was &lt; 100 MB/s per node, and “out” half of that. Of course, this isn’t all there is to Elasticsearch network traffic (there’s also index merging, tiering, cross-node group replication, etc), but considering how relatively small it was compared to disk I/O, it made it hard for me to imagine that someone could run out of network (2 x 25 G) before CPU resources even if storage I/O was to use iSCSI rather than FC SAN (our unusual testbed).</p>
 
 <p><img src="/assets/images/elasticsearch-3vm-build-loading-1-replica-network-traffic-vs-write-throughput.png" alt="Low network utilization during bulk upload" /></p>
 
-<p>In vSphere environments HCI Collector could get ESXi and VM performance from vCenter, but we didn’t have a vCenter, so this was just a quick workaround. HCI Collector can also monitor Bare Metal H615C servers (see the HCICollector (v0.7 branch) for additional details) via IPMI or SNMP, if you decide use those.</p>
+<p>In vSphere environments HCI Collector could get ESXi and VM performance from vCenter, but we didn’t have a vCenter. HCI Collector can also monitor Bare Metal H615C servers (see the HCICollector (v0.7 branch) for additional details) via IPMI or SNMP, if you decide to take that path (Bare Metal).</p>
 
-<p>Kibana can of course monitor Elasticsearch nodes, service and index metrics, but it’s not supposed to be used on Elasticsearch cluster which is being benchmarked so while used it a little, I mostly refrained from running it all the time.</p>
+<p>Kibana can of course monitor Elasticsearch nodes, service and index metrics, but it’s not supposed to be used on Elasticsearch cluster which is being benchmarked, so while I used it a little to correlate its data with my DIY approach, I refrained from running it all the time.</p>
 
 <h2 id="advantage-of-disaggregated-hci">Advantage of disaggregated HCI</h2>
 
 <p>Even with EF-Series in the picture, NetApp HCI Compute nodes maintain access to HCI Storage (iSCSI) and can use it at the same time.</p>
 
-<p>NetApp HCI (Compute &amp; Storage ) is still deployed, scaled and upgraded the same way it’s normally done (using NetApp Deployment Engine and NetApp Hybrid Cloud Control), which solves server, VI/K8s and storage management problems inherent to VI/K8s workloads. Even if your main workload is Elasticsearch, you still need to store OS and services (infrastructure services, Kibana, etc.) on efficient storage meant to manage VMs and containers, and NetApp HCI Storage clusters start at just two nodes, which is just enough.</p>
+<p>NetApp HCI (Compute &amp; Storage ) is still deployed, scaled and upgraded the same way it’s normally done (using NetApp Deployment Engine and NetApp Hybrid Cloud Control), which solves server, VI/K8s and storage management problems inherent to VI/K8s workloads. Even if your main workload is Elasticsearch you still need to store OS and services (infrastructure services, Kibana, etc.) on efficient storage meant to manage VMs and containers, and NetApp HCI Storage clusters start at just two nodes, which is just enough. Secondly, if you want to run Elastic stack in containers, you can do that in minutes with Rancher deployment wizard for NetApp HCI.</p>
 
-<p>EF-Series storage attached to NetApp HCI cost-effectively addresses performance and storage management challenges <em>different</em> from those solved by HCI storage: you don’t need to deduplicate or automate Elasticsearch storage. You need a fast storage system to quickly ingress, egress and protect many TBs of data at a low cost ($/IOPS and $/MB/s). EF-Series provides exactly that, while shared core HCI does not. Shared core HCI also forces you to over-provision compute resources and software licenses, which NetApp HCI with EF-Series avoids.</p>
+<p>EF-Series storage attached to NetApp HCI cost-effectively addresses performance and storage management challenges <em>different</em> from those solved by HCI storage: you don’t need to deduplicate or automate Elasticsearch storage. You need a fast storage system to quickly and cost-effectively ($/IOPS and $/MB/s) ingress, egress and protect many TBs of compressed data. EF-Series provides exactly that, while shared core HCI does not. Shared core HCI also forces you to over-provision compute resources and software licenses, which NetApp HCI with EF-Series can avoid.</p>
 
 <p>In this way NetApp HCI Compute nodes serve as a Private Cloud deployment pattern for VMs or Containers used to run Elasticsearch as well as other virtualized workloads. This frees you from management and maintenance tasks common to regular servers, as well as hardware and license bloat associated with shared core HCI.</p>
 
@@ -462,7 +462,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-06 13:17 </p>
+    <p>2021-01-06 13:30 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
