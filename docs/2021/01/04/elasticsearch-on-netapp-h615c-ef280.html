@@ -112,7 +112,11 @@
       <li><a href="#test-results">Test results</a></li>
     </ul>
   </li>
-  <li><a href="#configuration">Configuration</a></li>
+  <li><a href="#configuration">Configuration</a>
+    <ul>
+      <li><a href="#elasticsearch-data-protection-with-ef-series">Elasticsearch data protection with EF-Series</a></li>
+    </ul>
+  </li>
   <li><a href="#workload-description">Workload description</a></li>
   <li><a href="#performance-related-observations">Performance-related observations</a>
     <ul>
@@ -165,11 +169,13 @@
   </li>
 </ul>
 
+<h3 id="elasticsearch-data-protection-with-ef-series">Elasticsearch data protection with EF-Series</h3>
+
 <p>When a group of physical disks in an E/EF Series array is protected with DDP, data is striped across all pooled disks, allowing for a high usable-to-raw ratio, easy expansion and quick recovery from disk failures. Image below attempts to show that data STRIPE’s, one blueish and one redish, get spread across different, but not necessarily across <em>all</em> disks in the pool (which a RAID6 schema would do, and when 24 disks-wide it would randomize sequential writes). You can find more about DDP in <a href="https://www.netapp.com/media/12421-tr4652.pdf">NetApp TR-4652</a>.</p>
 
 <p><img src="/assets/images/elasticsearch-ef280-ddp.png" alt="E/EF-Series DDP Stripes" /></p>
 
-<p>Elastic has a very nice post on <a href="https://www.elastic.co/blog/how-to-design-your-elasticsearch-data-storage-architecture-for-scale">storage options in Elasticsearch</a>. While EF-Series supports DDP as well as different RAID levels, we used DDP which isn’t explicitly covered in the Elastic blog post, so I’ll only explain how it avoids RAID 6 disadvantages (“cons”) mentioned in that post:</p>
+<p>Elastic has a very nice post on <a href="https://www.elastic.co/blog/how-to-design-your-elasticsearch-data-storage-architecture-for-scale">storage options in Elasticsearch</a>. While EF-Series supports DDP as well as different RAID levels, we used DDP which isn’t explicitly covered in the Elastic blog post, so I’ll only explain how it avoids the disadvantages (“cons”) of RAID 6 from that post:</p>
 
 <ul>
   <li>Small to medium capacity loss (vs. RAID 0): the price of data protection is still to be paid, but DDP pays a smaller price than RAID 6; instead of paying the overhead of 2 disks over 10 (8+2 or 8D2P RAID 6), we put aside two disks worth of capacity from a pool of 24</li>
@@ -179,9 +185,11 @@
 
 <p><img src="/assets/images/tr-4652-santricity-ddp-reconstruction-speed.png" alt="EF-Series DDP Reconstruction vs RAID 6 Rebuild Speed from TR4652" /></p>
 
-<p>One key point - apart from the obvious - is that with 24 SSDs we’d reasonably use two 12-disk groups to protect data with RAID 6. Then, if a disk failed, it’d take 10 hours (less with sequential workload, but the TR doesn’t have that chart) to rebuild that group during which time both RAID 6 groups would perform slower. Why? Because you’d likely have similar workloads, such as index replicas, using these groups so the healthy group couldn’t run faster than the one that’s rebuilding without impacting the health of Elasticsearch replicas.</p>
+<p>One key point - apart from the obvious - is that with 24 SSDs we’d reasonably use two 12-disk groups to protect data with RAID 6. Then, if a disk failed, it’d take some 10 hours (less with sequential workload, but the TR doesn’t have that chart) to rebuild that group during which time both RAID 6 groups would perform slower. Why? Because you’d likely have similar workloads such as index replicas using these groups, and the healthy group couldn’t run faster than the one that’s rebuilding without impacting the health of Elasticsearch replicas.</p>
 
-<p>Whereas with 24 disks in a DDP you’d lose 30% performance-wise (Figure 14 in the TR, for 24-disk DDP) compared to a 40% loss with a 12-disk RAID 6, which is a 25% lower impact on the impacted group that likely translates to a 40% percent drop in performance across <em>both</em> RAID 6 groups, and you’d also recover 60% faster (10 vs. 4 hours from the image above). Sometimes even RAID 6 is better than other RAID levels, but I hope this adds to the Elastic post comparing pro- and contra-points of different data protection techiques.</p>
+<p>Whereas with 24 disks in a DDP you’d lose 30% performance-wise (Figure 14 in the TR, for 24-disk DDP) compared to a 40% loss with a 12-disk RAID 6 - a 25% lower impact on the impacted group that likely translates to a 40% percent drop in performance across <em>both</em> RAID 6 groups. And you’d also recover 60% faster (10 vs 4 hours from the image above).</p>
+
+<p>RAID 6 doesn’t “suck” - sometimes it’s more suitable than DDP (even for Elasticsearch), and you can use both RAID 6 and DDP in the same array - for example, if you had 72 or 180 disks, or used a hybrid E-Series array with HDDs and SSDs, and wanted to optimize RAID/DDP levels for Elasticsearch workload patterns specific to your environment. But DDP is a nice overall choice for an array with few dozen SSDs. I hope this adds to that nice Elastic post comparing pro- and contra-arguments regarding different data protection techniques.</p>
 
 <p>Elasticsearch cluster configuration:</p>
 
@@ -196,7 +204,7 @@
   <li>One index configured with 9 shards and 1 replica (resulting in some 80 GB of “on-disk” data)</li>
 </ul>
 
-<p>Because I had only one server at my disposal, all the VMs were running on it. All EF280 volumes (one Datastore for NFS data, one for all VM OS images, and six for indice data belonging to three Elasticsearch VMs) were created within the same DDP pool.</p>
+<p>Because I had only one server at my disposal, all the VMs were running on it. All the EF280 volumes (one Datastore for NFS data, one for all VM OS images, and six for indice data belonging to three Elasticsearch VMs) were created within the same DDP pool.</p>
 
 <p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-cluster-setup.png" alt="Test configuration for virtualized Elasticsearch on NetAppp HCI with EF280" /></p>
 
@@ -208,7 +216,7 @@
   <li>Uncompressed size (JSON): 110 GiB (60 million “documents”)</li>
   <li>Elasticsearch on-disk data size (2x due to 1 replica copy):
     <ul>
-      <li>9 shards (2 copies): 130 GB (67 GB data size, 2 copies)</li>
+      <li>9 shards (2 full copies with “1 replica” setting): 130 GB (67 GB data + 1 replica)</li>
     </ul>
   </li>
 </ul>
@@ -452,7 +460,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-06 12:18 </p>
+    <p>2021-01-06 12:47 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
