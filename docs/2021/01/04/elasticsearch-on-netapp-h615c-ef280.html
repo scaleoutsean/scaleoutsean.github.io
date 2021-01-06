@@ -180,14 +180,14 @@
 <ul>
   <li>Small to medium capacity loss (vs. RAID 0): the price of data protection is still to be paid, but DDP pays a smaller price than RAID 6; instead of paying the overhead of 2 disks over 10 (8+2 or 8D2P RAID 6), we put aside two disks worth of capacity from a pool of 24</li>
   <li>Potentially long recovery: when a disk in a 8+2 RAID 6 array fails, 9 remaining disks rebuild lost data to a hot spare. In our case, 23 disks join DDP data reconstruction (“rebuild” in DDP speak)</li>
-  <li>During a recovery the array’s performance is reduced: that’s always the case, but DDP deals with this much better. These last two points unfortunately require a longer explanation. TR-4652 has the details, but for those skimming this post, here’s a comparison of DDP reconstruction vs to RAID 6 rebuild speed:</li>
+  <li>During a recovery the array’s performance is reduced: that’s always the case, but DDP deals with this much better. These last two points unfortunately require a longer explanation. TR-4652 has the details, but for those skimming this post, here’s a comparison of DDP reconstruction vs to RAID 6 rebuild speed (I expect this would be for HDDs, not SSDs, but couldn’t find that detail):</li>
 </ul>
 
 <p><img src="/assets/images/tr-4652-santricity-ddp-reconstruction-speed.png" alt="EF-Series DDP Reconstruction vs RAID 6 Rebuild Speed from TR4652" /></p>
 
 <p>One key point - apart from the obvious - is that with 24 SSDs we’d reasonably use two 12-disk groups to protect data with RAID 6. Then, if a disk failed, it’d take some 10 hours (less with sequential workload, but the TR doesn’t have that chart) to rebuild that group during which time both RAID 6 groups would perform slower. Why? Because you’d likely have similar workloads such as index replicas using these groups, and the healthy group couldn’t run faster than the one that’s rebuilding without impacting the health of Elasticsearch replicas.</p>
 
-<p>Whereas with 24 disks in a DDP you’d lose 30% performance-wise (Figure 14 in the TR, for 24-disk DDP) compared to a 40% loss with a 12-disk RAID 6 - a 25% lower impact on the impacted group that likely translates to a 40% percent drop in performance across <em>both</em> RAID 6 groups. And you’d also recover 60% faster (10 vs 4 hours from the image above).</p>
+<p>Whereas with 24 disks in a DDP you’d lose 30% performance-wise (Figure 14 in the TR, for 24-disk DDP) compared to a 40% loss with a 12-disk RAID 6 - a 25% lower impact on the impacted group that likely translates to a <em>relative</em> 40% percent drop in performance across <em>both</em> RAID 6 groups. And you’d also recover 60% faster (10 vs 4 hours from the image above).</p>
 
 <p>RAID 6 doesn’t “suck” - sometimes it’s more suitable than DDP (even for Elasticsearch), and you can use both RAID 6 and DDP in the same array - for example, if you had 72 or 180 disks, or used a hybrid E-Series array with HDDs and SSDs, and wanted to optimize RAID/DDP levels for Elasticsearch workload patterns specific to your environment. But DDP is a nice overall choice for an array with few dozen SSDs. I hope this adds to that nice Elastic post comparing pro- and contra-arguments regarding different data protection techniques.</p>
 
@@ -460,7 +460,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-06 12:47 </p>
+    <p>2021-01-06 12:49 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
