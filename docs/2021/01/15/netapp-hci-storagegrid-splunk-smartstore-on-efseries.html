@@ -100,7 +100,7 @@
 
   
   
-    9 minute read
+    10 minute read
   
 
     </span>
@@ -145,7 +145,7 @@
   </li>
 </ul>
 
-<p>That would look approximately like this:</p>
+<p>That would look approximately like this (with 16 rather than 4 network cables from HCI to Mellanox SN2010):</p>
 
 <p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-01.png" alt="NetApp HCI with Mellanox SN2010 and EF570" /></p>
 
@@ -154,27 +154,34 @@
 <p>If we wanted to start with a very small configuration, we could use EF570 array which can fit up to 24 SSD drives in the controller shelf (same as other currently available EF-Series models).</p>
 
 <ul>
-  <li>For VMs running Splunk indexers attached to Hot tier and SmartStore cache, we want volumes on RAID 10 disk group because we don’t need a lot of capacity, we want a fast performance and we expect that in the future SmartStore will grow much faster than this tier so RAID 10 is perfect for that</li>
-  <li>StorageGRID storage VMs can store their data on a more redundant (in terms of tolerance for disk failures) disk group such as RAID 6 or DDP pool (<a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">this post explains</a> main differences between the two, but let’s just say RAID 6 and DDP are similar). Because we have four ESXi hosts and sufficient resources to tolerate the failure of one host, we chose to store objects using Erasure Coding 2+1 - this requires N+M+1 VMs for N-1 redundancy, which means four StorageGRID “storage” VMs.</li>
-  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (N-1). We could use more storage nodes (if we had many dozens of VMs we might need more capacity for that).</li>
+  <li>For VMs running Splunk indexers attached to Hot tier and SmartStore cache, we want volumes on a RAID 10 group because we don’t need a lot of capacity, we want a fast performance and we expect that in the future SmartStore will grow much faster than this tier so RAID 10 is perfect for that</li>
+  <li>StorageGRID storage VMs can store their data on a more redundant (in terms of tolerance to disk failures) disk group such as RAID 6 or DDP pool (<a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">this post explains</a> main differences between the two, but let’s just say RAID 6 and DDP are similar)
+    <ul>
+      <li>Because we have four ESXi hosts and sufficient resources to tolerate the failure of one ESXi host, we chose to use four storage VMs and store objects using Erasure Coding 2+1, which requires N+M+1 VMs (2+1+1=4)</li>
+      <li>Considering the small initial size of this StorageGRID, we take 20 disks to create one DDP pool and on top of it create four volumes (for four VMware datastores), so we have just one volume per each StorageGRID storage node</li>
+    </ul>
+  </li>
+  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (N-1). We could use more storage nodes (if we had over 100 VMs in this environment we might need more capacity for that)</li>
 </ul>
 
-<p>Showing Splunk-related data on the EF array, StorageGRID (4 VMs on the left - I shouldn’t have called them SmartStore VMs but that’s what they’re for) and Splunk indexer volumes (on the right, only 2 VMs are shown) would look similar to this:</p>
+<p>Showing Splunk-related data on the EF array, StorageGRID (4 VMs on the leftr and Splunk indexer volumes (on the right, only two VMs are shown) would look similar to this:</p>
 
 <p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-02.png" alt="EF-Series storage layout with single shelf for StorageGRID and Splunk indexers" /></p>
 
-<p>Splunk indexers running Linux could use LVM to combine physical volumes into one larger volume, but we could also create large volumes on the array.</p>
+<p>Splunk indexers running Linux could use LVM to combine two physical volumes into one larger logical volume, but we could also create large volumes on the array to avoid that. LVM would be desirable if we expected Hot Tier may need to be enlarged.</p>
 
 <p>How large would these volumes be? That depends on the disk size(s) (from 1.9 to 15.3 TB). They could all have the same size, or we could pick a larger capacity for SSDs in DDP pool, and smaller for the 4 disks in RAID 10 group (or the other way around). We also don’t have to populate all 24 slots.</p>
 
 <p>With 3.8 TB disks in all the 24 slots we’d have:</p>
 
 <ul>
-  <li>Approximately 50 TB for SmartPool data which, after Erasure Coding applied by StorageGRID, translates into 30-odd TB. If by “50 TB” we meant “50 TB for Splunk SmartStore”, we could use 18 (or thereabout) 7.6 TB disks instead.</li>
-  <li>Approximately 7 TB for Hot/Cache Tier which, after RF2 on Splunk, becomes half of that (3.5 TB) - enough for no-churn searches going back 2-3 days (4 nodes @ 300 GB/day, RF2, SF2). To make that a week, we’d use the same number of 7.6 TB disks.</li>
+  <li>Approximately 50 TB for SmartPool data which, after Erasure Coding applied by StorageGRID, translates into 30-odd TB. If by “50 TB” we meant “50 TB for Splunk SmartStore”, we could use 18 (or thereabout) 7.6 TB disks instead. Each StorageGRID node would have one or two volumes smaller than 20TB.</li>
+  <li>Approximately 7 TB for Hot/Cache Tier which, after Splunk RF2, translates into just below 1 TB - enough for 2-3 days of data (4 nodes @ 300 GB/day, RF2, SF2). To make that a week, we’d use the same number of 7.6 TB disks. You get the idea.</li>
 </ul>
 
 <p>As we have seen, larger disks in DDP pool translate into a larger SmartStore capacity, while larger disks in RAID 10 normally result in a better performance for search and reporting because relatively more data would be available for immediate search queries (without having to fetch it from SmartStore).</p>
+
+<p>It doesn’t have to be done this way, but the general idea is to find a balance in data protection, performance, manageability (that is, we don’t want 8 volumes in a volume group that’s just 2 TB large if two volumes will serve our purpose) and other things we care about.</p>
 
 <h2 id="capacity-and-performance-scaling">Capacity and performance scaling</h2>
 
@@ -332,7 +339,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-15 02:04 </p>
+    <p>2021-01-15 02:30 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
