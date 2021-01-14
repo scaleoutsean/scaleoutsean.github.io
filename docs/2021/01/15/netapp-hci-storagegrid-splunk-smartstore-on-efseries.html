@@ -1,0 +1,343 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:20">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:20">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:20">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Virtualized StorageGRID for Splunk Smartstore on NetApp HCI and EF-Series array | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Virtualized StorageGRID with NetApp HCI and EF-Series
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Virtualized StorageGRID for Splunk Smartstore on NetApp HCI and EF-Series array</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>15 Jan 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    9 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>If you’d like to deploy Splunk SmartStore with NetApp StorageGRID object storage but also want to “start small”, you can consider using smaller StorageGRID appliances or deploy StorageGRID as virtual machines.</p>
+
+<p>Which one is better? Both are great. Which one is better for <em>you</em> depends on your current, and (expected) future, requirements and preferences.</p>
+
+<p>This post is about the latter - addressing smaller SmartStore requirements which need to be satisfied on-premises by deploying StorageGRID VMs on NetApp HCI.</p>
+
+<ul>
+  <li><a href="#assumptions">Assumptions</a></li>
+  <li><a href="#netapp-hci-with-mellanox-sn2010-and-ef570">NetApp HCI with Mellanox SN2010 and EF570</a></li>
+  <li><a href="#vm-to-storage-mapping">VM-to-storage mapping</a></li>
+  <li><a href="#capacity-and-performance-scaling">Capacity and performance scaling</a></li>
+  <li><a href="#transition-to-storagegrid-appliances">Transition to StorageGRID appliances</a></li>
+  <li><a href="#reasons-for-smartstore-on-storagegrid-vms-and-ef-series">Reasons for SmartStore on StorageGRID VMs and EF-Series</a></li>
+  <li><a href="#summary">Summary</a></li>
+</ul>
+
+<h2 id="assumptions">Assumptions</h2>
+
+<p>What’s a “smaller” SmartStore requirement? That’s also subjective, but let’s assume that is (currently) somewhere between 50 and 300 TB.</p>
+
+<p>It is likely that this environment doesn’t have a lot of busy Splunk indexers, so let’s also assume four indexers running across four ESXi hosts, for which we may be using either blade servers (H410C, 4 per 2U chassis) or “pizza box” H615C servers, with enough CPU cores for all VMs involved even when one server fails (otherwise, if we wanted to be able to process data with “N-1” ESXi hosts, we’d need one more server).</p>
+
+<p>Since we’ll use a flash array for SmartStore data, we can use the same array for Splunk Hot Tier (and SmartStore cache).</p>
+
+<h2 id="netapp-hci-with-mellanox-sn2010-and-ef570">NetApp HCI with Mellanox SN2010 and EF570</h2>
+
+<p>We’d pick a pair of switches (Mellanox SN2100) and one of all-flash EF-Series arrays such as the EF570 configured with eight 25G iSCSI ports (4 per controller):</p>
+
+<ul>
+  <li>For this situation NetApp EF-Series array would suffice both capacity- and performance-wise, but considering that we’ll use the same array for Hot Tier and Smartstore, we pick one of faster models, EF570</li>
+  <li>Each Mellanox SN2010 has 18 25G ports, which means we have 36 ports at our disposal (excluding inter-switch links and uplinks)
+    <ul>
+      <li>Four H410C (4 x 25G on each) compute nodes take 16 ports</li>
+      <li>Two H410S (HCI storage nodes used for all VMs including Splunk, StorageGRID, etc.) consume 4 ports</li>
+      <li>The EF570 with iSCSI add-on card uses eight ports, so by now we’ve used 28 out of 36, which means we can add two more H410C compute nodes at a later time. If we expect to need more than that before next h/w refresh, we could start with a larger Mellanox Ethernet switch (SN2100)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>That would look approximately like this:</p>
+
+<p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-01.png" alt="NetApp HCI with Mellanox SN2010 and EF570" /></p>
+
+<h2 id="vm-to-storage-mapping">VM-to-storage mapping</h2>
+
+<p>If we wanted to start with a very small configuration, we could use EF570 array which can fit up to 24 SSD drives in the controller shelf (same as other currently available EF-Series models).</p>
+
+<ul>
+  <li>For VMs running Splunk indexers attached to Hot tier and SmartStore cache, we want volumes on RAID 10 disk group because we don’t need a lot of capacity, we want a fast performance and we expect that in the future SmartStore will grow much faster than this tier so RAID 10 is perfect for that</li>
+  <li>StorageGRID storage VMs can store their data on a more redundant (in terms of tolerance for disk failures) disk group such as RAID 6 or DDP pool (<a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">this post explains</a> main differences between the two, but let’s just say RAID 6 and DDP are similar). Because we have four ESXi hosts and sufficient resources to tolerate the failure of one host, we chose to store objects using Erasure Coding 2+1 - this requires N+M+1 VMs for N-1 redundancy, which means four StorageGRID “storage” VMs.</li>
+  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (N-1). We could use more storage nodes (if we had many dozens of VMs we might need more capacity for that).</li>
+</ul>
+
+<p>Showing Splunk-related data on the EF array, StorageGRID (4 VMs on the left - I shouldn’t have called them SmartStore VMs but that’s what they’re for) and Splunk indexer volumes (on the right, only 2 VMs are shown) would look similar to this:</p>
+
+<p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-02.png" alt="EF-Series storage layout with single shelf for StorageGRID and Splunk indexers" /></p>
+
+<p>Splunk indexers running Linux could use LVM to combine physical volumes into one larger volume, but we could also create large volumes on the array.</p>
+
+<p>How large would these volumes be? That depends on the disk size(s) (from 1.9 to 15.3 TB). They could all have the same size, or we could pick a larger capacity for SSDs in DDP pool, and smaller for the 4 disks in RAID 10 group (or the other way around). We also don’t have to populate all 24 slots.</p>
+
+<p>With 3.8 TB disks in all the 24 slots we’d have:</p>
+
+<ul>
+  <li>Approximately 50 TB for SmartPool data which, after Erasure Coding applied by StorageGRID, translates into 30-odd TB. If by “50 TB” we meant “50 TB for Splunk SmartStore”, we could use 18 (or thereabout) 7.6 TB disks instead.</li>
+  <li>Approximately 7 TB for Hot/Cache Tier which, after RF2 on Splunk, becomes half of that (3.5 TB) - enough for no-churn searches going back 2-3 days (4 nodes @ 300 GB/day, RF2, SF2). To make that a week, we’d use the same number of 7.6 TB disks.</li>
+</ul>
+
+<p>As we have seen, larger disks in DDP pool translate into a larger SmartStore capacity, while larger disks in RAID 10 normally result in a better performance for search and reporting because relatively more data would be available for immediate search queries (without having to fetch it from SmartStore).</p>
+
+<h2 id="capacity-and-performance-scaling">Capacity and performance scaling</h2>
+
+<p>Compute resources could scale to dozens of ESXi servers as common with VMware. But - as mentioned above - if we started with the smallest network switch model (SN2010) we’d have to add additional switches for that, or start with one of larger models (SN2100, SN2700) to avoid the hassle of having to make modifications too soon.</p>
+
+<p>Storage-wise, we could add capacity - and quite a bit of performance - by adding additional disk shelves.</p>
+
+<p>In picture below, to make it easier to to understand and see, only one of four Splunk indexers is shown and only some disk groups are marked (in blue, now RAID 6 vs. DDP in the earlier image, and red, RAID 10, but with two RAID 10 disk groups compared to one in the example before).</p>
+
+<p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-03.png" alt="Fully populated EF570 array for Splunk Smartstore and Hot/Cache Tier" /></p>
+
+<p>The two illustrations above aren’t necessarily “best” ways to lay out storage (for Splunk or in general) but they are “close enough” and meant to show there are different ways to get the capacity, performance, and redundancy for various requirements.</p>
+
+<p>We could increase SmartStore capacity at least fivefold (by adding 4 additional shelves) before we had to add another storage array.</p>
+
+<p>Why “at least” fivefold?</p>
+
+<ul>
+  <li>We could use larger disk drives in other shelves</li>
+  <li>If we didn’t have to grow Splunk Hot/Cache tier, shelves #2 to #5 could use more than 20 drives per shelf for SmartStore data</li>
+  <li>If it turned out RAID 10 was too generous performance-wise, we could use DDP across the board</li>
+</ul>
+
+<h2 id="transition-to-storagegrid-appliances">Transition to StorageGRID appliances</h2>
+
+<p>What if we <em>didn’t</em> want to go beyond one EF570, but instead decided it was time to move SplunkStore to StorageGRID appliances? No problem!</p>
+
+<p>Because StorageGRID clusters can be asymmetric and heterogeneous, it’s possible to further expand this SmartStore deployment not just beyond the size and performance of multiple EF570 arrays, but also with StorageGRID appliances.</p>
+
+<p>We could expand our VM-based StorageGRID cluster with physical StorageGRID appliances, and even gracefully remove StorageGIRD storage node VMs from the cluster, effectively migrating SmartStore data out to StorageGRID appliances without downtime. Other, “storage-less” StorageGRID VMs (administrative VMs, for example) would still live on NetApp HCI but if you wanted to move everything out to StorageGRID appliances, you could (using the StorageGRID SG models which provide network load balancing as well as administrative service).</p>
+
+<p>That would release some or all of the capacity on the EF570, which could be reused for additional Hot/Cache data, or other applications in your NetApp HCI environment.</p>
+
+<p>If we had no immediate need for the freed DDP capacity, we could let StorageGRID run across both VMs and appliances, also transparently to Splunk.</p>
+
+<h2 id="reasons-for-smartstore-on-storagegrid-vms-and-ef-series">Reasons for SmartStore on StorageGRID VMs and EF-Series</h2>
+
+<p>Some readers may wonder: why complicate things and use SmartStore when Erasure Coding 2+1 on top of DDP only decreases (by 33%) the amount capacity that could otherwise be used for Splunk Warm Tier?</p>
+
+<p>As you know, SmartStore has several operational benefits and if you think that’s worth the extra cost, this is one of less expensive ways to do that (with flash storage). Most object storage configurations start at more than 50 TB so you’d probably start with not just 20 TB of extra capacity (overhead of EC 2+1 on DDP in this example) in any case.</p>
+
+<p>Second, deploying a small SmartStore to better understand how it fits your use case (search and reporting patterns, retention requirements, and so on) can help you save money when you deploy SmartStore at scale.</p>
+
+<p>Third, if your SmartStore continues to grow, you can recover capacity allocated to StorageGRID storage VMs.</p>
+
+<p>Four, suppose you realize you need to retain SmartStore data for 365 days, but your search and reporting timelines go back only up to 60 days. Maybe you don’t need 500 TB of all-flash SmartStore capacity? You could expand this EF-based StorageGRID cluster with HDD-based StorageGRID appliances, and use StorageGRID ILM to store SmartStore data in two object store tiers: (1) fast SSD tier on EF-Series, and (2) lower cost tier on StorageGRID appliances. StorageGRID can also use object storage in Public Cloud as its low cost tier.</p>
+
+<p>Five, if you needed an off-site copy of SmartStore data, you could expand StorageGRID with HDD-based appliances at a remote location (it’s never searched, so maybe HDDs will do?) and use StorageGRID ILM policies to replicate SmartStore data to it.</p>
+
+<p>There’s more, but my point is: most Splunk users may not care about some of these reasons, but everyone starting with SmartStore should be able relate to at least one or two and that can matter enough to consider the merits of this approach.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>Splunk users on NetApp HCI with EF-Series arrays can take advantage of SmartStore by using StorageGRID VMs backed by EF-Series arrays.</p>
+
+<p>After capacity requirements are estimated, we select a suitable disk size for DDP pool and from that moment it is very easy to increase SmartStore capacity in <em>single drive</em> increments and scale to hundreds of TBs without complications.</p>
+
+<p>If you’re interested in starting small with SmartStore, I hope this post contains some thoughts that will motivate you to evaluate various approaches.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">• Elasticsearch on NetApp HCI H615C with EF-Series EF280</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">• Virtualized Splunk on NetApp HCI and EF Series iSCSI storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">• BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html">• DiskSpd performance from NetApp HCI VM to EF280</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-01-15 02:04 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
