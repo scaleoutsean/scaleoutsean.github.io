@@ -100,7 +100,7 @@
 
   
   
-    10 minute read
+    12 minute read
   
 
     </span>
@@ -115,10 +115,18 @@
 <ul>
   <li><a href="#assumptions">Assumptions</a></li>
   <li><a href="#netapp-hci-with-mellanox-sn2010-and-ef570">NetApp HCI with Mellanox SN2010 and EF570</a></li>
-  <li><a href="#vm-to-storage-mapping">VM-to-storage mapping</a></li>
+  <li><a href="#vm-to-storage-mapping">VM-to-storage mapping</a>
+    <ul>
+      <li><a href="#tier-capacity-calculation">Tier capacity calculation</a></li>
+    </ul>
+  </li>
   <li><a href="#capacity-and-performance-scaling">Capacity and performance scaling</a></li>
   <li><a href="#transition-to-storagegrid-appliances">Transition to StorageGRID appliances</a></li>
-  <li><a href="#reasons-for-smartstore-on-storagegrid-vms-and-ef-series">Reasons for SmartStore on StorageGRID VMs and EF-Series</a></li>
+  <li><a href="#reasons-for-smartstore-on-storagegrid-vms-and-ef-series">Reasons for SmartStore on StorageGRID VMs and EF-Series</a>
+    <ul>
+      <li><a href="#storage-overheads-compared">Storage overheads compared</a></li>
+    </ul>
+  </li>
   <li><a href="#summary">Summary</a></li>
 </ul>
 
@@ -151,7 +159,7 @@
 
 <h2 id="vm-to-storage-mapping">VM-to-storage mapping</h2>
 
-<p>If we wanted to start with a very small configuration, we could use EF570 array which can fit up to 24 SSD drives in the controller shelf (same as other currently available EF-Series models).</p>
+<p>If we wanted to start with a very small configuration, we could use the EF570 which can fit up to 24 SSD drives in the controller shelf (same as other currently available EF-Series models) and scale to 5 shelves (including the controller shelf).</p>
 
 <ul>
   <li>For VMs running Splunk indexers attached to Hot tier and SmartStore cache, we want volumes on a RAID 10 group because we don’t need a lot of capacity, we want a fast performance and we expect that in the future SmartStore will grow much faster than this tier so RAID 10 is perfect for that</li>
@@ -161,27 +169,35 @@
       <li>Considering the small initial size of this StorageGRID, we take 20 disks to create one DDP pool and on top of it create four volumes (for four VMware datastores), so we have just one volume per each StorageGRID storage node</li>
     </ul>
   </li>
-  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (N-1). We could use more storage nodes (if we had over 100 VMs in this environment we might need more capacity for that)</li>
+  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (we can tolerate the loss of one HCI storage node). If we had over 100 VMs in this environment we might need more capacity and perofrmance and add additional nodes.</li>
 </ul>
 
-<p>Showing Splunk-related data on the EF array, StorageGRID (4 VMs on the leftr and Splunk indexer volumes (on the right, only two VMs are shown) would look similar to this:</p>
+<p>Showing Splunk-related data on the EF array (StorageGRID 4 storage node VMs on the left and Splunk indexer volumes on the right with only two VMs to declutter the image) would look similar to this:</p>
 
 <p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-02.png" alt="EF-Series storage layout with single shelf for StorageGRID and Splunk indexers" /></p>
 
-<p>Splunk indexers running Linux could use LVM to combine two physical volumes into one larger logical volume, but we could also create large volumes on the array to avoid that. LVM would be desirable if we expected Hot Tier may need to be enlarged.</p>
+<p>Splunk indexers running Linux could use LVM to combine two physical volumes into one larger logical volume, but we could also create large volumes on the array to avoid having to do that. LVM would be desirable if we expected Hot Tier may need to grow without new indexers.</p>
 
-<p>How large would these volumes be? That depends on the disk size(s) (from 1.9 to 15.3 TB). They could all have the same size, or we could pick a larger capacity for SSDs in DDP pool, and smaller for the 4 disks in RAID 10 group (or the other way around). We also don’t have to populate all 24 slots.</p>
+<p>If we expect our data retention requirements will soon increase or need more disks for SmartStore, we can start with two partially (or fully) populated shelves. Only one VM of each service (StorageGRID storage node, Splunk indexer) represents each workload.</p>
+
+<p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-04.png" alt="EF-Series storage layout with two shelves for StorageGRID and Splunk indexers" /></p>
+
+<h3 id="tier-capacity-calculation">Tier capacity calculation</h3>
+
+<p>How large would these volumes be? That depends on disk size(s) (from 1.9 to 15.3 TB). They could all have the same size, or we could pick a larger capacity for SSDs in DDP pool, and use a smaller size for the 4 disks in RAID 10 (or the other way around). We also don’t have to populate all 24 slots at once.</p>
 
 <p>With 3.8 TB disks in all the 24 slots we’d have:</p>
 
 <ul>
-  <li>Approximately 50 TB for SmartPool data which, after Erasure Coding applied by StorageGRID, translates into 30-odd TB. If by “50 TB” we meant “50 TB for Splunk SmartStore”, we could use 18 (or thereabout) 7.6 TB disks instead. Each StorageGRID node would have one or two volumes smaller than 20TB.</li>
-  <li>Approximately 7 TB for Hot/Cache Tier which, after Splunk RF2, translates into just below 1 TB - enough for 2-3 days of data (4 nodes @ 300 GB/day, RF2, SF2). To make that a week, we’d use the same number of 7.6 TB disks. You get the idea.</li>
+  <li>Approximately 60 TB for SmartPool data which, after Erasure Coding applied by StorageGRID, translates into 45 TB. If by “50 TB” we meant “50 TB for Splunk SmartStore”, we could use 12 (or thereabout) 7.6 TB disks instead. Each StorageGRID node would have one or two volumes smaller than 20TB.</li>
+  <li>Approximately 7 TB for Hot/Cache Tier which translates to almost 2 TB per each of 4 indexers and enough for 3-4 days of data (with RF=2, daily volume 1,000 GB/day). To make that a week, we’d use the same number of 7.6 TB disks. Using RF=2 on hosts that all have their data on the same RAID 10 doesn’t enhance protection from disk failures, but can help prevent downtime to issues with individual indexer OS, filesystem corruption and such.</li>
 </ul>
 
-<p>As we have seen, larger disks in DDP pool translate into a larger SmartStore capacity, while larger disks in RAID 10 normally result in a better performance for search and reporting because relatively more data would be available for immediate search queries (without having to fetch it from SmartStore).</p>
+<p>It doesn’t have to be done exactly this way. The idea is to find a balance in data protection, performance, manageability (avoid complexity, avoid too many volumes) and other things we care about.</p>
 
-<p>It doesn’t have to be done this way, but the general idea is to find a balance in data protection, performance, manageability (that is, we don’t want 8 volumes in a volume group that’s just 2 TB large if two volumes will serve our purpose) and other things we care about.</p>
+<p>Larger disks in DDP pool translate into a larger SmartStore capacity, while larger disks in RAID 10 normally result in a better performance for search and reporting because relatively more data would be available for immediate queries (without having to fetch it from SmartStore).</p>
+
+<p>Because the optimal size of each tier greatly varies between use cases, applications and user behaviors, even within one Splunk cluster there could be order-of-magnitude differences between optimal settings for each index (such as 3 days on Hot Tier for one index vs. 30 days for another).</p>
 
 <h2 id="capacity-and-performance-scaling">Capacity and performance scaling</h2>
 
@@ -189,20 +205,23 @@
 
 <p>Storage-wise, we could add capacity - and quite a bit of performance - by adding additional disk shelves.</p>
 
-<p>In picture below, to make it easier to to understand and see, only one of four Splunk indexers is shown and only some disk groups are marked (in blue, now RAID 6 vs. DDP in the earlier image, and red, RAID 10, but with two RAID 10 disk groups compared to one in the example before).</p>
+<p>In picture below, to make it easier to on the eye, only one of four Splunk indexers is shown and only some disk groups are highlighted:</p>
+
+<ul>
+  <li>StorageGRID capacity is now carved out of independent RAID 6 disk groups compared to one DDP in the earlier image</li>
+  <li>Splunk Hot/Cache is across two independent RAID 10 disk groups (LVM with concatenated logical volumes, Splunk RF still 2)</li>
+</ul>
 
 <p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-03.png" alt="Fully populated EF570 array for Splunk Smartstore and Hot/Cache Tier" /></p>
 
-<p>The two illustrations above aren’t necessarily “best” ways to lay out storage (for Splunk or in general) but they are “close enough” and meant to show there are different ways to get the capacity, performance, and redundancy for various requirements.</p>
+<p>Above illustrations aren’t necessarily “best” ways to lay out storage (for Splunk or in general) but they are “close enough” and indend to show there are different ways to get the capacity, performance, and redundancy for various requirements.</p>
 
-<p>We could increase SmartStore capacity at least fivefold (by adding 4 additional shelves) before we had to add another storage array.</p>
-
-<p>Why “at least” fivefold?</p>
+<p>We could increase SmartStore capacity at least fivefold (by adding 4 additional shelves to the initial deployment with one, controller, shelf) before we’d had to add another storage array or StorageGRID appliances. Why “at least” fivefold?</p>
 
 <ul>
   <li>We could use larger disk drives in other shelves</li>
-  <li>If we didn’t have to grow Splunk Hot/Cache tier, shelves #2 to #5 could use more than 20 drives per shelf for SmartStore data</li>
-  <li>If it turned out RAID 10 was too generous performance-wise, we could use DDP across the board</li>
+  <li>If we didn’t have to grow Hot/Cache tier shelves #2 to #5 could use more than 20 drives per shelf for StorageGRID VMs serving SmartStore</li>
+  <li>If it turned out RAID 10 was too generous performance-wise (i.e. low IOPS observed on Hot/Cache), we could use DDP across the board</li>
 </ul>
 
 <h2 id="transition-to-storagegrid-appliances">Transition to StorageGRID appliances</h2>
@@ -211,7 +230,7 @@
 
 <p>Because StorageGRID clusters can be asymmetric and heterogeneous, it’s possible to further expand this SmartStore deployment not just beyond the size and performance of multiple EF570 arrays, but also with StorageGRID appliances.</p>
 
-<p>We could expand our VM-based StorageGRID cluster with physical StorageGRID appliances, and even gracefully remove StorageGIRD storage node VMs from the cluster, effectively migrating SmartStore data out to StorageGRID appliances without downtime. Other, “storage-less” StorageGRID VMs (administrative VMs, for example) would still live on NetApp HCI but if you wanted to move everything out to StorageGRID appliances, you could (using the StorageGRID SG models which provide network load balancing as well as administrative service).</p>
+<p>We could expand our VM-based StorageGRID cluster with physical StorageGRID appliances, and even gracefully remove StorageGRID storage node VMs from the cluster, effectively migrating SmartStore data out to StorageGRID appliances without downtime. Other, “storage-less” StorageGRID VMs (administrative VMs, for example) would still live on NetApp HCI but if you wanted to move everything out to StorageGRID appliances, you could (using the StorageGRID SG models which provide network load balancing as well as administrative service).</p>
 
 <p>That would release some or all of the capacity on the EF570, which could be reused for additional Hot/Cache data, or other applications in your NetApp HCI environment.</p>
 
@@ -219,11 +238,11 @@
 
 <h2 id="reasons-for-smartstore-on-storagegrid-vms-and-ef-series">Reasons for SmartStore on StorageGRID VMs and EF-Series</h2>
 
-<p>Some readers may wonder: why complicate things and use SmartStore when Erasure Coding 2+1 on top of DDP only decreases (by 33%) the amount capacity that could otherwise be used for Splunk Warm Tier?</p>
+<p>Some may wonder: why complicate things and use SmartStore when Erasure Coding 2+1 on top of DDP only decreases (by 33%) the amount of capacity that could otherwise be used for Splunk Warm Tier?</p>
 
-<p>As you know, SmartStore has several operational benefits and if you think that’s worth the extra cost, this is one of less expensive ways to do that (with flash storage). Most object storage configurations start at more than 50 TB so you’d probably start with not just 20 TB of extra capacity (overhead of EC 2+1 on DDP in this example) in any case.</p>
+<p>First, SmartStore has several operational benefits and if you think that’s worth the extra cost, this is one of less expensive ways to do that (with flash storage). Most object storage configurations start at more than 50 TB so you’d probably start with not just 20 TB of extra capacity (overhead of EC 2+1 on DDP in this example) in any case.</p>
 
-<p>Second, deploying a small SmartStore to better understand how it fits your use case (search and reporting patterns, retention requirements, and so on) can help you save money when you deploy SmartStore at scale.</p>
+<p>Second, deploying a small SmartStore to better understand how it fits your use case (search and reporting patterns, retention requirements, and so on) can help you save money when you deploy SmartStore at scale. You may discover there are indexes that you don’t want to put on SmartStore and decide to add a Warm Tier on a new RAID 5 disk group, for example.</p>
 
 <p>Third, if your SmartStore continues to grow, you can recover capacity allocated to StorageGRID storage VMs.</p>
 
@@ -231,15 +250,56 @@
 
 <p>Five, if you needed an off-site copy of SmartStore data, you could expand StorageGRID with HDD-based appliances at a remote location (it’s never searched, so maybe HDDs will do?) and use StorageGRID ILM policies to replicate SmartStore data to it.</p>
 
-<p>There’s more, but my point is: most Splunk users may not care about some of these reasons, but everyone starting with SmartStore should be able relate to at least one or two and that can matter enough to consider the merits of this approach.</p>
+<p>Six, my earlier statement about losing 33% capacity was not entirely correct: SmartStore saves just one copy of data to Remote Tier, so with tiering to StorageGRID, Splunk RF changes from 2 to 1. Two copies from RAID 10 become one copy on DDP pool with a 50% overhead due to erasure coding used to protect StorageGRID data.</p>
+
+<p>There’s more, but my point is: most Splunk users may not care about some of these reasons, but everyone starting with SmartStore should be able relate to at least one or two, and that can matter enough to consider merits of this approach.</p>
+
+<h4 id="storage-overheads-compared">Storage overheads compared</h4>
+
+<p>To elaborate on point six, here’s a look at the overheads involved in our approach with the first, controller shelf (this doesn’t concern itself with Splunk compression and metadata):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tier</th>
+      <th style="text-align: center">DDP</th>
+      <th style="text-align: center">RAID 10</th>
+      <th style="text-align: center">Splunk RF</th>
+      <th style="text-align: center">Object Store (EC 2+1)</th>
+      <th style="text-align: center">TOTAL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Hot/Cache</td>
+      <td style="text-align: center">-</td>
+      <td style="text-align: center">2x</td>
+      <td style="text-align: center">2x</td>
+      <td style="text-align: center">-</td>
+      <td style="text-align: center">4.0x</td>
+    </tr>
+    <tr>
+      <td>SmartStore</td>
+      <td style="text-align: center">1.1x</td>
+      <td style="text-align: center">-</td>
+      <td style="text-align: center">1x</td>
+      <td style="text-align: center">1.5x</td>
+      <td style="text-align: center">1.7x</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If we used DDP for all data or had more (or less) disks in DDP pool, we’d get different results. Hot/Cache Tier has 4x overhead but its cost is minimal (it’s just four drives for the entire deployment, not per each indexer).</p>
+
+<p>SmartStore on EF-Series doesn’t necessarily have a negative impact of usable storage capacity available to Splunk.</p>
 
 <h2 id="summary">Summary</h2>
 
-<p>Splunk users on NetApp HCI with EF-Series arrays can take advantage of SmartStore by using StorageGRID VMs backed by EF-Series arrays.</p>
+<p>Splunk users on NetApp HCI with EF-Series arrays can take advantage of SmartStore by using StorageGRID VMs backed by an EF-Series array.</p>
 
-<p>After capacity requirements are estimated, we select a suitable disk size for DDP pool and from that moment it is very easy to increase SmartStore capacity in <em>single drive</em> increments and scale to hundreds of TBs without complications.</p>
+<p>After the initial capacity requirements are confirmed, we select a suitable disk size for DDP pool and from that moment it is very easy to increase SmartStore capacity in <em>single drive</em> increments and scale it to hundreds of TBs without complications.</p>
 
-<p>If you’re interested in starting small with SmartStore, I hope this post contains some thoughts that will motivate you to evaluate various approaches.</p>
+<p>If you’re interested in starting small with an on-premises SmartStore, I hope this post motivates you to evaluate this approach.</p>
 
       </article>
     </div>
@@ -339,7 +399,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-15 02:30 </p>
+    <p>2021-01-16 13:39 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
