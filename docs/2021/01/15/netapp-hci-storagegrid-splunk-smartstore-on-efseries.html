@@ -100,7 +100,7 @@
 
   
   
-    12 minute read
+    15 minute read
   
 
     </span>
@@ -117,7 +117,9 @@
   <li><a href="#netapp-hci-with-mellanox-sn2010-and-ef570">NetApp HCI with Mellanox SN2010 and EF570</a></li>
   <li><a href="#vm-to-storage-mapping">VM-to-storage mapping</a>
     <ul>
-      <li><a href="#tier-capacity-calculation">Tier capacity calculation</a></li>
+      <li><a href="#compute-node-sizing-for-splunk-and-storagegrid">Compute node sizing for Splunk and StorageGRID</a></li>
+      <li><a href="#vm-storage-sizing-for-data-on-netapp-hci-storage-nodes">VM storage sizing for data on NetApp HCI storage nodes</a></li>
+      <li><a href="#tier-capacity-calculation-on-ef-series-array">Tier capacity calculation on EF-Series array</a></li>
     </ul>
   </li>
   <li><a href="#capacity-and-performance-scaling">Capacity and performance scaling</a></li>
@@ -169,7 +171,7 @@
       <li>Considering the small initial size of this StorageGRID, we take 20 disks to create one DDP pool and on top of it create four volumes (for four VMware datastores), so we have just one volume per each StorageGRID storage node</li>
     </ul>
   </li>
-  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them because that’s enough both capacity- and redundancy-wise (we can tolerate the loss of one HCI storage node). If we had over 100 VMs in this environment we might need more capacity and perofrmance and add additional nodes.</li>
+  <li>Splunk, StorageGRID and all other VM OS disks live on NetApp HCI storage - we have just two of them (H610S-1) because that’s enough both capacity- and redundancy-wise (we can tolerate the loss of one HCI storage node). If we had over 100 VMs in this environment we might need more capacity and perofrmance and add additional nodes.</li>
 </ul>
 
 <p>Showing Splunk-related data on the EF array (StorageGRID 4 storage node VMs on the left and Splunk indexer volumes on the right with only two VMs to declutter the image) would look similar to this:</p>
@@ -182,7 +184,168 @@
 
 <p><img src="/assets/images/splunk-smartstore-storagegrid-vm-netapp-hci-ef-04.png" alt="EF-Series storage layout with two shelves for StorageGRID and Splunk indexers" /></p>
 
-<h3 id="tier-capacity-calculation">Tier capacity calculation</h3>
+<h3 id="compute-node-sizing-for-splunk-and-storagegrid">Compute node sizing for Splunk and StorageGRID</h3>
+
+<p>Sources:</p>
+
+<ul>
+  <li>Splunk <a href="https://docs.splunk.com/Documentation/Splunk/8.1.0/Capacity/Referencehardware">recommendations</a> for v8.1</li>
+  <li>StorageGRID <a href="http://docs.netapp.com/sgws-114/index.jsp?topic=%2Fcom.netapp.doc.sg-admin%2FGUID-B9B9FB7B-76FA-4C85-99A7-4310E3F24F1C.html">requirements</a> for v11.4 VMs on vSphere</li>
+  <li>NetApp HCI <a href="https://www.netapp.com/media/7977-ds-3881.pdf">datasheet</a> as of now</li>
+</ul>
+
+<p>Following those requirements and recommendations I picked 16 cores (between basic and medium recommendation) for Splunk indexers.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Item</th>
+      <th style="text-align: left">Detail</th>
+      <th style="text-align: center">VM x Cores</th>
+      <th style="text-align: right">Total Cores</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Splunk</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right"><strong>82</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Indexer</td>
+      <td style="text-align: center">4 x 16</td>
+      <td style="text-align: right">64</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Search Head</td>
+      <td style="text-align: center">1 x 16</td>
+      <td style="text-align: right">16</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">StorageGRID</td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right"><strong>56</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Admin</td>
+      <td style="text-align: center">1 x 8</td>
+      <td style="text-align: right">8</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Backup Admin</td>
+      <td style="text-align: center">1 x 8</td>
+      <td style="text-align: right">8</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Storage Node</td>
+      <td style="text-align: center">4 x 8</td>
+      <td style="text-align: right">32</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">Gateway Node</td>
+      <td style="text-align: center">1 x 8</td>
+      <td style="text-align: right">8</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Other</td>
+      <td style="text-align: left">VCSA, HCI Mgmt, Splunk UFW</td>
+      <td style="text-align: center">2 x 8</td>
+      <td style="text-align: right"><strong>16</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>TOTAL</strong></td>
+      <td style="text-align: left"> </td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right"><strong>154</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>At a 75% average utilization, 115 cores would be required.</p>
+
+<p>StorageGRID has a lot of CPUs allocated to it, but we know its only hard workload is searches for non-cached data, therefore I would epxect with one ESXi down only search on non-cached SmartStore data could be slightly, if at all, impacted.</p>
+
+<p>Using H410C compute nodes:</p>
+
+<ul>
+  <li>4 x H410C with 2 x Xeon Gold 6138 (20 cores) = 160 cores
+    <ul>
+      <li>120 cores with one ESXi node down - enough to run Splunk at ~90% and the rest at ~50%</li>
+    </ul>
+  </li>
+</ul>
+
+<p>If using H615C compute nodes (these need just 2 x 10/25G ports per server, but require vSphere Enterprise Plus):</p>
+
+<ul>
+  <li>4 x H615C with 2 x Xeon Gold 6252 (24 cores) = 192 cores
+    <ul>
+      <li>144 cores with one ESXi node down</li>
+      <li>Because these 1U nodes require just two SFP28 ports each, we can double Splunk cluster size without adding additional ethernet switches</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This sizing exercise is obviously just an example that should be further refined.</p>
+
+<p>I did not consider RAM requirements because NetApp HCI compute nodes come with plenty of RAM and we could probably beef up RAM resources of Splunk search head and indexers above the Splunk-recommended values.</p>
+
+<h3 id="vm-storage-sizing-for-data-on-netapp-hci-storage-nodes">VM storage sizing for data on NetApp HCI storage nodes</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Item</th>
+      <th style="text-align: right">Size (GB)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">OS for all Splunk VMs</td>
+      <td style="text-align: right">200</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">OS and Data for SG Admin &amp; Backup</td>
+      <td style="text-align: right">1,000</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">OS for SG Storage Nodes</td>
+      <td style="text-align: right">400</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">OS for SG Gateway Node</td>
+      <td style="text-align: right">100</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">OS and Data for NetApp HCI Management Node</td>
+      <td style="text-align: right">500</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Everything else</td>
+      <td style="text-align: right">500</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>TOTAL</strong></td>
+      <td style="text-align: right"><strong>2,700</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>NetApp HCI usually gets 3x storage efficiency, some of this stuff would deduplicate really well (e.g. all OS) and Management Node can be thin-provisioned. It’s possible only 1TiB of usable capacity might be enough - especially if we moved StorageGRID Admin Nodes out to that DDP pool on EFF (that would take away 1TB from that pool later so keep that in mind when sizing).</p>
+
+<p>Two H610S-1 (12 x 960 GB SSD each) are more than enough for this. If we wanted to use H410C compute nodes (which use the same chassis as H410S storage nodes), we could consider using two or three of the smallest H410S (6 x 480GB SSD each) instead, but it would be wise to give a try in the lab to avoid surprises.</p>
+
+<p>If you’re interested in the details of deploying StorageGRID on NetApp HCI, see <a href="https://www.netapp.com/pdf.html?item=/media/17114-tr4734pdf.pdf">NetApp TR-4734</a> but remember that with storage node data on EF-Series, some of the detailed tuning advice for NetApp HCI storage would not be required.</p>
+
+<h3 id="tier-capacity-calculation-on-ef-series-array">Tier capacity calculation on EF-Series array</h3>
 
 <p>How large would these volumes be? That depends on disk size(s) (from 1.9 to 15.3 TB). They could all have the same size, or we could pick a larger capacity for SSDs in DDP pool, and use a smaller size for the 4 disks in RAID 10 (or the other way around). We also don’t have to populate all 24 slots at once.</p>
 
@@ -399,7 +562,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-01-16 15:32 </p>
+    <p>2021-01-16 18:59 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
