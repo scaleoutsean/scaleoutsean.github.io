@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Deploying Rancher Worker VMs to NetApp HCI with VMware VSS | Acting Technologist
+            Get Rancher Kubernetes deployment log for on NetApp HCI mNode | Acting Technologist
       
     </title>
     <meta name="description" content="
-     The impact of Virtual Standard Switch on Host Selection
+     Get Rancher deployment log on NetApp HCI
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,45 +90,57 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</h2>
+        <h2 id = "post-title">Get Rancher Kubernetes deployment log for on NetApp HCI mNode</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>20 Nov 2020</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>29 Jan 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    1 minute read
+    2 minute read
   
 
     </span>
   </div>
   
-        <p>Earlier this week I spotted the advice to not select a VM host when deploying Rancher worker VMs to a vSphere environment where DRS is enabled, because “DRS is smarter than you.”</p>
+        <p>As I explained in the lengthy <a href="/2020/12/08/get-bearer-token-for-netapp-hci-hybrid-cloud-control-logs">post</a> related to mNode/HCC logs, mNode documentation is misleading in several places and in this particular case service name you need to provide isn’t really a service name: my HCI mNode is called <code class="language-plaintext highlighter-rouge">mnode</code>, so “service name” I should provide is really <code class="language-plaintext highlighter-rouge">mnode_${servicename}</code>.</p>
 
-<p><img src="/assets/images/rancher-2-deploy-to-specific-vsphere-host.png" alt="Select VM Host in a DRS environment" /></p>
+<p>Rancher deployment service on NetApp HCI mNode is called <code class="language-plaintext highlighter-rouge">k8sdeployer</code>, which makes my full URL (assuming I have a valid bearer token):</p>
 
-<p>That’s almost certainly true - especially in the mid and long term - but at the moment of deployment you might have an edge.</p>
+<blockquote>
+  <p>https://${mnode-ip}/mnode/1/logs?lines=1000&amp;service-name=mnode_k8sdeployer&amp;type=service</p>
+</blockquote>
 
-<p>Situation:</p>
+<p>This gets me 1,000 (if available) most recent lines of that service log.</p>
 
-<ul>
-  <li>Five VM hosts with ESXi</li>
-  <li>Virtual Standard Switch (VSS) because maybe you don’t have vSphere Enterprise Edition</li>
-  <li>Rancher VMs are commonly deployed on VM Hosts 1, 2, and 3 so that they don’t run all over the place</li>
-</ul>
+<p>In mNode Swagger:</p>
 
-<p>If you use a Resource Pool and the three hosts are part of it, then it’s more likely that DRS will make better decisions over time.</p>
+<p><img src="/assets/images/hcc-get-k8sdeployer-logs-01.png" alt="Get logs from mNode Swagger UI" /></p>
 
-<p>If you do not have a Resource Pool and only Hosts 1, 2 and 3 are connected to networks required by your Rancher workloads, it’s probably better to pick one of the hosts and manually redistribute VMs after that (add anti-affinity rules, etc.).</p>
+<p>If your Rancher deployment fails and you don’t grab a screenshot or copy the error, you can get the log from the Swagger UI or via the API (see the post linked at the top for instructions on how to do it from PowerShell or Python).</p>
 
-<p>One such situation is where only Hosts 1-3 have networks or allow VLANs that can allow Rancher VMs to get to SolidFire Storage Virtual IP (i.e. iSCSI).</p>
+<h2 id="example">Example</h2>
 
-<p>In a regular NetApp HCI environment only hosts (not VMs) need to get to SolidFire iSCSI IPs (each ESXi has 2 networks for that purpose). With VDS this is easy to apply and maintain over a cluster of hosts, but with VSS it takes some effort and some users may find value in limiting that complexity to only a subset of VM hosts.</p>
+<p>Here’s an example I encountered the other day:</p>
 
-<p>If you use VSS and run Rancher on a subset of VM hosts, it’s a good idea to create a Resource Pool with these “Rancher” Hosts.</p>
+<blockquote>
+  <p>“Error: error reconfiguring virtual machine: error in virtual machine configuration: this VM lacks a vApp configuration and cannot have vApp properties set on it”</p>
+</blockquote>
+
+<p>That didn’t surprise me at all because I hadn’t deleted a pre-existing VM template with the “default” name. I had it there because of ez-rancher testing in recent weeks (see <a href="https://github.com/NetApp/ez-rancher/">ez-rancher</a> docs), and it was heavily butchered (all sorts of custom crap installed in it). None of that turned out to be helpful.</p>
+
+<p>Rancher deployment errors usually can be cleared from the UI, but if that doesn’t work you can try to reboot mNode to clear the error that way, if no one or nothing is using it at the moment (although an enabled ActiveIQ collector always is, that one can survive reboots just fine).</p>
+
+<h2 id="if-you-avoid-errors-you-wont-need-to-troubleshoot-them">If you avoid errors you won’t need to troubleshoot them</h2>
+
+<p>A better approach - in my mind - is to use ez-rancher until you understand what various options do, and deploy production clusters with HCC because that gives you an officially supported deployment and frees you from having to deal with errors and troubleshooting due to incorrect use.</p>
+
+<p>Even if you plan to use the free version (without paid support), it’s still better to use HCC deployment correctly because it helps avoid troubles with HCC (and HCC and mNode are used for other services which may be important for production and support (ActiveIQ, for example).</p>
+
+<p>Late last year I posted three ez-rancher deployment videos on YouTube, find the first one <a href="https://www.youtube.com/watch?v=m54PM9dJujE">here</a>.</p>
 
       </article>
     </div>
@@ -136,10 +148,6 @@
       <div class="categories">
     <span><p>Categories:</p>
     
-    
-      <a href="
-      /categories/#kubernetes">kubernetes</a>
-      &nbsp; 
     
       <a href="
       /categories/#virtualization">virtualization</a>
@@ -165,12 +173,6 @@
     
         
     
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/01/29/get-rancher-deployment-log-from-netapp-hci-hcc.html">• Get Rancher Kubernetes deployment log for on NetApp HCI mNode</a></h5>
-          </div>
-          
-          
         
     
       
@@ -231,6 +233,21 @@
         
           <div class = "related-posts">
           <h5><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">• Elasticsearch on NetApp HCI H615C with EF-Series EF280</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html">• Virtualized Splunk on NetApp HCI and EF Series iSCSI storage</a></h5>
           </div>
           
           
