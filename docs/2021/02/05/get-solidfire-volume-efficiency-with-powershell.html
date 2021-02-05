@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Splunk sizing with shared core HCI vendors | Acting Technologist
+            Use SolidFire PowerShell Tools to find low efficiency volumes | Acting Technologist
       
     </title>
     <meta name="description" content="
-     But I thought *you* checked it!
+     How to get volume efficiency information on SolidFire
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,34 +90,61 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Splunk sizing with shared core HCI vendors</h2>
+        <h2 id = "post-title">Use SolidFire PowerShell Tools to find low efficiency volumes</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Jan 2021</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>05 Feb 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    Less than 1 minute read
+    2 minute read
   
 
     </span>
   </div>
   
-        <p>In recent weeks I’ve done a fair amount of reading about log management solutions, and I have to say the quality of technical material related to Splunk and Elasticsearch from mainstream vendors is not very good.</p>
+        <p>NetApp Hybrid Cloud Control (HCC) lets you access volume details to a slightly greater detail than the SolidFire Web UI. One additional detail that we are interested about is volume (storage utilization) efficiency.</p>
 
-<p>Shared-core HCI vendors are worst because not one ever tells you what you’re overpaying for - storage, compute, software, or indeed “all of the above”- when you use their “black box” sizing approaches. And when you have no idea what’s going on, no sizing can be wrong and your IT budget tends to become their performance bottleneck.</p>
+<p>You can use this information to identify poorly utilized volumes (again, in terms of storage efficiency, not storage performance) and possibly do something about it.</p>
 
-<p>The other problem is their Splunk solution documentation looks superficial and sloppy, which makes you wonder just how much effort went into optimizing these solutions.</p>
+<p>If you have a bunch of volumes, you can’t do that every day or week. I created a very simple script to get you started - it’s available in my Github repository <code class="language-plaintext highlighter-rouge">awesome-solidfire</code>. The way to use it is simple: <code class="language-plaintext highlighter-rouge">./GetSfVolEff $EfficiencyFactor</code></p>
 
-<p><img src="/assets/images/splunk-sizing-dell-calculation.png" alt="" /></p>
+<p>First we list Volume Efficiency of all volumes, and separately those which have volume efficiency less than or equal to $EfficiencyFactor. If $EfficiencyFactor isn’t provided, <code class="language-plaintext highlighter-rouge">2</code> is assumed (that is a pretty low efficiency for SolidFire environments).</p>
 
-<p>You’d need more typists than that to manually store data in SmartStore buckets, but Amazon Mechanical Turk may be able to provide sufficient scale and performance for your log archiving needs.</p>
+<p>Examples:</p>
 
-<p><img src="/assets/images/splunk-sizing-nutanix-calculation.png" alt="" /></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Get-SfVolEff 3</code>: find volume IDs and names of volumes with storage efficiency less than or equal to 3</li>
+  <li><code class="language-plaintext highlighter-rouge">Get-SfVolEff</code>: find volume IDs and names of volumes with storage efficiency less than or equal to default (2)</li>
+</ul>
 
+<p>I wasn’t particularly inspired, so the formatting is crap. But it can still save you some time compared to doing the same in the HCC Web UI.</p>
+
+<pre><code class="language-raw">./Get-SfVolEff.ps1  
+Cut-off efficiency factor: 2 (default)
+==== OVERVIEW: VOLUMES' EFFICIENCY (Volume ID, Name, Efficiency Factor) ====
+52 scaleoutsean-1 218.98
+53 scaleoutsean-2 258.97
+167 hv191 28.66
+168 hv192 1
+==== SUMMARY: LOW EFFICIENCY VOLUMES (Volume ID, Name, Efficiency Factor) ====
+168 hv192 1
+</code></pre>
+
+<p>In the Summary we can see Volume ID 168 (name: hv192) has the efficiency of 1x (it’s empty, that’s why).</p>
+
+<p>If I had more time and wanted to use this myself I’d do the following:</p>
+
+<ul>
+  <li>Output results in HTML with links to Volume IDs in the SolidFire UI (HCICollector’s Grafana interface has this “feature”)</li>
+  <li>Option to sort volumes by size, efficiency, name</li>
+  <li>Add few lines of PowerCLI to check these volumes (get a list of VMs and sort them by size, number of VMware snapshots) - this could need a bit more work as we’d have to find a way to figure out which SolidFire Volume ID maps to which VMware datastore. If we created all datastores with Element Plug-in for vCenter and do not have duplicate volume names, that would make things easier.</li>
+</ul>
+
+<p>But I did this for someone who asked for help, and I don’t want to add random stuff without knowing if it’d be useful.</p>
 
       </article>
     </div>
@@ -127,7 +154,7 @@
     
     
       <a href="
-      /categories/#random">random</a>
+      /categories/#automation">automation</a>
        
     
   </span>
@@ -214,75 +241,6 @@
         
     
         
-          <div class = "related-posts">
-          <h5><a href="/2021/01/19/storagegird-versioning-example.html">• StorageGRID object versioning</a></h5>
-          </div>
-          
-          
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
     
       
     
@@ -356,22 +314,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/24/scary-bs-postman-ssl-certs.html">• Helpful waste of time</a></h5>
-          </div>
-          
-          
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2020/11/20/solidfire-netapp-hci-dark-mode.html">• Dark Mode for NetApp HCI and SolidFire</a></h5>
+          <h5><a href="/2020/12/19/solidfire-powershell-python-cli-sdk-1.7.html">• SolidFire PowerShell Tools, Python CLI and SDK pip packages v1.7</a></h5>
           </div>
           
           
@@ -395,7 +338,46 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/17/muddying-gh-page-waters.html">• Muddying the gh-pages waters</a></h5>
+          <h5><a href="/2020/12/08/get-bearer-token-for-netapp-hci-hybrid-cloud-control-logs.html">• Get NetApp Hybrid Cloud Control logs via the HCC API</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/28/powershell-set-sfqosexception.html">• Set Temporary Storage QoS Policy for SolidFire Volume</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/27/solidfire-mnode-hcc-log-forwarding.html">• SolidFire mNode and HCC Log Fowarding</a></h5>
           </div>
           
           
