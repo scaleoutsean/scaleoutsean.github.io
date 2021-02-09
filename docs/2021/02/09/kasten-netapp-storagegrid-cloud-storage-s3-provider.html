@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Splunk sizing with shared core HCI vendors | Acting Technologist
+            StorageGRID as Cloud Storage (S3) Provider for Kasten K10 | Acting Technologist
       
     </title>
     <meta name="description" content="
-     But I thought *you* checked it!
+     Configure NetApp StorageGRID for Kasten K10 cloud backup repository
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,34 +90,39 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Splunk sizing with shared core HCI vendors</h2>
+        <h2 id = "post-title">StorageGRID as Cloud Storage (S3) Provider for Kasten K10</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Jan 2021</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>09 Feb 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    Less than 1 minute read
+    1 minute read
   
 
     </span>
   </div>
   
-        <p>In recent weeks I’ve done a fair amount of reading about log management solutions, and I have to say the quality of technical material related to Splunk and Elasticsearch from mainstream vendors is not very good.</p>
+        <p>Previously I blogged about using Kasten with NetApp HCI and SolidFire, but I did not have time to examine another NetApp storage integration, namely that of NetApp StorageGRID which can be used as a Cloud Provider in Kasten K10.</p>
 
-<p>Shared-core HCI vendors are worst because not one ever tells you what you’re overpaying for - storage, compute, software, or indeed “all of the above”- when you use their “black box” sizing approaches. And when you have no idea what’s going on, no sizing can be wrong and your IT budget tends to become their performance bottleneck.</p>
+<p>It’s extremely easy to set it up: in Kasten K10 Web UI go to Location Profiles add a Generic Provider and provide required details. Make sure you apply appropriate ACLs to this bucket (<code class="language-plaintext highlighter-rouge">sean-backup</code>, in my case) to protect it from unauthorized access.</p>
 
-<p>The other problem is their Splunk solution documentation looks superficial and sloppy, which makes you wonder just how much effort went into optimizing these solutions.</p>
+<p><img src="/assets/images/kasten-k10-bucket-storagegrid-11.4.png" alt="Kasten Cloud Provider in Location Profiles" /></p>
 
-<p><img src="/assets/images/splunk-sizing-dell-calculation.png" alt="" /></p>
+<p>If you enable K10 Disaster Recovery, K10 creates a unique bucket (<code class="language-plaintext highlighter-rouge">d5cca499-f80d-4574-a539-5c90cd0987f2</code>) which is also your “cluster ID”, from which Kasten can restore applications and data to another site and another Kubernetes cluster.</p>
 
-<p>You’d need more typists than that to manually store data in SmartStore buckets, but Amazon Mechanical Turk may be able to provide sufficient scale and performance for your log archiving needs.</p>
+<p><img src="/assets/images/kasten-k10-bucket-storagegrid-11.4-bucket-content.png" alt="StorageGRID bucket in use by Kasten K10" /></p>
 
-<p><img src="/assets/images/splunk-sizing-nutanix-calculation.png" alt="" /></p>
+<p>Individual data protection policies (for applications and such) are stored in its subdirectories.</p>
 
+<p>If you have three StorageGRID storage nodes (which can be VMs), Kasten K10 and a cluster of six StorageGRID nodes (three per site) can provide cross-site data protection for your Kubernetes cluster.</p>
+
+<p>Such small VM-based StorageGRID clusters (starting at just few TB of usable capacity) can be expanded to PBs by adding additional virtual or physical StorageGRID appliances.</p>
+
+<p>If you run StorageGRID on NetApp HCI or other virtualized infrastructure and use external storage, consider E-Series. I wrote about StorageGRID on NetApp HCI and E-Series in <a href="/2021/01/15/netapp-hci-storagegrid-splunk-smartstore-on-efseries">this post</a>. For 50, 100 TB or more, use StorageGRID appliances to provision bulk of that capacity (“edge” sites can be served by VM-based StorageGRID “pools” because StorageGRID supports asymmetric hardware configurations).</p>
 
       </article>
     </div>
@@ -127,7 +132,7 @@
     
     
       <a href="
-      /categories/#random">random</a>
+      /categories/#kubernetes">kubernetes</a>
        
     
   </span>
@@ -160,80 +165,8 @@
         
     
         
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
           <div class = "related-posts">
-          <h5><a href="/2021/01/19/storagegird-versioning-example.html">• StorageGRID object versioning</a></h5>
+          <h5><a href="/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">• Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01</a></h5>
           </div>
           
           
@@ -374,22 +307,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/24/scary-bs-postman-ssl-certs.html">• Helpful waste of time</a></h5>
-          </div>
-          
-          
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2020/11/20/solidfire-netapp-hci-dark-mode.html">• Dark Mode for NetApp HCI and SolidFire</a></h5>
+          <h5><a href="/2020/12/21/kasten-rancher-netapp-hci-solidfire-k8s-backup.html">• Protect your Kubernetes applications and data with Kasten and SolidFire</a></h5>
           </div>
           
           
@@ -413,7 +331,85 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/17/muddying-gh-page-waters.html">• Muddying the gh-pages waters</a></h5>
+          <h5><a href="/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html">• Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/20/rancher-and-drs.html">• Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</a></h5>
           </div>
           
           
