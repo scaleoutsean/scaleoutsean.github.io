@@ -373,7 +373,7 @@ time="2021-02-12T08:15:38Z" level=error msg="GRPC error: rpc error: code = Inter
 
 <p><img src="/assets/images/solidfire-custom-k10-independent-retention-and-replication.png" alt="Custom snapshot schedule, retention and other settings" /></p>
 
-<p>Again, you should not touch K10 snapshots (let it control its own) - if you want a separate schedule, create it separately and give those snapshots easily recognizable names.</p>
+<p>Again, you should not touch K10 snapshots (let it control its own) - if you want a custom snapshot schedule and behavior, create it separately on SolidFire and give those snapshots easily recognizable names.</p>
 
 <h3 id="application-and-snapshot-management">Application and Snapshot Management</h3>
 
@@ -414,9 +414,9 @@ time="2021-02-12T08:15:38Z" level=error msg="GRPC error: rpc error: code = Inter
 
 <p>The other curiosity - related to several other sections of this post - is that it seems that K10 export (to S3) necessitates the creation of a clone from a snapshot of the protected volume (as expected - I mentioned at the very top that SoliFire snapshots cannot be presented to hosts - they need to be cloned so that we can read and backup data from a clone).</p>
 
-<p>But because all protected volumes must allow retention of discarded volumes, what happens is after such operations complete and the cloned PV is released, they just stay there (reclaim policy: Retain) in K8s and on SolidFire (the screenshot above).</p>
+<p>But because all protected volumes <em>must</em> allow retention of released PVs, what happens is after such operations complete and the cloned PV is released, temporary PVs just stay there (reclaim policy: Retain) in K8s and on SolidFire (the screenshot above). This seems unavoidable, “by design” behavior of SCs.</p>
 
-<p>Remember to periodically delete Released volumes (first from Kubernetes, then from SolidFire). Also remember to <em>not</em> delete <em>all</em> Released volumes - not all Released volumes are abandoned clones - some may have snapshots that K10 needs to protect data.</p>
+<p>So remember to periodically delete Released volumes (first remove them from Kubernetes (possibly with <code class="language-plaintext highlighter-rouge">tridentctl</code>, if you find a way to automate), then from SolidFire). Also remember to <em>not</em> delete <em>all</em> Released volumes. Not all Released volumes are abandoned clones - some may have snapshots that K10 needs to protect data.</p>
 
 <h4 id="expect-the-unexpected">Expect the unexpected</h4>
 
@@ -899,7 +899,7 @@ Events:        &lt;none&gt;
 
     
   </div><footer class= "footer">
-    <p>2021-02-12 19:35 </p>
+    <p>2021-02-12 19:48 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
