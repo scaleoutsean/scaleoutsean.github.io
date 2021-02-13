@@ -100,7 +100,7 @@
 
   
   
-    24 minute read
+    26 minute read
   
 
     </span>
@@ -128,6 +128,10 @@
           <li><a href="#expect-the-unexpected">Expect the unexpected</a></li>
         </ul>
       </li>
+    </ul>
+  </li>
+  <li><a href="#diagram">Diagram</a>
+    <ul>
       <li><a href="#automation">Automation</a></li>
     </ul>
   </li>
@@ -433,6 +437,57 @@ time="2021-02-12T08:15:38Z" level=error msg="GRPC error: rpc error: code = Inter
 <p><img src="/assets/images/kasten-snapshot-schedule-03.png" alt="SolidFire snapshots - 2 hourly and 1 daily" /></p>
 
 <p>But currently SolidFire snapshots keep piling up (see Appendix B for a DIY workaround).</p>
+
+<h2 id="diagram">Diagram</h2>
+
+<p>How do we put these pieces together?</p>
+
+<p>There are several ways to do it, but most of my customers run Kubernetes in VMs (on top of VMware), so I’ll show a VMware-based Kubernetes environment on top of NetApp HCI.</p>
+
+<p><img src="/assets/images/solidfire-kasten-storagegrid-diagram.png" alt="Protect Kubernetes with SolidFire, Kasten and StorageGRID" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Item</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">1</td>
+      <td style="text-align: left">K10 takes app &amp; PV data snapshot, snapshots drive Trident CSI</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">2</td>
+      <td style="text-align: left">Trident CSI takes SolidFire PV snapshots</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">3</td>
+      <td style="text-align: left">K10 snapshots of encapsulated apps and persistent data are exported to StorageGRID</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">4</td>
+      <td style="text-align: left">Optionally you can bypass K8s and create own schedule for volume and snapshot replication, as well as VMware SRM (RPO 0m (sync) or 5m+ (async))</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">5a</td>
+      <td style="text-align: left">Trident CSI can clone SolidFire-replicated snapshots and volumes (from step 4) and import them into K8s (RTO &lt; 5m)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">5b</td>
+      <td style="text-align: left">Kubernetes VMs and other data can also be failed over thanks to replication of VMFS filesystems hosting the cluster (RTO &lt; 5m), VMware SRM, Cleondris HCC or manually</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">6</td>
+      <td style="text-align: left">Restore applications and data from K10 by importing backups from StorageGRID. K10 doesn’t need to be aware there are multiple StorageGRID sites</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This could be 1 site (2 racks, or 2 buildings), 2 sites or 3 sites. A minimal deployment with full redundancy and all features except site replication would consist of one site with NetApp HCI and StorageGRID running out of VMs.</p>
+
+<p>Depending on how much data there is to protect, StorageGRID could run out of VMs or use physical appliances (or use appliances on PROD site and VMs on DR site).</p>
 
 <h3 id="automation">Automation</h3>
 
@@ -899,7 +954,7 @@ Events:        &lt;none&gt;
 
     
   </div><footer class= "footer">
-    <p>2021-02-12 19:48 </p>
+    <p>2021-02-13 15:14 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
