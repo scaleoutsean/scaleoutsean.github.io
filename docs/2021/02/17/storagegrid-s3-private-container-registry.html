@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            solid-rancher | Acting Technologist
+            Use StorageGRID for private container registry | Acting Technologist
       
     </title>
     <meta name="description" content="
-     Rancher Kubernetes with NetApp HCI and SolidFire
+     StorageGRID as S3 back-end for Docker Registry server
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,29 +90,100 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">solid-rancher</h2>
+        <h2 id = "post-title">Use StorageGRID for private container registry</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>16 Nov 2020</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>17 Feb 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    Less than 1 minute read
+    1 minute read
   
 
     </span>
   </div>
   
-        <p><code class="language-plaintext highlighter-rouge">solid-rancher</code> is a Github repo I created to organize and enrich information related to Rancher on SolidFire (and NetApp HCI in general).</p>
+        <p><a href="https://blog.netapp.com/blogs/deploying-docker-registry-on-netapp-storagegrid-webscale/">This</a> post needs a refresh. Work by the Docker docs and use StorageGRID values like so:</p>
 
-<p>A non-mission is to substitute or duplicate information from the official documentation (whether from Rancher or from NetApp).</p>
+<pre><code class="language-raw">- regionendpoint: https://s3.dot.org:8443  # StorageGRID S3 API endpoint
+- bucket: docker-registry        # create it beforehand, secure with S3 ACLs
+- secure: true                   # use HTTPS (strongly recommended)
+- v4auth: true                   # v4 auth, we want this
+- chunksize: 8388608             # Docker Registry min is 5*1024*1024, here 8 MiB
+- rootdirectory: /scaleoutsean   # "subdirectory" in bucket
+</code></pre>
 
-<p>Like with other repos I maintain, the idea is to share useful information quickly and in an accessible way. Quality contributions are welcome (submit issue on Github).</p>
+<p>There are other settings, some mandatory (but not StorageGRID-specific), some optional. I haven’t tested <code class="language-plaintext highlighter-rouge">encrypt</code> (optional, default <code class="language-plaintext highlighter-rouge">false</code>), for example.</p>
 
-<p>This repo is experimentally published as a Web site located at <a href="https://scaleoutsean.github.io/solid-rancher/">https://scaleoutsean.github.io/solid-rancher</a>.</p>
+<p>Start Docker registry container (by default it runs on port 5000, but I’m running mine on port 5001) and push a docker image to it:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker push localhost:5001/sean/onecollect:2.2
+The push refers to repository <span class="o">[</span>localhost:5001/sean/onecollect]
+1f86270f8b10: Pushed 
+d8e7bb532026: Pushed 
+4491ef6d3684: Pushed 
+237fede51eb1: Pushed 
+22b25abc8483: Pushed 
+3079b27917f6: Pushed 
+474ea542cb75: Pushed 
+d65a2752aa83: Pushed 
+a82f5cf3c2ac: Pushed 
+0484528dc83e: Pushed 
+40a9a68a4a2d: Pushed 
+1704948fdfa1: Pushed 
+43111861f90f: Pushed 
+e39388a91f88: Pushed 
+d69f00255e33: Pushed 
+cc9d18e90faa: Pushed 
+0c2689e3f920: Pushed 
+47dde53750b4: Pushed 
+2.2: digest: sha256:11752ab8043ac8eea544cd1f94540f3cc7f2999b678db4c06c84e8b0d1d4fde1 size: 4070
+</code></pre></div></div>
+
+<p><img src="/assets/images/storagegrid-docker-s3-registry.png" alt="StorageGRID docker-registry bucket" /></p>
+
+<p>Because we downloaded that Docker image from Docker Hub first, now we have two:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker images | <span class="nb">grep </span>coll
+localhost:5001/sean/onecollect       2.2                 fb484820200c        2 months ago        350MB
+netapp/onecollect                    latest              fb484820200c        2 months ago        350MB
+</code></pre></div></div>
+
+<p>Remove both of these and try to download <a href="https://hub.docker.com/r/netapp/onecollect/">OneCollect</a> from StorageGRID-backed private registry:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker pull localhost:5001/sean/onecollect:2.2
+2.2: Pulling from sean/onecollect
+6a5697faee43: Pull <span class="nb">complete 
+</span>ba13d3bc422b: Pull <span class="nb">complete 
+</span>a254829d9e55: Pull <span class="nb">complete 
+</span>307bfc31a030: Pull <span class="nb">complete 
+</span>8d16aae92253: Pull <span class="nb">complete 
+</span>e880f7506ac2: Pull <span class="nb">complete 
+</span>8658c249d939: Pull <span class="nb">complete 
+</span>e62f0c8b95a8: Pull <span class="nb">complete 
+</span>b3467aefecbc: Pull <span class="nb">complete 
+</span>e6ff3d4e27e5: Pull <span class="nb">complete 
+</span>198075eb550e: Pull <span class="nb">complete 
+</span>aa0aad1f63d7: Pull <span class="nb">complete 
+</span>edcb4255c8da: Pull <span class="nb">complete 
+</span>e6dc89a40119: Pull <span class="nb">complete 
+</span>b8c7dc79a72e: Pull <span class="nb">complete 
+</span>5a15ee51ad5a: Pull <span class="nb">complete 
+</span>2ba1851ce93a: Pull <span class="nb">complete 
+</span>1f9a330b5ade: Pull <span class="nb">complete 
+</span>Digest: sha256:11752ab8043ac8eea544cd1f94540f3cc7f2999b678db4c06c84e8b0d1d4fde1
+Status: Downloaded newer image <span class="k">for </span>localhost:5001/sean/onecollect:2.2
+localhost:5001/sean/onecollect:2.2
+</code></pre></div></div>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li>Docker Registry <a href="https://docs.docker.com/registry/storage-drivers/s3/">S3 storage driver</a> options</li>
+</ul>
 
       </article>
     </div>
@@ -122,7 +193,7 @@
     
     
       <a href="
-      /categories/#projects">projects</a>
+      /categories/#containers">containers</a>
        
     
   </span>
