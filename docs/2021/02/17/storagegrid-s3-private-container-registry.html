@@ -18,7 +18,7 @@
       
     </title>
     <meta name="description" content="
-     StorageGRID as S3 back-end for Docker Registry server
+     StorageGRID as S3 back-end for Docker / Harbor Registry server
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -100,19 +100,21 @@
 
   
   
-    1 minute read
+    3 minute read
   
 
     </span>
   </div>
   
-        <p><a href="https://blog.netapp.com/blogs/deploying-docker-registry-on-netapp-storagegrid-webscale/">This</a> post needs a refresh, but tldr of it is: you need to work by Docker docs and use StorageGRID values like so:</p>
+        <h2 id="docker-registry">Docker Registry</h2>
+
+<p><a href="https://blog.netapp.com/blogs/deploying-docker-registry-on-netapp-storagegrid-webscale/">This</a> post needs a refresh, but tldr of it is: you need to work by Docker docs and use StorageGRID values like so:</p>
 
 <pre><code class="language-raw">- regionendpoint: https://s3.dot.org:8443  # StorageGRID S3 API endpoint
 - bucket: docker-registry        # create it beforehand, secure with S3 ACLs
-- secure: true                   # use HTTPS (strongly recommended)
+- secure: true                   # use HTTPS to SG S3 (strongly recommended)
 - v4auth: true                   # v4 auth, we want this
-- chunksize: 8388608             # Docker Registry min is 5*1024*1024, here 8 MiB
+- chunksize: 8388608             # Docker Registry min is 5*1024*1024, here I set 8 MiB
 - rootdirectory: /scaleoutsean   # "subdirectory" in bucket
 </code></pre>
 
@@ -145,7 +147,7 @@ cc9d18e90faa: Pushed
 
 <p>Now you should see some stuff in the registry-backing bucket:</p>
 
-<p><img src="/assets/images/storagegrid-docker-s3-registry.png" alt="StorageGRID docker-registry bucket" /></p>
+<p><img src="/assets/images/storagegrid-docker-s3-registry.png" alt="StorageGRID Docker's docker-registry bucket" /></p>
 
 <p>Because we downloaded that Docker image from Docker Hub first, now we have two:</p>
 
@@ -181,10 +183,76 @@ Status: Downloaded newer image <span class="k">for </span>localhost:5001/sean/on
 localhost:5001/sean/onecollect:2.2
 </code></pre></div></div>
 
+<h2 id="harbor-registry">Harbor Registry</h2>
+
+<p>After Docker Registry I installed Harbor. It’s very similar and S3 related settings are nearly identical (in <code class="language-plaintext highlighter-rouge">harbor.yaml</code>) - I even used the same StorageGRID S3 bucket (<code class="language-plaintext highlighter-rouge">rootdirectory</code> was <code class="language-plaintext highlighter-rouge">scaleoutsean-harbor</code> vs. <code class="language-plaintext highlighter-rouge">scaleoutsean</code> with Docker Registry).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker images
+REPOSITORY                             TAG                 IMAGE ID            CREATED             SIZE
+goharbor/chartmuseum-photon            v2.2.0              036eabb4e8b4        7 days ago          165MB
+goharbor/redis-photon                  v2.2.0              af30f909bcd0        7 days ago          68.9MB
+goharbor/trivy-adapter-photon          v2.2.0              576741ea40ad        7 days ago          116MB
+goharbor/notary-server-photon          v2.2.0              e4dcdf19f2ca        7 days ago          101MB
+goharbor/notary-signer-photon          v2.2.0              8d2b8194d69c        7 days ago          98.4MB
+goharbor/harbor-registryctl            v2.2.0              7d2c74e67290        7 days ago          128MB
+goharbor/registry-photon               v2.2.0              76a8d4dfb507        7 days ago          77.2MB
+goharbor/nginx-photon                  v2.2.0              1eed7232f077        7 days ago          40.2MB
+goharbor/harbor-log                    v2.2.0              186bd0f71fc4        7 days ago          108MB
+goharbor/harbor-jobservice             v2.2.0              aaa1bcbec29f        7 days ago          163MB
+goharbor/harbor-core                   v2.2.0              bef56a1d9844        7 days ago          148MB
+localhost:5000/library/harbor-portal   v2.2.0              c81e05ebcfba        7 days ago          51MB
+goharbor/harbor-portal                 v2.2.0              c81e05ebcfba        7 days ago          51MB
+goharbor/harbor-db                     v2.2.0              818e07587d3b        7 days ago          174MB
+goharbor/prepare                       v2.2.0              0e98e9a1a9b1        7 days ago          165MB
+goharbor/harbor-exporter               v2.2.0              9ab1248a90dd        7 days ago          76.1MB
+k8s.gcr.io/kube-proxy                  v1.20.2             43154ddb57a8        5 weeks ago         118MB
+k8s.gcr.io/kube-apiserver              v1.20.2             a8c2fdb8bf76        5 weeks ago         122MB
+k8s.gcr.io/kube-controller-manager     v1.20.2             a27166429d98        5 weeks ago         116MB
+k8s.gcr.io/kube-scheduler              v1.20.2             ed2c44fbdd78        5 weeks ago         46.4MB
+registry                               2                   678dfa38fcfa        2 months ago        26.2MB
+registry                               latest              678dfa38fcfa        2 months ago        26.2MB
+netapp/onecollect                      2.2                 fb484820200c        2 months ago        350MB
+localhost:5001/sean/onecollect         2.2                 fb484820200c        2 months ago        350MB
+k8s.gcr.io/etcd                        3.4.13-0            0369cf4303ff        5 months ago        253MB
+k8s.gcr.io/coredns                     1.7.0               bfe3a36ebd25        8 months ago        45.2MB
+k8s.gcr.io/pause                       3.2                 80d28bedfe5d        12 months ago       683kB
+
+<span class="nv">$ </span>docker tag goharbor/nginx-photon:v2.2.0 localhost:5000/library/nginx-photon:v2.2.0
+
+<span class="nv">$ </span>docker push localhost:5000/library/nginx-photon:v2.2.0
+The push refers to repository <span class="o">[</span>localhost:5000/library/nginx-photon]
+57c3cb695990: Pushed 
+230005775895: Mounted from library/harbor-portal 
+v2.2.0: digest: sha256:5b2a1a4873e18444c6dffee72a2e8b7ce8880e8586b56eaa7e39b1575bb55a15 size: 740
+</code></pre></div></div>
+
+<p>In the same bucket, in <code class="language-plaintext highlighter-rouge">scaleoutsean-harbor</code> directory, we can see uploaded content:</p>
+
+<p><img src="/assets/images/storagegrid-harbor-s3-registry-bucket.png" alt="Harbor's docker-registry bucket" /></p>
+
+<p>Same as with Docker registry we can pull the image using the SHA256 sum or tag.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker pull localhost:5000/library/harbor-portal@sha256:8c9635208a3d89f8a3b575929672b3a14c3e3af59ca41c0afd09734a02a3df6e
+
+<span class="nv">$ </span>docker pull localhost:5000/library/harbor-portal:v2.2.0
+v2.2.0: Pulling from library/harbor-portal
+Digest: sha256:8c9635208a3d89f8a3b575929672b3a14c3e3af59ca41c0afd09734a02a3df6e
+Status: Image is up to <span class="nb">date </span><span class="k">for </span>localhost:5000/library/harbor-portal:v2.2.0
+localhost:5000/library/harbor-portal:v2.2.0
+</code></pre></div></div>
+
+<p>Or in the browser:</p>
+
+<p><img src="/assets/images/storagegrid-harbor-s3-registry-portal.png" alt="Harbor's docker-registry bucket" /></p>
+
+<p><img src="/assets/images/storagegrid-harbor-s3-registry.png" alt="Harbor's docker-registry bucket" /></p>
+
 <h2 id="references">References</h2>
 
 <ul>
+  <li>NetApp StorageGRID 11.4</li>
   <li>Docker Registry <a href="https://docs.docker.com/registry/storage-drivers/s3/">S3 storage driver</a> options</li>
+  <li>Harbor v2.2.0-rc2 (<a href="https://github.com/goharbor/harbor/releases/tag/v2.2.0-rc2">download v2.2.0-rc2</a>; <a href="https://goharbor.io/docs/2.0.0/">documentation for v2.0.0</a>)</li>
 </ul>
 
       </article>
@@ -497,7 +565,7 @@ localhost:5001/sean/onecollect:2.2
 
     
   </div><footer class= "footer">
-    <p>2021-02-17 19:22 </p>
+    <p>2021-02-18 01:29 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
