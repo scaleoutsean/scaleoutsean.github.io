@@ -121,37 +121,37 @@
 <ul>
   <li>virtual data network</li>
   <li>virtual management network</li>
-  <li>virtual management accounts</li>
+  <li>virtual management account</li>
   <li>virtual storage (RAID group)</li>
 </ul>
 
-<p>An ONTAP Storage VM (SVM) doesn’t always have to have all these, but it can. To keep the post shorter, let’s say we configure all three. What are the benefits of SVMs for <a href="https://netapp-trident.readthedocs.io/en/latest/search.html?q=svm+vsadmin&amp;check_keywords=no&amp;area=default#">Trident CSI</a> users?</p>
+<p>An ONTAP Storage VM (SVM) doesn’t always have to have all these, but it can. To keep the post shorter, let’s say we configure all four. What are the benefits of SVMs for <a href="https://netapp-trident.readthedocs.io/en/latest/search.html?q=svm+vsadmin&amp;check_keywords=no&amp;area=default#">Trident CSI</a> users?</p>
 
 <ul>
-  <li>Your container cluster (K8s or whatever you have) uses its own SVM
+  <li>Each container cluster (Kubernetes or whatever) uses its own SVM(s)
     <ul>
       <li>Worker nodes use virtual data network(s) to to the SVM’s storage resources (NFS, iSCSI)</li>
       <li>Because SVM is exposed only to this container cluster, no other clients can get to this data</li>
       <li>Because SVM “owns” only designated RAID group, it cannot access “host level” (ONTAP Cluster) resources</li>
     </ul>
   </li>
-  <li>Trident CSI, one of container workloads running on worker nodes, can get to SVM Management IP
+  <li>Each cluster has its own Trident CSI instance (which, being one of containers running on worker nodes, can get to the SVM Management IP)
     <ul>
-      <li>Trident can use its own account (with minimal privileges) or SVM admin (Vsadmin) account</li>
-      <li>Because worker nodes can access SVM Management IP, you can set up two SVM management accounts: one for Trident (HTTPS; minimum privileges) and one for SVM admin (SSH or HTTPS or SSH+HTTPS; maximum SVM-scoped privileges) and use the SVM admin account for non-CSI purposes such as Ansible</li>
+      <li>Trident can use its own account (with minimal privileges) or an SVM admin (Vsadmin) account (highest SVM privileges)</li>
+      <li>Because the worker nodes can access the SVM Management IP, we can set up two SVM management accounts for more flexibility: one for Trident CSI (HTTPS + API; minimum privileges) and one for the SVM admin (SSH, or HTTPS, or SSH and HTTPS; maximum SVM-scoped privileges) and use the SVM admin account for non-CSI purposes such as Ansible automation</li>
     </ul>
   </li>
   <li>ONTAP Cluster
     <ul>
-      <li>Retains its cluster management interfaces which are exposed to a completely different network (highly secure “management LAN”)</li>
-      <li>Has its own management accounts</li>
-      <li>Can have multiple SVMs</li>
-      <li>Can have multiple RAID groups</li>
+      <li>Retains its cluster management interfaces which are exposed to a completely different network (highly secure “corporate management LAN”)</li>
+      <li>Has its own cluster management account</li>
+      <li>Haa one or more SVMs</li>
+      <li>Has one or more RAID groups</li>
     </ul>
   </li>
 </ul>
 
-<p>In an environment with one ONTAP cluster, multiple container clusters could each run on their own Service, SVM Data, and SVM Management VLAN(s). An example for one container cluster with one SVM on one ONTAP cluster:</p>
+<p>In an environment with one ONTAP cluster, multiple container clusters could each have their own Service Network, SVM Data Network, and SVM Management VLAN(s). An example of one container cluster with one SVM on one ONTAP cluster:</p>
 
 <table>
   <thead>
@@ -200,17 +200,21 @@
   </tbody>
 </table>
 
-<p>* You could have the Masters wired to SVM Mgmt VLAN for Ansible and whatnot, but you can also run Ansible from a user shell account on Worker nodes.</p>
+<p>* You could have the Masters connected to SVM Mgmt VLAN for Ansible or other purposes, but you can also run Ansible from a user shell account on Worker nodes.</p>
 
 <p>In my demo (link at the bottom) I cheated in the sense that ONTAP Cluster was in fact connected to External/Service VLAN, but from the demo it is clear that SVM Data and Management LANs are the only way Trident and Workers could use to reach SVM interfaces.</p>
 
 <p><img src="/assets/images/k8s-ots-network.png" alt="K8s, and SVM-based Trident CSI provisioning with ONTAP Select" /></p>
 
-<p>With this setup (multiple, independent) container cluster administrators can automate their storage without impacting anyone else.</p>
+<p>With this setup (multiple and independent) container cluster administrators can automate their storage without being able to impact anyone else.</p>
 
 <p>They can’t get 100% of ONTAP API functionality this way - because some actions require ONTAP Cluster admin account and access to ONTAP Cluster admin IP - but that’s what security is about.</p>
 
-<p>As hinted above, a container cluster can simultaneously connect to several Trident back-ends, so we can use many available approaches. For example, we configure Trident CSI to use an SVM admin-level account for one SVM (a Trident CSI back-end for which we want more convenience and less security), add a more limited dedicated SVM account for iSCSI on another SVM where we won’t more security and less flexibility, and add yet another SVM which isn’t dynamically provisioned at all.</p>
+<p>As I hinted earlier, a container cluster can be configured to simultaneously connect to several Trident back-ends, so we can fine tune and intermix various approaches even within one container cluster.</p>
+
+<p>For example, we configure Trident CSI to use an SVM admin-level account for one SVM (a Trident CSI back-end for which we want more convenience and less security), add a more limited dedicated SVM account for iSCSI on another SVM where we won’t more security and less flexibility, and add yet another SVM which isn’t dynamically provisioned at all.</p>
+
+<p>There are other security-related settings, such as orchestrator-level RBAC and Storage Class settings, which can help you set an even finer balance between security and convenience.</p>
 
 <h2 id="demo">Demo</h2>
 
@@ -541,7 +545,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-02-20 18:33 </p>
+    <p>2021-02-20 18:44 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
