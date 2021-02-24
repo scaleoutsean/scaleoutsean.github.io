@@ -1,0 +1,414 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:40">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:40">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:40">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            NetApp Trident v21.01.1 on Linux/ARM64 with SolidFire iSCSI storage | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     NetApp Trident on linux/arm64 K8s cluster with Solidfire iSCSI SAN back-end
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">NetApp Trident v21.01.1 on Linux/ARM64 with SolidFire iSCSI storage</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>24 Feb 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    8 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#intro">Intro</a></li>
+  <li><a href="#build--deploy">Build &amp; Deploy</a></li>
+  <li><a href="#what-about-s390x-ppc64le-and-other-architectures">What about <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">ppc64le</code> and other architectures</a></li>
+  <li><a href="#next-steps">Next steps</a></li>
+  <li><a href="#version-info">Version info</a></li>
+</ul>
+
+<h2 id="intro">Intro</h2>
+
+<p><a href="https://github.com/NetApp/trident/">NetApp Trident</a> is open source dynamic storage provisioner for CSI-compatible platforms such as Docker and Kubernetes.</p>
+
+<p>Currently it supports the x86_64 platform but - as we shall soon find out - it can work with other architectures.</p>
+
+<p>That doesn’t mean you can get support for Trident on ARM64 Linux today (check with your NetApp representative - it may be possible), but it does mean you can use Trident in some other interesting scenarios. Examples:</p>
+
+<ul>
+  <li>Mixed architecture cluster: <code class="language-plaintext highlighter-rouge">amd64</code> and <code class="language-plaintext highlighter-rouge">arm64</code>, with Trident running on <code class="language-plaintext highlighter-rouge">amd64</code> (i.e. you don’t need Trident on <code class="language-plaintext highlighter-rouge">arm64</code> to dynamically provision NetApp iSCSI and NFS storage to <code class="language-plaintext highlighter-rouge">arm64</code> clusters in a supported way)</li>
+  <li>Casual use: Trident deployed on <code class="language-plaintext highlighter-rouge">linux/arm64</code> Kubenetes workers connected to a NetApp storage system. Currently this isn’t officially supported but you can check if you can get some sort of “best effort” support if you build and deploy Trident by yourself</li>
+</ul>
+
+<p>The latter example can be seen in this screenshot which shows a three-node K8s cluster on ARM64 connected to an iSCSI SolidFire back-end. The SolidFire “cluster” is in fact a SolidFire VM running on VMware ESXi (<code class="language-plaintext highlighter-rouge">x86_64</code>). Works like a charm!</p>
+
+<p><img src="/assets/images/trident-v21.01.1-on-arm64-03.png" alt="SolidFire Demo VM (amd64) with K8s on Linux (arm64) " /></p>
+
+<p>You could connect to other back-ends (E-Series, ONTAP) the same way. Personally I prefer to use SolidFire. Why? Because it is <a href="https://www.theregister.co.uk/2016/09/01/netapp_founder_dave_hitz_says_solidfire_is_for_people_who_fking_hate_storage/">storage for people who fxxxing hate storage</a> - having worked with storage for so long I can relate - and on top of that SolidFire Demo VM does not expire, so that is all I’ve ever wanted and more).</p>
+
+<p>Anyway, once you build Trident for ARM64 and get it up and running, you should be able to use any of the supported back-ends, two of which - ONTAP and SolidFire - have a VM version (not for ESXi on ARM64, but still).</p>
+
+<h2 id="build--deploy">Build &amp; Deploy</h2>
+
+<p>How to build this sucker? It took several evenings to find that out.</p>
+
+<p>I’ve created a Trident issue for this (an <a href="https://github.com/NetApp/trident/issues/534#issue-811742451">ask</a> for this to be documented), so I’ll let the Trident Team describe (and potentially improve) the process, but here are high level steps for v21.01 (if you’re reading this much later, don’t bother with this post - best check the current state of the source code):</p>
+
+<ul>
+  <li>Get latest Trident source code, find all <code class="language-plaintext highlighter-rouge">Dockerfile</code>s and replace gcr.io/distroless/static with a “hard-coded” link to an ARM64 build</li>
+  <li>Have access to a container registry (whether local or remote, such as a free account on Docker Hub) where you can upload stuff</li>
+  <li>Get the latest source (<code class="language-plaintext highlighter-rouge">wget https://github.com/NetApp/trident/archive/v21.01.1.tar.gz</code>, at this time), decompress and descend into the decompressed source code directory. We’ll be working from here.</li>
+  <li>Build Trident for <code class="language-plaintext highlighter-rouge">arm64</code> (<code class="language-plaintext highlighter-rouge">cat BUILD.md</code> or see my <a href="https://github.com/NetApp/trident/issues/534">ask</a>). You can build on x86_64 (cross-build), or natively (on your K8s worker nodes, for example). Both approaches work - I did try - but the native approach is simpler and probably takes longer (x86_64 CPUs are usually faster).</li>
+  <li>Download (<code class="language-plaintext highlighter-rouge">docker pull</code>) an ARM64 version of all the required <a href="https://netapp-trident.readthedocs.io/en/stable-v21.01/support/requirements.html?highlight=k8s.gcr.io%2Fsig-storage%2Fcsi-resizer#csi-sidecar-images-and-versions">CSI images</a>. If you’re installing online this step isn’t necessary, but for air-gapped installs you’ll need them offline. For my version of Trident (v21.01.1) I used these:</li>
+</ul>
+
+<pre><code class="language-raw">k8s.gcr.io/sig-storage/csi-resizer v1.1.0
+k8s.gcr.io/sig-storage/csi-provisioner v2.1.0
+k8s.gcr.io/sig-storage/csi-node-driver-registrar v2.1.0
+k8s.gcr.io/sig-storage/csi-attacher v3.1.0
+k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
+</code></pre>
+
+<ul>
+  <li>Now you have five of these and one Trident image. Tag ‘em all and push to your container registry. That’s six containers in total. You may now delete them local images and try to pull ‘em from registry to test whether that works.</li>
+  <li>In the process of building Trident <code class="language-plaintext highlighter-rouge">tridentctl</code> got created in the bin subdirectory. Copy or move it to the trident-installer subdirectory</li>
+  <li>Now you can create custom YAML files in the setup subdirectory. We’ll prepare them for the trident namespace:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl <span class="nb">install</span> <span class="nt">--silence-autosupport</span> <span class="nt">--generate-custom-yaml</span> <span class="nt">--image-registry</span> <span class="nv">$YOUR_REGISTRY</span> <span class="nt">-n</span> trident
+</code></pre></div></div>
+
+<ul>
+  <li>I identified two small bugs and one thing to watch out for in the generated YAML files.
+    <ul>
+      <li>find <code class="language-plaintext highlighter-rouge">amd64</code> and replace it with <code class="language-plaintext highlighter-rouge">arm64</code> in <code class="language-plaintext highlighter-rouge">setup/*.yaml</code></li>
+      <li>remove the entire NeApp autosupport container section in <code class="language-plaintext highlighter-rouge">setup/trident-deployment.yaml</code> because it’s a closed source image only released for <code class="language-plaintext highlighter-rouge">amd64</code></li>
+      <li>depending on how you built and tagged, your Trident image URL may end up being wrong. I did some fancy crap with my tags and ended up with a weird-ass $MY_REGISTRY/trident:21.01.1-arm64.0 image, while in the setup directory that was $MY_REGISTRY/trident:21.01.1-custom (which I changed to reflect the reality, but if you don’t do fancy tagging, that may be correct for your situation)</li>
+      <li>As mentioned earlier if your CSI images weren’t downloaded, you need to change their container image links to their online version</li>
+    </ul>
+  </li>
+  <li>This should let you deploy (don’t forget <code class="language-plaintext highlighter-rouge">-n trident</code>, and use the image name that corresponds to your situation in the registry):</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl <span class="nb">install</span> <span class="nt">--image-registry</span> <span class="nv">$YOUR_REGISTRY</span> <span class="nt">--trident-image</span> <span class="nv">$YOUR_REGISTRY</span>/trident:21.01.1-arm64.0 <span class="nt">--use-custom-yaml</span> <span class="nt">-n</span> trident
+</code></pre></div></div>
+
+<p><img src="/assets/images/trident-v21.01.1-on-arm64-01.png" alt="Trident v21.01 on Linux/ARM64" /></p>
+
+<ul>
+  <li>Now that this somehow worked we can deploy a back-end of our choosing which in my case is SolidFire (in Trident, <code class="language-plaintext highlighter-rouge">solidfire-san</code> driver). Create a back-end JSON file (an example for SolidFire can be found <a href="/2021/02/02/trident-21.01-install-with-helm-on-netapp-hci">here</a> and in the Trident installer’s samples directory) and use <code class="language-plaintext highlighter-rouge">tridentctl</code> to create/configure it. The workers and storage need to be prepared for iSCSI or (for ONTAP) NFS as per the Trident documentation.</li>
+</ul>
+
+<p><img src="/assets/images/trident-v21.01.1-on-arm64-02.png" alt="Trident v21.01 on Linux/ARM64 with a SolidFire iSCSI back-end" /></p>
+
+<ul>
+  <li>Configure an SC for SolidFire and create a PVC that uses it.</li>
+</ul>
+
+<p><img src="/assets/images/trident-v21.01.1-on-arm64-04.png" alt="Trident-on-linux/arm64 PV on SolidFire" /></p>
+
+<p>I’m not going to spend another 30 minutes writing about troubleshooting because I’ve had enough of it: if the above doesn’t help you and it’s not something obvious that you can figure out by reading the Troubleshooting section of the Trident documentation, join the NetApp Pub Slack (SolidFire users can use the #netapp-hci channel, or just use the #containers channel for generic Trident questions) or up-vote my <a href="https://github.com/NetApp/trident/issues/534#issue-811742451">ask</a> to have the multi-arch procedure documented by the Trident Team.</p>
+
+<p>If may publish the Trident containers on Docker Hub if I find time (if I do, I’ll edit this post) so that people can install it without the hassle of building these on their own.</p>
+
+<h2 id="what-about-s390x-ppc64le-and-other-architectures">What about <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">ppc64le</code> and other architectures</h2>
+
+<p>It’s the same thing, just follow use the right architecture string those architectures.</p>
+
+<p>There may be tooling bugs unrelated to Trident (go, gcc, 3rd party containers which may or may not exist for your target architecture, and more). The ARM64 ecosystem is more advanced than other non-x86 architectures, so be ready to waste days on this and still get nowhere!</p>
+
+<p>For supported use remember the other requirement which I didn’t mention before, which is to have those clients (OS) supported by the array you’re using. For example, SolidFire (<code class="language-plaintext highlighter-rouge">solidfire-san</code>) provides iSCSI service and supports only Windows and Linux on the x86_64 architecture. This means there’s a problem from both a Trident perspective, but also from a client–protocol-back-end perspective.</p>
+
+<p>NetApp usually provides that info in Interoperability Matrix (search for “NetApp IMT”). While Linux on <code class="language-plaintext highlighter-rouge">ppc64</code> with an <code class="language-plaintext highlighter-rouge">ontap-nas</code> back-end is probably supported (I haven’t checked, but it should be because NFSv3 is very old), <code class="language-plaintext highlighter-rouge">solidfire-san</code> does not provide NFS and doesn’t support <code class="language-plaintext highlighter-rouge">ppc64</code> (iSCSI) clients either. So check this stuff carefully before you spend days on this.</p>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>Trident on ARM64 is the only reason why I write about Kubernetes on ARM64 - there isn’t much exciting or novel about it. I’ve had five ARM devices and used them with Docker for years. Three months ago I bought three more but haven’t had time to look into Trident so they were idling.</p>
+
+<p>Now that I have Trident running on <code class="language-plaintext highlighter-rouge">linux/arm64</code> maybe I’ll keep a Kubernetes-on-ARM64 cluster running and move some lightweight services and applications from older ARM and ARM64 systems to Kubernetes, and eventually retire the older 32-bit ARM systems. And there’s a chance I come across an opportunity for ARM64-based clusters.</p>
+
+<p>Other than that, if I need to use K8s I still prefer x86_64 VMs because in <em>my</em> specific case:</p>
+
+<ul>
+  <li>x86_64 is many times faster</li>
+  <li>x86_64 more power-efficient (I can run K8s on my x86_64 notebook or ESXi, both which are always on for workloads that cannot run on ARM)</li>
+  <li>I can use Trident and any other containers without wasting time on troubleshooting. As a long-time ARM user, one thing I’ve learned is to stay away from exactly this type of activity (the troubleshooting of architecture-related issues)</li>
+</ul>
+
+<p>Although neither Trident nor SolidFire (currently) support Linux on ARM64, this setup is good enough for me and I look forward to using Kubernetes with SolidFire in this environment.</p>
+
+<p>But if you’re an “Edge Computing person”, this may be interesting to you professionally.</p>
+
+<p>If <em>you</em> have a use case for Trident on ARM64 or other non-x86_64 architecture please up-vote (for that, you can use the “thumb up” emoji) my <a href="https://github.com/NetApp/trident/issues/534">request</a> on Github or contact NetApp with your requirements.</p>
+
+<p><img src="/assets/images/github-upvote-issue.png" alt="Upvote Github issue" /></p>
+
+<h2 id="version-info">Version info</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Component</th>
+      <th style="text-align: center">Version</th>
+      <th style="text-align: center">Arch</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">Kubernetes (generic)</td>
+      <td style="text-align: center">v1.20.2</td>
+      <td style="text-align: center">arm64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Ubuntu Linux</td>
+      <td style="text-align: center">20.04.02</td>
+      <td style="text-align: center">arm64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">NetApp Trident</td>
+      <td style="text-align: center">v21.01.1</td>
+      <td style="text-align: center">arm64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">NetApp SolidFire VM</td>
+      <td style="text-align: center">12.2</td>
+      <td style="text-align: center">x86_64</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">VMware ESXi (for SolidFire)</td>
+      <td style="text-align: center">7.0U1</td>
+      <td style="text-align: center">x86_64</td>
+    </tr>
+  </tbody>
+</table>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/12/kasten-solidfire-trident.html">• Kubernetes data protection and storage management with NetApp SolidFire and Kasten K10</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/09/kasten-netapp-storagegrid-cloud-storage-s3-provider.html">• StorageGRID as Cloud Storage (S3) Provider for Kasten K10</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">• Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/02/trident-21.01-install-with-helm-on-netapp-hci.html">• Install NetApp Trident v21.01.01 with Helm v3 and configure a SolidFire back-end</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-02-24 12:03 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
