@@ -100,7 +100,7 @@
 
   
   
-    8 minute read
+    10 minute read
   
 
     </span>
@@ -112,6 +112,7 @@
   <li><a href="#what-about-s390x-ppc64le-and-other-architectures">What about <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">ppc64le</code> and other architectures</a></li>
   <li><a href="#next-steps">Next steps</a></li>
   <li><a href="#version-info">Version info</a></li>
+  <li><a href="#notes-on-linuxs390x-feb-25-2021">Notes on linux/s390x (Feb 25, 2021)</a></li>
 </ul>
 
 <h2 id="intro">Intro</h2>
@@ -269,6 +270,122 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
   </tbody>
 </table>
 
+<h2 id="notes-on-linuxs390x-feb-25-2021">Notes on linux/s390x (Feb 25, 2021)</h2>
+
+<ul>
+  <li>Following the instructions for ARM64, I used x86_64 to build for <code class="language-plaintext highlighter-rouge">linux/s390x</code>. First, edit the Dockerfiles to include <code class="language-plaintext highlighter-rouge">FROM gcr.io/distroless/static:latest-s390x</code></li>
+  <li>Bug in utils/osutils_linux.go:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span><span class="nv">GOOS</span><span class="o">=</span>linux <span class="nv">GOARCH</span><span class="o">=</span>s390x make trident_build
+<span class="c"># github.com/netapp/trident/utils</span>
+utils/osutils_linux.go:70:28: invalid operation: int64<span class="o">(</span>buf.Blocks<span class="o">)</span> <span class="k">*</span> buf.Bsize <span class="o">(</span>mismatched types int64 and uint32<span class="o">)</span>
+utils/osutils_linux.go:80:32: invalid operation: int64<span class="o">(</span>buf.Bavail<span class="o">)</span> <span class="k">*</span> buf.Bsize <span class="o">(</span>mismatched types int64 and uint32<span class="o">)</span>
+Makefile:102: recipe <span class="k">for </span>target <span class="s1">'trident_build'</span> failed
+</code></pre></div></div>
+
+<ul>
+  <li>I couldn’t get past this problem, so I cheated. I don’t know if it matters to the resulting Trident build (and I don’t have a mainframe at home to try). This diff is for <a href="https://raw.githubusercontent.com/NetApp/trident/v21.01.1/utils/osutils_linux.go">v21.01.1</a>.</li>
+</ul>
+
+<pre><code class="language-raw">70c70
+&lt; 	size := int64(buf.Blocks) * buf.Bsize
+---
+&gt; 	size := int64(buf.Blocks) * int64(buf.Bsize)
+80c80
+&lt; 	available = int64(buf.Bavail) * buf.Bsize
+---
+&gt; 	available = int64(buf.Bavail) * int64(buf.Bsize)
+</code></pre>
+
+<ul>
+  <li>Build:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span><span class="nv">GOOS</span><span class="o">=</span>linux <span class="nv">GOARCH</span><span class="o">=</span>s390x make trident_build
+<span class="nb">cp</span> /home/ubuntu/trident-21.01.1-s390x/bin/trident_orchestrator /home/ubuntu/trident-21.01.1-s390x/bin/tridentctl <span class="nb">.</span>
+chwrap/make-tarball.sh /home/ubuntu/trident-21.01.1-s390x/bin/chwrap chwrap.tar
+docker build <span class="nt">--build-arg</span> <span class="nv">PORT</span><span class="o">=</span>8000 <span class="nt">--build-arg</span> <span class="nv">BIN</span><span class="o">=</span>trident_orchestrator <span class="nt">--build-arg</span> <span class="nv">CLI_BIN</span><span class="o">=</span>tridentctl <span class="nt">--build-arg</span> <span class="nv">K8S</span><span class="o">=</span><span class="s2">""</span> <span class="nt">-t</span> trident:21.01.1-custom <span class="nt">--rm</span> <span class="nb">.</span>
+Sending build context to Docker daemon  318.7MB
+Step 1/18 : FROM gcr.io/distroless/static:latest-s390x
+latest-s390x: Pulling from distroless/static
+2050d73f0a3c: Pull <span class="nb">complete 
+</span>Digest: sha256:b0dc5adcc32d2b00f871ea0d4badd0d7bd884255a1b3f47b199fd40ad03a7f07
+Status: Downloaded newer image <span class="k">for </span>gcr.io/distroless/static:latest-s390x
+ <span class="nt">---</span><span class="o">&gt;</span> 6aeb63cb7882
+Step 2/18 : LABEL <span class="nv">maintainers</span><span class="o">=</span><span class="s2">"The NetApp Trident Team"</span>       <span class="nv">app</span><span class="o">=</span><span class="s2">"trident.netapp.io"</span>       <span class="nv">description</span><span class="o">=</span><span class="s2">"Trident Storage Orchestrator"</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>e059c7005178
+Removing intermediate container e059c7005178
+ <span class="nt">---</span><span class="o">&gt;</span> 5a9d61e894f7
+Step 3/18 : ARG <span class="nv">PORT</span><span class="o">=</span>8000
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>cd0c3804ab74
+Removing intermediate container cd0c3804ab74
+ <span class="nt">---</span><span class="o">&gt;</span> c255028503c8
+Step 4/18 : ENV PORT <span class="nv">$PORT</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>fdcaa31eb927
+Removing intermediate container fdcaa31eb927
+ <span class="nt">---</span><span class="o">&gt;</span> 599c6fcbb15d
+Step 5/18 : EXPOSE <span class="nv">$PORT</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>233387e823ca
+Removing intermediate container 233387e823ca
+ <span class="nt">---</span><span class="o">&gt;</span> 3fe30604b8b4
+Step 6/18 : ARG <span class="nv">BIN</span><span class="o">=</span>trident_orchestrator
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>1006ff4e9286
+Removing intermediate container 1006ff4e9286
+ <span class="nt">---</span><span class="o">&gt;</span> f5810abb3b18
+Step 7/18 : ENV BIN <span class="nv">$BIN</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>f55ab480ed88
+Removing intermediate container f55ab480ed88
+ <span class="nt">---</span><span class="o">&gt;</span> ce9da4427e22
+Step 8/18 : ARG <span class="nv">CLI_BIN</span><span class="o">=</span>tridentctl
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>c2e37683fd01
+Removing intermediate container c2e37683fd01
+ <span class="nt">---</span><span class="o">&gt;</span> 5fa055e239c2
+Step 9/18 : ENV CLI_BIN <span class="nv">$CLI_BIN</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>5e0427c95624
+Removing intermediate container 5e0427c95624
+ <span class="nt">---</span><span class="o">&gt;</span> 07e50c8502fb
+Step 10/18 : ARG <span class="nv">K8S</span><span class="o">=</span><span class="s2">""</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>b4b1d0ab2906
+Removing intermediate container b4b1d0ab2906
+ <span class="nt">---</span><span class="o">&gt;</span> 1fb74edfba4b
+Step 11/18 : ENV K8S <span class="nv">$K8S</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>ac8e98e411d0
+Removing intermediate container ac8e98e411d0
+ <span class="nt">---</span><span class="o">&gt;</span> fac74d91b045
+Step 12/18 : ENV TRIDENT_IP localhost
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>f19b8f82fd4f
+Removing intermediate container f19b8f82fd4f
+ <span class="nt">---</span><span class="o">&gt;</span> ac418c20fb13
+Step 13/18 : ENV TRIDENT_SERVER 127.0.0.1:<span class="nv">$PORT</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>260d5decd8b2
+Removing intermediate container 260d5decd8b2
+ <span class="nt">---</span><span class="o">&gt;</span> cf03bcac7988
+Step 14/18 : COPY <span class="nv">$BIN</span> /
+ <span class="nt">---</span><span class="o">&gt;</span> 93bede2142d8
+Step 15/18 : COPY <span class="nv">$CLI_BIN</span> /bin/
+ <span class="nt">---</span><span class="o">&gt;</span> 097738c61bc9
+Step 16/18 : ADD chwrap.tar /
+ <span class="nt">---</span><span class="o">&gt;</span> c08cec73df85
+Step 17/18 : ENTRYPOINT <span class="o">[</span><span class="s2">"/bin/</span><span class="nv">$CLI_BIN</span><span class="s2">"</span><span class="o">]</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>369125b48b1d
+Removing intermediate container 369125b48b1d
+ <span class="nt">---</span><span class="o">&gt;</span> 1b609424e48c
+Step 18/18 : CMD <span class="o">[</span><span class="s2">"version"</span><span class="o">]</span>
+ <span class="nt">---</span><span class="o">&gt;</span> Running <span class="k">in </span>bd9c950e41c6
+Removing intermediate container bd9c950e41c6
+ <span class="nt">---</span><span class="o">&gt;</span> a6a92f3b152d
+Successfully built a6a92f3b152d
+Successfully tagged trident:21.01.1-custom
+<span class="nb">rm </span>trident_orchestrator tridentctl
+
+<span class="nv">$ </span><span class="nb">sudo </span>docker images | <span class="nb">grep </span>a6a92f3b152d
+trident                                            21.01.1-custom      a6a92f3b152d        43 seconds ago      88.4MB
+
+<span class="nv">$ </span><span class="nb">sudo </span>docker inspect a6a92f3b152d | <span class="nb">grep </span>Arch
+        <span class="s2">"Architecture"</span>: <span class="s2">"s390x"</span>,
+</code></pre></div></div>
+
       </article>
     </div>
     
@@ -403,7 +520,7 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
 
     
   </div><footer class= "footer">
-    <p>2021-02-24 13:46 </p>
+    <p>2021-02-25 13:16 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
