@@ -100,7 +100,7 @@
 
   
   
-    32 minute read
+    39 minute read
   
 
     </span>
@@ -115,11 +115,12 @@
       <li><a href="#solidfire-failover">SolidFire failover</a></li>
       <li><a href="#configure-kubernetes-and-trident-csi-at-prod-and-dr-site">Configure Kubernetes and Trident CSI at PROD and DR site</a></li>
       <li><a href="#failover-proddr">Failover: PROD=&gt;DR</a></li>
-    </ul>
-  </li>
-  <li><a href="#failback-drprod">Failback (DR=&gt;PROD)</a>
-    <ul>
-      <li><a href="#reestablish-proddr-replication">Reestablish PROD=&gt;DR replication</a></li>
+      <li><a href="#failback-drprod">Failback (DR=&gt;PROD)</a>
+        <ul>
+          <li><a href="#resume-proddr-replication">Resume PROD=&gt;DR replication</a></li>
+        </ul>
+      </li>
+      <li><a href="#import-volumes">Import Volumes</a></li>
     </ul>
   </li>
   <li><a href="#conclusion">Conclusion</a></li>
@@ -132,6 +133,7 @@
       <li><a href="#restore-read-write-access-to-target-replica-volumes">Restore read-write access to target replica volumes</a></li>
       <li><a href="#why-use-retain-reclaim-policy">Why use Retain Reclaim Policy</a></li>
       <li><a href="#solidfire-replication-and-kubernetes-snapshot-volume-class">SolidFire replication and Kubernetes Snapshot Volume Class</a></li>
+      <li><a href="#pvc-name-pv-name-pv-internalname-solidfire-volume-name">PVC name, PV name, PV internalName, SolidFire Volume Name</a></li>
       <li><a href="#conduct-dr-failover-and-failback-testing">Conduct DR failover and failback testing</a></li>
     </ul>
   </li>
@@ -305,6 +307,8 @@
   </li>
 </ul>
 
+<p>Volume names and IDs in Failover and Failback belong to the same (successful) attempt, while names from Appendix are from different experiments so please do not try to map PVs from earlier sections or Apendix with what you see in this main section.</p>
+
 <h3 id="configure-kubernetes-and-trident-csi-at-prod-and-dr-site">Configure Kubernetes and Trident CSI at PROD and DR site</h3>
 
 <p>For this we create a back-end JSON file and deploy it to use the PROD cluster. We also need a storage class. We use <code class="language-plaintext highlighter-rouge">ReclaimPolicy: Retain</code> to prevent the automatic deletion of PVs after we delete PVCs.</p>
@@ -399,9 +403,28 @@ Events:                &lt;none&gt;
 
 <h3 id="failover-proddr">Failover: PROD=&gt;DR</h3>
 
-<p>The first thing we’d do is switch to SolidFire UI or API endpoint at the DR site and pause volume replication on that array.</p>
+<p>Before I explain how <em>I</em> did this for Scenario 1, let me emphasize that this isn’t necessarily the only way or the correct way. You need to test (and it’s quick and takes just 2-3 hours) what works well for you.</p>
 
-<p>After that we’d delete the stale PVCs and PVs (remnants from the PROD site) on our remote Kubernetes cluster:</p>
+<p>Let me explain: I have one Kubernetes cluster connected to two back-ends. Your situation may be slightly different (e.g. two Kubernetes clusters, aka Scenario 2), or even the same but maybe you want to do things differently. So don’t just follow my steps or logic - this post is verbose because I want to explain why I do it the way I do, so that you can do it better (for you).</p>
+
+<p>So, once my PROD storage cluster failed, the first thing I’d like to do is to delete the PROD back-end. This I do in order to make Trident forget of the back-end from the PROD site. Why I do this? Because <em>if</em> the PROD storage cluster comes online, then <code class="language-plaintext highlighter-rouge">kubectl delete pv</code> would destroy Source volume.</p>
+
+<p>Let’s go ahead and delete the first SolidFire backend (from the PROD site) with <code class="language-plaintext highlighter-rouge">tridentctl delete backend</code>. It’s offline (failed) as we do this, so it will remain in the <code class="language-plaintext highlighter-rouge">deleting</code> state and that’s okay.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl get backend <span class="nt">-n</span> trident
++----------------------+----------------+--------------------------------------+----------+---------+
+|         NAME         | STORAGE DRIVER |                 UUID                 |  STATE   | VOLUMES |
++----------------------+----------------+--------------------------------------+----------+---------+
+| SF-PROD-192.168.1.30 | solidfire-san  | 57883f01-94ba-48aa-8acd-e7330c128bce | deleting |       1 |
+| SF-DR-192.168.1.34   | solidfire-san  | 38455724-54ad-4d6d-a1dc-7437ab56803b | online   |       0 |
++----------------------+----------------+--------------------------------------+----------+---------+
+</code></pre></div></div>
+
+<p>All I care about is for it to not become “online” because I created my Storage Class to not distinguish between SolidFire back-ends - all it cares about is to use a <code class="language-plaintext highlighter-rouge">solidfire-san</code> type of back-end), and we don’t want to have it create new volumes at the PROD site should that cluster come online while we’re operating at the DR site. Once it’s in <code class="language-plaintext highlighter-rouge">deleting</code> state, the remote cluster won’t be used by Storage Class (at least that’s what I observed in my testing).</p>
+
+<p>If I remove that back-end from Trident, future <code class="language-plaintext highlighter-rouge">kubectl delete pv</code> command against the source PV won’t translate into Trident actions because Trident won’t be aware of which back-end that PV is related to.</p>
+
+<p>After deleting the original back-end with tridenctl I’d switch to the SolidFire UI or API endpoint at the DR site and pause volume replication on the remote SolidFire cluster. After that I could delete the stale PVCs and PVs (remnants from the PROD site) on my Kubernetes cluster without actually deleting them from Trident and the SolidFire PROD cluster.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pvc pg <span class="nt">-n</span> pg
 persistentvolumeclaim <span class="s2">"pg"</span> deleted
@@ -411,9 +434,9 @@ warning: deleting cluster-scoped resources, not scoped to the provided namespace
 persistentvolume <span class="s2">"pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb"</span> deleted
 </code></pre></div></div>
 
-<p>Then we would delete our volume pairing configuration while nothing Volume IDs from both sites (why, because we need to replicate in reverse later, and for that we can’t lose track of Volume IDs required to configure Volume Pairs).</p>
+<p>Then we would delete our volume pairing configuration used for replication, while nothing Volume IDs from both sites (why, because we will need to replicate in reverse, and for that we can’t lose track of Volume IDs required to configure Volume Pairs).</p>
 
-<p>You probably don’t want to take notes during failover. You could create a CSV, JSON or YAML table and keep it in a S3 bucket or in private Github repository, so that you can always access it from both sites without relying on any notes. That table could be simple or complex, but as long as it was correct, it’d serve you well.</p>
+<p>You probably don’t want to take notes during failover. It’s better to create a CSV, JSON or YAML table and keep it in object storage or private Github repository so that you can always access it from both sites without relying on any notes. That table can be simple (example below) or sophisticated, but as long as it is correct, it will work well.:</p>
 
 <table>
   <thead>
@@ -444,17 +467,15 @@ persistentvolume <span class="s2">"pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb"</sp
 
 <p>As you create PVCs for apps that need protection, you can updates that table in the same go. When we pair volumes, we pull/download the table and use its fields as inputs to Ansible, PowerShell, or some other tool.</p>
 
-<p>We need to promote Target (volume replica in the DR cluster) to Read/Write and we’ll later pair it in reverse (DR=&gt;PROD). As for the PVC/PV from the remote site, we need to recreate them using the DR cluster.</p>
+<p>We need to promote Target (volume replica in the DR cluster) to Read/Write and later pair the volumes in reverse (DR=&gt;PROD). As for the PVC/PV from the remote site, we need to recreate them using the DR cluster.</p>
 
 <p>PVs can’t be duplicate, so in our scenario (one Kubernetes cluster) the PVCs must be first removed from Kubernetes. As mentioned earlier, in Scenario 2 (one Kubernetes cluster at each site) we would not have to do that because each Kubernetes cluster would not have PVC/PV information from the other site although there may be yet other scenarios for two Kubernets clusters (for example, you periodically restore the PROD cluster configuration at the remote site) but I can’t cover (or contemplate) them all.</p>
 
-<p>Recall that because our Storage Class uses Retain, removing the PVCs will still leave us with “stale” PVs, which is harmless but can be confusing.</p>
-
-<p>Next steps:</p>
+<p>Recall that because our Storage Class uses Retain, removing a PVC will still leave us with “stale” PVs, which is harmless but can be confusing.</p>
 
 <p>Add the SolidFire DR cluster as new Trident back-end to my cluster using JSON configuration file for the DR back-end (this too could be kept in Git or S3 bucket, without the SolidFire admin username and password). We will switch to, and use this back-end, while the SolidFire PROD cluster is down.</p>
 
-<p>Create new Trident back-end:</p>
+<p>Create a new Trident back-end:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl create backend <span class="nt">-n</span> trident <span class="nt">-f</span> be-dr.json 
 +--------------------+----------------+--------------------------------------+--------+---------+
@@ -464,22 +485,9 @@ persistentvolume <span class="s2">"pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb"</sp
 +--------------------+----------------+--------------------------------------+--------+---------+
 </code></pre></div></div>
 
-<p>Delete the first SolidFire (from the PROD site) with <code class="language-plaintext highlighter-rouge">tridentctl delete backend</code>. It’s offline (failed) as we do this, so it will remain in the <code class="language-plaintext highlighter-rouge">deleting</code> state and that’s okay.</p>
+<p>Before I import volumes to Kubernetes cluster on the remote site I need to promote them from <code class="language-plaintext highlighter-rouge">replicationTarget</code> to <code class="language-plaintext highlighter-rouge">Read/Write</code> in SolidFire, in order to make them writeable. This can be easily automated but for a handful of volumes you could also use the SolidFire Web UI.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl get backend <span class="nt">-n</span> trident
-+----------------------+----------------+--------------------------------------+----------+---------+
-|         NAME         | STORAGE DRIVER |                 UUID                 |  STATE   | VOLUMES |
-+----------------------+----------------+--------------------------------------+----------+---------+
-| SF-PROD-192.168.1.30 | solidfire-san  | 57883f01-94ba-48aa-8acd-e7330c128bce | deleting |       1 |
-| SF-DR-192.168.1.34   | solidfire-san  | 38455724-54ad-4d6d-a1dc-7437ab56803b | online   |       0 |
-+----------------------+----------------+--------------------------------------+----------+---------+
-</code></pre></div></div>
-
-<p>We don’t want to wait for it to become “online” because I created my Storage Class to not distinguish between SolidFire back-ends (all it cares is to use a <code class="language-plaintext highlighter-rouge">solidfire-san</code> type of back-end), and we don’t want to have it create new volumes at the PROD site should that cluster come online while we’re operating at the DR site. Once it’s in <code class="language-plaintext highlighter-rouge">deleting</code> state, the remote cluster shouldn’t be used by Storage Class (that’s what I observed in my testing).</p>
-
-<p>Before I import volumes on the K8s DR cluster, I need to promote them from <code class="language-plaintext highlighter-rouge">replicationTarget</code> to <code class="language-plaintext highlighter-rouge">Read/Write</code> in order to make them writeable. This can be easily automated but for a handful of volumes you could also use the SolidFire Web UI.</p>
-
-<p>I am now ready to import this volume with <code class="language-plaintext highlighter-rouge">tridentctl import volume</code>. Notice how I specify the remote back-end (<code class="language-plaintext highlighter-rouge">SF-DR-192.168.1.34</code>), remote volume name (<code class="language-plaintext highlighter-rouge">dr-$VOLNAME</code>), and use the original PVC YAML from the PROD site (this tells Kubernetes what the volume is used for).</p>
+<p>Once that’s been done I am ready to import this volume with <code class="language-plaintext highlighter-rouge">tridentctl import volume</code>. Notice how I specify a remote back-end (<code class="language-plaintext highlighter-rouge">SF-DR-192.168.1.34</code>), remote volume name (<code class="language-plaintext highlighter-rouge">dr-$VOLNAME</code>), and use the original PVC YAML from the PROD site (this tells Kubernetes what the volume is used for).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl import volume <span class="nt">-n</span> trident SF-DR-192.168.1.34 dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3 <span class="nt">-n</span> trident <span class="nt">-f</span> pvc-simple.yaml
 +------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
@@ -521,7 +529,7 @@ VolumeMode:    Filesystem
 Used By:       &lt;none&gt;
 </code></pre></div></div>
 
-<p>Notice how <code class="language-plaintext highlighter-rouge">trident.netapp.io/importOriginalName</code> in PVC Annotations is where the name of DR replica volume is stored. That is the actual SolidFire Volume Name at the DR site: <code class="language-plaintext highlighter-rouge">dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3</code>. If we describe this PV, <code class="language-plaintext highlighter-rouge">backendUUID</code> is different from the PROD site (it is a non-deterministic Trident UUID for the SolidFire array at the DR site).</p>
+<p>Notice how <code class="language-plaintext highlighter-rouge">trident.netapp.io/importOriginalName</code> in PVC Annotations is where the name of the DR replica volume is stored. That is the actual SolidFire Volume Name at the DR site: <code class="language-plaintext highlighter-rouge">dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3</code>. If we describe this PV, <code class="language-plaintext highlighter-rouge">backendUUID</code> is different from the PROD site (it is a non-deterministic Trident UUID for back-end storage).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pv pvc-d24cf316-496a-4807-aa54-08999f712f9d <span class="nt">-n</span> pg
 Name:            pvc-d24cf316-496a-4807-aa54-08999f712f9d
@@ -551,18 +559,18 @@ Source:
 Events:                &lt;none&gt;
 </code></pre></div></div>
 
-<h2 id="failback-drprod">Failback (DR=&gt;PROD)</h2>
+<h3 id="failback-drprod">Failback (DR=&gt;PROD)</h3>
 
-<p>Remember how we deleted volume pairings at the DR site? The source array isn’t aware of that and when it comes back online it will unsuccessfully attempt to resume replication (PROD=&gt;DR). Of course, that won’t work because (a) we deleted pairings at the DR site, and (b) our volumes are in Read/Write mode, which means replication couldn’t continue even if the pairings were still in place.</p>
+<p>Remember how we deleted volume pairings at the DR site? The source array isn’t aware of that and when it comes back online it will unsuccessfully attempt to resume replication (PROD=&gt;DR). Of course, that won’t work because (a) we deleted volume replication pairings on the DR cluster, and (b) volumes on the remote cluster are in Read/Write mode, which means that replication couldn’t continue even if the pairings were still in place.</p>
 
-<p>So when SolidFire array from the PROD site comes online we can delete its stale volume pairings originally set up for PROD=&gt;DR volume replication and set up new pairings (DR=&gt;PROD) so that we can replicate DR=&gt;PROD, and eventually fall back to the PROD site.</p>
+<p>So once SolidFire array from the PROD site comes online we can delete its stale volume pairings originally set up for PROD=&gt;DR volume replication and set up new pairings (DR=&gt;PROD) so that we can begin to replicate in the opposite direction, DR=&gt;PROD, and eventually fall back to the PROD site.</p>
 
 <p>We begin like so:</p>
 
 <ul>
   <li>On the PROD SolidFire cluster: go to Data Protection &gt; Volume Pairs, and delete stale volume pairs</li>
   <li>On the same SolidFire cluster: go to each replicated volume and demote it from <code class="language-plaintext highlighter-rouge">Read/Write</code> to <code class="language-plaintext highlighter-rouge">replicationTarget</code></li>
-  <li>Return to the SolidFire DR cluster, set up new volume pairs (DR=&gt;PROD) to initiate replication for DR=&gt;PROD failback. To do that we’d create a volume pair at Source (DR) and complete the pairing at Destination (the SolidFire Web UI from DR site would open the Web UI of the PROD cluster for you) where we’d confirm and complete this step. Notice that Remote cluster is DR, as we are about to complete volume pairing for failback:</li>
+  <li>Return to the SolidFire DR cluster, set up new volume pairs (DR=&gt;PROD) to initiate replication for DR=&gt;PROD failback. To do that we’d create a volume pair at Source (DR) and complete the pairing at Destination (the SolidFire Web UI from DR site opens the Web UI of the PROD cluster in new tab) where we’d confirm and complete this step. Notice that Remote cluster is called DR, as we are about to complete volume pairing for failback:</li>
 </ul>
 
 <p><img src="/assets/images/solidfire-kubernetes-replication-failover-failback-07-complete-replication-pairing-at-destination.png" alt="Trident-inserted SolidFire volume attributes in SolidFire UI at Active site" /></p>
@@ -585,20 +593,24 @@ NAME                                       CAPACITY   ACCESS MODES   RECLAIM POL
 pvc-d24cf316-496a-4807-aa54-08999f712f9d   1Gi        RWO            Retain           Released   pg/pg   basic                   20m
 </code></pre></div></div>
 
-<p>It’s time to switch back. Confirm there’s no delay (in volume replication state in the SolidFire UI at the DR site), pause DR=&gt;PROD replication, delete volume pairing(s) on the SolidFire DR cluster, and then delete them on the SolidFire PROD cluster to (the order of deletion isn’t important because all queued data has been drained and replication paused).</p>
+<h4 id="resume-proddr-replication">Resume PROD=&gt;DR replication</h4>
 
-<h3 id="reestablish-proddr-replication">Reestablish PROD=&gt;DR replication</h3>
+<p>It’s time to switch back. Confirm there’s no delay in volume replication state in the SolidFire UI at the DR site, pause DR=&gt;PROD replication, delete volume pairing(s) on the SolidFire DR cluster, and then delete them on the SolidFire PROD cluster too (the order of deletion isn’t important because workloads had stopped, all queued data has been drained and replication paused).</p>
 
-<p>Promote PROD volumes to <code class="language-plaintext highlighter-rouge">Read/Write</code>. Before failback we set volumes at the DR site to <code class="language-plaintext highlighter-rouge">replicationTarget</code> and removed volume pairing configuration at both sites, so now we can create volume pairs just as if were starting from scratch (before PROD=&gt;DR failover) and replication will resume.</p>
+<p>Promote PROD volumes to <code class="language-plaintext highlighter-rouge">Read/Write</code>. Before failback we set volumes on the DR cluster to <code class="language-plaintext highlighter-rouge">replicationTarget</code> and removed volume pairing configuration on both sides so now we can create volume pairs just as if were starting from scratch (before PROD=&gt;DR failover) and replication will resume.</p>
 
-<p>Now, this step is controversial and <em>not</em> in the official documentation and therefore not recommended either: on my Kubernetes cluster I’d reinstall Trident.</p>
+<p>We can now re-create the original volume pairs for PROD=&gt;DR replication, plus some new volumes if they’ve been added in the meantime.</p>
+
+<h3 id="import-volumes">Import Volumes</h3>
+
+<p>Now, this next step may be controversial. It is <em>not</em> in the official documentation and therefore not recommended. On my Kubernetes cluster I’d reinstall Trident to remove the remote Trident back-end from config, and clean Trident configuration after failback.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./trident-installer/tridentctl uninstall <span class="nt">-n</span> trident
 ./trident-installer/tridentctl obliviate crd <span class="nt">-n</span> trident
 ./trident-installer/tridentctl <span class="nb">install</span> <span class="nt">-n</span> trident
 </code></pre></div></div>
 
-<p>Again, in Scenario 2, with one Kubernetes cluster per each site, you wouldn’t have two back-ends on either of the Kubernetes clusters and wouldn’t benefit from doing this step either. But I have one cluster and with that step I think I somewhat simplify my failback.</p>
+<p>Again, in Scenario 2, with one Kubernetes cluster per each site, you wouldn’t have two back-ends on either of the Kubernetes clusters and wouldn’t benefit from doing this step. But I have one cluster and with that step I think I simplify my failback.</p>
 
 <p>Next I need to add the SolidFire back-end cluster from the PROD site and import the volume I need (pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3). Like before, I could get this info from external source code repo or object storage.</p>
 
@@ -692,24 +704,33 @@ Source:
 Events:                &lt;none&gt;
 </code></pre></div></div>
 
-<p>If you scroll up, you will see <code class="language-plaintext highlighter-rouge">backendUUID=38455724-54ad-4d6d-a1dc-7437ab56803b</code> was (before I deleted Trident) the back-end UUID of the SolidFire cluster from the DR site. Which means we can safely remove that PV: it is not from this site, and it doesn’t correspond to anything we see in the SolidFire UI at the PROD site. We don’t need it.</p>
+<p>If you scroll up, you will see <code class="language-plaintext highlighter-rouge">backendUUID=38455724-54ad-4d6d-a1dc-7437ab56803b</code> was (before I deleted Trident) the back-end UUID of the SolidFire cluster from the DR site. Which means we can safely remove that PV: it is not from this site, and it doesn’t correspond to anything we see in the SolidFire UI at the PROD site. <strong>However</strong>, and this is the key point related to Trident re-installation, fidding with backends and PVs: <strong>if</strong> you do that, you will delete your remote replica volume. Wait, what? How come?</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pv pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80  <span class="nt">-n</span> pg
+<p>I explained earlier: if you do not use <code class="language-plaintext highlighter-rouge">tridentctl delete backend</code> to remove the remote back-end after failback, <code class="language-plaintext highlighter-rouge">kubectl delete pvc pg</code> would leave the remote PV in place (Retain). Cool. But because the back-end is online and still configured, <code class="language-plaintext highlighter-rouge">kubectl delete pv</code> will purge the PV from the remote site!</p>
+
+<p>If, on the other hand, you delete the remote Trident back-end and then delete the PV (like we did on failover), or simply use my controversia approach and re-install Trident, and <em>then</em> run <code class="language-plaintext highlighter-rouge">delete pv</code>, Trident won’t delete the PV from the DR cluster. Most people would want to keep the remote replicas to save the time and bandwidth required to resume PROD=&gt;DR replication, so if you chose to not re-install Trident upon failback and also don’t want to leave remote volumes visible while using the PROD site, you could delete only the remote backend. In either case, if you re-installed Trident or deleted remote back-end, you can then remove the remote PV from Kubernetes.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl delete backend <span class="nt">-n</span> trident SF-DR-192.168.1.34
+
+<span class="nv">$ </span>kubectl delete pv pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80 <span class="nt">-n</span> pg
 warning: deleting cluster-scoped resources, not scoped to the provided namespace
 persistentvolume <span class="s2">"pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80"</span> deleted
+</code></pre></div></div>
 
-<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+<p>Now the only volume known to both Kubernetes and Trident is the first volume from the PROD site. In Kubernetes is called differently (very confusing!), but it is the right volume (see <a href="#pvc-name-pv-name-pv-internalname-solidfire-volume-name">PVC name, PV name, PV internalName, SolidFire Volume Name</a> to see how Kubernetes PV names change).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM   STORAGECLASS   REASON   AGE
 pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain           Bound    pg/pg   basic                   6m31s
 </code></pre></div></div>
 
-<p>With that, our failback is done and we can again re-create the original volume pairs for PROD=&gt;DR replication.</p>
+<p>And this is the end of the failback workflow.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Kubernetes failover and failback with Trident and SolidFire are cleaner than the “old school” approach that used patching. Trident’s Volume Import makes the proces much more convenient.</p>
 
-<p>While the reinstallation of Trident prior to failback is not required I found that approach to work quite nicely and takes just 30 seconds. I didn’t notice any downsides to it.</p>
+<p>While the reinstallation of Trident prior to failback is not required I found that approach to work quite nicely and takes just 30 seconds. I didn’t notice any downsides to it except that PVCs from the PROD cluster get new PV names in Kubernetes, but if you use Volume IDs to manage replication that shouldn’t be a problem. If, on the other hand, you have other data protection software in place, you should evaluate a suitable approach.</p>
 
 <p>Kubernetes’ PV names are unsuitable for human consumption so SolidFire’s primary focus on Volume IDs makes it easy to ignore Volume Names and stick to managing Volume IDs. If we store Kubernetes’ configuration YAMLs and SolidFire paired volume pairs in a repository, we can use that to automate everything (the creation of remote volumes, the pairing of Src-Dst and Dst-Src volumes, Trident-related failover, and failback operations).</p>
 
@@ -882,7 +903,9 @@ pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain     
 </span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">replicationTarget</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Note about Volume Resizing: yes there’s such a feature (in SolidFire and Trident CSI), but there’s also Thin Provisioning (SolidFire). What happens when you resize a replciation Source and forgot to resize its paired Target? Probably nothing good. Either plan and test resizing for paired volumes, or (better) provision larger volumes from the beginning to minimize or eliminate that activity.</p>
+<p>Note about Volume Resizing: yes there’s such a feature (in SolidFire and Trident CSI), but there’s also Thin Provisioning (SolidFire).</p>
+
+<p>What happens when you resize a replication Source and then forget to resize its paired Target? I don’t want to find out, but probably nothing good. If you don’t want either, better plan and test resizing of paired volumes, or (better yet) provision larger volumes from the beginning to minimize or eliminate that activity.</p>
 
 <p>We can now use <code class="language-plaintext highlighter-rouge">Set-SFVolumePair</code> which pauses or (re)starts replication between a pair of volumes.</p>
 
@@ -896,7 +919,7 @@ pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain     
 
 <p>Once two volumes are paired, we can connect to Source cluster to obtain pairing details (<code class="language-plaintext highlighter-rouge">Get-SFVolumePair</code>). Or you can see replication status in the Web interface - see the second screenshot in Failback section.</p>
 
-<p>After the SolidFire PROD cluster went down <code class="language-plaintext highlighter-rouge">Get-SFVolumePair</code> was able to query just one site of the replication pair (the DR side).</p>
+<p>After the SolidFire PROD cluster went down <code class="language-plaintext highlighter-rouge">Get-SFVolumePair</code> was able to query just one site of the replication pair (the DR side). That’s expected, but also yet another reason to keep this info in Git repo or file located in an S3 bucket.</p>
 
 <h3 id="restore-read-write-access-to-target-replica-volumes">Restore read-write access to target replica volumes</h3>
 
@@ -937,6 +960,34 @@ pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain     
 <p>Example of a Snapshot ID 1830 of Volume ID 221:</p>
 
 <p><img src="/assets/images/solidfire-kubernetes-replication-failover-failback-02-volume-snapshot-replication.png" alt="SolidFire snapshot at Standby site" /></p>
+
+<h3 id="pvc-name-pv-name-pv-internalname-solidfire-volume-name">PVC name, PV name, PV internalName, SolidFire Volume Name</h3>
+
+<p>Kubernetes names aren’t predictable. When you create a PV, the SolidFire volume name will reflect it.</p>
+
+<p>But things change as we begin to fiddle. Say I created a PVC <code class="language-plaintext highlighter-rouge">pg</code> which resulted in the creation of the PVC <code class="language-plaintext highlighter-rouge">pvc-8e4fad39-4763-4d31-a618-3e8409fbac25</code> and its namesake on SoldiFire. Impossible to remember, but we’re not lost. Let’s continue.</p>
+
+<p>Now, to make our job easier, while setting things up for PROD=&gt;DR replication, we name the new remote volume <code class="language-plaintext highlighter-rouge">pg</code>. Take that, CSI!</p>
+
+<p>Once we failover, delete back-end from the PROD cluster, add back-end from the remote site and use <code class="language-plaintext highlighter-rouge">tridentctl import volume</code> we realize Kubernetes doesn’t care about our pretty SolidFire volume name. The imported Kuberntes PV is named <code class="language-plaintext highlighter-rouge">pvc-eb8c4dea-4191-4eee-8fca-52e004c834f0</code>. Damn!!!</p>
+
+<p>Our SolidFire volume at the remote site is (still) named <code class="language-plaintext highlighter-rouge">pg</code>, its CSI <code class="language-plaintext highlighter-rouge">internalName</code> is also <code class="language-plaintext highlighter-rouge">pg</code>, but its CSI <code class="language-plaintext highlighter-rouge">name</code> is <code class="language-plaintext highlighter-rouge">pvc-eb8c4dea-4191-4eee-8fca-52e004c834f0</code>. This is starting to get confusing!</p>
+
+<p>We replicate this volume back for failback and once ready (volume pairs are in sync), we can fail over. Stop workloads on the remote site, and delete PVCs. Trident still knows about the both PVs (one from each site).</p>
+
+<p><em>If</em> you now re-create the PROD back-end (which find convenient for Scenario 1), Trident will assign it a new, non-deterministic UUID (I mentioned that earlier) which means Kubernetes CSI and Trident will both know about <code class="language-plaintext highlighter-rouge">pvc-8e4fad39-4763-4d31-a618-3e8409fbac25</code> (from the PROD cluster, and that volume is still there - we want to use it once we fail back), but they consider it tied to the old PROD backend UUID that no longer exists (we deleted the old PROD back-end upon failover to DR site).</p>
+
+<p>What that means is we can delete this PV with <code class="language-plaintext highlighter-rouge">kubectl</code> and it will only be deleted from Kubernetes and not from SolidFire, which is what we want because now we can use <code class="language-plaintext highlighter-rouge">trident import volume</code>, which will work. Doing that feels scary because the name in <code class="language-plaintext highlighter-rouge">kubectl get pv</code> output is identical to the name you see in the SolidFire UI.</p>
+
+<p>This step will yet again rearrange volume names, this time at at the PROD site: now the name of the imported volume is <code class="language-plaintext highlighter-rouge">pvc-54bc2f41-a8f6-41b6-aec2-0df664e507f9</code>, while <code class="language-plaintext highlighter-rouge">internalName</code> is <code class="language-plaintext highlighter-rouge">pvc-8e4fad39-4763-4d31-a618-3e8409fbac25</code> and SolidFire Volume Name are still good old <code class="language-plaintext highlighter-rouge">pvc-eb8c4dea-4191-4eee-8fca-52e004c834f0</code>.</p>
+
+<p>I don’t blame you if you aren’t even trying to understand this - from my first-hand-experience I conclude that is next to impossible. Imagine trying to figure this out for 1000 volumes. Phew!</p>
+
+<p>For the same reason I have no doubt that trying to use “human-friendly” SolidFire volume names on the remote cluster isn’t very helpful.</p>
+
+<p>Once you understand why I delete Trident and/or Trident back-ends from Trident configuration on failover and failback, you can determine what’s best for <em>you</em>. If there’s no chance of confusion, and no problem with leaving remote PVs present while running at the remote site, you can do it differently.</p>
+
+<p>I suspect that in Scenario 1 (one cluster stretched across two sites), it is not possible to leave the remote backend registered and PVs present, because there’s no way to disable a back-end and prevent the single storage class from making use of it. What’s more, with remote volumes in replicationTarget mode, those can’t even accept any writes - all you can do with them is the last thing you want - accidentally delete them.</p>
 
 <h3 id="conduct-dr-failover-and-failback-testing">Conduct DR failover and failback testing</h3>
 
@@ -1109,7 +1160,7 @@ pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain     
 
     
   </div><footer class= "footer">
-    <p>2021-03-20 16:03 </p>
+    <p>2021-03-20 21:31 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
