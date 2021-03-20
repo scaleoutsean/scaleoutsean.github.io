@@ -100,7 +100,7 @@
 
   
   
-    26 minute read
+    27 minute read
   
 
     </span>
@@ -482,7 +482,7 @@ time="2021-02-12T08:15:38Z" level=error msg="GRPC error: rpc error: code = Inter
   </tbody>
 </table>
 
-<p>This could be 1 site (2 racks, or 2 buildings), 2 sites or 3 sites. A minimal deployment with full redundancy and all features except site replication would consist of one site with NetApp HCI (4 compute, 4 storage nodes) and a three node StorageGRID cluster running out of VMs.</p>
+<p>This could be 1 site (2 racks, or 2 buildings), 2 sites or 3 sites. Minimal deployment with full redundancy and all features except site replication would consist of one site with NetApp HCI (4 compute, 4 storage nodes) and a three node StorageGRID cluster running out of VMs.</p>
 
 <p>Depending on how much data there is to protect, StorageGRID could run in VMs or on physical appliances (or use appliances on PROD site and VMs on DR site).</p>
 
@@ -512,7 +512,7 @@ time="2021-02-12T08:15:38Z" level=error msg="GRPC error: rpc error: code = Inter
 
 <p>For snapshot protection in Kasten/SolidFire environment most users would benefit from a combined snapshot protection split between SolidFire and K10/CSI snapshots in which only a necessary minimum of SolidFire snapshots would be taken to cater to storage replication and similar requirements.</p>
 
-<p>Because of the limited number of snapshots per volume, users must be careful to organize snapshot policies to fit within those limits and monitor the growth in number of SolidFire volumes and snapshots.</p>
+<p>Because of the limited number of snapshots per volume, users must be careful to organize snapshot policies to fit within those limits and monitor the growth in number of SolidFire volumes and snapshots, and have a process to patch expired deleted snapshot objects and use <code class="language-plaintext highlighter-rouge">tridentctl</code> to delete them.</p>
 
 <p>Exported snapshots (or backups) work seamlessly with StorageGRID S3 and don’t seem to need special consideration compared to object stores in public cloud. Because local S3 storage usually does not have bandwidth restictions, the frequency and retention of backups to StorageGRID can be much higher than local snapshots on SolidFire.</p>
 
@@ -579,7 +579,7 @@ k10-csi-snap-knrhwqcckffv9d4s   <span class="nb">true         </span>elasticsear
 k10-csi-snap-nkw6wmmpkbhbnvzt   <span class="nb">true                                                      </span>k10-csi-snap-nkw6wmmpkbhbnvzt-content-8648afa6-6883-4459-aa32-09eaba15b6dd   1Gi           k10-clone-csi-trident   k10-csi-snap-nkw6wmmpkbhbnvzt-content-8648afa6-6883-4459-aa32-09eaba15b6dd   8h             7h5m
 </code></pre></div></div>
 
-<p>It shouldn’t be too hard to match K10 PVs and snapshots against SolidFire Volume and Snapshot names, and automatically delete unnecessary Released PVs in Kubernetes, and then orphaned SolidFire volumes. But it can also be risky, so it’s better to have smart Storage Class policies and avoid the need to automate this sensitive operation - despite the recycle bin feature in SolidFire (SolidFire volumes can be recovered up to several hours after deletion).</p>
+<p>It shouldn’t be too hard to match K10 PVs and snapshots against SolidFire Volume and Snapshot names, and automatically delete unnecessary Released PVs in Kubernetes, and then the orphaned SolidFire volumes. But it can also be risky, so it’s better to have smart Storage Class policies and avoid the need to automate this sensitive operation - despite the recycle bin feature in SolidFire (SolidFire volumes can be recovered up to several hours after deletion).</p>
 
 <p>SolidFire snapshots manually created in Kubernetes (not by K10) are not relevant to K10 and if needed may be deleted with <code class="language-plaintext highlighter-rouge">tridentctl</code>. For example, I want to delete a snapshot of volume <code class="language-plaintext highlighter-rouge">pvc-73d41364-e902-419e-9a1e-2b560ef07fd6</code>. The snapshot was created in SolidFire Web UI. To find it, I get snapshots for the volume:</p>
 
@@ -599,7 +599,7 @@ k10-csi-snap-nkw6wmmpkbhbnvzt   <span class="nb">true                           
 
 <ul>
   <li>Situation: protected PV uses SolidFire volume ID 256</li>
-  <li>Problem: although K10 protection policy is set to take and keep last 2 hourly snapshots, old SolidFire snapshots remain, creeping towards the hard limit of 32. In the Kubernetes namespace under VolumeSnapshots for protected resource K10 correctly shows only two snapshots. But on SolidFire we see a whole bunch:</li>
+  <li>Challenge: although K10 protection policy is set to take and keep last 2 hourly snapshots, old SolidFire snapshots remain, creeping towards the hard limit of 32. In the Kubernetes namespace under VolumeSnapshots for protected resource K10 correctly shows only two snapshots. But on SolidFire we see a whole bunch:</li>
 </ul>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">256</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">SnapshotID</span><span class="p">,</span><span class="nx">Name</span><span class="w">
@@ -616,36 +616,26 @@ k10-csi-snap-nkw6wmmpkbhbnvzt   <span class="nb">true                           
      </span><span class="nx">63490</span><span class="w"> </span><span class="nx">snapshot-8e76c4ea-35ad-43a0-bea1-1ace69d49204</span><span class="w">
 </span></code></pre></div></div>
 
-<p>This looks like <a href="https://github.com/NetApp/trident/issues/462">Trident issue #462</a>. Trident snapshots don’t have the ability to set snapshot expiration, but it seems they’re deleted on Kubernetes. To confirm if Kubernetes knows about those extra snapshots:</p>
+<p>Edit (2021/03/19): I had thoght this was <a href="https://github.com/NetApp/trident/issues/462">Trident issue #462</a>, but after a Trident developer suggested that in all likelihood that must be because <code class="language-plaintext highlighter-rouge">deletePolicy: Retain</code> was used. I went back and checked my Kasten-with-SolidFire notes and I confirmed I had tried with <code class="language-plaintext highlighter-rouge">Delete</code> as well - didn’t help. Aha! So it must be Trident, right? Wrong!</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get volumesnapshots <span class="nt">--namespace</span> backup-test
-NAME                            READYTOUSE   SOURCEPVC               SOURCESNAPSHOTCONTENT   RESTORESIZE   SNAPSHOTCLASS   SNAPSHOTCONTENT                                    CREATIONTIME   AGE
-k10-csi-snap-79655znpw6vtwspb   <span class="nb">true         </span>datadir-cockroachdb-0                           2Gi           csi-trident     snapcontent-78cc428f-b6d3-49a0-a9e6-ecc2dc952e40   19m            19m
-k10-csi-snap-lchmz7q579zfsd9x   <span class="nb">true         </span>datadir-cockroachdb-0                           2Gi           csi-trident     snapcontent-bbc3639e-de74-4d37-89dc-8687a0638f15   5m33s          5m33s
-</code></pre></div></div>
+<p>It turns out I missed this particular note from the Kasten K10 <a href="https://docs.kasten.io/3.0.10/install/storage.html?highlight=volumesnapshotclass">docs</a> which states that “K10 creates a clone of the original VolumeSnapshotClass with the DeletionPolicy set to ‘Retain’.” Oops! Kasten K10 is easy to use so I didn’t read all of the documentation - my bad!</p>
 
-<p>Kubernetes isn’t aware, just like K10, so we can delete them. The problem (Trident issue #462) is Trident retains them in its own database. Even if I delete a snapshot like this:</p>
+<p>I agree this is a wise approach. But we can’t just ignore it because eventually you’ll hit the 32 snapshot limit on SolidFire. My workaround until there’s a recommended best practice from either Kasten or NetApp: knowing the details of this environment (example: K10 is set to retain two most recent snapshots): find SolidFire snapshot IDs older than most recent two, find their K8s IDs, patch those snapshots to <code class="language-plaintext highlighter-rouge">spec.deletionPolicy: Delete</code> and then delete them with <code class="language-plaintext highlighter-rouge">tridentctl delete snapshot</code>, which should delete them in SolidFire as well. I haven’t tried this yet.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete volumesnapshots <span class="nt">--namespace</span> backup-test k10-csi-snap-79655znpw6vtwspb
-volumesnapshot.snapshot.storage.k8s.io <span class="s2">"k10-csi-snap-79655znpw6vtwspb"</span> deleted
-</code></pre></div></div>
-
-<p>Trident still hangs onto it:</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl get snapshot <span class="nt">-n</span> trident | <span class="nb">grep </span>78cc
-| snapshot-78cc428f-b6d3-49a0-a9e6-ecc2dc952e40 | pvc-73d41364-e902-419e-9a1e-2b560ef07fd6 |
-</code></pre></div></div>
-
-<p>You can’t just ignore this because eventually you’ll hit the 32 snapshot limit on SolidFire. My workaround until Trident issue #462 is resolved: knowing the details of this environment (only two most recent ones should be kept), we can periodically prune all snapshot but the most recent two:</p>
+<p>What I did try (before I knew about the K10 volume snapshot class clone) was to delete them outside of Kubernetes:</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">256</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">CreateTime</span><span class="p">,</span><span class="nx">SnapshotID</span><span class="p">,</span><span class="nx">Name</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">`</span><span class="w">
  </span><span class="n">Sort-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">CreateTime</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">SnapshotID</span><span class="w"> </span><span class="nt">-SkipLast</span><span class="w"> </span><span class="nx">2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">`</span><span class="w">
  </span><span class="n">Remove-SFSnapshot</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
 </span></code></pre></div></div>
 
-<p>This could be made to run out of a <a href="https://hub.docker.com/r/scaleoutsean/solidshell">PowerShell container</a> or VM.</p>
+<p>One significant downside of this approach is that it doesn’t clean up in Trident, so Trident keeps track of ever more snapshots.</p>
 
-<p>If we had a more complex K10 protection policy (example: hourly snapshots (keep 8) &amp; daily snapshots (keep 7)), this wouldn’t be a one-line script. We’d have to write a more complex script. Also, the effect of letting stale snapshot entries pile up in Trident are unknown.</p>
+<p>If we had a more complex K10 protection policy (example: hourly snapshots (keep 8) &amp; daily snapshots (keep 7)), this wouldn’t be a one-line script. We’d have to write a more complex script, perhaps one that queries Kasten K10 for snapshots that are about to expire and patch them to <code class="language-plaintext highlighter-rouge">Delete</code> before that happens.</p>
+
+<p>Such scripts could run out of a <a href="https://hub.docker.com/r/scaleoutsean/solidshell">PowerShell container</a> or VM.</p>
+
+<p>The more complex appraoch with patching looks better but I haven’t tested it. I wonder if Kasten could simply patch Snapshots to <code class="language-plaintext highlighter-rouge">retainPolicy: Delete</code> as it expires them.</p>
 
 <h2 id="appendix-c-kasten-k10">Appendix C: Kasten K10</h2>
 
@@ -870,6 +860,21 @@ Events:        &lt;none&gt;
         
     
         
+          <div class = "related-posts">
+          <h5><a href="/2021/03/20/kubernetes-solidfire-failover-failback.html">• Kubernetes failover and failback with Trident CSI and SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
     
       
     
@@ -959,39 +964,6 @@ Events:        &lt;none&gt;
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/02/02/trident-21.01-install-with-helm-on-netapp-hci.html">• Install NetApp Trident v21.01.01 with Helm v3 and configure a SolidFire back-end</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -999,7 +971,7 @@ Events:        &lt;none&gt;
 
     
   </div><footer class= "footer">
-    <p>2021-03-10 00:59 </p>
+    <p>2021-03-20 13:03 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

@@ -1,0 +1,1053 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:40">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:40">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:40">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Kubernetes failover and failback with Trident CSI and SolidFire | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Use Trident CSI and SolidFire to protect data and provide failover and failback to Kubernetes clusters
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Kubernetes failover and failback with Trident CSI and SolidFire</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>20 Mar 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    26 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#solidfire-replication-and-switch-over-under-the-hood">SolidFire replication and switch-over under the hood</a></li>
+  <li><a href="#setup-and-workflow">Setup and workflow</a>
+    <ul>
+      <li><a href="#solidfire-failover">SolidFire failover</a></li>
+      <li><a href="#configure-kubernetes-and-trident-csi-at-prod-and-dr-site">Configure Kubernetes and Trident CSI at PROD and DR site</a></li>
+      <li><a href="#failover-proddr">Failover: PROD=&gt;DR</a></li>
+    </ul>
+  </li>
+  <li><a href="#failback-drprod">Failback (DR=&gt;PROD)</a>
+    <ul>
+      <li><a href="#reestablish-proddr-replication">Reestablish PROD=&gt;DR replication</a></li>
+    </ul>
+  </li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#appendix">Appendix</a>
+    <ul>
+      <li><a href="#pair-solidfire-arrays-for-replication-and-pair-pv-with-a-new-pv-at-the-dr-site">Pair SolidFire arrays for replication and pair PV with a new PV at the DR site</a></li>
+      <li><a href="#solidfire-volume-names-and-ids">SolidFire Volume Names and IDs</a></li>
+      <li><a href="#fail-prod-cluster">Fail PROD cluster</a></li>
+      <li><a href="#configure-replication">Configure replication</a></li>
+      <li><a href="#recover-services-at-dr-site">Recover services at DR site</a></li>
+      <li><a href="#why-use-retain-as-our-reclaim-policy">Why use Retain as our Reclaim Policy</a></li>
+      <li><a href="#solidfire-replication-and-kubernetes-snapshot-volume-class">SolidFire replication and Kubernetes Snapshot Volume Class</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>So far I’ve created two videos on the topic of SolidFire replication: one about <a href="https://youtu.be/LdKBYJhvwrU">configuring SolidFire array &amp; volume replication using SolidFire PowerShell Tools</a> in which I demonstrated how SolidFire replication can be configured in mere seconds, and another about manual <a href="https://www.youtube.com/watch?v=f-PJGCtEojQ">failover and failback of Kubernetes with SolidFire</a> which used an old approach (before Trident Volume Import feature became available).</p>
+
+<p>The Trident documentation v21.01.01 doesn’t have much on this topic so I’ve been thinking to examine this topic again.</p>
+
+<h2 id="solidfire-replication-and-switch-over-under-the-hood">SolidFire replication and switch-over under the hood</h2>
+
+<p>How replication works under the hood of SolidFire is simple. Assuming your network configuration is symmetric (that is, your volume X isn’t exposed on VLAN 100 and VLAN 200, respectively), you only need to worry about the following differences between sites:</p>
+
+<ul>
+  <li>Storage VIP (one per SolidFire cluster) (example: <code class="language-plaintext highlighter-rouge">192.168.1.30</code>)</li>
+  <li>Unique cluster ID (example: <code class="language-plaintext highlighter-rouge">mn4y</code>)</li>
+  <li>Volume ID (example: <code class="language-plaintext highlighter-rouge">270</code>)</li>
+</ul>
+
+<p>Of course, there’s also a Volume Name, which can be consistent across sites, prefixed with a unique site-specific or Kubernetes cluster-specific string, or entirely different.</p>
+
+<p>Example:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Cluster</th>
+      <th style="text-align: left">SVIP</th>
+      <th style="text-align: left">Unique ID</th>
+      <th style="text-align: left">Vol Name</th>
+      <th style="text-align: left">Vol ID</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">PROD</td>
+      <td style="text-align: left">192.168.1.30</td>
+      <td style="text-align: left">mn4y</td>
+      <td style="text-align: left">pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+      <td style="text-align: left">270</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When an iSCSI client connects to a volume like that, this is what we see in Reporting &gt; iSCSI Sessions in the SolidFire Web UI:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:mn4y.pvc-ba229a61-6026-44bd-8b39-29863261469a.270</code></li>
+</ul>
+
+<p>The same can be observed with <code class="language-plaintext highlighter-rouge">Get-SFIscsiSession</code> (PowerShell):</p>
+
+<pre><code class="language-pwsh">&gt; Get-SFIscsiSession
+
+DriveIDs               : {1}
+AccountID              : 14
+Initiator              : 
+AccountName            : uc01
+DriveID                : 1
+InitiatorIP            : 192.168.103.20:54614
+InitiatorPortName      : iqn.1993-08.org.debian:01:9dbcf2ddfb75,i,0x23d000001
+TargetPortName         : iqn.2010-01.com.solidfire:mn4y.pvc-ba229a61-6026-44bd-8b39-29863261469a.270,t,0x1
+InitiatorName          : iqn.1993-08.org.debian:01:9dbcf2ddfb75
+NodeID                 : 1
+ServiceID              : 4
+SessionID              : 17179925321
+TargetName             : iqn.2010-01.com.solidfire:mn4y.pvc-ba229a61-6026-44bd-8b39-29863261469a.270
+TargetIP               : 192.168.103.29:3260
+VirtualNetworkID       : 0
+VolumeID               : 270
+CreateTime             : 2021-02-24T02:59:47.205942Z
+VolumeInstance         : 140032150693376
+InitiatorSessionID     : 9613344769
+MsSinceLastScsiCommand : 39159
+MsSinceLastIscsiPDU    : 3390
+</code></pre>
+
+<p>Now we know how to put together our SF iSCSI target:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:</code> + <code class="language-plaintext highlighter-rouge">${CLUSTER-UNIQUE-ID}</code> + <code class="language-plaintext highlighter-rouge">.</code> + <code class="language-plaintext highlighter-rouge">${VOLUME-NAME}</code> + <code class="language-plaintext highlighter-rouge">.</code> + <code class="language-plaintext highlighter-rouge">${VOLUME-ID}</code></li>
+</ul>
+
+<p>We can get Svip (Storage Virtual IP) and UniqueID using <code class="language-plaintext highlighter-rouge">Get-SFClusterInfo</code>, which means we have everything required to transform PROD iSCSI device paths and swap them for Target device paths (which is what storage site failover would require), and back.</p>
+
+<p>This is how I did it in one of the videos mentioned at the top. But the NetApp dynamic provisioner for CSI orchestrators, Trident, has Volume Import feature which has the potential to make site failover a more pleasant experience. Let’s find out if that is true for SolidFire users.</p>
+
+<h2 id="setup-and-workflow">Setup and workflow</h2>
+
+<p>There are several different scenarios to consider:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Scenario</th>
+      <th style="text-align: center">K8s clusters</th>
+      <th style="text-align: center">SF clusters</th>
+      <th style="text-align: center">Protection</th>
+      <th style="text-align: center">Switch-over</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
+      <td style="text-align: center">1</td>
+      <td style="text-align: center">2</td>
+      <td style="text-align: center">SF cluster</td>
+      <td style="text-align: center">SF switch-over</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2</td>
+      <td style="text-align: center">2</td>
+      <td style="text-align: center">2</td>
+      <td style="text-align: center">K8s or SF cluster</td>
+      <td style="text-align: center">K8s and SF s-o</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">3</td>
+      <td style="text-align: center">1,3</td>
+      <td style="text-align: center">1,3</td>
+      <td style="text-align: center">AZ</td>
+      <td style="text-align: center">No s-o or K8s+SF s-o</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In Scenario 1 we assume PROD=&gt;DR replication is in place. There is only one Kubernetes cluster so we just need to switch to the surviving storage back-end.</p>
+
+<p>In Scenario 2 there’s one Kubernetes and one SolidFire cluster per each site. If either cluster fails, we switch both Kubernetes and SolidFire to the surviving site. The difference compared to Scenario 1 is the remote site has a Kubernetes cluster that is unaware of the existence of the PROD site. As soon as we “promote” the remote SolidFire cluster to Read/Write, it can come online for read-write access by the Kubernetes cluster at the remote site.</p>
+
+<p>Scenario 3 is about more complex combinations. One of them (single cluster, three sites scenario) involves SolidFire Protection Domains (PD’s), as well as more than two Kuberntes and SolidFire clusters. What do PD’s do?</p>
+
+<p>They’re similar to Availability Zones in Public Coud. SolidFire cluster with six or more nodes can be logically segregated in three Protection Domains so that two copies of each data block (that SolidFire makes to protect from disk or node failures) never land in the same Protection Domain (in this example, get stored on two nodes belonging to the same PD). If your Kuberetes is spread spread over multiple buildings in a campus environment, you could deploy six or nine SolidFire nodes to protect data and services in the case one building loses power or network connectivity. Only this  approach has RTO and RPO of zero, because there is no SolidFire cluster failover (PD failover is just a failover of a node, or domain).</p>
+
+<p>This post will discuss only Scenario 1, because Scenarios 2 and 3 are similar enough.</p>
+
+<h3 id="solidfire-failover">SolidFire failover</h3>
+
+<p>This is my setup:</p>
+
+<ul>
+  <li>One K8s cluster with Trident CSI</li>
+  <li>Two SolidFire storage clusters paired for volume replication</li>
+  <li>Only one storage back-end (PROD) and one (default) storage class configured in Kubernetes</li>
+</ul>
+
+<p>Plan:</p>
+
+<ul>
+  <li>Create a PVC, identify resulting PV</li>
+  <li>Configure SolidFire asynchronous replication (PROD=&gt;DR) for that PV</li>
+  <li>Power off the SolidFire array at the PROD site (simulate unplanned site failure)</li>
+  <li>At the DR site
+    <ul>
+      <li>On the remote SolidFire cluster: delete volume pairing relationships (I could pause them but I no longer need them)</li>
+      <li>On the remote Kubernetes cluster: delete “stale” PVCs from the PROD site (we need to recreate them on Volume Import)</li>
+      <li>On SolidFire, promote DR replica Volumes to Read/Write (we need to be able to write at the DR site)</li>
+      <li>Add SolidFire back-end to Kubernetes (we pretend our Kubernetes DR cluster is a new cluster)</li>
+      <li>Use Trident Volume Import to import DR site volumes and configuration (PVC YAML) into the Kubernetes cluster at that (DR) site</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="configure-kubernetes-and-trident-csi-at-prod-and-dr-site">Configure Kubernetes and Trident CSI at PROD and DR site</h3>
+
+<p>For this we create a back-end JSON file and deploy it to use the PROD cluster. We also need a storage class. We use <code class="language-plaintext highlighter-rouge">ReclaimPolicy: Retain</code> to prevent automatic deletion of PVs after we delete PVCs.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl create backend <span class="nt">-n</span> trident <span class="nt">-f</span> be-prod.json 
++----------------------+----------------+--------------------------------------+--------+---------+
+|         NAME         | STORAGE DRIVER |                 UUID                 | STATE  | VOLUMES |
++----------------------+----------------+--------------------------------------+--------+---------+
+| SF-PROD-192.168.1.30 | solidfire-san  | 9322422c-a2f1-4f57-8389-713dc6b19e1c | online |       0 |
++----------------------+----------------+--------------------------------------+--------+---------+
+
+<span class="nv">$ </span>kubectl get sc
+NAME              PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+basic <span class="o">(</span>default<span class="o">)</span>   csi.trident.netapp.io   Retain          Immediate           <span class="nb">true                   </span>4h20m
+
+<span class="nv">$ </span>kubectl describe sc 
+Name:                  basic
+IsDefaultClass:        Yes
+Annotations:           storageclass.kubernetes.io/is-default-class<span class="o">=</span><span class="nb">true
+</span>Provisioner:           csi.trident.netapp.io
+Parameters:            <span class="nv">IOPS</span><span class="o">=</span>300,backendType<span class="o">=</span>solidfire-san,clones<span class="o">=</span><span class="nb">true</span>,fsType<span class="o">=</span>ext4,snapshots<span class="o">=</span><span class="nb">true
+</span>AllowVolumeExpansion:  True
+MountOptions:          &lt;none&gt;
+ReclaimPolicy:         Retain
+VolumeBindingMode:     Immediate
+Events:                &lt;none&gt;
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">ReclaimPolicy: Retain</code> is safer, but not a requirement. This storage class is not site-specific so we can always leave it in place and just add/delete back-ends. There may be other approaches (more complex, too).</p>
+
+<p>Request a PV:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">pg</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">1Gi</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">basic</span>
+</code></pre></div></div>
+
+<p>Now we have a PVC and PV to protect. Make a copy of config data for your DR site.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> pg
+NAME   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+pg     Bound    pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb   1Gi        RWO            basic          106m
+
+<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM   STORAGECLASS   REASON   AGE
+pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb   1Gi        RWO            Retain           Bound    pg/pg   basic                   106m
+</code></pre></div></div>
+
+<p>One important detail to note here is <code class="language-plaintext highlighter-rouge">internalName=pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3</code>. This is the original volume attribute when it was created. It is stored by Trident in SolidFire volume attributes. <code class="language-plaintext highlighter-rouge">backendUUID</code> is Trident’s internal unique identifier for the SolidFire array at the PROD site.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pv pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb <span class="nt">-n</span> pg
+Name:            pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb
+Labels:          &lt;none&gt;
+Annotations:     pv.kubernetes.io/provisioned-by: csi.trident.netapp.io
+Finalizers:      <span class="o">[</span>kubernetes.io/pv-protection]
+StorageClass:    basic
+Status:          Bound
+Claim:           pg/pg
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   &lt;none&gt;
+Message:         
+Source:
+    Type:              CSI <span class="o">(</span>a Container Storage Interface <span class="o">(</span>CSI<span class="o">)</span> volume <span class="nb">source</span><span class="o">)</span>
+    Driver:            csi.trident.netapp.io
+    FSType:            ext4
+    VolumeHandle:      pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb
+    ReadOnly:          <span class="nb">false
+    </span>VolumeAttributes:      <span class="nv">backendUUID</span><span class="o">=</span>57883f01-94ba-48aa-8acd-e7330c128bce
+                           <span class="nv">internalName</span><span class="o">=</span>pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3
+                           <span class="nv">name</span><span class="o">=</span>pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb
+                           <span class="nv">protocol</span><span class="o">=</span>block
+                           storage.kubernetes.io/csiProvisionerIdentity<span class="o">=</span>1615813561469-8081-csi.trident.netapp.io
+Events:                &lt;none&gt;
+</code></pre></div></div>
+
+<p>Replicate this volume to SolidFire on DR site. SolidFire calls this “volume pairing” (more on that in Appendix, if you wish to use the CLI or automate).</p>
+
+<p>Now let’s assume the PROD site failed.</p>
+
+<h3 id="failover-proddr">Failover: PROD=&gt;DR</h3>
+
+<p>The first thing we’d do is switch to SolidFire UI or API endpoint at the DR site and pause volume replication on that array.</p>
+
+<p>After that we’d delete the stale PVCs and PVs (remnants from the PROD site) on our remote Kubernetes cluster:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pvc pg <span class="nt">-n</span> pg
+persistentvolumeclaim <span class="s2">"pg"</span> deleted
+
+<span class="nv">$ </span>kubectl delete pv pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb <span class="nt">-n</span> pg
+warning: deleting cluster-scoped resources, not scoped to the provided namespace
+persistentvolume <span class="s2">"pvc-fdd499f6-14f3-4280-bdef-35d84c5794bb"</span> deleted
+</code></pre></div></div>
+
+<p>Then we would delete our volume pairing configuration while nothing Volume IDs from both sites (why, because we need to replicate in reverse later, and for that we can’t lose track of Volume IDs required to configure Volume Pairs). You probably don’t want to take notes during failover, but when you pair volumes.</p>
+
+<p>This isn’t “recommended by NetApp” but it is possibly convenient. You could create CSV, JSON or YAML table and keep it in S3 bucket or Github, so that you can always access it from both sites without relying on any notes.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">ns/pod</th>
+      <th style="text-align: center">src</th>
+      <th style="text-align: center">dst</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">pg/pg</td>
+      <td style="text-align: center">476</td>
+      <td style="text-align: center">126</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">pg/logs</td>
+      <td style="text-align: center">477</td>
+      <td style="text-align: center">128</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">pg/bkp</td>
+      <td style="text-align: center">478</td>
+      <td style="text-align: center">130</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As you create PVCs for apps that need protection, you can updates that table in the same go. When we pair volumes, we pull/download the table and use it as input to Ansible, PowerShell, or other tool.</p>
+
+<p>We need to promote Target (volume replica in the DR cluster) to Read/Write and we’ll later pair it in reverse (DR=&gt;PROD). As for the PVC/PV at the remote site, we need to recreate them using the DR cluster, and PVs can’t be duplicate. So PVCs must be removed from our Kubernetes cluster. As mentioned earlier, in Scenario 2 (one Kubernetes per each site) we would not have to do this because the remote Kubernetes cluster would not have PV information from the PROD site.</p>
+
+<p>Also recall that because our Storage Class uses Retain, removing the PVCs will still leave us with “stale” PVs which are harmless but can be confusing.</p>
+
+<p>Next steps:</p>
+
+<p>Add the DR SolidFire cluster as new Trident back-end to my cluster using JSON configuration file for the DR site (this too could be kept in Git or S3 bucket). We will switch to, and use this back-end while the SolidFire PROD cluster is down</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl create backend <span class="nt">-n</span> trident <span class="nt">-f</span> be-dr.json 
++--------------------+----------------+--------------------------------------+--------+---------+
+|        NAME        | STORAGE DRIVER |                 UUID                 | STATE  | VOLUMES |
++--------------------+----------------+--------------------------------------+--------+---------+
+| SF-DR-192.168.1.34 | solidfire-san  | 38455724-54ad-4d6d-a1dc-7437ab56803b | online |       0 |
++--------------------+----------------+--------------------------------------+--------+---------+
+</code></pre></div></div>
+
+<p>Delete the first SolidFire back-end (SolidFire from the PROD site). It’s offline (failed) as we do this, so it will remain in the <code class="language-plaintext highlighter-rouge">deleting</code> state. We don’t want to wait for it to become “ready” (get back online) because my Storage Class can use both back-ends (<code class="language-plaintext highlighter-rouge">solidfire-san</code> type of back-end at both sites), and we don’t want to have it create new volumes at the PROD site (should that cluster come online while we’re operating at the DR site). After <code class="language-plaintext highlighter-rouge">tridentctl delete backend</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl get backend <span class="nt">-n</span> trident
++----------------------+----------------+--------------------------------------+----------+---------+
+|         NAME         | STORAGE DRIVER |                 UUID                 |  STATE   | VOLUMES |
++----------------------+----------------+--------------------------------------+----------+---------+
+| SF-PROD-192.168.1.30 | solidfire-san  | 57883f01-94ba-48aa-8acd-e7330c128bce | deleting |       1 |
+| SF-DR-192.168.1.34   | solidfire-san  | 38455724-54ad-4d6d-a1dc-7437ab56803b | online   |       0 |
++----------------------+----------------+--------------------------------------+----------+---------+
+</code></pre></div></div>
+
+<p>Before I import volumes from the K8s DR cluster I need to promote them from <code class="language-plaintext highlighter-rouge">replicationTarget</code> to <code class="language-plaintext highlighter-rouge">Read/Write</code>. This can be easily automated but for a handful of volumes you could also use the SolidFire Web UI.</p>
+
+<p>I am now ready to import this volume with Trident. Notice how I specified the remote back-end (<code class="language-plaintext highlighter-rouge">SF-DR-192.168.1.34</code>), remote volume name (<code class="language-plaintext highlighter-rouge">dr-$VOLNAME</code>), and use the original PVC YAML from the PROD site (this tells Kubernetes about the user of the volume). The PVC YAML files could also be kept in Git.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl import volume <span class="nt">-n</span> trident SF-DR-192.168.1.34 dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3 <span class="nt">-n</span> trident <span class="nt">-f</span> pvc-simple.yaml
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-d24cf316-496a-4807-aa54-08999f712f9d | 1.0 GiB | basic         | block    | 38455724-54ad-4d6d-a1dc-7437ab56803b | online | <span class="nb">true</span>    |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+</code></pre></div></div>
+
+<p>From the above example you can see that I created the remote SolidFire volume prefixed with <code class="language-plaintext highlighter-rouge">dr-</code> (dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3) to pair it with the source (b4ad4998-05ce-46ab-9f67-a6e972805fa3). This can be convenient and logical for some, and inconvenient and confusing to others. You can name the target volume exactly the same, prefix it with something, etc. What matters is that you don’t lose track of which Volume ID you need to use - Volume Names are easy to look up.</p>
+
+<p>Let’s examine this new PVC/PV pair:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> pg
+NAME   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+pg     Bound    pvc-d24cf316-496a-4807-aa54-08999f712f9d   1Gi        RWO            basic          13m
+
+<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM   STORAGECLASS   REASON   AGE
+pvc-d24cf316-496a-4807-aa54-08999f712f9d   1Gi        RWO            Retain           Bound    pg/pg   basic                   13m
+
+<span class="nv">$ </span>kubectl describe pvc pg <span class="nt">-n</span> pg
+Name:          pg
+Namespace:     pg
+StorageClass:  basic
+Status:        Bound
+Volume:        pvc-d24cf316-496a-4807-aa54-08999f712f9d
+Labels:        &lt;none&gt;
+Annotations:   pv.kubernetes.io/bind-completed: <span class="nb">yes
+               </span>pv.kubernetes.io/bound-by-controller: <span class="nb">yes
+               </span>trident.netapp.io/importBackendUUID: 38455724-54ad-4d6d-a1dc-7437ab56803b
+               trident.netapp.io/importOriginalName: dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3
+               trident.netapp.io/notManaged: <span class="nb">false
+               </span>volume.beta.kubernetes.io/storage-provisioner: csi.trident.netapp.io
+Finalizers:    <span class="o">[</span>kubernetes.io/pvc-protection]
+Capacity:      1Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       &lt;none&gt;
+</code></pre></div></div>
+
+<p>Notice how <code class="language-plaintext highlighter-rouge">trident.netapp.io/importOriginalName</code> is where the name of DR replica volume is stored. That is the actual SolidFire Volume Name at the DR site: <code class="language-plaintext highlighter-rouge">dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3</code>. If we describe this PV, <code class="language-plaintext highlighter-rouge">backendUUID</code> is different from the PROD site (because it is a non-deterministic Trident UUID for the SolidFire array at the DR site).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pv pvc-d24cf316-496a-4807-aa54-08999f712f9d <span class="nt">-n</span> pg
+Name:            pvc-d24cf316-496a-4807-aa54-08999f712f9d
+Labels:          &lt;none&gt;
+Annotations:     pv.kubernetes.io/provisioned-by: csi.trident.netapp.io
+Finalizers:      <span class="o">[</span>kubernetes.io/pv-protection]
+StorageClass:    basic
+Status:          Bound
+Claim:           pg/pg
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   &lt;none&gt;
+Message:         
+Source:
+    Type:              CSI <span class="o">(</span>a Container Storage Interface <span class="o">(</span>CSI<span class="o">)</span> volume <span class="nb">source</span><span class="o">)</span>
+    Driver:            csi.trident.netapp.io
+    FSType:            ext4
+    VolumeHandle:      pvc-d24cf316-496a-4807-aa54-08999f712f9d
+    ReadOnly:          <span class="nb">false
+    </span>VolumeAttributes:      <span class="nv">backendUUID</span><span class="o">=</span>38455724-54ad-4d6d-a1dc-7437ab56803b
+                           <span class="nv">internalName</span><span class="o">=</span>dr-pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3
+                           <span class="nv">name</span><span class="o">=</span>pvc-d24cf316-496a-4807-aa54-08999f712f9d
+                           <span class="nv">protocol</span><span class="o">=</span>block
+                           storage.kubernetes.io/csiProvisionerIdentity<span class="o">=</span>1615813561469-8081-csi.trident.netapp.io
+Events:                &lt;none&gt;
+</code></pre></div></div>
+
+<h2 id="failback-drprod">Failback (DR=&gt;PROD)</h2>
+
+<p>Remember how we deleted volume pairings at the DR site? The source array isn’t aware of that and when it comes back online it will unsuccessfully attempt to resume replication (PROD=&gt;DR).</p>
+
+<p>So when SolidFire array from the PROD site comes online we can delete its stale volume pairings originally set up for PROD=&gt;DR volume replication and set up new pairings (DR=&gt;PROD) so that we can replicate DR to PROD, and eventually fall back to the PROD site.</p>
+
+<p>We begin like so:</p>
+
+<ul>
+  <li>On the PROD SolidFire cluster: go to Data Protection &gt; Volume Pairs, and delete stale volume pairs</li>
+  <li>On the same SolidFire cluster: go to each replicated volume and demote it from <code class="language-plaintext highlighter-rouge">Read/Write</code> to <code class="language-plaintext highlighter-rouge">replicationTarget</code></li>
+  <li>Return to the SolidFire DR cluster, set up new volume pairs (DR=&gt;PROD) to initiate replication for DR=&gt;PROD failback</li>
+</ul>
+
+<p>Wait until your volume pairs are in sync. If you haven’t forgotten to change the PROD volumes to replicationTarget, you’ll see replication kick off in minutes. SolidFire replication is efficient - only the changed blocks will need to be copied back (and even those will be compressed and deduplicated) - so there is symmetry in failback as far as the amount of data and process are concerned.</p>
+
+<p>Now that your data is ready, you can schedule take the DR site down. Confirm your storage class reclaim policy is Retain, and give up your PVCs at the DR site. After PVCs are deleted, PVs should remain (<code class="language-plaintext highlighter-rouge">Retain</code>) in your cluster. (For Scenario 2, because the DR clusters are separate, you wouldn’t need to delete PVCs, you’d just scale to 0.)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pvc pg <span class="nt">-n</span> pg
+persistentvolumeclaim <span class="s2">"pg"</span> deleted
+
+<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM   STORAGECLASS   REASON   AGE
+pvc-d24cf316-496a-4807-aa54-08999f712f9d   1Gi        RWO            Retain           Released   pg/pg   basic                   20m
+</code></pre></div></div>
+
+<p>Now you can stop replication (DR=&gt;PROD) by pausing (or deleting) volume pairing on the SolidFire DR cluster, and then do the same on the PROD SolidFire side.</p>
+
+<h3 id="reestablish-proddr-replication">Reestablish PROD=&gt;DR replication</h3>
+
+<p>Promote PROD volumes to <code class="language-plaintext highlighter-rouge">Read/Write</code>. Before failback we set volumes at the DR site to <code class="language-plaintext highlighter-rouge">replicationTarget</code> and removed volume pairing configuration at both sites, so now we can create volume pairs just as if were starting from scratch (before PROD=&gt;DR failover) and replication will resume.</p>
+
+<p>Now, this step is controversial and <em>not</em> in the official documentation and therefore not recommended either: on my Kubernetes cluster I’d reinstall Trident.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./trident-installer/tridentctl uninstall <span class="nt">-n</span> trident
+./trident-installer/tridentctl obliviate crd <span class="nt">-n</span> trident
+./trident-installer/tridentctl <span class="nb">install</span> <span class="nt">-n</span> trident
+</code></pre></div></div>
+
+<p>Again, in Scenario 2, with one Kubernetes cluster per each site, you wouldn’t have two back-ends on either of the Kubernetes clusters and wouldn’t benefit from doing this step either. But I have one cluster and with that step I think I somewhat simplify my failback.</p>
+
+<p>Next I need to add the SolidFire back-end cluster from the PROD site and import the volume I need (pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3). Like before, I could get this info from external source code repo or object storage.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl create backend <span class="nt">-n</span> trident <span class="nt">-f</span> be-prod.json 
++----------------------+----------------+--------------------------------------+--------+---------+
+|         NAME         | STORAGE DRIVER |                 UUID                 | STATE  | VOLUMES |
++----------------------+----------------+--------------------------------------+--------+---------+
+| SF-PROD-192.168.1.30 | solidfire-san  | 57883f01-94ba-48aa-8acd-e7330c128bce | online |       1 |
++----------------------+----------------+--------------------------------------+--------+---------+
+
+<span class="nv">$ </span>./trident-installer/tridentctl import volume <span class="nt">-n</span> trident SF-PROD-192.168.1.30 pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3 <span class="nt">-n</span> trident <span class="nt">-f</span> pvc-simple.yaml
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-f5cda73c-98d2-441a-9296-93f841a5cde8 | 1.0 GiB | basic         | block    | 1a474ae1-6559-472a-a5ae-74d8c220a8b2 | online | <span class="nb">true</span>    |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+
+<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM   STORAGECLASS   REASON   AGE
+pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80   1Gi        RWO            Retain           Released   pg/pg   basic                   6m8s
+pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain           Bound      pg/pg   basic                   3s
+</code></pre></div></div>
+
+<p>Hmm, why do I have two volumes?</p>
+
+<p>We’re supposed to have just one volume: let’s consult Trident (which now knows only about the PROD back-end system):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nv">$ </span>./trident-installer/tridentctl get volumes <span class="nt">-n</span> trident
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-f5cda73c-98d2-441a-9296-93f841a5cde8 | 1.0 GiB | basic         | block    | 1a474ae1-6559-472a-a5ae-74d8c220a8b2 | online | <span class="nb">true</span>    |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+</code></pre></div></div>
+
+<p>This is fine, the new (Bound) volume is listed. In the SolidFire UI we see just one volume (the original <code class="language-plaintext highlighter-rouge">pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3</code> volume). So what is this other volume <code class="language-plaintext highlighter-rouge">pbc-81a...</code>?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pv pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80 <span class="nt">-n</span> pg
+Name:            pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80
+Labels:          &lt;none&gt;
+Annotations:     pv.kubernetes.io/provisioned-by: csi.trident.netapp.io
+Finalizers:      <span class="o">[</span>kubernetes.io/pv-protection]
+StorageClass:    basic
+Status:          Released
+Claim:           pg/pg
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   &lt;none&gt;
+Message:         
+Source:
+    Type:              CSI <span class="o">(</span>a Container Storage Interface <span class="o">(</span>CSI<span class="o">)</span> volume <span class="nb">source</span><span class="o">)</span>
+    Driver:            csi.trident.netapp.io
+    FSType:            ext4
+    VolumeHandle:      pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80
+    ReadOnly:          <span class="nb">false
+    </span>VolumeAttributes:      <span class="nv">backendUUID</span><span class="o">=</span>38455724-54ad-4d6d-a1dc-7437ab56803b
+                           <span class="nv">internalName</span><span class="o">=</span>pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80
+                           <span class="nv">name</span><span class="o">=</span>pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80
+                           <span class="nv">protocol</span><span class="o">=</span>block
+                           storage.kubernetes.io/csiProvisionerIdentity<span class="o">=</span>1615821914199-8081-csi.trident.netapp.io
+Events:                &lt;none&gt;
+
+<span class="nv">$ </span>kubectl describe pv pvc-f5cda73c-98d2-441a-9296-93f841a5cde8 <span class="nt">-n</span> pg
+Name:            pvc-f5cda73c-98d2-441a-9296-93f841a5cde8
+Labels:          &lt;none&gt;
+Annotations:     pv.kubernetes.io/provisioned-by: csi.trident.netapp.io
+Finalizers:      <span class="o">[</span>kubernetes.io/pv-protection]
+StorageClass:    basic
+Status:          Bound
+Claim:           pg/pg
+Reclaim Policy:  Retain
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   &lt;none&gt;
+Message:         
+Source:
+    Type:              CSI <span class="o">(</span>a Container Storage Interface <span class="o">(</span>CSI<span class="o">)</span> volume <span class="nb">source</span><span class="o">)</span>
+    Driver:            csi.trident.netapp.io
+    FSType:            ext4
+    VolumeHandle:      pvc-f5cda73c-98d2-441a-9296-93f841a5cde8
+    ReadOnly:          <span class="nb">false
+    </span>VolumeAttributes:      <span class="nv">backendUUID</span><span class="o">=</span>1a474ae1-6559-472a-a5ae-74d8c220a8b2
+                           <span class="nv">internalName</span><span class="o">=</span>pvc-b4ad4998-05ce-46ab-9f67-a6e972805fa3
+                           <span class="nv">name</span><span class="o">=</span>pvc-f5cda73c-98d2-441a-9296-93f841a5cde8
+                           <span class="nv">protocol</span><span class="o">=</span>block
+                           storage.kubernetes.io/csiProvisionerIdentity<span class="o">=</span>1615822339188-8081-csi.trident.netapp.io
+Events:                &lt;none&gt;
+</code></pre></div></div>
+
+<p>If you scroll up, you will see <code class="language-plaintext highlighter-rouge">backendUUID=38455724-54ad-4d6d-a1dc-7437ab56803b</code> was (before I deleted Trident) back-end UUID of the SolidFire cluster from the DR site. Which means we can safely remove that PV: it is not from this site, and it doesn’t correspond to anything we see in the SolidFire UI at the PROD site. We don’t need it.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pv pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80  <span class="nt">-n</span> pg
+warning: deleting cluster-scoped resources, not scoped to the provided namespace
+persistentvolume <span class="s2">"pvc-81a2acb5-750e-45b0-afec-224fcc4d0e80"</span> deleted
+
+<span class="nv">$ </span>kubectl get pv <span class="nt">-n</span> pg
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM   STORAGECLASS   REASON   AGE
+pvc-f5cda73c-98d2-441a-9296-93f841a5cde8   1Gi        RWO            Retain           Bound    pg/pg   basic                   6m31s
+</code></pre></div></div>
+
+<p>With that, our failback is done and we can again re-create the original volume pairs for PROD=&gt;DR replication.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>Kubernetes failover and failback with Trident and SolidFire are cleaner than the “old school” approach that used patching. Trident’s Volume Import makes the proces much more convenient.</p>
+
+<p>While reinstallation of Trident for failback is not required, I found that approach to work quite nicely and quickly. I don’t know what downsides it might have.</p>
+
+<p>Kuberntes PV names are unsuitable for human consumption so SolidFire’s primary focus on IDs makes it possible to ignore Volume Names and stick to managing Volume IDs. If store Kubernetes configuration and volume pairs in a repository we can use that to automate the creation of remote volumes and Src-Dst pairs and avoid Excel.</p>
+
+<p>Because Trident deletes SolidFire volumes by purging them, it is important to ensure that storage classes for replicated volumes use have reclaim policy for volumes (and possibly volume snapshots, see in Appendix for additional notes on that) set to Retain.</p>
+
+<p>Topology-aware CSI configurations may simplify the management of multiple back-ends in the scenario where one Kubernetes cluster can access two SolidFire back-ends.</p>
+
+<h2 id="appendix">Appendix</h2>
+
+<h3 id="pair-solidfire-arrays-for-replication-and-pair-pv-with-a-new-pv-at-the-dr-site">Pair SolidFire arrays for replication and pair PV with a new PV at the DR site</h3>
+
+<p>Source volume accepts writes from iSCSI client(s) and forwards them to Target volume which can only accept writes from the volume replicating to it.</p>
+
+<p>I’ll describe this in more detail because this is easy to automate and lets us almost completely eliminate repetitive work involved in SolidFire failover and failback.</p>
+
+<ul>
+  <li>Get a list of all volumes you want to pair (e.g. <code class="language-plaintext highlighter-rouge">pvc-*</code>)</li>
+  <li>Get properties of each volume (Source and Target)</li>
+  <li>Create Target volume(s) at DR site using the same volume size(s), 512e emulation (on/off) settings, and (optionally) volume name(s)</li>
+  <li>Record Volume ID of each created volume</li>
+  <li>Change access properties of Target volume to <code class="language-plaintext highlighter-rouge">replicationTarget</code></li>
+  <li>With Volume ID pair(s) you gathered in the process configure replication from PROD to DR (sync, async, or snapshots only)</li>
+</ul>
+
+<p>You can decide if you want sync, async or snapshots only. It doesn’t matter which one you choose, as long as it works for you.</p>
+
+<p>And now you have your volume pairs. Random example (not related to the earlier volume pairs):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Property \ Cluster</th>
+      <th>PROD</th>
+      <th>DR</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Unique ID</td>
+      <td>mn4y</td>
+      <td>72k4</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Vol Name</td>
+      <td>pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+      <td>pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Vol ID</td>
+      <td>270</td>
+      <td>221</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SVIP</td>
+      <td>192.168.103.30</td>
+      <td>192.168.103.34</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="solidfire-volume-names-and-ids">SolidFire Volume Names and IDs</h3>
+
+<p>Notice how Volume Names in the example above are identical. SolidFire is volume names are just tags. Volume IDs make volumes unique within a cluster, but Volume Names can be duplicate (which can create confusion and so when we create clones or new volumes in the same cluster, we try to avoid that).</p>
+
+<p>We can’t decide Kubernetes volume names when they are created, and we shouldn’t change them once they are created. Across clusters, each volume in a pairs can have the same Name (as in the example above) and some people may find that easier to work with.</p>
+
+<p>Trident has a volume prefix setting, so in Trident back-end files we could ask Trident to prefix volumes at PROD site with <code class="language-plaintext highlighter-rouge">prod-</code>, and volumes at DR site with <code class="language-plaintext highlighter-rouge">dr-</code>. Because names of volumes at Replication Target site are decided by us when we set up volume pairs we can pick any allowed, but I assume most folks would prefer one of these approaches:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Approach</th>
+      <th style="text-align: left">Vol Name at PROD site</th>
+      <th style="text-align: left">Vol Name at DR site</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Asymmetric</td>
+      <td style="text-align: left">prod-pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+      <td style="text-align: left">dr-pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Symmetric</td>
+      <td style="text-align: left">pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+      <td style="text-align: left">pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Asymmetric for Humans</td>
+      <td style="text-align: left">pvc-ba229a61-6026-44bd-8b39-29863261469a</td>
+      <td style="text-align: left">pg-data</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Kubernetes picks its own volume names, but we pick the names of remote volumes that we create before we set up replication. I’m not at all convinced that naming the remote volume <code class="language-plaintext highlighter-rouge">dr-pg-data</code> would be helpful but yes, you could have your own schema (<code class="language-plaintext highlighter-rouge">$SITE-$POD-$DISK</code>) for replica volumes at least. I do think, though, it’d be more fruitful to just figure out how to use Git or S3 and automate.</p>
+
+<p>What’s also replicated with Volume is its other tags (called Attributes).</p>
+
+<p><img src="assets/images/solidfire-kubernetes-replication-failover-failback-01-volume-attributes.png" alt="Trident-inserted SolidFire volume attributes in SolidFire UI at Active site" /></p>
+
+<p>Form the Trident documentation: “When a volume is imported, an annotation is added to the PVC and PV that serves a dual purpose of indicating that the volume was imported and if the PVC and PV are managed. This annotation should not be modified or removed.”</p>
+
+<h3 id="fail-prod-cluster">Fail PROD cluster</h3>
+
+<p>To simulate site failure, I simply shut down my SolidFire cluster at the PROD site (the command can be used to shut down all SolidFire nodes at once).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="n">Invoke-SFShutdown</span><span class="w"> </span><span class="nt">-Option</span><span class="w"> </span><span class="nx">halt</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="configure-replication">Configure replication</h3>
+
+<p>As stated at the beginning, we assume no one screwed with volume names so we can query the API for that name to get one and only one VolumeID that matches it.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="n">Get-SFVolume</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"pvc-a410d978-c346-4322-912d-5323571020b3"</span><span class="w">
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">273</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">pvc-a410d978-c346-4322-912d-5323571020b3</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">21</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">2021-03-15T08:47:59Z</span><span class="w">
+</span><span class="n">VolumeConsistencyGroupUUID</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="nx">18bd234c-e333-499e-87b7-92de29a8b52f</span><span class="w">
+</span><span class="n">VolumeUUID</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">ab7c5eb2-0138-4f40-9b7d-d32570bc1dee</span><span class="w">
+</span><span class="n">EnableSnapMirrorReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">readWrite</span><span class="w">
+</span><span class="n">Enable512e</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">True</span><span class="w">
+</span><span class="n">Iqn</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:mn4y.pvc-a410d978-c346-4322-912d-5323571020b3.273</span><span class="w">
+</span><span class="n">ScsiEUIDeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">6d6e347900000111f47acc0100000000</span><span class="w">
+</span><span class="n">ScsiNAADeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">6f47acc1000000006d6e347900000111</span><span class="w">
+</span><span class="n">Qos</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"MinIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="s2">"MaxIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">390</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">}</span><span class="w">
+</span><span class="n">QosPolicyID</span><span class="w">                 </span><span class="p">:</span><span class="w"> 
+</span><span class="n">VolumeAccessGroups</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">VolumePairs</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">DeleteTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> 
+</span><span class="n">PurgeTime</span><span class="w">                   </span><span class="p">:</span><span class="w"> 
+</span><span class="n">LastAccessTime</span><span class="w">              </span><span class="p">:</span><span class="w"> 
+</span><span class="n">LastAccessTimeIO</span><span class="w">            </span><span class="p">:</span><span class="w"> 
+</span><span class="n">SliceCount</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">1073741824</span><span class="w">
+</span><span class="n">BlockSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">4096</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">             </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Attributes</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="n">fstype</span><span class="p">,</span><span class="w"> </span><span class="nx">provisioning</span><span class="p">,</span><span class="w"> </span><span class="nx">trident</span><span class="p">,</span><span class="w"> </span><span class="nx">docker-name</span><span class="p">}</span><span class="w">
+</span><span class="n">CurrentProtectionScheme</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="nx">singleHelix</span><span class="w">
+</span><span class="n">PreviousProtectionScheme</span><span class="w">    </span><span class="p">:</span><span class="w"> 
+</span></code></pre></div></div>
+
+<p>For the DR cluster we want to use the same name and size, while the K8s storage AccountID and QoSPolicy ID are unique to DR site. The SF API won’t let us use <code class="language-plaintext highlighter-rouge">Access: replicationTarget</code> right away so first we just need to create it and then change it. Both of these below are executed against the DR cluster.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="n">New-SFVolume</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"pvc-a410d978-c346-4322-912d-5323571020b3"</span><span class="w"> </span><span class="nt">-AccountID</span><span class="w"> </span><span class="nx">30</span><span class="w"> </span><span class="nt">-Enable512e</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="nt">-TotalSize</span><span class="w"> </span><span class="nx">1073741824</span><span class="w"> </span><span class="nt">-QoSPolicyID</span><span class="w"> </span><span class="nx">6</span><span class="w">                           
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">223</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">pvc-a410d978-c346-4322-912d-5323571020b3</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">30</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">2021-03-15T08:59:35Z</span><span class="w">
+</span><span class="o">...</span><span class="w">
+</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">readWrite</span><span class="w">
+
+</span><span class="err">&gt;</span><span class="w"> </span><span class="n">Set-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">223</span><span class="w"> </span><span class="nt">-Access</span><span class="w"> </span><span class="nx">replicationTarget</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="nv">$False</span><span class="w">
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">223</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">pvc-a410d978-c346-4322-912d-5323571020b3</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">30</span><span class="w">
+</span><span class="o">...</span><span class="w">
+</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">replicationTarget</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Quick note about Volume Resizing: yes, there’s such a feature (Trident CSI), but there’s also the Thin Provisioning (SolidFire) which can’t be disabled. Either plan and test resizing, or provision larger volumes to minimize or eliminate that hobby.</p>
+
+<p>We can now use <code class="language-plaintext highlighter-rouge">Set-SFVolumePair</code> which pauses or (re)starts replication between a pair of volumes.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">((</span><span class="n">Get-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">273</span><span class="w"> </span><span class="nt">-SFConnection</span><span class="w"> </span><span class="nv">$connp</span><span class="p">)</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w"> </span><span class="o">-eq</span><span class="w"> </span><span class="p">((</span><span class="n">Get-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">223</span><span class="w"> </span><span class="nt">-SFConnection</span><span class="w"> </span><span class="nv">$connd</span><span class="p">)</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Write-Host</span><span class="w"> </span><span class="s2">"Good!"</span><span class="p">}</span><span class="w">
+</span><span class="n">Good</span><span class="o">!</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Once two volumes are paired, though, we can connect to only one cluster to find these details (<code class="language-plaintext highlighter-rouge">Get-SFVolumePair</code>). Or you can see the status in the Web interface (click to open it in another tab).</p>
+
+<p><img src="assets/images/" alt="" /></p>
+
+<p>Afer the PROD SolidFire cluster went down <code class="language-plaintext highlighter-rouge">Get-SFVolumePair</code> was able to query just one half of the replication pair (the DR side). It did not matter if replication was Paused or not. Because of this (unable to automate the creation of a reverse relationship using output of this API method) and because I had a “Retain” policy in my storage class, I simply deleted the replication relationship (PROD =&gt; DR) and decided to recreate it later after the PROD storage comes online, as well as the PVC:</p>
+
+<h3 id="recover-services-at-dr-site">Recover services at DR site</h3>
+
+<p><img src="assets/images/solidfire-kubernetes-replication-failover-failback-02-volume-replica.png" alt="SolidFire replica volume at Standby site" /></p>
+
+<p>At the other site we’d perform recovery based on the steps indicated earlier:</p>
+
+<p>Pause replication, and make replica volumes writeable:</p>
+
+<p><img src="assets/images/solidfire-kubernetes-replication-failover-failback-04-make-replica-volume-writeable.png" alt="Make Target Volumes Writeable" /></p>
+
+<p>That was the theory. In practice, when it comes to Kubernetes, Trident and SolidFire, I discovered that currently it’s easier to simply delete the replication pairing at the Target site (the Source site is “down”) because it can’t be “reverted” anyway. When the Source site comes up, delete the pairing on it too.</p>
+
+<p>Later, when we want to replicate from the DR to PROD, we’ll just set up a new volume pairing (relationship) using the same volume IDs that we used before. There is no penalty in doing that (replication is space- and bandwidth-efficient) and it takes about 5 minutes for replication to start.</p>
+
+<h3 id="why-use-retain-as-our-reclaim-policy">Why use Retain as our Reclaim Policy</h3>
+
+<p>You can use Delete, too. If your protected volumes use the retention policy of Delete, you don’t have to deal with Retain’ed PVs. Convenient!</p>
+
+<p>Buuuut, when you release a PVC, the PV gets both deleted <em>and</em> purged. Annnd it’s gone! Yes, you still have a copy at the remote site (at least you had when you last checked three weeks ago), if that’s of any help. You may need to replicate that data back and within hours you’ll recover from that mistake. What you don’t want is to to make two mistakes at the same time (lose a volume <em>after</em> you’ve already lost a site).</p>
+
+<p>Retain is a safer approach to critical data, especially when there’s a lot of it and you can’t instantly re-replicate mistakenly reclaimed volumes.</p>
+
+<h3 id="solidfire-replication-and-kubernetes-snapshot-volume-class">SolidFire replication and Kubernetes Snapshot Volume Class</h3>
+
+<p>For important data, Snapshot Volume Class would usually also be set to Retain. But you’d be unable to delete Snapshots (they’d remain Retain’ed, like PVs with reclaimPolicy set to Retain). Also note that Trident doesn’t include snapshots into replication configuration of underlying volume, so what you could do is:</p>
+
+<ul>
+  <li>schedule snapshots in SolidFire (crash-consistent snapshots) and make them included in replication. This is easy and very convenient. You don’t get application-consistent snapshots (unless you suspend the app that uses that volume), but you don’t have to deal with Kubernetes.</li>
+  <li>make snapshot replication part of your snapshot worklfow: take a Kubernetes snapshot, find its snapshot ID on SolidFire, and enable its replication with the underlying volume</li>
+  <li>use external application and data protection solution that understands Kubernetes and leverages CSI snapshots to do this for you</li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/24/netapp-trident-on-arm64.html">• NetApp Trident v21.01.1 on Linux/ARM64 with SolidFire iSCSI storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/12/kasten-solidfire-trident.html">• Kubernetes data protection and storage management with NetApp SolidFire and Kasten K10</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/09/kasten-netapp-storagegrid-cloud-storage-s3-provider.html">• StorageGRID as Cloud Storage (S3) Provider for Kasten K10</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">• Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-03-20 13:03 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
