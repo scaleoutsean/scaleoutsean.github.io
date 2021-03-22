@@ -223,7 +223,7 @@
 
 <h3 id="comparison-between-pv-patching-and-trident-volume-import-approach">Comparison between PV Patching and Trident Volume Import approach</h3>
 
-<p>To me these would be most significant differences:</p>
+<p>To me these would be most significant differences (it’s been a while since I looked at the PV patching/replacement approach so I’m not entirely sure about that column):</p>
 
 <table>
   <thead>
@@ -234,6 +234,11 @@
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td style="text-align: left">Works with CSI-compatible Trident</td>
+      <td style="text-align: center">x (?)</td>
+      <td style="text-align: center">o</td>
+    </tr>
     <tr>
       <td style="text-align: left">Static Kubernetes PV names</td>
       <td style="text-align: center">o</td>
@@ -250,7 +255,7 @@
       <td style="text-align: center">o</td>
     </tr>
     <tr>
-      <td style="text-align: left">Relies on Trident for volume import</td>
+      <td style="text-align: left">Relies on Trident CSI for volume import</td>
       <td style="text-align: center">x</td>
       <td style="text-align: center">o</td>
     </tr>
@@ -261,7 +266,7 @@
     </tr>
     <tr>
       <td style="text-align: left">Easy integration with external tooling</td>
-      <td style="text-align: center">oo</td>
+      <td style="text-align: center">o</td>
       <td style="text-align: center">o</td>
     </tr>
   </tbody>
@@ -509,7 +514,7 @@ Source:
 
 <p>We could also reinstall Trident to be sure. But in my testing I noticed that the <code class="language-plaintext highlighter-rouge">deleting</code> state is sufficient to ensure that new volumes don’t get created on such a backend even if it is online.</p>
 
-<p>While we’re here, we can create a new Trident backend that uses the remote cluster (we <em>must</em> do this before we can import volumes, but not too early - such as before storage failover - because you could end up creating and using DR volumes from PROD workers):</p>
+<p>While we’re here, we can create a new Trident backend that uses the remote cluster (we <em>must</em> do this before we can import volumes, but not too early - such as before storage failover - because you could end up creating and using DR volumes from more remote Kubernetes workers (close to PROD storage) which may be undesirable for several reasons):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl create backend <span class="nt">-n</span> trident <span class="nt">-f</span> be-dr.json 
 +--------------------+----------------+--------------------------------------+--------+---------+
@@ -642,9 +647,9 @@ Source:
 
 <p>We reversed storage replication in the Failover section (see the previous paragraphs), so DR=&gt;PROD replication is already taking place.</p>
 
-<p>There is symmetry in SolidlFire failover and failback, as far as the amount of data and process are concerned. The main difference between SolidFire failover and failback is that failback is (usually) planned and both sites are online.</p>
+<p>There is a symmetry in SolidlFire failover and failback, as far as amount of data and workflow are concerned. The main difference between SolidFire failover and failback is that failback is (usually) planned and both sites are online.</p>
 
-<p>Therefore, in this part we skip repetitive details and focus on what’s different.</p>
+<p>Therefore, in this part we skip repetitive details and focus on what’s different (Trident failback).</p>
 
 <h3 id="steps-for-a-solidfire-cluster-failback">Steps for a SolidFire cluster failback</h3>
 
@@ -1081,14 +1086,13 @@ Source:
 
 <ul>
   <li>Using <code class="language-plaintext highlighter-rouge">tridentctl import volume</code>: TODO</li>
-  <li>Using old school PV patching approach: evaluate and adjust <a href="https://github.com/scaleoutsean/sf-failover-k8s">this script</a></li>
+  <li>Using PV patching approach with pre-CSI K8s: evaluate and adjust <a href="https://github.com/scaleoutsean/sf-failover-k8s">this script</a> if possible</li>
 </ul>
 
 <h3 id="video-demo">Video demo</h3>
 
 <ul>
   <li>SolidFire failover and failback with single Kubernetes cluster using <a href="https://youtu.be/kvy9I7rwfn8">Trident Volume Import</a> (10m55s)</li>
-  <li>SolidFire failover and failback with single single Kubernetes cluster using <a href="https://www.youtube.com/watch?v=f-PJGCtEojQ">PV patching</a> (15m)</li>
 </ul>
 
       </article>
@@ -1234,7 +1238,7 @@ Source:
 
     
   </div><footer class= "footer">
-    <p>2021-03-22 14:28 </p>
+    <p>2021-03-22 22:12 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
