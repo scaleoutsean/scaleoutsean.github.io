@@ -147,7 +147,7 @@
   <li>Have access to a container registry (whether local or remote, such as a free account on Docker Hub) where you can upload stuff</li>
   <li>Get the latest source (<code class="language-plaintext highlighter-rouge">wget https://github.com/NetApp/trident/archive/v21.01.1.tar.gz</code>, at this time), decompress and descend into the decompressed source code directory. We’ll be working from here.</li>
   <li>Build Trident for <code class="language-plaintext highlighter-rouge">arm64</code> (<code class="language-plaintext highlighter-rouge">cat BUILD.md</code> or see my <a href="https://github.com/NetApp/trident/issues/534">ask</a>). You can build on x86_64 (cross-build), or natively (on your K8s worker nodes, for example). Both approaches work - I did try - but the native approach is simpler and probably takes longer (x86_64 CPUs are usually faster).</li>
-  <li>Download (<code class="language-plaintext highlighter-rouge">docker pull</code>) an ARM64 version of all the required <a href="https://netapp-trident.readthedocs.io/en/stable-v21.01/support/requirements.html?highlight=k8s.gcr.io%2Fsig-storage%2Fcsi-resizer#csi-sidecar-images-and-versions">CSI images</a>. If you’re installing online this step isn’t necessary, but for air-gapped installs you’ll need them offline. For my version of Trident (v21.01.1) I used these:</li>
+  <li>Download (<code class="language-plaintext highlighter-rouge">docker pull</code>) an ARM64 version of all the required <a href="https://netapp-trident.readthedocs.io/en/stable-v21.01/support/requirements.html#csi-sidecar-images-and-versions">CSI images</a>. If you’re installing online this step isn’t necessary, but for air-gapped installs you’ll need them offline. For my version of Trident (v21.01.1) I used these:</li>
 </ul>
 
 <pre><code class="language-raw">k8s.gcr.io/sig-storage/csi-resizer v1.1.0
@@ -158,7 +158,7 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
 </code></pre>
 
 <ul>
-  <li>Now you have five of these and one Trident image. Tag ‘em all and push to your container registry. That’s six containers in total. You may now delete them local images and try to pull ‘em from registry to test whether that works.</li>
+  <li>Now you have five of these and one Trident image. Tag ‘em all and push to your container registry. That’s six containers in total. You may now delete local container images and try to pull ‘em from registry to test whether that works.</li>
   <li>In the process of building Trident <code class="language-plaintext highlighter-rouge">tridentctl</code> got created in the bin subdirectory. Copy or move it to the trident-installer subdirectory</li>
   <li>Now you can create custom YAML files in the setup subdirectory. We’ll prepare them for the trident namespace:</li>
 </ul>
@@ -172,7 +172,7 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
       <li>find <code class="language-plaintext highlighter-rouge">amd64</code> and replace it with <code class="language-plaintext highlighter-rouge">arm64</code> in <code class="language-plaintext highlighter-rouge">setup/*.yaml</code></li>
       <li>remove the entire NetApp autosupport container section in <code class="language-plaintext highlighter-rouge">setup/trident-deployment.yaml</code> because it’s a closed source image only released for <code class="language-plaintext highlighter-rouge">amd64</code></li>
       <li>depending on how you built and tagged, your Trident image URL may end up being wrong. I did some fancy crap with my tags and ended up with a weird-ass $MY_REGISTRY/trident:21.01.1-arm64.0 image, while in the setup directory that was $MY_REGISTRY/trident:21.01.1-custom (which I changed to reflect the reality, but if you don’t do fancy tagging, that may be correct for your situation)</li>
-      <li>As mentioned earlier if your CSI images weren’t downloaded, you need to change their container image links to their online version</li>
+      <li>As mentioned earlier, if your CSI images weren’t downloaded you need to change their container image links to their online version or tell Trident installer where to get the images. From the Trident docs: “CSI sidecars are pulled from k8s.gcr.io/sig-storage when the Kubernetes version is 1.17 or greater, and quay.io/k8scsi otherwise.”</li>
     </ul>
   </li>
   <li>This should let you deploy (don’t forget <code class="language-plaintext highlighter-rouge">-n trident</code>, and use the image name that corresponds to your situation in the registry):</li>
@@ -197,23 +197,18 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
 
 <p>I’m not going to spend another 30 minutes writing about troubleshooting because I’ve had enough of it: if the above doesn’t help you and it’s not something obvious that you can figure out by reading the Troubleshooting section of the Trident documentation, join the NetApp Pub Slack (SolidFire users can use the #netapp-hci channel, or just use the #containers channel for generic Trident questions) or up-vote my <a href="https://github.com/NetApp/trident/issues/534#issue-811742451">ask</a> to have the multi-arch procedure documented by the Trident Team.</p>
 
-<p>For v21.01.2 I uploaded Trident image I built to Docker Hub so that those trying to test it without too much hassle can give it a try:</p>
+<p>For v21.01.2 I uploaded a Trident image to Docker Hub so that those trying to test it without too much hassle can give it a try:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull docker.io/scaleoutsean/trident-arm64:v21.01.2-custom
 </code></pre></div></div>
 
-<p>With this image downloaded you could upload it to own registry, run Trident install with <code class="language-plaintext highlighter-rouge">--generate-custom-yaml</code> and then install it from your registry:</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./tridentctl <span class="nb">install</span> <span class="nt">-n</span> trident <span class="nt">--trident-image</span> trident:21.01.2-custom <span class="nt">--silence-autosupport</span> <span class="nt">--image-registry</span> <span class="nv">$MY_REG</span>:5000 <span class="nt">--use-custom-yaml</span>
-</code></pre></div></div>
-
 <h2 id="what-about-s390x-ppc64le-and-other-architectures">What about <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">ppc64le</code> and other architectures</h2>
 
-<p>It’s the same thing, use the right architecture string for the architecture.</p>
+<p>It’s the same thing, just use the right architecture string for the architecture.</p>
 
-<p>There may be tooling bugs unrelated to Trident (go, gcc, 3rd party containers which may or may not exist for your target architecture, and more). The ARM64 ecosystem is more advanced compared to other non-x86 architectures so be ready to waste days on this and still get nowhere!</p>
+<p>There may be tooling bugs unrelated to Trident (go, gcc, 3rd party containers which may or may not exist for your target architecture, and more). The ARM64 ecosystem is more mature compared to other non-x86 architectures so be ready to waste days on this and still get nowhere!</p>
 
-<p>For supported use remember the other requirement which I didn’t mention before, which is to have those clients (OS) supported by the array you’re using. For example, SolidFire (<code class="language-plaintext highlighter-rouge">solidfire-san</code>) provides iSCSI service and supports only Windows and Linux on the x86_64 architecture. This means there’s a problem from both a Trident perspective, but also from a client–protocol-back-end perspective.</p>
+<p>For supported use remember the other requirement which I didn’t mention before, which is to have those clients (OS) supported by the array you’re using. For example, SolidFire (<code class="language-plaintext highlighter-rouge">solidfire-san</code>) provides iSCSI service and supports only Windows and Linux on the x86_64 architecture. This means there’s a problem from both a Trident perspective, but also from a client-protocol and back-end perspective.</p>
 
 <p>NetApp usually provides that info in Interoperability Matrix (search for “NetApp IMT”). While Linux on <code class="language-plaintext highlighter-rouge">ppc64</code> with an <code class="language-plaintext highlighter-rouge">ontap-nas</code> back-end is probably supported (I haven’t checked, but it should be because NFSv3 is very old), <code class="language-plaintext highlighter-rouge">solidfire-san</code> does not provide NFS and doesn’t support <code class="language-plaintext highlighter-rouge">ppc64</code> (iSCSI) clients either. So check this stuff carefully before you spend days on this.</p>
 
@@ -282,7 +277,7 @@ k8s.gcr.io/sig-storage/csi-snapshotter v3.0.3
 
 <ul>
   <li>Following the instructions for ARM64, I used x86_64 to build for <code class="language-plaintext highlighter-rouge">linux/s390x</code>. First, edit the Dockerfiles to include <code class="language-plaintext highlighter-rouge">FROM gcr.io/distroless/static:latest-s390x</code></li>
-  <li>Bug in utils/osutils_linux.go:</li>
+  <li>With Trident v21.01 you’ll probably hit this bug in utils/osutils_linux.go:</li>
 </ul>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span><span class="nv">GOOS</span><span class="o">=</span>linux <span class="nv">GOARCH</span><span class="o">=</span>s390x make trident_build
@@ -293,7 +288,7 @@ Makefile:102: recipe <span class="k">for </span>target <span class="s1">'trident
 </code></pre></div></div>
 
 <ul>
-  <li>I couldn’t get past this problem, so I cheated. I don’t know if it matters to the resulting Trident build (and I don’t have a mainframe at home to try). This diff for this file is for <a href="https://raw.githubusercontent.com/NetApp/trident/v21.01.1/utils/osutils_linux.go">v21.01.1</a>.</li>
+  <li>I couldn’t get past this problem, so I cheated. This patch is for <a href="https://raw.githubusercontent.com/NetApp/trident/v21.01.1/utils/osutils_linux.go">v21.01.1</a> but I successfully (i.e. I was able to build) used it with v21.01.2 as well.</li>
 </ul>
 
 <pre><code class="language-raw">70c70
@@ -388,7 +383,7 @@ Successfully tagged trident:21.01.1-custom
 <span class="nb">rm </span>trident_orchestrator tridentctl
 
 <span class="nv">$ </span><span class="nb">sudo </span>docker images | <span class="nb">grep </span>a6a92f3b152d
-trident                                            21.01.1-custom      a6a92f3b152d        43 seconds ago      88.4MB
+trident              21.01.1-custom      a6a92f3b152d        43 seconds ago      88.4MB
 
 <span class="nv">$ </span><span class="nb">sudo </span>docker inspect a6a92f3b152d | <span class="nb">grep </span>Arch
         <span class="s2">"Architecture"</span>: <span class="s2">"s390x"</span>,
@@ -396,14 +391,28 @@ trident                                            21.01.1-custom      a6a92f3b1
 
 <ul>
   <li>
-    <p>tridentctl and trident_operator:</p>
+    <p>tridentctl and trident_operator for s390x:</p>
 
     <ul>
       <li><code class="language-plaintext highlighter-rouge">bin/tridentctl: ELF 64-bit MSB executable, IBM S/390, version 1 (SYSV), statically linked, stripped</code></li>
       <li><code class="language-plaintext highlighter-rouge">bin/trident_orchestrator: ELF 64-bit MSB executable, IBM S/390, version 1 (SYSV), statically linked, stripped</code></li>
     </ul>
   </li>
+  <li>tridentctl and trident_operator for ppc64le:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">bin/tridentctl: ELF 64-bit LSB executable, 64-bit PowerPC or cisco 7500, version 1 (SYSV), statically linked, stripped</code></li>
+      <li><code class="language-plaintext highlighter-rouge">bin/trident_orchestrator: ELF 64-bit LSB executable, 64-bit PowerPC or cisco 7500, version 1 (SYSV), statically linked, stripped</code></li>
+    </ul>
+  </li>
+  <li>Experimental NetApp Trident v21.01.2 containers for s390x and ppc64le:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">scaleoutsean/trident:v21.01.2-s390x.0</code></li>
+      <li><code class="language-plaintext highlighter-rouge">scaleoutsean/trident:v21.01.2-ppc64le.0</code></li>
+    </ul>
+  </li>
 </ul>
+
+<p>I don’t know if these s390x and ppc64le images are any good (unlike with arm64, I don’t have the hardware to try), so your mileage may vary.</p>
 
       </article>
     </div>
@@ -575,7 +584,7 @@ trident                                            21.01.1-custom      a6a92f3b1
 
     
   </div><footer class= "footer">
-    <p>2021-04-13 11:25 </p>
+    <p>2021-04-13 14:47 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
