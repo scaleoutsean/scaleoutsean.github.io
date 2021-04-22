@@ -1,0 +1,816 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Backup SolidFire volumes to S3-compatible storage | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     SolidFire Backup to S3 feature explained
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Backup SolidFire volumes to S3-compatible storage</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Apr 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    14 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#what-it-is-and-isnt-and-when-to-use-it">What it is (and isn’t) and when to use it</a></li>
+  <li><a href="#how-it-works">How it works</a></li>
+  <li><a href="#buckets-subdirectories-nametags">Buckets, (sub)directories, nametags</a></li>
+  <li><a href="#restore-from-s3">Restore from S3</a></li>
+  <li><a href="#automating-solidfire-backup-to-s3">Automating SolidFire Backup to S3</a>
+    <ul>
+      <li><a href="#backup-using-the-api-or-powershell">Backup using the API or PowerShell</a></li>
+      <li><a href="#observe-job-progress-using-the-api-or-powershell">Observe job progress using the API or PowerShell</a></li>
+      <li><a href="#restore-using-the-api-or-powershell">Restore using the API or PowerShell</a></li>
+      <li><a href="#per-node-job-scheduling">Per-node job scheduling</a></li>
+    </ul>
+  </li>
+  <li><a href="#demo">Demo</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="what-it-is-and-isnt-and-when-to-use-it">What it is (and isn’t) and when to use it</h2>
+
+<p>SolidFire’s Backup (and Restore) feature is a simple data protection utility built into NetApp SolidFire software that lets cluster administrator kick off backup and restore jobs that work with data on object (S3 or Swift) storage or remote SolidFire clusters. Source (for backup operation; Target for Restore operation) is standard SolidFire volume, whether it’s used by VMware or physical hosts or containers. Backup to S3 works with one of three supported targets (S3-compatible object storage, obviously).</p>
+
+<p>Backup to S3 is <em>not</em> a replacement for enterprise data protection software (or even community backup utilities which may work less efficiently in some cases, but have more features and be easier to integrate with external tooling in other).</p>
+
+<p>When Backup to S3 may be just good enough? Some examples:</p>
+
+<ul>
+  <li>you don’t have enterprise backup software (or don’t have the skill or time to implement a community backup software such as <a href="https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">Velero</a> for Kubernetes) and don’t need advanced data protection features</li>
+  <li>you don’t have ONTAP to which you could copy data with SnapMirror and from there use Cloud Backup Service to backup to S3 (I wrote about that use case <a href="https://scaleoutsean.github.io/2021/01/27/netapp-hci-cloud-backup-service.html">here</a>)</li>
+  <li>you have more data than you can backup with a free/community edition of enterprise software like <a href="https://scaleoutsean.github.io/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html">Veeam</a> or <a href="https://scaleoutsean.github.io/2021/02/12/kasten-solidfire-trident.html">Kasten</a>, and have simple basic backup/restore requirements</li>
+</ul>
+
+<p>Backup to S3 doesn’t have a mechanism to freeze (quiesce) a volume because it’s completely self-contained in the storage software and has no client components; a snapshot ID can be provided but if it does not exist, on-demand snapshot is created and used to perform backup.</p>
+
+<p>You could - in theory - suspend I/O to a volume, kick of a backup job, and unfreeze the workload, but if you wanted to do this it would probably be easier to just take application consistent snapshots (group or individual) and pick latest or selected Snapshot ID for use in Backup to S3 feature. The difference is your snapshots would be taken at times you want, rather than when Backup to S3 runs.</p>
+
+<h2 id="how-it-works">How it works</h2>
+
+<p>To backup, SolidFire reads volume data in segments (chunks) and copies data to a directory located in a bucket on S3-compatible storage of your choosing. This is what you’d see in Backup-to-S3 backup bucket after succesfully making a backup of two Kubernetes volumes.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-01.png" alt="Backup to S3 of two Kubernetes PVs" /></p>
+
+<p>To restore, SolidFire reads information provided by the user, accesses and restores data from user-provided backup data location.</p>
+
+<p>When it comes to using S3 as backup Target (the Backup feature can also send backups to another SolidFire array), we can choose between native and raw (uncompressed) backup: native backups are space-efficient and use proprietary format to compress and deduplicate volume contents.</p>
+
+<p>Completely empty chunks translate into 168 byte objects, and 4MiB chunks filled with MP4 contents might become 4MB objects (approximately 0% efficiency savings).</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-02.png" alt="Backup to S3 - native" /></p>
+
+<p>Raw volume backups can be restored anywhere (imagine concatenating all segments and restoring them to a block device using the <code class="language-plaintext highlighter-rouge">dd</code> command - although SolidFire Backup doesn’t provide that functionality, you could probably do it yourself), but consume more network bandwidth and backup storage capacity.</p>
+
+<p>Despite the misleading bucket name in this screenshot below, you can see how each segment takes up 4MiB even when backing up a completely empty volume.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-03.png" alt="Backup to S3 - raw" /></p>
+
+<p>Normally we would use the native (SolidFire) format to backup and restore more efficiently.</p>
+
+<h2 id="buckets-subdirectories-nametags">Buckets, (sub)directories, nametags</h2>
+
+<p>S3 “directories” aren’t really directories, but that’s not important right now: the point is if we use Backup to S3 to backup SolidFire volumes to a bucket called <code class="language-plaintext highlighter-rouge">backup</code>, our cluster name is <code class="language-plaintext highlighter-rouge">syddemo-hci</code> and cluster ID is <code class="language-plaintext highlighter-rouge">nfgj</code>, volume backups will be found under <code class="language-plaintext highlighter-rouge">s3://backup/syddemo-hci-nfgj</code> (so that even if you had two clusters with the same cluster and volume name, these backups wouldn’t collide).</p>
+
+<p>Below that “cluster-directory”, volume backups would be found in “subdirectories” with names automatically created by concatenating volumeName and volumeId (example: <code class="language-plaintext highlighter-rouge">scaleoutsean-139</code>).</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-04.png" alt="Backup to Minio - bucket, cluster, and volume directory names" /></p>
+
+<p>Backup manifest is normally written to $ClusterName-$ClusterID/$VolumeName-$VolumeID but if nametag value is provided to the call or command, backup manifest will be saved to a bucket subdirectory like this:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">DR-72k4/junk-24/</code> - volume name <code class="language-plaintext highlighter-rouge">junk</code>, volume ID 24, no (name)tag</li>
+  <li><code class="language-plaintext highlighter-rouge">DR-72k4/pvc-1e396de7-bc8f-4a16-ba3b-d62293c511ac-247/monday/</code> - volume name <code class="language-plaintext highlighter-rouge">pvc-1e...</code>, volume ID 247, tag <code class="language-plaintext highlighter-rouge">monday</code></li>
+</ul>
+
+<p>Nametags are optional, as you can see below:</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-06.png" alt="Backup to S3 - backup tag" /></p>
+
+<p>You can use a different bucket for every volume or group of volumes (e.g. put all HR databases in the bucket <code class="language-plaintext highlighter-rouge">backup-hr</code>), if you don’t want to set very granular permissions within a bucket shared by many users.</p>
+
+<p>You can use NetApp StorageGRID S3 storage and its ILM features to make it possible to only create new objects and append to existing, which you can use to ensure backup users cannot delete existing backups.</p>
+
+<h2 id="restore-from-s3">Restore from S3</h2>
+
+<p>To restore a volume we need to know its S3 endpoint (where it was backed up), bucket name where backups are stored, and subdirectory names ((cluster name + cluster ID)/(volume name + volumeID)), as well as the tag if it was used.</p>
+
+<p>Active volumes have to be unmounted on iSCSI clients while they’re being restored. If we completely lose a volume we can create a new one - use the same volume size and volume block size (512e or 4k) - and then restore it before accessing it from iSCSI client(s).</p>
+
+<p>As you’ve probably guessed by now, you can restore a volume from a backup taken on any SolidFire cluster as long as you can access backup data and SolidFire you’re restoring to isn’t an older version. It’s not fast (for that, you’d restore from SolidFire snapshots, or even clones), but it works.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-05.png" alt="Restore from Minio" /></p>
+
+<p>In the case multiple users (DBAs, for example) use the same destination bucket, ACLs and S3 keys should be carefully managed.</p>
+
+<h2 id="automating-solidfire-backup-to-s3">Automating SolidFire Backup to S3</h2>
+
+<p>There’s no scheduler that would run X number of backup jobs per each SolidFire node and retry failed jobs for you.</p>
+
+<p>A basic approach to automation that matches the simplicity of Backup to S3 would be to maintain a CSV file with Volume IDs and S3 target configuration (S3 API endpoint FQDN, bucket, keys), loop through those Volume IDs and keep the maximum allowed number of Backup to S3 jobs running until they’re all done.</p>
+
+<p>As jobs complete check their completion status: if a job has failed retry once, and if it’s succeeded kick off the next one.</p>
+
+<p>A more advanced approach could make use of a DB such as Sqlite which would store backup and restore job data. SolidFire keeps track of backup and restore jobs but not forever and it therefore cannot be used for reporting. I would generally recommend against this “build your own backup &amp; restore management and reporting system” idea. Why?</p>
+
+<p>It’d take quite a lot of work (I tried to do that in late 2020 and although I got close to having something that could work, I wasn’t happy with the outcome), and you’d still have a limited solution.</p>
+
+<p>I think it would be better to address advanced requirements with a community backup software or - if your requirements are enterprise-level - use data protection service from a vendor that integrates with SolidFire (Commvault or Veeam, for example) or make use of NetApp SnapMirror as explained at the very beginning of this post.</p>
+
+<p>What follows is a bunch of examples <em>from different</em> backup and restore jobs, following the typical backup-observe-restore workflow. Hopefully these examples can save you some time understanding the SolidFire API.</p>
+
+<h3 id="backup-using-the-api-or-powershell">Backup using the API or PowerShell</h3>
+
+<p>Example of a JSON file passed to SolidFire to backup Volume ID 139 to S3:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"StartBulkVolumeRead"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"native"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"scriptParameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"range"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"lba"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"blocks"</span><span class="p">:</span><span class="w"> </span><span class="mi">2147483648</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"write"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"awsAccessKeyID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"awsSecretAccessKey"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iHO3QsM7dnCh+uTb9/Z/4GHRGiXDLasFqhspKOg0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"bucket"</span><span class="p">:</span><span class="w"> </span><span class="s2">"backup"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"myClusterName-k4z3/scaleoutsean-139"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"hostname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"storagegrid.my.co:18443"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>For Backup to S3 in the SolidFire native format, you’d change the following from the example above in order to adjust this to your environment:</p>
+
+<ul>
+  <li>volumeID</li>
+  <li>scriptParameters.range.blocks - provide volume size (in bytes; you can get this easily (in PS, <code class="language-plaintext highlighter-rouge">Get-SFVolume -VolumeID</code>))</li>
+  <li>scriptParameters.write values except endpoint (s3) - adjust for your cluster name and backup destination and bucket</li>
+</ul>
+
+<p>As mentioned earlier, we can optionally provide a snapshot ID, which could be interesting if we had application consistent snapshots. Otherwise a temporary ad-hoc snapshot is taken when backup job is initiated.</p>
+
+<p>In a small environment with just a handful of volumes we could use PowerShell to do something as simple as this (to back up volumes 143 and 144):</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$vol</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="p">(</span><span class="mi">143</span><span class="p">,</span><span class="mi">144</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="n">Start-SFVolumeBackup</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nv">$vol</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-Format</span><span class="w"> </span><span class="nx">native</span><span class="w"> </span><span class="nt">-BackupTo</span><span class="w"> </span><span class="nx">S3</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-Hostname</span><span class="w"> </span><span class="nx">storagegrid.my.co:18443</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-AccessKeyID</span><span class="w"> </span><span class="nx">Q36K1OR8865OA8AV3A50</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-SecretAccessKey</span><span class="w"> </span><span class="nx">iHO3QsM7dnCh</span><span class="o">+</span><span class="nx">uTb9/Z/4GHRGiXDLasFqhspKOg0</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-Bucket</span><span class="w"> </span><span class="nx">solidfire-native-backup</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>There seems to be a bug in SolidFire Tools for PowerShell 1.7.0.55 - it doesn’t append $ClusterID to $ClusterName, so the API and PowerShell result in backups executed via the API and PowerShell saved to different directories inside of the expected backup “subdirectory”. To avoid this problem we can use <code class="language-plaintext highlighter-rouge">Invoke-SFApi</code> (instead of using <code class="language-plaintext highlighter-rouge">Start-SFVolumeBackup</code>) to work around this until that bug is fixed.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="se">`
+</span><span class="w">  </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="s2">"356"</span><span class="p">;</span><span class="w"> </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="p">@{</span><span class="w"> </span><span class="s2">"write"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"iHO3QsM7dnCh+uTb9/Z/4GHRGiXDLasFqhspKOg0"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"bucket"</span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-native-backup"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"PROD-mn4y/pvc-f8050652-4cd0-495d-946c-1d315da725e9-356"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"endpoint"</span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w"> </span><span class="s2">"hostname"</span><span class="o">=</span><span class="w"> </span><span class="s2">"storagegrid.my.co:18443"</span><span class="w"> </span><span class="p">}}}</span><span class="w"> 
+</span></code></pre></div></div>
+
+<h3 id="observe-job-progress-using-the-api-or-powershell">Observe job progress using the API or PowerShell</h3>
+
+<p>No matter how you call the API, you get a job key and async handle back. Example for JSON:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"asyncHandle"</span><span class="p">:</span><span class="w"> </span><span class="mi">46</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"82e939a9ee81811096f4e43e61e6e4f7"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://10.111.55.66:18443/"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Check on this particular job using its job key:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UpdateBulkVolumeStatus"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"82e939a9ee81811096f4e43e61e6e4f7"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Response (while job is still running or just completed - afterwards it disappears - see <code class="language-plaintext highlighter-rouge">-KeepResult</code> in PowerShell-related comments):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"running"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://10.128.56.54:8443/"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>In PowerShell, using async job handle ID:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="n">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">48</span><span class="w">
+</span><span class="n">ASyncResultID:</span><span class="w"> </span><span class="nx">48</span><span class="w">
+</span><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">            
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">createTime</span><span class="w">                     </span><span class="nx">4/18/2021</span><span class="w"> </span><span class="nx">5:56:00</span><span class="w"> </span><span class="nx">AM</span><span class="w">        
+</span><span class="n">status</span><span class="w">                         </span><span class="nx">complete</span><span class="w">
+</span><span class="n">result</span><span class="w">                         </span><span class="p">{</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="nx">bvID</span><span class="p">,</span><span class="w"> </span><span class="nx">volumeID</span><span class="p">}</span><span class="w">
+</span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">4/18/2021</span><span class="w"> </span><span class="nx">5:57:59</span><span class="w"> </span><span class="nx">AM</span><span class="w">    
+</span><span class="n">resultType</span><span class="w">                     </span><span class="nx">BulkVolume</span><span class="w">  
+</span></code></pre></div></div>
+
+<p>If a job has completed more than 20-30 seconds ago (i.e. async handle no longer exists) you may see this.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"error"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xBulkVolumeIDDoesNotExist"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xBulkVolumeIDDoesNotExist"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>In order to get around this and if you want to check on it later and explicitly make sure it completed successfully use <code class="language-plaintext highlighter-rouge">Get-SFAsyncResult -KeepResult:$True</code> the first time you check and while the job is still running. SolidFire will then keep job result after execution is complete.</p>
+
+<p>Or you could parse SolidFire events to look for this job, which isn’t a very efficient way to do it (unless you send logs to a place where you can easily analyze them).</p>
+
+<h3 id="restore-using-the-api-or-powershell">Restore using the API or PowerShell</h3>
+
+<p>To restore a backup of testvol-143 to a newly created 1Gi volume (volume ID 144):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"StartBulkVolumeWrite"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">144</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"native"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"scriptParameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"range"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"lba"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"blocks"</span><span class="p">:</span><span class="w"> </span><span class="mi">1073741824</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"read"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"awsAccessKeyID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"awsSecretAccessKey"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iHO3QsM7dnCh+uTb9/Z/4GHRGiXDLasFqhspKOg0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"bucket"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire-native-backup"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"myClusterName-k4z3/testvol-143"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"hostname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"storagegrid.my.co:18443"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>As mentioned earlier, in the current version of SolidFire PowerShell Tools, dedicated Backup cmdlets have a known issue so we’ll use Invoke-SFApi for restore, too.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeWrite</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="s2">"356"</span><span class="p">;</span><span class="w"> </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"range"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">  </span><span class="s2">"lba"</span><span class="o">=</span><span class="w"> </span><span class="s2">"0"</span><span class="p">;</span><span class="w"> </span><span class="s2">"blocks"</span><span class="o">=</span><span class="w"> </span><span class="s2">"1073741824"</span><span class="p">};</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"read"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"iHO3QsM7dnCh+uTb9/Z/4GHRGiXDLasFqhspKOg0"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"bucket"</span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-native-backup"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"pvc-f8050652-4cd0-495d-946c-1d315da725e9-356"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"endpoint"</span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w"> </span><span class="s2">"hostname"</span><span class="o">=</span><span class="w"> </span><span class="s2">"storagegrid.my.co:18443"</span><span class="w"> </span><span class="p">}}}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="per-node-job-scheduling">Per-node job scheduling</h3>
+
+<p>The challenge isn’t how to kick off your daily or weekly backup (you could do that from crontab, for example), but how to schedule individual jobs so that we don’t schedule too many (which would cause some to fail) or too few (which would cause them to run comparatively longer) on each SolidFire node.</p>
+
+<p>How to control the number of concurrently running backup jobs and keep it below the maximum? First we need to know how to find the maximum number of bulk jobs per node:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">Get-SFLimits</span><span class="p">)</span><span class="o">.</span><span class="nf">BulkVolumeJobsPerNodeMax</span><span class="w">
+</span><span class="mi">8</span><span class="w">
+</span></code></pre></div></div>
+
+<p>(It’s strange that on a physical SolidFire cluster 12.2 this result is 8, while SolidFire Demo VM shows 10. I assume 8 is correct.)</p>
+
+<p>I’d run no more than eight per SolidFire node, to leave several slots for restore and other bulk jobs (such as volume cloning).</p>
+
+<p>One problem in scheduling this is to figure out where the volume is. For active volumes we can find this by checking iSCSI connections (in PowerShell, <code class="language-plaintext highlighter-rouge">Get-SFIscsiSession</code>; SolidFire node that has a connection for volume scaleoutsean-139 is where your volume metadata is, and where backup job for the volume will run). I don’t know how to do it for disconnected volumes, but those usually aren’t many and don’t change a lot.</p>
+
+<p>So we would get a list of all nodes and volumes, and build a “per-node” list of volumes (backup jobs). As volumes are sometimes automatically rebalanced by SolidFire, long running scripts may need to do this more than once in the course of one daily or weekly run.</p>
+
+<p>Then we’d dispatch a handful of async backup jobs from each node’s job queue and watch their status. When a slot is freed, dispatch the next job.</p>
+
+<p>I suspect - but I forgot to check when I was testing - that URL in the response of <code class="language-plaintext highlighter-rouge">UpdateBulkVolumeStatus</code> method shows Management IP of the SolidFire node running the job. If this is correct then it’d be easier to manage job scheduling: fire first 10 jobs, watch the number of jobs per unique URL (node) returned by this method, and add one more whenever no node has more than 7. Several very large volumes on one node could result in underutilized job slots on some nodes, but we could schedule those to be backed up last (query volume IDs and order them by (volume size * fullness) before you start and start with smallest by amount of data to back up).</p>
+
+<p>Separately, build a list of failed jobs and notify about them or log your progress in a central location (Splunk, Elastic) where failures can be detected and remedied.</p>
+
+<p>If your situation is simple - let’s say you back up 50 volumes in a five-node SolidFire cluster - you might as well dispatch first 10 jobs, sleep three minutes, check if any of those jobs has completed, and if yes, run another job. It’s unlikely that more than 10 concurrent jobs would end up working on volumes hosted on the same SolidFire node, but even if that happens, such jobs can be retried later.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-07.png" alt="Parallel backup-to-S3 jobs in a five-node SolidFire cluster" /></p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li>SolidFire Backup/Restore to/from S3 with <a href="https://youtu.be/fBhD9xM-z7c">Minio</a> (2m16s)</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>SolidFire’s Backup to S3 is probably much simpler than similar features seen in other storage platforms (for example, Cloud Backup Service available for ONTAP is already quite sophisticated and well-integrated into NetApp’s hybrid and public cloud solutions). But SolidFire’s Backup to S3 is free, easy to automate, has basic requirements, and can be used with on-premises or cloud S3 storage and some users find it good enough for their data protection purposes.</p>
+
+<p>For advanced and enterprise use, especially with 100’s of TBs to protect, I’d recommend software and services from NetApp data protection partners (currently, in alphabetic order, you may want to consider at Commvault, Rubrik, Veeam - the first and last currently integrate with SolidFire snapshot API). I wrote about some of them on this blog (mostly in the context of Kubernetes).</p>
+
+<p>At the risk of fragmenting your data protection approaches - not something I’d advocate, but I’ll mention it for the sake of discussion - you could use a community edition of enterprise data protection software for important data (Firewall VM, DBs, ADS/LDAP, Git, K8s Masters), and Backup to S3 for the rest (generic VMs).</p>
+
+<p>One so far unexplored area is “in between” situations where community applications could be used to cover niche use cases. More on that in <a href="https://scaleoutsean.github.io/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html">the next post</a>.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#automation">automation</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/05/get-solidfire-volume-efficiency-with-powershell.html">• Use SolidFire PowerShell Tools to find low efficiency volumes</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/19/solidfire-powershell-python-cli-sdk-1.7.html">• SolidFire PowerShell Tools, Python CLI and SDK pip packages v1.7</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/08/get-bearer-token-for-netapp-hci-hybrid-cloud-control-logs.html">• Get NetApp Hybrid Cloud Control logs via the HCC API</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/11/28/powershell-set-sfqosexception.html">• Set Temporary Storage QoS Policy for SolidFire Volume</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-04-22 15:50 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
