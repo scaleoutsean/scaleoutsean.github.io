@@ -100,7 +100,7 @@
 
   
   
-    14 minute read
+    16 minute read
   
 
     </span>
@@ -117,6 +117,7 @@
       <li><a href="#observe-job-progress-using-the-api-or-powershell">Observe job progress using the API or PowerShell</a></li>
       <li><a href="#restore-using-the-api-or-powershell">Restore using the API or PowerShell</a></li>
       <li><a href="#per-node-job-scheduling">Per-node job scheduling</a></li>
+      <li><a href="#demo-script">Demo script</a></li>
     </ul>
   </li>
   <li><a href="#demo">Demo</a></li>
@@ -255,7 +256,7 @@
 
 <p>In a small environment with just a handful of volumes we could use PowerShell to do something as simple as this (to back up volumes 143 and 144):</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$vol</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="p">(</span><span class="mi">143</span><span class="p">,</span><span class="mi">144</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="w">
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="kr">foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$vol</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="p">(</span><span class="mi">143</span><span class="p">,</span><span class="mi">144</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="n">Start-SFVolumeBackup</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nv">$vol</span><span class="w"> </span><span class="se">`
 </span><span class="w">  </span><span class="nt">-Format</span><span class="w"> </span><span class="nx">native</span><span class="w"> </span><span class="nt">-BackupTo</span><span class="w"> </span><span class="nx">S3</span><span class="w"> </span><span class="se">`
 </span><span class="w">  </span><span class="nt">-Hostname</span><span class="w"> </span><span class="nx">storagegrid.my.co:18443</span><span class="w"> </span><span class="se">`
@@ -267,7 +268,7 @@
 
 <p>There seems to be a bug in SolidFire Tools for PowerShell 1.7.0.55 - it doesn’t append $ClusterID to $ClusterName, so the API and PowerShell result in backups executed via the API and PowerShell saved to different directories inside of the expected backup “subdirectory”. To avoid this problem we can use <code class="language-plaintext highlighter-rouge">Invoke-SFApi</code> (instead of using <code class="language-plaintext highlighter-rouge">Start-SFVolumeBackup</code>) to work around this until that bug is fixed.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="se">`
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="se">`
 </span><span class="w">  </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="s2">"356"</span><span class="p">;</span><span class="w"> </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="p">@{</span><span class="w"> </span><span class="s2">"write"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
@@ -291,6 +292,8 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
+<p>Note the URL value above; it’s a node URL where the volume’s Primary Metadata service is running. You can add these up to keep track of the total number of jobs running on any storage node.</p>
+
 <p>Check on this particular job using its job key:</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
@@ -302,7 +305,7 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Response (while job is still running or just completed - afterwards it disappears - see <code class="language-plaintext highlighter-rouge">-KeepResult</code> in PowerShell-related comments):</p>
+<p>Response (while job is still running or just completed - afterwards it disappears - see the <code class="language-plaintext highlighter-rouge">KeepResult</code> option in PowerShell-related comments):</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
@@ -374,13 +377,13 @@
 
 <p>As mentioned earlier, in the current version of SolidFire PowerShell Tools, dedicated Backup cmdlets have a known issue so we’ll use Invoke-SFApi for restore, too.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeWrite</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">&gt;</span><span class="w"> </span><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeWrite</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="s2">"356"</span><span class="p">;</span><span class="w"> </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"range"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">  </span><span class="s2">"lba"</span><span class="o">=</span><span class="w"> </span><span class="s2">"0"</span><span class="p">;</span><span class="w"> </span><span class="s2">"blocks"</span><span class="o">=</span><span class="w"> </span><span class="s2">"1073741824"</span><span class="p">};</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"read"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Q36K1OR8865OA8AV3A50"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"iHO3QsM7dnCh+uTb9/Z/4GHRGiXDLasFqhspKOg0"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"bucket"</span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-native-backup"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
-  </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"pvc-f8050652-4cd0-495d-946c-1d315da725e9-356"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"PROD-mn4y/pvc-f8050652-4cd0-495d-946c-1d315da725e9-356"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
   </span><span class="s2">"endpoint"</span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w"> </span><span class="s2">"hostname"</span><span class="o">=</span><span class="w"> </span><span class="s2">"storagegrid.my.co:18443"</span><span class="w"> </span><span class="p">}}}</span><span class="w">
 </span></code></pre></div></div>
 
@@ -396,7 +399,7 @@
 
 <p>(It’s strange that on a physical SolidFire cluster 12.2 this result is 8, while SolidFire Demo VM shows 10. I assume 8 is correct.)</p>
 
-<p>I’d run no more than eight per SolidFire node, to leave several slots for restore and other bulk jobs (such as volume cloning).</p>
+<p>I’d run no more than six per SolidFire node, to leave several slots for restore and other bulk jobs (such as volume cloning or restore from S3 backup).</p>
 
 <p>One problem in scheduling this is to figure out where the volume is. For active volumes we can find this by checking iSCSI connections (in PowerShell, <code class="language-plaintext highlighter-rouge">Get-SFIscsiSession</code>; SolidFire node that has a connection for volume scaleoutsean-139 is where your volume metadata is, and where backup job for the volume will run). I don’t know how to do it for disconnected volumes, but those usually aren’t many and don’t change a lot.</p>
 
@@ -412,10 +415,35 @@
 
 <p><img src="/assets/images/solidfire-backup-to-s3-07.png" alt="Parallel backup-to-S3 jobs in a five-node SolidFire cluster" /></p>
 
+<h3 id="demo-script">Demo script</h3>
+
+<p>I created a proof-of-concept script that follows the simpler of the two approaches outlined above:</p>
+
+<ul>
+  <li>Takes a parameter that specifies the number of parallel jobs (default: 10) which should be safe on a 4 node cluster although 20 might work as well</li>
+  <li>Volumes to backup are provided in a list of volume IDs; these don’t have to be ordered in any particular way and could be loaded from a CSV file or DB</li>
+  <li>Reports errors that can be logged to a file, but I’d recommend to simply watch SolidFire events or SNMP logs with Graylog, Elastic, Splunk or something and look for failed backup jobs. Failed jobs could be rescheduled, of course, but I didn’t do it in the script.</li>
+  <li>As BulkVolumeRead (Backup) jobs take the optional parameter SnapshotID, you could easily make a quiesced snapshot before this script runs, and then simply pick the latest snapshot ID available. While experimenting with this I discovered that if <code class="language-plaintext highlighter-rouge">snapshotID: 0</code>, Backup to S3 still works (it seems it 0 equals none) so something like this could be added to the script:</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$snapshotID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nv">$v</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">`</span><span class="w">
+</span><span class="n">Sort-Object</span><span class="w"> </span><span class="nt">-Descending</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">CreateTime</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="err">`</span><span class="w">
+</span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-First</span><span class="w"> </span><span class="nx">1</span><span class="p">)</span><span class="o">.</span><span class="nf">snapshotID</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">$snapshotID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Then you’d just add <code class="language-plaintext highlighter-rouge">"snapshotID" = $snapshotID</code> to Invoke-SFApi parameters.</p>
+
+<p>I did not try to save and load credentials securely because PowerShell makes that reasonably easy. I’d suggest to run such scripts signed, from a Windows VM connected to Management Network.</p>
+
+<p>This script in action:</p>
+
+<p><img src="/assets/images/solidfire-backup-to-s3-08.png" alt="Parallel backup-to-S3 jobs in a five-node SolidFire cluster" /></p>
+
 <h2 id="demo">Demo</h2>
 
 <ul>
   <li>SolidFire Backup/Restore to/from S3 with <a href="https://youtu.be/fBhD9xM-z7c">Minio</a> (2m16s)</li>
+  <li>Simple <a href="https://youtu.be/u5AqpMslQuA">parallel backup script for SolidFire Backup to S3</a> (4m00s) - screenshot below; PowerShell script can be found in <code class="language-plaintext highlighter-rouge">awesome-solidfire</code></li>
 </ul>
 
 <h2 id="conclusion">Conclusion</h2>
@@ -805,7 +833,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-04-22 15:50 </p>
+    <p>2021-04-27 16:08 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
