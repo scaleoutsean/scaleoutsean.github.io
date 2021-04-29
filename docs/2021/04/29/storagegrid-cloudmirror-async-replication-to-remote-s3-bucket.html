@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Helpful waste of time | Acting Technologist
+            Using StorageGRID CloudMirror to replicate objects to remote S3-compatible bucket | Acting Technologist
       
     </title>
     <meta name="description" content="
-     You too can save time by following helpful UI hints
+     Simple intro to StorageGRID CloudMirror
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,50 +90,79 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Helpful waste of time</h2>
+        <h2 id = "post-title">Using StorageGRID CloudMirror to replicate objects to remote S3-compatible bucket</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>24 Nov 2020</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>29 Apr 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    1 minute read
+    2 minute read
   
 
     </span>
   </div>
   
-        <p>When dealing with input that consists of unweildy TLS certificates Postman can helpfully hint at potential JSON validity problems and save you time. I’m sure some other tools are like that as well.</p>
+        <h2 id="what">What</h2>
 
-<p><img src="/assets/images/postman-scary-bs-setsslcertificate.png" alt="Scary Bullshit" /></p>
+<p>When CloudMirror is properly configured, StorageGRID places changes into a queue and copies modified objects to a remote S3 bucket.</p>
 
-<p>With such help, instead of trying like an idiot you can fix your inputs before that, get things done and have a nice rest of the day.</p>
+<p>This remote bucket can be AWS S3, another StorageGRID or some other object store that adheres to the S3 API.</p>
 
-<p>All right, let’s try to remove all line breaks until Postman stops hinting.</p>
+<h2 id="why">Why</h2>
 
-<p>After having removed 10 lines, I start thinking “oh man, this is slow! Let’s automate!”</p>
+<p>If you need a persistent copy of your bucket data in another location - disaster recovery, predictably geographically distributed readers, distributed analytics, etc.</p>
 
-<p>Try sed, get stuck, Google it, done!</p>
+<p>If you need a temporary or ad-hoc copy, you can configure HTTP read cache such as Varnish in front of StorageGRID.</p>
 
-<p>Back to Postman. No hints. Send. Yikes!!! Invalid cert!</p>
+<h2 id="steps">Steps</h2>
 
-<p>Aha! Back to checking if my cert is in the right format. DER. PEM, etc. What a hassle!</p>
+<p>You should read the documentation as it doesn’t make sense to rehash it here, so here goes a summary:</p>
 
-<p>All right, the certs are fine as I had thought. I see - I should replace line breaks with <code class="language-plaintext highlighter-rouge">\n</code>’s, says a helpful Stack Overflow answer.</p>
+<ul>
+  <li>
+    <p>Grid Admin must enable Platform Services for the Tenant (at Source). These services include CloudMirror, but also Search (Elasticsearch integration) and SNS.</p>
+  </li>
+  <li>
+    <p>Tenant Admin must create an S3 API endpoint. This can be confusing. No, you don’t <em>create</em> an endpoint and in fact don’t create anything on the Grid you’re using. You merely register a remote S3 API endpoint with your Grid, so that it knows where to send data. You must provide Access Key and Secure key for most Target buckets as they require some form of authentication and authorization.</p>
+  </li>
+  <li>
+    <p>In Source bucket settings, paste the standard XML file for S3 replication. A simple template can be found in the StorageGRID documentation but you can use AWS S3 documentation as well (in the case you use the latter, some limitations outlined in the StorageGRID documentation apply - such as Storage Class is limited to <code class="language-plaintext highlighter-rouge">STANDARD</code> and so on). Best start with the skeleton configuration file from the StorageGRID documentation and improve it once you get it to work. Example to replicate s3://source-bucket/onlythis-subdir/ to s3://remote-bucket-name/onlythis-subdir/ (Standard storage class) on AWS S3:</p>
+  </li>
+</ul>
 
-<p>More sed. Done! Damn, it still doesn’t work!</p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;ReplicationConfiguration&gt;</span> 
+    <span class="nt">&lt;Rule&gt;</span> 
+        <span class="nt">&lt;Status&gt;</span>Enabled<span class="nt">&lt;/Status&gt;</span> 
+        <span class="nt">&lt;Prefix&gt;</span>onlythis-subdir/<span class="nt">&lt;/Prefix&gt;</span> 
+        <span class="nt">&lt;Destination&gt;</span> 
+            <span class="nt">&lt;Bucket&gt;</span>arn:aws:s3:::remote-bucket-name<span class="nt">&lt;/Bucket&gt;</span> 
+            <span class="nt">&lt;StorageClass&gt;</span>STANDARD<span class="nt">&lt;/StorageClass&gt;</span>
+        <span class="nt">&lt;/Destination&gt;</span> 
+    <span class="nt">&lt;/Rule&gt;</span> 
+<span class="nt">&lt;/ReplicationConfiguration&gt;</span>
+</code></pre></div></div>
 
-<p>Let’s recheck those certs…</p>
+<h2 id="gotchas">Gotchas</h2>
 
-<p>Eventually I got desperate and tried to work by <a href="https://github.com/scaleoutsean/awesome-solidfire/blob/master/encryption/kmip-thales-keysecure.md">my own notes</a> from Github which led me to believe I should simply paste that junk as-is and hit Send. It worked.</p>
+<p>As the documentation highlights, existing objects won’t get replicated. You need to “touch” them (update them in some way) or use a 3rd party utility to sync existing objects from Source to Target bucket, which can be done before you configure CloudMirror, but also after. In the case you do it after you’d probably prefer to use a filter to not replicate objects that have changed after CloudMirror was enabled (maybe filter by date or object name or something else).</p>
 
-<p>I don’t blame Postman, those visual hints probably saved me more than 30 minutes over the years.</p>
+<p>In endpoint settings and bucket’s XML file you need to supply <code class="language-plaintext highlighter-rouge">arn:aws:s3:::</code> for AWS S3 and <code class="language-plaintext highlighter-rouge">urn:sg:s3:::</code> for StorageGRID destination. This is mentioned in the documentation and online help, but of course ain’t nobody got time to read that (or this paragraph).</p>
 
-<p>But why things have to be so complicated?</p>
+<p>I found the aws s3 CLI frustratingly hard to use for StorageGRID to StorageGRID synchronization as it makes it hard (in fact I found it impossible to use) to provide two sets of profiles and credentials required for Source and Target. Maybe try rclone or some other utility.</p>
 
+<h2 id="workarounds">Workarounds</h2>
+
+<p>If CloudMirror doesn’t support your destination object store (say, Azure Blob), consider using client-side utilities and services (such as NetApp CloudSync).</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://www.youtube.com/watch?v=d_3C7Wq45n0">Configure StorageGRID CloudMirror replication</a> (2m33s)</li>
+</ul>
 
       </article>
     </div>
@@ -143,7 +172,7 @@
     
     
       <a href="
-      /categories/#random">random</a>
+      /categories/#analytics">analytics</a>
        
     
   </span>
@@ -212,8 +241,53 @@
         
     
         
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
           <div class = "related-posts">
-          <h5><a href="/2021/03/27/photon-ontap-on-arm64-iot-edge.html">• Experimenting with Edge-to-DC integrations with Photon IoT and ONTAP</a></h5>
+          <h5><a href="/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html">• NetApp StorageGRID object store for Vertica EON Mode</a></h5>
           </div>
           
           
@@ -380,27 +454,6 @@
         
     
         
-          <div class = "related-posts">
-          <h5><a href="/2021/01/21/splunk-sizing-with-dellemc-and-nutanix.html">• Splunk sizing with shared core HCI vendors</a></h5>
-          </div>
-          
-          
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/01/19/storagegrid-versioning-example.html">• StorageGRID object versioning</a></h5>
-          </div>
-          
-          
-        
     
       
     
@@ -538,19 +591,6 @@
         
     
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2020/11/20/solidfire-netapp-hci-dark-mode.html">• Dark Mode for NetApp HCI and SolidFire</a></h5>
-          </div>
-          
-          
-            
     
     </div>
     
