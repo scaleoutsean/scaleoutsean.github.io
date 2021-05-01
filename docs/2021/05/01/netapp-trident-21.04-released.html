@@ -14,7 +14,7 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            NetApp Trident v21.04 is out | Acting Technologist
+            GA of NetApp Trident v21.04 | Acting Technologist
       
     </title>
     <meta name="description" content="
@@ -90,7 +90,7 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">NetApp Trident v21.04 is out</h2>
+        <h2 id = "post-title">GA of NetApp Trident v21.04</h2>
 
   
   <div class = "post-info">
@@ -100,7 +100,7 @@
 
   
   
-    6 minute read
+    7 minute read
   
 
     </span>
@@ -112,9 +112,9 @@
     <ul>
       <li><a href="#before">Before</a></li>
       <li><a href="#out-with-the-old-in-with-the-new">Out with the old, in with the new</a></li>
+      <li><a href="#verify-success">Verify success</a></li>
     </ul>
   </li>
-  <li><a href="#verify-success">Verify success</a></li>
   <li><a href="#trident-for-arm64-and-other-non-amd64-architectures">Trident for ARM64 and other non-AMD64 architectures</a></li>
 </ul>
 
@@ -123,12 +123,12 @@
 <p>NetApp Trident v21.04 was released yesterday. Notable Kubernetes-related enhancements:</p>
 
 <ul>
-  <li>Kubernetes: Added recreate strategy in Trident Operator deployment</li>
-  <li>Kubernetes: Added an images sub-command to tridentctl to display the container images required for a Trident installation on a specific Kubernetes version</li>
-  <li>Kubernetes: Added support for Kubernetes 1.21</li>
-  <li>Kubernetes: Added support for Trident backend creation using kubectl</li>
-  <li>Kubernetes: Added startup, liveness and readiness probes for Trident node pods</li>
-  <li>Kubernetes: Mirantis Kubernetes Engine (formerly Universal Control Plane (UCP) 3.2.11 is now supported (I wonder if it’s by ONTAP-based back-ends, or all Trident-supported back-ends)</li>
+  <li>Added recreate strategy in Trident Operator deployment</li>
+  <li>Added an images sub-command to tridentctl to display the container images required for a Trident installation on a specific Kubernetes version</li>
+  <li>Added support for Kubernetes 1.21</li>
+  <li>Added support for Trident backend creation using kubectl</li>
+  <li>Added startup, liveness and readiness probes for Trident node pods</li>
+  <li>Mirantis Kubernetes Engine (formerly Universal Control Plane (UCP) 3.2.11 is now supported (I wonder if it’s by ONTAP-based back-ends, or all Trident-supported back-ends)</li>
 </ul>
 
 <p>This release includes various improvements related to NetApp Public Cloud services and bug fixes.</p>
@@ -198,7 +198,7 @@
 
 <h3 id="out-with-the-old-in-with-the-new">Out with the old, in with the new</h3>
 
-<p>For this simplest upgrade case, I don’t have to do much - I only need to reinstall Trident.</p>
+<p>For this simplest upgrade case, I don’t have to do much - I only need to reinstall Trident. I run this using tridentctl v21.04.</p>
 
 <pre><code class="language-raw">$ ./trident-installer/tridentctl uninstall -n trident
 INFO Deleted Trident deployment.                  
@@ -244,7 +244,7 @@ $ ./trident-installer/tridentctl version -n trident
 +----------------+----------------+
 </code></pre>
 
-<h2 id="verify-success">Verify success</h2>
+<h3 id="verify-success">Verify success</h3>
 
 <p>Check that everything is up and running:</p>
 
@@ -277,6 +277,43 @@ trident-9fb55565b-7d7sq   1/1       Running   0          7m
 <p>If you want to build v21.04 for ARM64 or other architecture by yourself, refer to previous posts on this topic (find it in blog Archive).</p>
 
 <p>If you’re a K8s-on-ARM64 user, I have an unofficial <code class="language-plaintext highlighter-rouge">arm64</code> build on <a href="https://hub.docker.com/r/scaleoutsean/trident-arm64/tags?page=1&amp;ordering=name">Docker Hub</a> but you may still need to ensure other images are also ARM64 as explained in that ARM64-related post.</p>
+
+<p>Trident v21.04 on ARM64:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME   STATUS   ROLES                  AGE   VERSION
+k1     Ready    control-plane,master   73d   v1.20.2
+k2     Ready    &lt;none&gt;                 36d   v1.20.2
+k3     Ready    &lt;none&gt;                 73d   v1.20.2
+
+sean@k1:~/trident/trident-installer<span class="nv">$ </span>tridentctl version <span class="nt">-n</span> trident
++------------------------+------------------------+
+|     SERVER VERSION     |     CLIENT VERSION     |
++------------------------+------------------------+
+| 21.04.0-custom+unknown | 21.04.0-custom+unknown |
++------------------------+------------------------+
+
+<span class="nv">$ </span>kubectl describe pod trident-csi-5c98ff74fb-rwj4f <span class="nt">-n</span> trident
+Name:         trident-csi-5c98ff74fb-rwj4f
+Namespace:    trident
+Priority:     0
+Node:         k2/192.168.1.19
+Start Time:   Sat, 01 May 2021 13:02:42 +0000
+Labels:       <span class="nv">app</span><span class="o">=</span>controller.csi.trident.netapp.io
+              pod-template-hash<span class="o">=</span>5c98ff74fb
+<span class="o">[</span>...]
+
+<span class="nv">$ </span>ssh k2 <span class="nb">uname</span> <span class="nt">-a</span>
+Linux k2 4.9.241-69 <span class="c">#1 SMP PREEMPT Tue Feb 16 03:06:52 UTC 2021 aarch64 aarch64 aarch64 GNU/Linux</span>
+</code></pre></div></div>
+
+<p>It seems to run fine just like it did with 21.01 but I spotted the following error in Trident logs - likely not new:</p>
+
+<blockquote>
+  <p>Failed to watch *v1.TridentBackendConfig: failed to list *v1.TridentBackendConfig: tridentbackendconfigs.trident.netapp.io is forbidden: User “system:serviceaccount:trident:trident-csi” cannot list resource “tridentbackendconfigs” in API group “trident.netapp.io” in the namespace “trident”.</p>
+</blockquote>
+
+<p>I suppose I will need to let “system:serviceaccount:trident:trident-csi” access that resource. This is on vanilla Kubernetes, by the way.</p>
 
 <p>You can run Kubernetes &amp; Trident on arm64 and connect to SolidFire Demo VM 12.3 running on your VMware 6 or 7.0 or Virtualbox (including your Windows or Linux laptop with VirtualBox 6.1 and 24 GB RAM or better). SolidFire Demo VM itself needs 16 GB RAM to run.</p>
 
@@ -734,7 +771,7 @@ trident-9fb55565b-7d7sq   1/1       Running   0          7m
 
     
   </div><footer class= "footer">
-    <p>2021-05-01 21:11 </p>
+    <p>2021-05-01 21:25 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
