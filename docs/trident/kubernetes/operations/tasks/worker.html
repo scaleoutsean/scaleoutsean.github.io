@@ -70,6 +70,10 @@
             <a class="nav-link" href="../../../introduction.html">What is Trident?</a>
         </li>
         
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../astra-introduction.html">What is Astra?</a>
+        </li>
+        
         <li class="nav-item active">
             <a class="nav-link" href="../../index.html">Trident for Kubernetes</a>
         </li>
@@ -107,6 +111,14 @@
         </li>
         
         
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://github.com/netapp/trident">Trident on Github<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://netapp-trident.readthedocs.io">Official docs<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
       </ul>
 
 
@@ -124,16 +136,14 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="search here" aria-label="search here" autocomplete="on" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+          <div class="col-12 col-md-3 bd-sidebar"><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
 
     <div class="bd-toc-item active">
     
   
     <ul class="nav bd-sidenav">
+        
+        
         
         
         
@@ -174,7 +184,7 @@
                         </li>
                     
                         <li class="">
-                            <a href="backends.html">Managing backends</a>
+                            <a href="managing-backends/index.html">Managing backends</a>
                         </li>
                     
                         <li class="">
@@ -227,7 +237,11 @@
         
       </ul>
   
-  </nav>
+  </nav><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="on" >
+</form>
+
           </div>
           
 
@@ -279,47 +293,45 @@ tools, or else attaching volumes to containers might fail.</p>
 <h2>NFS<a class="headerlink" href="#nfs" title="Permalink to this headline">¶</a></h2>
 <p>Install the following system packages:</p>
 <p><strong>RHEL / CentOS</strong></p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo yum install -y nfs-utils
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo yum install -y nfs-utils
 </pre></div>
 </div>
-</div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You should ensure that the NFS service is started up during boot time.</p>
 </div>
 <p><strong>Ubuntu / Debian</strong></p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install -y nfs-common
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install -y nfs-common
 </pre></div>
 </div>
-</div></blockquote>
 </div>
 <div class="section" id="iscsi">
 <h2>iSCSI<a class="headerlink" href="#iscsi" title="Permalink to this headline">¶</a></h2>
-<div class="admonition warning" id="iscsi-worker-node-prep">
-<p class="admonition-title">Warning</p>
-<p>If using RHCOS &gt;=4.5 or RHEL or CentOS &gt;=8.2 with the <code class="docutils literal notranslate"><span class="pre">solidfire-san</span></code> driver ensure
-that the CHAP authentication algorithm is set to <code class="docutils literal notranslate"><span class="pre">MD5</span></code> in <code class="docutils literal notranslate"><span class="pre">/etc/iscsi/iscsid.conf</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo sed -i <span class="s1">&#39;s/^\(node.session.auth.chap_algs\).*/\1 = MD5/&#39;</span> /etc/iscsi/iscsid.conf
+<p id="iscsi-worker-node-prep">Keep in mind the following considerations when using iSCSI volumes:</p>
+<ul class="simple">
+<li><p>Each node in the Kubernetes cluster must have a unique IQN. This is a <strong>necessary
+prerequisite</strong> that must be fulfilled.</p></li>
+<li><p>If using RHCOS &gt;=4.5 or RHEL or CentOS &gt;=8.2 with the <code class="docutils literal notranslate"><span class="pre">solidfire-san</span></code> driver ensure
+that the CHAP authentication algorithm is set to <code class="docutils literal notranslate"><span class="pre">MD5</span></code> in <code class="docutils literal notranslate"><span class="pre">/etc/iscsi/iscsid.conf</span></code></p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo sed -i <span class="s1">&#39;s/^\(node.session.auth.chap_algs\).*/\1 = MD5/&#39;</span> /etc/iscsi/iscsid.conf
 </pre></div>
 </div>
-</div>
+</div></blockquote>
+<ul class="simple">
+<li><p>When using worker nodes that run RHEL/RedHat CoreOS with iSCSI
+PVs, make sure to specify the <code class="docutils literal notranslate"><span class="pre">discard</span></code> mountOption in the
+<a class="reference external" href="https://kubernetes.io/docs/concepts/storage/storage-classes/#mount-options">StorageClass</a>
+to perform inline space reclamation. See
+RedHat’s documentation <a class="reference external" href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_file_systems/discarding-unused-blocks_managing-file-systems">here</a>.</p></li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You should ensure that the iSCSI service is started up during boot time.</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When using worker nodes that run RHEL/RedHat CoreOS with iSCSI
-PVs, make sure to specify the <code class="docutils literal notranslate"><span class="pre">discard</span></code> mountOption in the
-<a class="reference external" href="https://kubernetes.io/docs/concepts/storage/storage-classes/#mount-options">StorageClass</a>
-to perform inline space reclamation. See
-RedHat’s documentation <a class="reference external" href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_file_systems/discarding-unused-blocks_managing-file-systems">here</a>.</p>
-</div>
 <p><strong>RHEL / CentOS</strong></p>
-<blockquote>
-<div><ol class="arabic">
+<ol class="arabic">
 <li><p>Install the following system packages:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo yum install -y lsscsi iscsi-initiator-utils sg3_utils device-mapper-multipath
 </pre></div>
@@ -351,7 +363,6 @@ RedHat’s documentation <a class="reference external" href="https://access.redh
 </div>
 </li>
 </ol>
-</div></blockquote>
 <p><strong>Ubuntu / Debian</strong></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -433,8 +444,6 @@ sudo systemctl status open-iscsi
     </p>
   </div>
 </footer>
-<!-- Copyright 2021 NetApp, Inc. All Rights Reserved. -->
-
 <style>
     .highlight {
         background-color: #f0f0f0;

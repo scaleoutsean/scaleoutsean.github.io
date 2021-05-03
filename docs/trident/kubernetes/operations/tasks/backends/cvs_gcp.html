@@ -70,6 +70,10 @@
             <a class="nav-link" href="../../../../introduction.html">What is Trident?</a>
         </li>
         
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../astra-introduction.html">What is Astra?</a>
+        </li>
+        
         <li class="nav-item active">
             <a class="nav-link" href="../../../index.html">Trident for Kubernetes</a>
         </li>
@@ -107,6 +111,14 @@
         </li>
         
         
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://github.com/netapp/trident">Trident on Github<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://netapp-trident.readthedocs.io">Official docs<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
       </ul>
 
 
@@ -124,16 +136,14 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="search here" aria-label="search here" autocomplete="on" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+          <div class="col-12 col-md-3 bd-sidebar"><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
 
     <div class="bd-toc-item active">
     
   
     <ul class="nav bd-sidenav">
+        
+        
         
         
         
@@ -174,7 +184,7 @@
                         </li>
                     
                         <li class="">
-                            <a href="../backends.html">Managing backends</a>
+                            <a href="../managing-backends/index.html">Managing backends</a>
                         </li>
                     
                         <li class="">
@@ -227,7 +237,11 @@
         
       </ul>
   
-  </nav>
+  </nav><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="on" >
+</form>
+
           </div>
           
 
@@ -271,7 +285,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The NetApp Cloud Volumes Service for GCP does not support CVS-Performance volumes less than 100 GiB in size, or CVS
-volumes less than 1 TiB in size. To make it easier to deploy applications, Trident automatically creates volumes of
+volumes less than 300 GiB in size. To make it easier to deploy applications, Trident automatically creates volumes of
 the minimum size if a too-small volume is requested. Future releases of the Cloud Volumes Service may remove this
 restriction.</p>
 </div>
@@ -284,6 +298,30 @@ restriction.</p>
 <li><p>GCP service account with the <code class="docutils literal notranslate"><span class="pre">netappcloudvolumes.admin</span></code> role</p></li>
 <li><p>API key file for your CVS service account</p></li>
 </ul>
+<p>Trident now includes support for smaller volumes with the default CVS service type on
+GCP (<a class="reference external" href="https://cloud.google.com/architecture/partners/netapp-cloud-volumes/service-types">https://cloud.google.com/architecture/partners/netapp-cloud-volumes/service-types</a>).
+For backends created with <code class="docutils literal notranslate"><span class="pre">storageClass=software</span></code>, volumes will now have a
+minimum provisioning size of 300 GiB. CVS currently provides this feature under
+Controlled Availability and does <strong>not provide</strong> technical support.
+Users must sign up for access to sub-1TiB
+volumes <a class="reference external" href="https://docs.google.com/forms/d/e/1FAIpQLSc7_euiPtlV8bhsKWvwBl3gm9KUL4kOhD7lnbHC3LlQ7m02Dw/viewform">here</a>.
+NetApp recommends customers consume sub-1TiB volumes for <strong>non-production</strong> workloads.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When deploying backends using the default CVS service type [<code class="docutils literal notranslate"><span class="pre">storageClass=software</span></code>],
+users <strong>must obtain access</strong> to the sub-1TiB volumes feature on GCP for the Project Number(s)
+and Project ID(s) in question. This is necessary for Trident to provision sub-1TiB volumes.
+If not, volume creations <strong>will fail</strong> for PVCs that are &lt;600 GiB. Obtain access to sub-1TiB
+volumes using <a class="reference external" href="https://docs.google.com/forms/d/e/1FAIpQLSc7_euiPtlV8bhsKWvwBl3gm9KUL4kOhD7lnbHC3LlQ7m02Dw/viewform">this</a>
+form.</p>
+</div>
+<p>Volumes created by Trident for the default CVS service level will be provisioned as follows:</p>
+<ol class="arabic simple">
+<li><p>PVCs that are smaller than 300 GiB will result in Trident creating a 300 GiB CVS volume.</p></li>
+<li><p>PVCs that are between 300 GiB to 600 GiB will result in Trident creating a CVS volume of the requested size.</p></li>
+<li><p>PVCs that are between 600 GiB and 1 TiB will result in Trident creating a 1TiB CVS volume.</p></li>
+<li><p>PVCs that are greater than 1 TiB will result in Trident creating a CVS volume of the requested size.</p></li>
+</ol>
 </div>
 <div class="section" id="backend-configuration-options">
 <h2>Backend configuration options<a class="headerlink" href="#backend-configuration-options" title="Permalink to this headline">¶</a></h2>
@@ -313,49 +351,59 @@ restriction.</p>
 <td><p>Driver name + “_” + part of API key</p></td>
 </tr>
 <tr class="row-odd"><td><p>storageClass</p></td>
-<td><p>Type of storage. Choose from <code class="docutils literal notranslate"><span class="pre">hardware</span></code> [Performance Optimized]
-or <code class="docutils literal notranslate"><span class="pre">software</span></code> [Scale Optimized (beta)]</p></td>
+<td><p>Type of storage. Choose from <code class="docutils literal notranslate"><span class="pre">hardware</span></code> [CVS-Performance
+service type] or <code class="docutils literal notranslate"><span class="pre">software</span></code> [CVS service type]</p></td>
 <td><p>“hardware”</p></td>
 </tr>
 <tr class="row-even"><td><p>projectNumber</p></td>
 <td><p>GCP account project number</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>apiRegion</p></td>
+<tr class="row-odd"><td><p>hostProjectNumber</p></td>
+<td><p>GCP shared VPC host project number</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>apiRegion</p></td>
 <td><p>CVS account region</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>apiKey</p></td>
+<tr class="row-odd"><td><p>apiKey</p></td>
 <td><p>API key for GCP service account with CVS admin role</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>proxyURL</p></td>
+<tr class="row-even"><td><p>proxyURL</p></td>
 <td><p>Proxy URL if proxy server required to connect to CVS Account</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>nfsMountOptions</p></td>
+<tr class="row-odd"><td><p>nfsMountOptions</p></td>
 <td><p>Fine-grained control of NFS mount options</p></td>
 <td><p>“nfsvers=3”</p></td>
 </tr>
-<tr class="row-odd"><td><p>limitVolumeSize</p></td>
+<tr class="row-even"><td><p>limitVolumeSize</p></td>
 <td><p>Fail provisioning if requested volume size is above this value</p></td>
 <td><p>“” (not enforced by default)</p></td>
 </tr>
-<tr class="row-even"><td><p>network</p></td>
+<tr class="row-odd"><td><p>network</p></td>
 <td><p>GCP network used for CVS volumes</p></td>
 <td><p>“default”</p></td>
 </tr>
-<tr class="row-odd"><td><p>serviceLevel</p></td>
+<tr class="row-even"><td><p>serviceLevel</p></td>
 <td><p>The CVS service level for new volumes</p></td>
 <td><p>“standard”</p></td>
 </tr>
-<tr class="row-even"><td><p>debugTraceFlags</p></td>
+<tr class="row-odd"><td><p>debugTraceFlags</p></td>
 <td><p>Debug flags to use when troubleshooting.
 E.g.: {“api”:false, “method”:true}</p></td>
 <td><p>null</p></td>
 </tr>
 </tbody>
 </table>
+<p>The <code class="docutils literal notranslate"><span class="pre">apiRegion</span></code> represents the GCP region where Trident creates CVS volumes.
+Trident can mount and attach volumes on Kubernetes nodes that belong to the same
+GCP region. When creating a backend, it is important to ensure <code class="docutils literal notranslate"><span class="pre">apiRegion</span></code>
+matches the region Kubernetes nodes are deployed in. When creating cross-region
+Kubernetes clusters, CVS volumes that are created in a given <code class="docutils literal notranslate"><span class="pre">apiRegion</span></code> can
+only be used in workloads scheduled on nodes that are in the same GCP region.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not use <code class="docutils literal notranslate"><span class="pre">debugTraceFlags</span></code> unless you are troubleshooting and require a
@@ -365,19 +413,13 @@ detailed log dump.</p>
 GCP region where this backend will provision volumes. The <code class="docutils literal notranslate"><span class="pre">apiKey</span></code> is the JSON-formatted contents of a GCP
 service account’s private key file (copied verbatim into the backend config file).  The service account must have
 the <code class="docutils literal notranslate"><span class="pre">netappcloudvolumes.admin</span></code> role.</p>
+<p>If using a shared VPC network, both <code class="docutils literal notranslate"><span class="pre">projectNumber</span></code> and <code class="docutils literal notranslate"><span class="pre">hostProjectNumber</span></code> must be specified.  In that case,
+<code class="docutils literal notranslate"><span class="pre">projectNumber</span></code> is the service project, and <code class="docutils literal notranslate"><span class="pre">hostProjectNumber</span></code> is the host project.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">storageClass</span></code> is an optional parameter that can be used to choose the
 desired <a class="reference external" href="https://cloud.google.com/solutions/partners/netapp-cloud-volumes/service-types?hl=en_US">CVS service type</a>.
 Users can choose from the base CVS service type[<code class="docutils literal notranslate"><span class="pre">storageClass=software</span></code>] or the CVS-Performance service
 type [<code class="docutils literal notranslate"><span class="pre">storageClass=hardware</span></code>], which Trident uses by default. Make sure you specify an <code class="docutils literal notranslate"><span class="pre">apiRegion</span></code> that
 provides the respective CVS <code class="docutils literal notranslate"><span class="pre">storageClass</span></code> in your backend definition.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Trident’s integration with the base
-<a class="reference external" href="https://cloud.google.com/solutions/partners/netapp-cloud-volumes/service-types?hl=en_US">CVS service type</a>
-on GCP is a <strong>beta feature</strong>, not meant for production
-workloads. Trident is <strong>fully supported</strong> with the CVS-Performance service type
-and uses it by default.</p>
-</div>
 <p>The proxyURL config option must be used if a proxy server is needed to communicate with GCP. The proxy server may either
 be an HTTP proxy or an HTTPS proxy. In case of an HTTPS proxy, certificate validation is skipped to allow the usage of
 self-signed certificates in the proxy server. Proxy servers with authentication enabled are not supported.</p>
@@ -404,7 +446,7 @@ For an example, see the configuration examples below.</p>
 <td><p>“0.0.0.0/0”</p></td>
 </tr>
 <tr class="row-odd"><td><p>snapshotDir</p></td>
-<td><p>Access to the .snapshot directory</p></td>
+<td><p>Controls visibility of the .snapshot directory</p></td>
 <td><p>“false”</p></td>
 </tr>
 <tr class="row-even"><td><p>snapshotReserve</p></td>
@@ -413,7 +455,7 @@ For an example, see the configuration examples below.</p>
 </tr>
 <tr class="row-odd"><td><p>size</p></td>
 <td><p>The size of new volumes</p></td>
-<td><p>“1T”</p></td>
+<td><p>“100Gi”</p></td>
 </tr>
 </tbody>
 </table>
@@ -455,8 +497,7 @@ provided in the backend configuration.</p>
 <p><strong>Example 2 - Backend configuration for gcp-cvs driver with the base CVS service type</strong></p>
 <p>This example shows a backend definition that uses the base CVS service type, which
 is meant for general-purpose workloads and provides light/moderate performance,
-coupled with high zonal availability. This is a <strong>beta</strong> Trident integration that
-can be used in test environments.</p>
+coupled with high zonal availability.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="nt">&quot;storageDriverName&quot;</span><span class="p">:</span> <span class="s2">&quot;gcp-cvs&quot;</span><span class="p">,</span>
@@ -499,7 +540,7 @@ region. This example also shows the usage of proxyURL config option in a backend
         <span class="nt">&quot;client_x509_cert_url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.googleapis.com/robot/v1/metadata/x509/cloudvolumes-admin-sa%40my-gcp-project.iam.gserviceaccount.com&quot;</span>
     <span class="p">},</span>
     <span class="nt">&quot;proxyURL&quot;</span><span class="p">:</span> <span class="s2">&quot;http://proxy-server-hostname/&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;nfsMountOptions&quot;</span><span class="p">:</span> <span class="s2">&quot;vers=3,proto=tcp,timeo=600&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;nfsMountOptions&quot;</span><span class="p">:</span> <span class="s2">&quot;nfsvers=3,proto=tcp,timeo=600&quot;</span><span class="p">,</span>
     <span class="nt">&quot;limitVolumeSize&quot;</span><span class="p">:</span> <span class="s2">&quot;10Ti&quot;</span><span class="p">,</span>
     <span class="nt">&quot;serviceLevel&quot;</span><span class="p">:</span> <span class="s2">&quot;premium&quot;</span><span class="p">,</span>
     <span class="nt">&quot;defaults&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -535,7 +576,7 @@ overwrite the default values set above.</p>
         <span class="nt">&quot;auth_provider_x509_cert_url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.googleapis.com/oauth2/v1/certs&quot;</span><span class="p">,</span>
         <span class="nt">&quot;client_x509_cert_url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.googleapis.com/robot/v1/metadata/x509/cloudvolumes-admin-sa%40my-gcp-project.iam.gserviceaccount.com&quot;</span>
     <span class="p">},</span>
-    <span class="nt">&quot;nfsMountOptions&quot;</span><span class="p">:</span> <span class="s2">&quot;vers=3,proto=tcp,timeo=600&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;nfsMountOptions&quot;</span><span class="p">:</span> <span class="s2">&quot;nfsvers=3,proto=tcp,timeo=600&quot;</span><span class="p">,</span>
 
     <span class="nt">&quot;defaults&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="nt">&quot;snapshotReserve&quot;</span><span class="p">:</span> <span class="s2">&quot;5&quot;</span><span class="p">,</span>
@@ -691,8 +732,6 @@ selected and will ensure the snapshot reserve requirement is met.</p>
     </p>
   </div>
 </footer>
-<!-- Copyright 2021 NetApp, Inc. All Rights Reserved. -->
-
 <style>
     .highlight {
         background-color: #f0f0f0;

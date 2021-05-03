@@ -70,6 +70,10 @@
             <a class="nav-link" href="../../../../../../introduction.html">What is Trident?</a>
         </li>
         
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../../../astra-introduction.html">What is Astra?</a>
+        </li>
+        
         <li class="nav-item active">
             <a class="nav-link" href="../../../../../index.html">Trident for Kubernetes</a>
         </li>
@@ -107,6 +111,14 @@
         </li>
         
         
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://github.com/netapp/trident">Trident on Github<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link nav-external" href="https://netapp-trident.readthedocs.io">Official docs<i class="fas fa-external-link-alt"></i></a>
+        </li>
+        
       </ul>
 
 
@@ -124,16 +136,14 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="search here" aria-label="search here" autocomplete="on" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+          <div class="col-12 col-md-3 bd-sidebar"><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
 
     <div class="bd-toc-item active">
     
   
     <ul class="nav bd-sidenav">
+        
+        
         
         
         
@@ -174,7 +184,7 @@
                         </li>
                     
                         <li class="">
-                            <a href="../../../backends.html">Managing backends</a>
+                            <a href="../../../managing-backends/index.html">Managing backends</a>
                         </li>
                     
                         <li class="">
@@ -227,7 +237,11 @@
         
       </ul>
   
-  </nav>
+  </nav><form class="bd-search d-flex align-items-center" action="../../../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="on" >
+</form>
+
           </div>
           
 
@@ -336,7 +350,7 @@
 </tr>
 <tr class="row-odd"><td><p>igroupName</p></td>
 <td><p>Name of the igroup for SAN volumes to use</p></td>
-<td><p>“trident”</p></td>
+<td><p>“trident-&lt;backend-UUID&gt;”</p></td>
 </tr>
 <tr class="row-even"><td><p>username</p></td>
 <td><p>Username to connect to the cluster/SVM</p></td>
@@ -387,18 +401,21 @@ specified address.</p>
 cannot be modified after creation. To update these parameters you will need
 to create a new backend.</p>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">igroupName</span></code> is set to an igroup that is already created on the ONTAP cluster.
-CSI Trident will automatically populate the igroup with node IQNs as volumes are
-created and attached. Similarly, node removals from the Kubernetes cluster will
-result in deleting the IQNs from the igroup.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>While <code class="docutils literal notranslate"><span class="pre">igroupName</span></code> can be updated for a backend, it is important to remember
-that the new igroup will only be used for all volumes created henceforth.
-Existing volumes will continue to use the old igroup. Updating <code class="docutils literal notranslate"><span class="pre">igroupName</span></code>
-is <strong>not recommended</strong> unless the old igroup will still remain untouched on the
-storage cluster.</p>
-</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">igroupName</span></code> can be set to an igroup that is already created on the ONTAP cluster.
+If unspecified, Trident automatically creates an igroup named <code class="docutils literal notranslate"><span class="pre">trident-&lt;backend-UUID&gt;</span></code>.
+If providing a pre-defined <code class="docutils literal notranslate"><span class="pre">igroupName</span></code>, NetApp recommends using an igroup per
+Kubernetes cluster, if the SVM is to be shared between environments. This is
+necessary for Trident to maintain IQN additions/deletions automatically.</p>
+<p>Backends can also have igroups updated after creation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">igroupName</span></code> can be updated to point to a new igroup that is created and managed
+on the SVM outside of Trident.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">igroupName</span></code> can be omitted. In this case, Trident will create and manage a
+<code class="docutils literal notranslate"><span class="pre">trident-&lt;backend-UUID&gt;</span></code> igroup automatically.</p></li>
+</ul>
+<p>In both cases, volume attachments will continue to be accessible.
+Future volume attachments will use the updated igroup. This update does not disrupt
+access to volumes present on the backend.</p>
 <p>A fully-qualified domain name (FQDN) can be specified for the <code class="docutils literal notranslate"><span class="pre">managementLIF</span></code>
 option.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">managementLIF</span></code> for all ONTAP drivers can
@@ -493,6 +510,22 @@ Choose one of <code class="docutils literal notranslate"><span class="pre">qosPo
 </tr>
 </tbody>
 </table>
+<p id="ontap-san-snapshot-reserve">For volumes created using the <code class="docutils literal notranslate"><span class="pre">ontap-san</span></code> driver, Trident provisions a FlexVol and
+a LUN, both of which are of the requested size in the PVC. If the
+<code class="docutils literal notranslate"><span class="pre">snapshotReserve</span></code> parameter is used in a backend definition, this would reserve
+a portion of the allocated space to be used for storing snapshots. For example,
+a 1GiB PVC created with the <code class="docutils literal notranslate"><span class="pre">ontap-san</span></code> driver on a backend with <code class="docutils literal notranslate"><span class="pre">snapshotReserve=20</span></code>
+will result in a 1GiB FlexVol and LUN provisioned with 0.8GiB of usable space. Users are
+required to calculate the size of the PVC by factoring the amount of
+<code class="docutils literal notranslate"><span class="pre">snapshotReserve</span></code> configured. Existing volumes can be <a class="reference internal" href="../../../volumes/vol-expansion.html#volume-expansion"><span class="std std-ref">resized</span></a>
+through Trident to grow usable space available on the volume. Because
+<code class="docutils literal notranslate"><span class="pre">snapshotReserve</span></code> is a soft limit on the amount of space reserved for ONTAP
+snapshots, it is also possible that the filesystem space gets eaten into when
+the space used by snapshots grows beyond the reserve. This applies to ONTAP snapshots
+taken on the storage volume, as well as <a class="reference internal" href="../../../volumes/snapshots.html#on-demand-volume-snapshots"><span class="std std-ref">Kubernetes VolumeSnapshots</span></a>.
+To accommodate this behavior, users can choose to grow their volumes by resizing.
+Alternatively, users can also free up space by deleting snapshots that are not
+required.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Using QoS policy groups with Trident requires ONTAP 9.8 or later.
@@ -554,8 +587,6 @@ will enforce the ceiling for the <strong>total throughput</strong> of all worklo
     </p>
   </div>
 </footer>
-<!-- Copyright 2021 NetApp, Inc. All Rights Reserved. -->
-
 <style>
     .highlight {
         background-color: #f0f0f0;
