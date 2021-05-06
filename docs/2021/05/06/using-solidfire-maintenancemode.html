@@ -106,11 +106,11 @@
     </span>
   </div>
   
-        <p><a href="https://docs.netapp.com/us-en/element-software/esds/reference_esds_use_maintenance_mode.html">Maintenance Mode</a> is a relatively new SolidFire feature that takes a node in and out of the neutral. In other words, it nicely evacuates a node’s services to remaining cluster nodes, making servicing less disruptive to iSCSI clients, and makes it eligible for service scheduling when node leaves Maintenance Mode (i.e. returns to full service).</p>
+        <p><a href="https://docs.netapp.com/us-en/element-software/esds/reference_esds_use_maintenance_mode.html">Maintenance Mode</a> is a relatively new SolidFire feature that takes a node in and out of the neutral. In other words, it nicely moves a node’s services to remaining cluster nodes, making servicing less disruptive to iSCSI clients, and makes it eligible for service scheduling when node leaves Maintenance Mode (i.e. returns to full service).</p>
 
-<p>The SolidFire documentation (link above) currently doesn’t tell you how to check Maintenance Mode status of a node. I opened a documentation bug for that so that will soon be improved, but in any case it’s good to have this described in more detail.</p>
+<p>The SolidFire documentation (link above) currently doesn’t tell you how to check Maintenance Mode status of a node. I opened a documentation bug for that so that will soon be improved, but in any case it’s good to have this described in more detail. One of the several reasons for thsi is you can’t try this on SolidFire Demo Node (which has only one node to begin with).</p>
 
-<p>Maintenance Mode doesn’t automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1 - (n-1)/n)) of volume data without the second copy, for example. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.</p>
+<p>Maintenance Mode doesn’t automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1 - (n-1)/n)) percent of all data without the second copy, for example. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.</p>
 
 <p>You’re not supposed to put an unstable node in maintenance mode while Support is trying to figure it out. If a node is <em>that</em> unstable, you will probably want to remove it from the cluster (that way cluster will reprotect all data with Helix/RF2, assuming you have sufficient capacity left).</p>
 
@@ -154,6 +154,8 @@
 </span><span class="n">currentMode</span><span class="w">                    </span><span class="nx">PreparingForMaintenance</span><span class="w">
 </span></code></pre></div></div>
 
+<p>We can’t provide more than one node ID in params or run the command twice for different nodes (it won’t work the second time if it’s worked the first time) because RF2 can tolerate only one node being offline at a time (well, we <em>could</em> put more than one node from a Protection Domain in MaintenanceMode if the method understood Protection Domains, but currently (version 12.3) it’s not there yet).</p>
+
 <p>We can use that handle to watch the progress:</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
@@ -176,15 +178,15 @@ lastUpdateTime                 5/6/2021 7:00:07 AM
 resultType                     MaintenanceMode
 </code></pre></div></div>
 
-<p>Interestingly, neither the SolidFire Web UI nor Hybrid Cloud Control appear to indicate that a node may be under maintenance, which is why I thought that a post may be in order. Now <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> would show one of the nodes as <code class="language-plaintext highlighter-rouge">ReadyForMaintenance</code>. Notice that this isn’t node ID 3.</p>
+<p>Interestingly, neither the SolidFire Web UI nor Hybrid Cloud Control appear to indicate that a node may be under maintenance, which is why I thought that a post may be in order. Now <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> would show one of the nodes as <code class="language-plaintext highlighter-rouge">ReadyForMaintenance</code>. Notice that this is <em>not</em> node ID 3.</p>
 
-<pre><code class="language-raw">$r.nodes[3].maintenanceMode
-ReadyForMaintenance
-$r.nodes[3].nodeID
-4
-</code></pre>
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$r</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="nf">maintenanceMode</span><span class="w">
+</span><span class="n">ReadyForMaintenance</span><span class="w">
+</span><span class="nv">$r</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="nf">nodeID</span><span class="w">
+</span><span class="nx">4</span><span class="w">
+</span></code></pre></div></div>
 
-<p>To go back and enable the node (or, disable Maintenance Mode), use the <code class="language-plaintext highlighter-rouge">DisableMaintenanceMode</code> method with params for the node ID (<code class="language-plaintext highlighter-rouge">{"nodes" = [4])}</code>).</p>
+<p>To go back and enable the node (or, disable Maintenance Mode), use the <code class="language-plaintext highlighter-rouge">DisableMaintenanceMode</code> method with params for the node ID (<code class="language-plaintext highlighter-rouge">{"nodes" = [4]}</code>).</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
 </span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
@@ -207,6 +209,10 @@ $r.nodes[3].nodeID
 </span></code></pre></div></div>
 
 <p>You could also find this information in SolidFire events or SNMP logs if you forward those to external destination. Or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> and confirm that no node has maintenanceMode Enabled.</p>
+
+<p>Note (see the documentation link at the top) that the maintenance mode methods return <code class="language-plaintext highlighter-rouge">currentMode</code> and <code class="language-plaintext highlighter-rouge">requestedMode</code>, but because <code class="language-plaintext highlighter-rouge">nodes</code> parameter is mandatory, I don’t like the idea of using these methods to check node status (I’d rather List(All)Nodes as shown above).</p>
+
+<p>Secondly, possible values aren’t just Enabled and Disabled - there’s FailedToRecover, PreparingForMaintenance, and more. See the link for the details.</p>
 
       </article>
     </div>
@@ -603,7 +609,7 @@ $r.nodes[3].nodeID
 
     
   </div><footer class= "footer">
-    <p>2021-05-06 16:25 </p>
+    <p>2021-05-06 16:40 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
