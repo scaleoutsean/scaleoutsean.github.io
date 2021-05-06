@@ -1,0 +1,614 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            SolidFire Maintenance Mode | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Using Maintenance Mode in SolidFire 12.2 and 12.3
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">SolidFire Maintenance Mode</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>06 May 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    3 minute read
+  
+
+    </span>
+  </div>
+  
+        <p><a href="https://docs.netapp.com/us-en/element-software/esds/reference_esds_use_maintenance_mode.html">Maintenance Mode</a> is a relatively new SolidFire feature that takes a node in and out of the neutral. In other words, it nicely evacuates a node’s services to remaining cluster nodes, making servicing less disruptive to iSCSI clients, and makes it eligible for service scheduling when node leaves Maintenance Mode (i.e. returns to full service).</p>
+
+<p>The SolidFire documentation (link above) currently doesn’t tell you how to check Maintenance Mode status of a node. I opened a documentation bug for that so that will soon be improved, but in any case it’s good to have this described in more detail.</p>
+
+<p>Maintenance Mode doesn’t automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1 - (n-1)/n)) of volume data without the second copy, for example. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.</p>
+
+<p>You’re not supposed to put an unstable node in maintenance mode while Support is trying to figure it out. If a node is <em>that</em> unstable, you will probably want to remove it from the cluster (that way cluster will reprotect all data with Helix/RF2, assuming you have sufficient capacity left).</p>
+
+<p>On SolidFire 12.2 or 12.2 we can find the status by listing all nodes (<code class="language-plaintext highlighter-rouge">ListAllNodes</code>) and looking at <code class="language-plaintext highlighter-rouge">maintenanceMode</code> of each. <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> also responds with this information.</p>
+
+<p>Example:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">fibreChannelTargetPortGroup</span><span class="w">
+</span><span class="nx">cip</span><span class="w">                            </span><span class="nx">10.12.5.51</span><span class="w">
+</span><span class="n">sipi</span><span class="w">                           </span><span class="nx">Bond10G</span><span class="w">
+</span><span class="n">mipi</span><span class="w">                           </span><span class="nx">Bond1G</span><span class="w">
+</span><span class="n">nodeSlot</span><span class="w">                       </span><span class="nx">D</span><span class="w">
+</span><span class="n">platformInfo</span><span class="w">                   </span><span class="p">{</span><span class="n">chassisType</span><span class="p">,</span><span class="w"> </span><span class="nx">platformConfigVersion</span><span class="p">,</span><span class="w"> </span><span class="nx">containerized</span><span class="p">,</span><span class="w"> </span><span class="nx">nodeType...</span><span class="p">}</span><span class="w">
+</span><span class="n">role</span><span class="w">                           </span><span class="nx">Storage</span><span class="w">
+</span><span class="n">virtualNetworks</span><span class="w">                </span><span class="p">{</span><span class="n">System.Collections.Hashtable</span><span class="p">}</span><span class="w">
+</span><span class="n">customProtectionDomainName</span><span class="w">     </span><span class="nx">__default__</span><span class="w">
+</span><span class="n">chassisName</span><span class="w">                    </span><span class="nx">002170800051</span><span class="w">
+</span><span class="n">cipi</span><span class="w">                           </span><span class="nx">Bond10G</span><span class="w">
+</span><span class="n">nodeID</span><span class="w">                         </span><span class="nx">1</span><span class="w">
+</span><span class="n">sip</span><span class="w">                            </span><span class="nx">10.12.5.51</span><span class="w">
+</span><span class="n">softwareVersion</span><span class="w">                </span><span class="nx">12.3.0.958</span><span class="w">
+</span><span class="n">mip</span><span class="w">                            </span><span class="nx">10.12.5.54</span><span class="w">
+</span><span class="n">associatedMasterServiceID</span><span class="w">      </span><span class="nx">1</span><span class="w">
+</span><span class="n">uuid</span><span class="w">                           </span><span class="nx">00000000-0000-0000-0000-0CC47AF2DC12</span><span class="w">
+</span><span class="n">associatedFServiceID</span><span class="w">           </span><span class="nx">0</span><span class="w">
+</span><span class="n">attributes</span><span class="w">                     </span><span class="p">{}</span><span class="w">
+</span><span class="n">name</span><span class="w">                           </span><span class="nx">hci-s1</span><span class="w">
+</span><span class="n">maintenanceMode</span><span class="w">                </span><span class="nx">Disabled</span><span class="w">
+</span></code></pre></div></div>
+
+<p>To put node ID 4 (ID obtained from Cluster &gt; Nodes &gt; Active &gt; Node ID) into Maintenance Mode, we use <code class="language-plaintext highlighter-rouge">EnableMaintenanceMode</code> and pass it the node ID like this <code class="language-plaintext highlighter-rouge">{"nodes" = [4]}</code>.</p>
+
+<p>This returns an asyncHandle ID:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">asyncHandle</span><span class="w">                    </span><span class="nx">492</span><span class="w">
+</span><span class="n">requestedMode</span><span class="w">                  </span><span class="nx">ReadyForMaintenance</span><span class="w">
+</span><span class="n">currentMode</span><span class="w">                    </span><span class="nx">PreparingForMaintenance</span><span class="w">
+</span></code></pre></div></div>
+
+<p>We can use that handle to watch the progress:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">createTime</span><span class="w">                     </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">6:59:02</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">status</span><span class="w">                         </span><span class="nx">running</span><span class="w">
+</span><span class="n">details</span><span class="w">                        </span><span class="p">{</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">,</span><span class="w"> </span><span class="nx">nodes</span><span class="p">}</span><span class="w">
+</span><span class="n">resultType</span><span class="w">                     </span><span class="nx">MaintenanceMode</span><span class="w">
+</span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">6:59:07</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Once done, it will look similar to this (before it disappears):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Name                           Value
+----                           -----
+createTime                     5/6/2021 6:59:02 AM
+status                         complete
+result                         {message, action, nodes}
+lastUpdateTime                 5/6/2021 7:00:07 AM
+resultType                     MaintenanceMode
+</code></pre></div></div>
+
+<p>Interestingly, neither the SolidFire Web UI nor Hybrid Cloud Control appear to indicate that a node may be under maintenance, which is why I thought that a post may be in order. Now <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> would show one of the nodes as <code class="language-plaintext highlighter-rouge">ReadyForMaintenance</code>. Notice that this isn’t node ID 3.</p>
+
+<pre><code class="language-raw">$r.nodes[3].maintenanceMode
+ReadyForMaintenance
+$r.nodes[3].nodeID
+4
+</code></pre>
+
+<p>To go back and enable the node (or, disable Maintenance Mode), use the <code class="language-plaintext highlighter-rouge">DisableMaintenanceMode</code> method with params for the node ID (<code class="language-plaintext highlighter-rouge">{"nodes" = [4])}</code>).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">createTime</span><span class="w">                     </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">7:03:50</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">status</span><span class="w">                         </span><span class="nx">running</span><span class="w">
+</span><span class="n">details</span><span class="w">                        </span><span class="p">{</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">}</span><span class="w">
+</span><span class="n">resultType</span><span class="w">                     </span><span class="nx">MaintenanceMode</span><span class="w">
+</span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">7:03:50</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span></code></pre></div></div>
+
+<p>And finaly once it completes you’d see something like this:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">createTime</span><span class="w">                     </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">7:03:50</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">status</span><span class="w">                         </span><span class="nx">complete</span><span class="w">
+</span><span class="n">result</span><span class="w">                         </span><span class="p">{</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">,</span><span class="w"> </span><span class="nx">nodes</span><span class="p">}</span><span class="w">
+</span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">7:06:07</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">resultType</span><span class="w">                     </span><span class="nx">MaintenanceMode</span><span class="w">
+</span></code></pre></div></div>
+
+<p>You could also find this information in SolidFire events or SNMP logs if you forward those to external destination. Or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> and confirm that no node has maintenanceMode Enabled.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#automation">automation</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/04/21/solidfire-backup-to-s3.html">• Backup SolidFire volumes to S3-compatible storage</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/05/get-solidfire-volume-efficiency-with-powershell.html">• Use SolidFire PowerShell Tools to find low efficiency volumes</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/19/solidfire-powershell-python-cli-sdk-1.7.html">• SolidFire PowerShell Tools, Python CLI and SDK pip packages v1.7</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2020/12/08/get-bearer-token-for-netapp-hci-hybrid-cloud-control-logs.html">• Get NetApp Hybrid Cloud Control logs via the HCC API</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-05-06 16:25 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
