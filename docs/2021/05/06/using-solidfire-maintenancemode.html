@@ -110,7 +110,7 @@
 
 <p>The SolidFire documentation (link above) currently doesn’t tell you how to check Maintenance Mode status of a node. I opened a documentation bug for that so that will soon be improved, but in any case it’s good to have this described in more detail. One of the several reasons for thsi is you can’t try this on SolidFire Demo Node (which has only one node to begin with).</p>
 
-<p>Maintenance Mode doesn’t automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1 - (n-1)/n)) percent of all data without the second copy, for example. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.</p>
+<p>Maintenance Mode doesn’t automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1-(n-1)/n)) of data without the second copy, for example. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.</p>
 
 <p>You’re not supposed to put an unstable node in maintenance mode while Support is trying to figure it out. If a node is <em>that</em> unstable, you will probably want to remove it from the cluster (that way cluster will reprotect all data with Helix/RF2, assuming you have sufficient capacity left).</p>
 
@@ -178,7 +178,11 @@
 </span><span class="n">resultType</span><span class="w">                     </span><span class="nx">MaintenanceMode</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Interestingly, neither the SolidFire Web UI nor Hybrid Cloud Control appear to indicate that a node may be under maintenance, which is why I thought that a post may be in order. Now <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> would show one of the nodes as <code class="language-plaintext highlighter-rouge">ReadyForMaintenance</code>. Notice that this is <em>not</em> node ID 3.</p>
+<p>It can take a few minutes for SolidFire Web UI to start indicating that a node is under maintenance.</p>
+
+<p><img src="/assets/images/solidfire-maintenance-mode-enabled.png" alt="SolidFire Web UI when a node is in Maintanance Mode" /></p>
+
+<p>Now <code class="language-plaintext highlighter-rouge">ListActiveNodes</code> or <code class="language-plaintext highlighter-rouge">ListAllNodes</code> would show one of the nodes as <code class="language-plaintext highlighter-rouge">ReadyForMaintenance</code>. Notice that this is <em>not</em> node ID 3.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$r</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="nf">maintenanceMode</span><span class="w">
 </span><span class="n">ReadyForMaintenance</span><span class="w">
@@ -197,7 +201,13 @@
 </span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">5/6/2021</span><span class="w"> </span><span class="nx">7:03:50</span><span class="w"> </span><span class="nx">AM</span><span class="w">
 </span></code></pre></div></div>
 
-<p>And finaly once it completes you’d see something like this:</p>
+<p>During that time the node leaving Maintenance Mode resyncs its Metadata with the Primary copy to catch up with changes that happened while Maintenance Mode was enabled. Transient errors and warnings may appear but shouldn’t persist.</p>
+
+<p><img src="/assets/images/solidfire-maintenance-mode-disabled.png" alt="SolidFire Web UI when a node starts exiting Maintanance Mode" /></p>
+
+<p>A node is considered to be in Maintenance Mode until it completes leaving it.</p>
+
+<p>Eventually the async job status would indicate job completion:</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
 </span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
@@ -210,7 +220,7 @@
 
 <p>You could also find this information in SolidFire events or SNMP logs if you forward those to external destination. Or use <code class="language-plaintext highlighter-rouge">ListAllNodes</code> and confirm that no node has maintenanceMode Enabled.</p>
 
-<p>Note (see the documentation link at the top) that the maintenance mode methods return <code class="language-plaintext highlighter-rouge">currentMode</code> and <code class="language-plaintext highlighter-rouge">requestedMode</code>, but because <code class="language-plaintext highlighter-rouge">nodes</code> parameter is mandatory I don’t like the idea of using these methods to check node status (I’d rather List(All)Nodes as shown above).</p>
+<p>Note (see the documentation link at the top) that the maintenance mode methods return <code class="language-plaintext highlighter-rouge">currentMode</code> and <code class="language-plaintext highlighter-rouge">requestedMode</code>, but because the <code class="language-plaintext highlighter-rouge">nodes</code> parameter is mandatory I don’t like the idea of using these methods to check node status (I’d rather List(All)Nodes as shown above).</p>
 
 <p>Secondly, possible values aren’t just Enabled and Disabled - there’s FailedToRecover, PreparingForMaintenance, and more. See the documentation link for the details!</p>
 
@@ -609,7 +619,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-05-06 16:45 </p>
+    <p>2021-05-08 01:03 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
