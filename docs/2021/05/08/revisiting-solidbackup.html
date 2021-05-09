@@ -100,7 +100,7 @@
 
   
   
-    15 minute read
+    16 minute read
   
 
     </span>
@@ -171,13 +171,13 @@
 
 <p>I prefer that my SolidFire customers use enterprise-grade data protection solutions, because that almost always works better.</p>
 
-<p>But sometimes that’s not possible and sometimes it’s not about replacing, but complementing what customers already have. I wrote about that in the one of recent posts.</p>
+<p>But sometimes that’s not possible and sometimes it’s not about replacing, but complementing what customers already have. I wrote about that in one of the recent posts.</p>
 
-<p>I’ll make just one example: SolidFire API lets you copy one volume to another (i.e. it can resync the original volume to its clone), but I’m yet to meet a customer who knows of - let alone uses - this feature. Maybe because it’s not exposed in the UI.</p>
+<p>Example: the SolidFire API lets you copy one volume to another (i.e. it can resync the original volume to a same-sized volume such as its clone created 24 hours ago), but I’m yet to meet a customer who knows of - let alone uses - this feature. Why? I don’t know. Maybe because the API method is not exposed in the UI.</p>
 
-<p>I’m sure there are users out there who use it, but muy point is quite a few customers clone volumes - and sometimes say they’d want it to work faster - but no one uses the feature that makes it (let’s say) 10x faster.</p>
+<p>I’m sure there are users out there who use it, but my point is quite a few customers clone volumes - and sometimes say they’d like that to work faster - but no one uses the feature that makes it (let’s say) 10x faster.</p>
 
-<p>The first step in daily SolidBackup workflow - once Source and Target pairs have been created - is to perform a resync: for each volume pair, sync Source with Target (Clone). Even if no one pays attention to anything else but just discovers and starts using this feature, that would already be a decent step forward.</p>
+<p>The first step in a daily SolidBackup workflow - once Source and Target pairs have been created, that is - is to perform a Src-to-Clone resync: for each volume pair, copy Source to Target (Clone). Even if no one pays attention to anything else but just discovers and starts using this feature, that would already be a decent step forward.</p>
 
 <p>Lastly, the idea of SolidBackup isn’t prescriptive. It doesn’t even exist (yet), but anyone can make their own or take some ideas and adopt them in their environment. And if some of SolidFire users did that, they’d likely be better off which is another plus.</p>
 
@@ -212,47 +212,53 @@
 
 <p>Another fancy detail is you can assign clone to a different storage account (which I do) because I don’t want other VMs to access clone volumes. I also adjust storage QoS on the clones, to use a fairly low Minimum (performance guarantee), but have a high Maximum (good for backup workload, if nothing else is keeping SolidFire busy).</p>
 
-<p>This works quite well and can be used for anything - say, to quickly refresh build farm volumes for DevOps workflows.</p>
+<p>This part already works quite well and can be used for anything - say, to quickly refresh build farm volumes for DevOps workflows.</p>
 
 <h3 id="backup-to-s3">Backup to S3</h3>
 
-<p>Next I mount each Dst (clone) volume) to <code class="language-plaintext highlighter-rouge">/mnt/$SrcId</code> (we don’t care about mounting Dst volumes under Dst volume ID path - when we need to restore, we reference SrcId as that’s where data we care about is).</p>
+<p>Next I mount each Dst (clone) volume) to <code class="language-plaintext highlighter-rouge">/mnt/$SrcId</code>. I don’t care about mounting clone volumes to /mmnt/$DstId because when we need to restore volume defined by SrcId, we look for /mnt/$SrcId as that’s where (a copy of) data we care about is. This way we don’t have to check Src-to-Dst mapping in SolidBackup configuration file.</p>
 
-<p>We can use PowerShell or Ansible or something else to login to an iSCSI target and mount the volume or a partition as necessary. We use columns 3 and 4 (Partition number (alwasy 0 in NetApp Trident environments), and FS type (usually xfs or ext4, but can be ntfs, or other)).</p>
+<p>Then we can use PowerShell or Ansible or something else to login to the clone volume iSCSI target and mount volume or a partition as necessary. We use columns 3 and 4 (Partition number (0 in a NetApp Trident environment), and FS type (usually xfs or ext4, but can be ntfs or other)).</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-02.png" alt="Step two - mount Clone volume" /></p>
 
-<p>Once we can see volume’s data (files) we just run our backup software or replication utility (it can be anything; Duplicacy, Duplicati, Restic, NetApp Cloud Sync, etc.).</p>
+<p>Once we can see data (files), we just run our a backup software or replication utility (it can be anything; Duplicacy, Duplicati, Restic, NetApp Cloud Sync, etc.).</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-03.png" alt="Step three - backup" /></p>
 
-<p>You cannot see it in the screenshot above, but restic copies data to a S3 backup repository (which is NetApp StorageGRID). You could copy data to a VM running on StorageGRID on NetApp HCI server (ESXi) attached to E-Series as well. Or Google Object Storage (my nearest hyperscaler at this time).</p>
+<p>You cannot see it in the screenshot above, but Restic copies data to a backup repository which doesn’t have to be S3, but it can (and indeed, in my demo it is - I used NetApp StorageGRID).</p>
 
-<p>Once backup is done, we can see it (Restic calls backups “snapshots” - these are Restic backups, not SolidFire snapshots).</p>
+<p>You could copy data to a VM running on StorageGRID on NetApp HCI server (ESXi) attached to E-Series as well. Or Google Object Storage (my nearest hyperscaler at this time), or a non-S3 target supported by your backup software.</p>
+
+<p>Once backup is done, we can see it. Confusingly, Restic calls backups “snapshots” - these “snapshots” are Restic backups, not SolidFire snapshots.</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-04.png" alt="Restic backup in StorageGRID" /></p>
 
-<p>But wait, what about that Src Volume ID 55, there some NTFS action going on in in that CSV file? That’s right. And that’s easy:</p>
+<p>But wait, what about that Src Volume ID 55, there some NTFS action going on in in that CSV configuration file above? That’s right. And that’s easy to deal with:</p>
 
 <ul>
-  <li>We can run Restic (and Duplicacy and Duplicati) on Windows, no problem.  You’d tell PowerShell or Ansible to dispatch all login/mount jobs for SrcIds with <code class="language-plaintext highlighter-rouge">ntfs</code> in config file’s Column 4 to a Windows VM</li>
+  <li>We can run Restic (and Duplicacy and Duplicati) on Windows. You’d tell PowerShell or Ansible to dispatch all login/mount jobs for rows with <code class="language-plaintext highlighter-rouge">ntfs</code> in Column 4 to a Windows VM or container</li>
   <li>Restic supports VSS on Windows and SolidFire has a VSS plugin, so DBAs who use Windows could use Restic independently of this workflow (“SolidBackup”) to backup their databases to S3</li>
-  <li>We can backup the entire device the way SolidFire’s Backup to S3 feature does it! Let’s do that for partition 1:</li>
+  <li>We can choose to ignore the filesystem and simply backup the entire “raw” device the way SolidFire’s Backup to S3 feature does it! Let’s do that for a partition - partition 1, in this case:</li>
 </ul>
 
 <p><img src="/assets/images/revisiting-solidbackup-05.png" alt="Step three - raw device backup" /></p>
 
-<p>But what about Windows Dynamic Volumes and LVM? Take a group snapshot of Src Volume IDs and backup all block devices involved. Or - this would take some additional scripting in the - reassemble and import cloned LVM volumes.</p>
+<p>But what about Windows Dynamic Volumes and LVM?</p>
 
-<p>In any and all cases, volume or partition backups can be compressed and deduplicated, so it’s all very efficient. You even get cross-volume deduplication (it’s coarse, though).</p>
+<p>Take a group snapshot of Src Volume IDs and backup all block devices involved. Or - this would take some additional scripting in the - clone, reassemble and mount LVM. You’d need to gather LVM configuration prior to that, so you’d have to have LVM configuration files which wuld make everything more complicated (probably time to pay for enterprise backup software?).</p>
 
-<p>For an example, a 1Gi partition with XFS that doesn’t have any data in it took only 35kB. I can easily backup and/or migrate a 50 Gi database to or from GCP Taiwan in under 30 minutes. If it’s not the first time we backup, then backup is incremental and switch-over to or from GCP or other Public Cloud can be done in minutes.</p>
+<p>In any and all cases, volume or partition backups can be compressed and deduplicated, so it’s all very efficient. You even get cross-volume deduplication (it’s much coarser than SolidFire’s 4kB granularity, of course).</p>
 
-<p>All our backups - image- and file-based alike - are available to any client who can access our StorageGRID or GCP Object Storage.</p>
+<p>To check space efficiency, I created a 1Gi partition with XFS that didn’t have any data in it - Restic backup was only 35kB. Even when using the device or partition approach, I can easily backup and/or migrate a 50 Gi database to or from GCP Taiwan in under 30 minutes. If it’s not the first time we backup, then backup is incremental and switch-over to or from GCP or other Public Cloud can be done in less than 10 minutes.</p>
+
+<p>And all our SolidFire backups (or “snapshots”, as Restic calls them) - image- and file-based alike - are available to any client who can access our StorageGRID or GCP Object Storage.</p>
 
 <h3 id="restore-from-s3">Restore from S3</h3>
 
-<p>Now I am accessing this S3 bucket with Restic <strong>from a different host</strong>. This VM instance is located in GCP Asia East 1 (Taiwan) and can restore from “snapshots” on StorageGRID (on-premises) or Google Object Storage (if I were to backup to it). There’s nothing else to “download” or recover.</p>
+<p>If you look at the hostname, you’ll see that now I am accessing this S3 bucket with Restic <strong>from a different host</strong>.</p>
+
+<p>This VM instance is located in GCP Asia East 1 (Taiwan) and can restore data from “snapshots” on StorageGRID (on-premises) or Google Object Storage (if I were to use it). There’s nothing else to “download” or recover. The only thing I need is my S3 keys and Restic password used to decrypt backup data.</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-06.png" alt="solidbackup - view snapshots" /></p>
 
@@ -262,13 +268,13 @@
 
 <p><img src="/assets/images/revisiting-solidbackup-07.png" alt="solidbackup - view snapshots" /></p>
 
-<p>Object data and Snapshot IDs can be seen below. <code class="language-plaintext highlighter-rouge">68671c23</code> (in row 2) is Snapshot ID of our Restic backup of Partition 1 of Vol ID 369 - find it just above.</p>
+<p>Object data and Snapshot IDs can be seen below. <code class="language-plaintext highlighter-rouge">68671c23</code> (in row 2) is (Restic) Snapshot ID of our Restic backup of Partition 1 of Vol ID 369 - you can find it in a shell screenshot above.</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-08.png" alt="solidbackup - view snapshots" /></p>
 
 <p>Restic reads data that needs to be backed up and efficiently packages it in “snapshots”. It can restore, of course, but also “forget” (delete) backups and “prune” (“defrag”) backup repository space.</p>
 
-<p>Now, in order to restore data from a backup, I can restore an entire snapshot or any file(s) from it, or - in the case of a “raw” volume/partition backup - a partition.</p>
+<p>In order to restore data from a backup, I can restore an entire “snapshot” or any file(s) from it, or - in the case of a “raw” device/partition backup - a device or partition image.</p>
 
 <p><img src="/assets/images/revisiting-solidbackup-09.png" alt="solidbackup - view snapshots" /></p>
 
@@ -276,21 +282,21 @@
 
 <p>If your data lives on VMFS or VVOLs, you can’t use this approach without using the vSphere API or running backup in each VM.</p>
 
-<p>If you wanted to use a “centralized” or “semi-centralized” approach (where each Application or Team has its own SolidBackup-like VM) you could move data to “native” OS filesystems to make it possible to use the same automation on-premises and in the cloud (with generic VMs, hypervisor or container engine).</p>
+<p>If you wanted to use a “centralized” or “semi-centralized” approach (where each Application or Team has its own SolidBackup-like VM) you could move data to filesystems native to your applications (NTFS, ext4, XFS) to make it possible to use the same automation on-premises and in the cloud, with generic VMs, hypervisor or container engines.</p>
 
-<p>This may require significant efforts and at the same time you lose the benefits of VMFS or VVOLs (if you move devices to RDM/iSCSI), but you gain in flexibility and get some other advantages that can pay back for itself.</p>
+<p>This may require significant efforts and at the same time you lose the benefits of VMFS or VVOLs (if you move data to OS-native filesystem on RDM/iSCSI), but you gain in flexibility and get some other advantages that can pay off your investment in time and effort.</p>
 
-<p>Technically, there’s not much to it. Let’s say you have a SQL DB with OS on C:, data on D: and logs on L: (3 VMDK files). Create two new SolidFire iSCSI volumes, expose them to the VM via iSCSI, mount them under E: and F:, stop SQL Server, copy data over, swap the mountpoints D &amp; L with E &amp; F, start SQL Server, remove two unnecessary VMDKs. Next app, please!</p>
+<p>Technically, there’s not much to it. Let’s say you have a SQL DB with OS on C drive, data on D, logs on L (3 VMDK files). Create two new SolidFire iSCSI volumes, expose them to the VM via iSCSI, mount them under E and F, stop SQL Server, copy SQL DB and logs over, swap the mountpoints D &amp; L with E &amp; F, start SQL Server, remove two unnecessary VMDKs. Next app, please!</p>
 
-<p>Even better, you could use this opportunity to move the apps “one last time” (to K8s).</p>
+<p>Even better, you could use this opportunity to move some apps “one last time” (that is, move to Kubernetes).</p>
 
 <p>In the case the above doesn’t ring a bell, here are some random ideas:</p>
 
 <ul>
   <li>SolidFire SnapMirror cannot replicate data to GCP Cloud Volumes Service. The approach used by SolidBackup could restore SMB and NFS file servers from Windows and Linux VMs to Cloud Volumes Service. You can do things like restore Oracle files to NFS mounts (that live on Cloud Volume Service).</li>
-  <li>SolidBackup could use S3 (and cheap public Internet) to securely and economically backup TBs of SolidFire data to Google Object Storage <em>before</em> you have Cloud Volumes ONTAP up and running in it. And once you need your data (test, DR), you can restore backup of raw SolidFire iSCSI devices to CVO iSCSI targets, or restore files from restic snapshots into VMs or containers attached to NetApp CVO in GCP</li>
+  <li>SolidBackup could use S3 (and cheap public Internet) to securely and economically backup TBs of SolidFire data to Google Object Storage <em>before</em> you have Cloud Volumes ONTAP up and running in it. And once you need your data (test, DR), you can restore backup of raw SolidFire iSCSI devices to CVO iSCSI targets, or restore files from restic snapshots into VMs or containers attached to NetApp CVO in GCP (or other hyperscaler of your choice)</li>
   <li>SolidBackup could make your Hybrid Cloud back-and-forth data migration easy. You can start with data in the Public Cloud and return on-premises, or the other way around</li>
-  <li>SolidBackup could work exactly like SolidFire built-in Backup feature (including Backup to S3), but <strong>at &gt;1 GB/s</strong> (and you can get that with StorageGRID or HCI+E-Series running on premises). And you can restore such (volume or partition) backups anywhere, to any block device.</li>
+  <li>SolidBackup could work exactly like SolidFire built-in Backup feature (including Backup to S3), but <strong>at &gt;1 GB/s</strong> (and you can get that with StorageGRID or HCI+E-Series running on premises). And you can restore such (volume or partition) backups anywhere, to any block device (ONTAP, E-Series, and more).</li>
   <li>SolidBackup (or individual steps/components, when reused elsewhere) could let us seamlessly (I haven’t demonstrated that in these screenshots) integrate SolidFire with hybrid cloud data workflows, including batch jobs, testing, and more</li>
 </ul>
 
@@ -298,9 +304,9 @@
 
 <p>The idea of SolidBackup as a clone-focused backup to both make backup and restore run faster, and to increase the awareness of the SolidFire’s volume “re-sync” feature.</p>
 
-<p>Since version 11.8 SolidFire supports 1,000 volumes per node, so the only cost of having 1,000 clone volumes lying around is the cost of some metadata capacity. Or you could keep only the important ones online and clone the rest on demand.</p>
+<p>Since version 11.8 SolidFire supports 1,000 volumes per node, so the only cost of having (say) 1,200 clone volumes lying around is the cost of some metadata capacity. Or you could keep only the important ones online and clone the rest on demand.</p>
 
-<p>If you have a way to keep up-to-date clones online, when/if you want to restore file(s) from a snapshot, you no longer need to wait until you finish creating a clone. You can copy the files from latest mounted clone as long as you can use WinSCP (or <code class="language-plaintext highlighter-rouge">scp</code>).</p>
+<p>If you have a way to keep up-to-date clones online, when/if you want to restore file(s) from a snapshot, you no longer need to wait until you finish creating a clone. You can copy the files from latest mounted clone as long as you can use WinSCP (or <code class="language-plaintext highlighter-rouge">scp</code>). So this is one immediate advantage that doesn’t involve backup or Hybrid Cloud.</p>
 
 <p>As I mentioned above, if you don’t like the idea of someone (like a K8s admin) having access to your files/data, you could use the same approach to have clone data mounted only in your namespace or your own volume. We’d just have to adjust your SolidBackup-like script to make clones and mount them in same (or on-demand) VMs or dev-test namespaces. This would work even for encrypted volumes.</p>
 
@@ -332,13 +338,16 @@
   <li>it’s already clear to me that some SolidFire customers are interested in using and automating some steps from SolidBackup workflow, and with small changes we should be able to reuse that to automate SolidFire backups in Kubernetes environments (Velero <a href="https://www.jamesmcleod.xyz/2020/12/09/velero-restic/">works with Restic</a>)</li>
 </ul>
 
-<p>On this last point: in one of earlier posts discussing DR for SolidFire in Kubernetes environments I played with PowerShell wrappers for the Trident CLI (<code class="language-plaintext highlighter-rouge">tridentctl</code>) which worked very well, on PowerShell 7 for Linux).</p>
+<p>On this last point, in one of earlier posts discussing DR for SolidFire in Kubernetes environments I played with PowerShell wrappers for the Trident CLI (<code class="language-plaintext highlighter-rouge">tridentctl</code>) which worked very well in PowerShell for Linux. Example of one such wrapper cmdlet:</p>
 
 <p><img src="/assets/images/manage-netapp-trident-with-powershell-01.png" alt="PowerShell wrapper for Trident" /></p>
 
-<p>Trident CLI is used to import volumes to Kubernetes. Which means a simple Import-TridentVolume wrapper could import cloned volumes to Kubernetes where Velero &amp; Restic - i.e. <em>the entirety of unfinished SolidBackup steps</em> - have been deployed according to the Velero documentation and ready to go! WIth schedules, security, logging, auditing and more already built in thanks to Kubernetes.</p>
+<p>Trident CLI is also used to import volumes to Kubernetes.</p>
+
+<p>Which means a simple Import-TridentVolume wrapper cmdlet could import clone volumes to Kubernetes where Velero &amp; Restic - i.e. <em>the entirety of currently unfinished SolidBackup steps</em> - have been deployed according to the Velero documentation and ready to go! With namespaces, schedules, security, logging, auditing and more already built-in thanks to Kubernetes.</p>
 
 <p>Sound good?</p>
+
 
       </article>
     </div>
@@ -726,7 +735,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-05-08 20:14 </p>
+    <p>2021-05-09 15:54 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
