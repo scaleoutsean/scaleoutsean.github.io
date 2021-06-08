@@ -100,7 +100,7 @@
 
   
   
-    22 minute read
+    23 minute read
   
 
     </span>
@@ -131,9 +131,10 @@
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#update-may-30-2021">Update (May 30, 2021)</a>
     <ul>
-      <li><a href="#solidsync-stand-alone-powershell-script-that-syncs-source-to-target-volumes">SolidSync: stand-alone PowerShell script that syncs Source to Target volumes</a></li>
-      <li><a href="#solidbackupstand-alone-powershell-script-that-does-the-following">SolidBackup:stand-alone PowerShell script that does the following</a></li>
+      <li><a href="#solidsync-powershell-script-that-syncs-source-to-target-volumes">SolidSync: PowerShell script that syncs Source to Target volumes</a></li>
+      <li><a href="#solidbackup-stand-alone-powershell-script-that-does-the-following">SolidBackup: stand-alone PowerShell script that does the following</a></li>
       <li><a href="#rinse--reapeat">Rinse &amp; reapeat</a></li>
+      <li><a href="#why-not-one-big-script-that-does-it-all">Why not one big script that does it all</a></li>
     </ul>
   </li>
   <li><a href="#demo">Demo</a></li>
@@ -360,13 +361,13 @@
 
 <p>I got something that resembles a working set of scripts.</p>
 
-<h3 id="solidsync-stand-alone-powershell-script-that-syncs-source-to-target-volumes">SolidSync: stand-alone PowerShell script that syncs Source to Target volumes</h3>
+<h3 id="solidsync-powershell-script-that-syncs-source-to-target-volumes">SolidSync: PowerShell script that syncs Source to Target volumes</h3>
 
 <p><img src="/assets/images/solidbackup-01-prepare.gif" alt="SolidSync Demo" /></p>
 
-<p>As you can see there’s a config file with volume pairings, and the script copies Source to Target (Clone) volume.</p>
+<p>As you can see there’s a config file with volume pairings, and the script copies Source to Target (Clone) volumes.</p>
 
-<p>Here’s how one such “app” is defined. All of the info is data protection-related; Src Id, Tgt Id, Partition, Filesystem Type, and Backup Type (which can be file or image).</p>
+<p>Here’s how one such “app” (pairing) is defined. All of the info is data protection-related; Src Id, Tgt Id, Partition, Filesystem Type, and Backup Type (which can be file or image).</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">      </span><span class="n">db</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
         </span><span class="nx">SrcId</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">400</span><span class="w">
@@ -377,15 +378,15 @@
       </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>The reason I use this format is I experimented with for SolidFire cluster failover in a NetApp Trident environment and found it better than CSV or SQL, and maybe I can reuse it for SolidFire cluster failover for K8s as well.</p>
+<p>The reason I use this format is I’ve experimented with it for SolidFire cluster failover in a NetApp Trident (Kubernetes) environment and found it better than CSV or SQL, and I hope later I can use it for SolidFire cluster failover for K8s as well (“app definition” would have PVC name, Storage Class and few other details).</p>
 
 <p>By then I should build a CRUD TUI for it, though, because editing it by hand is almost as bad as working with YAML.</p>
 
-<p>Once SolidSync is done, you end up with Target volumes that belong to SolidBackup account and have a dedicated backup policy suitable for high Max/Burst throughput.</p>
+<p>Once SolidSync is done running, you get refreshed Target volumes (prefixed with <code class="language-plaintext highlighter-rouge">solidbackup-</code> or other prefix of your choosing) that belong to the SolidBackup account and have a dedicated QoS policy suitable for high Max/Burst throughput.</p>
 
 <p><img src="/assets/images/solidsync-src-to-dst-w-qos-and-account-adjustment.png" alt="SolidSync Result with cloned volumes belonging to another Account and QoS policy" /></p>
 
-<h3 id="solidbackupstand-alone-powershell-script-that-does-the-following">SolidBackup:stand-alone PowerShell script that does the following</h3>
+<h3 id="solidbackup-stand-alone-powershell-script-that-does-the-following">SolidBackup: stand-alone PowerShell script that does the following</h3>
 
 <ul>
   <li>For all Target volumes (whether their backup is Image or File type): log in to iSCSI targets (clones)</li>
@@ -479,6 +480,8 @@ dc20861e  2021-05-30 07:56:21  sb          src-id-398,tgt-id-401  /mn4y.solidbac
 
 <p>This way, apart from SolidSync (results of which can be easily validated by doing a binary diff between Src and Tgt) the rest is <em>completely</em> up to Ansible (easy to monitor, secure and audit) and Restic (quite manageable as well).</p>
 
+<h3 id="why-not-one-big-script-that-does-it-all">Why not one big script that does it all</h3>
+
 <p>I could continue to run Restic directly from SolidBackup, but with the workflow exported in Ansible-compatible playbook configuration format and the backup jobs in a Restic script, you don’t have to worry (as much) about SolidBackup errors - it’s a fairly minimalistic script that can’t easily hide its mistakes.</p>
 
 <p>Don’t forget that you can deploy one SolidSync/SolidBackup per VM, or per Group, and execute them on behalf of different stakeholders, so that each individual or team “sees” only own volumes, and uses its own encrypted backup repoository!</p>
@@ -516,6 +519,24 @@ dc20861e  2021-05-30 07:56:21  sb          src-id-398,tgt-id-401  /mn4y.solidbac
     
     
     
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
     
         
         
@@ -895,7 +916,7 @@ dc20861e  2021-05-30 07:56:21  sb          src-id-398,tgt-id-401  /mn4y.solidbac
 
     
   </div><footer class= "footer">
-    <p>2021-05-31 12:05 </p>
+    <p>2021-06-08 12:50 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

@@ -1,0 +1,405 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Does SolidFire support Availability Zones | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Difference between SolidFire Protection Domains and Availablity Zones
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Does SolidFire support Availability Zones</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>08 Jun 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    3 minute read
+  
+
+    </span>
+  </div>
+  
+        <h2 id="solidfire-helix">SolidFire Helix</h2>
+
+<p>As most of you know, up to the current version (12.3) SolidFire protects its data with Helix, which aims to make and maintain 2 identical replicas of each block. Some vendors call this approach RF2 (some implementations may maintain copies of segments or “chunks” of blocks).</p>
+
+<p>When making copies, one of key requirement is to <em>not</em> store both copies on the same storage node because - in the case that node fails - you end up with nothing.</p>
+
+<p>SolidFire Protection Domains introduce awareness in node locality within the cluster, so that Helix can also consider Protection Domain, and not just Node ID, when it creates redundant copies of data.</p>
+
+<p>This means that you can tag all storage nodes in one NetApp HCI 2U Chassis as “PD1”, all nodes in another chassis as PD2, and all the remaining nodes in the third chassis as PD3.</p>
+
+<p>Now when Helix saves two copies of your data, it avoids using the same storage node as it’s always done, but it also avoids using the same chassis or PD.</p>
+
+<h2 id="are-pds-only-available-to-owners-of-the-hci-2u-chassis">Are PDs only available to owners of the HCI 2U chassis</h2>
+
+<p>PDs don’t have to correspond to HCI 2U chassis, it’s just that with those it’s fully automated because SolidFire detects chassis ID and if you have 3 and properly balance your storage nodes (e.g. put two equally sized nodes in each), your job is done and you can take advantage of the Protection Domain feature without doing anything else. You don’t sacrifice any functionality and there’s no added cost.</p>
+
+<p>As you can imagine, you are expected to keep the capacity and storage node count balanced if you want PDs to work. You can’t have one PD 90% full, have another one fail at the same time and still expect that your storage service will remain up and running. It won’t.</p>
+
+<p>But your cluster would still survive single node failures as it did before.</p>
+
+<p>SolidFire users with H600 storage nodes can place those in different racks (with VXLAN) and inform SolidFire about PD layout.</p>
+
+<h2 id="protection-domains-vs-availability-zones">Protection Domains vs. Availability Zones</h2>
+
+<p>It’s not quite the same. All SolidFire nodes in a PD must be connected with L2 network, both the management and iSCSI networks.</p>
+
+<p>Naturally, iSCSI clients’ storage network must also be the same L2 network used by SolidFire storage.</p>
+
+<p><img src="/assets/images/solidfire-protection-domains-and-availability-zones.png" alt="SolidFire Protection Domains" /></p>
+
+<p>As you can immediately see, the client’s iSCSI connections connect to SolidFire nodes from any AZ (any SolidFire PD). That is random and it means on average 2/3 of connections will go to different PDs.</p>
+
+<h2 id="what-does-it-mean-for-my-vmware-kvm-kubernetes">What does it mean for my VMware, KVM, Kubernetes…</h2>
+
+<p>iSCSI clients need no awareness of the SolidFire cluster layout. They just need to be able to reach all storage nodes in the cluster.</p>
+
+<p>On the one hand users with nodes in different buildings get cross-AZ traffic from client traffic traversing PDs, but on the other in private cloud the cost of cross-AZ traversal is usually insignificant.</p>
+
+<p>Because SolidFire volume scheduler does not consider PDs, NetApp Trident also needs no special settings for SolidFire with Protection Domains: it works the same as without them.</p>
+
+<h2 id="does-this-use-storage-replication">Does this use storage replication</h2>
+
+<p>Maybe this is clear to everyone who’s made this this far, but no - there’s no storage replication here, it’s just a different take on RF2 in one SolidFire storage cluster.</p>
+
+<p>Any Protection Domain-enabled SolidFire cluster still supports storage replication (synchronous and asynchronous) to another SolidFire or (async-only) ONTAP (SnapMirror) cluster.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#containers">containers</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/05/25/external-access-to-netapp-trident-solidfire-metrics.html">• Fetch Trident's SolidFire metrics from outside of your container environment</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/05/01/netapp-trident-21.04-released.html">• GA of NetApp Trident v21.04</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/03/28/manage-netapp-trident-with-powershell.html">• NetApp SolidFire and Trident CSI failover automation with Powershell</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/02/20/trident-csi-ontap-management-isolation.html">• Limit CSI provisioner's blast radius for automatically provisioned ONTAP storage</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-06-08 12:50 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
