@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Role of SolidFire networks in SolidFire storage replication | Acting Technologist
+            SolidBackup with alternative backup clients | Acting Technologist
       
     </title>
     <meta name="description" content="
-     Which network(s) is/are used for SolidFire storage replication
+     How to modify SolidBackup to use another backup client
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,12 +90,12 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Role of SolidFire networks in SolidFire storage replication</h2>
+        <h2 id = "post-title">SolidBackup with alternative backup clients</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>08 Jun 2021</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>18 Jun 2021</span> - <i class="far fa-clock"></i> 
 
 
   
@@ -106,33 +106,36 @@
     </span>
   </div>
   
-        <p>Everyone should get the hard-to-find <a href="https://www.netapp.com/pdf.html?item=/media/10607-tr4741.pdf">TR-4741</a> (NetApp Element Software Remote Replication), but to answer the simple question: “all of the above”.</p>
+        <p>As I mentioned in one of previous posts on the topic of SolidBackup, we use SolidSync to sync Source volume(s) to Clone volume(s), and then SolidBackup generates scripts to run backup. My first example uses Restic, but it can be anything you fancy.</p>
 
-<ul>
-  <li>Management network is used for management traffic</li>
-  <li>Storage (iSCSI) network is used for storage traffic (including storage replication traffic)</li>
-</ul>
+<p>Given two volume pairs, (Src/Dst 398/401 and 399/402) and assuming volume (image) backup, we just need to adjust the function in SolidBackup that generates backup commands.</p>
 
-<p>Similarly to what I did in <a href="/2021/05/19/solidfire-exporter-monitor-solidfire-network-interfaces-with-prometheus-and-grafana">this post</a>, I configured <code class="language-plaintext highlighter-rouge">solidfire-exporter</code> to watch a replication Target cluster’s network traffic on Management and iSCSI interfaces.</p>
+<p>In order to use Minio client I replaced <code class="language-plaintext highlighter-rouge">restic backup</code> with <code class="language-plaintext highlighter-rouge">minio pipe</code> in SolidBackup-generated backup script. Object tags can be set in <code class="language-plaintext highlighter-rouge">minio pipe</code> or separately with <code class="language-plaintext highlighter-rouge">mc tag</code>.</p>
 
-<p>This cluster, called <code class="language-plaintext highlighter-rouge">thin</code>, was a replication Target for another SolidFire singleton cluster, called <code class="language-plaintext highlighter-rouge">thick</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="nb">sudo dd </span><span class="k">if</span><span class="o">=</span>/dev/disk/by-path/ip-192.168.103.30:3260-iscsi-iqn.2010-01.com.solidfire:mn4y.solidbackup-sb01.401-lun-0 <span class="se">\</span>
+  <span class="nv">bs</span><span class="o">=</span>256kB <span class="nv">status</span><span class="o">=</span>none | <span class="nb">gzip</span> | mc pipe s3/s3backup/mn4y.solidbackup-sb01.401.gz<span class="p">;</span> <span class="se">\</span>
+  mc tag <span class="nb">set </span>s3/s3backup/mn4y.solidbackup-sb01.401.gz <span class="s2">"src=398&amp;tgt=401"</span>
+<span class="c"># or</span>
+<span class="nb">sudo dd </span><span class="k">if</span><span class="o">=</span>/dev/disk/by-path/ip-192.168.103.30:3260-iscsi-iqn.2010-01.com.solidfire:mn4y.solidbackup-sb02.402-lun-0 <span class="se">\</span>
+  <span class="nv">bs</span><span class="o">=</span>256kB <span class="nv">status</span><span class="o">=</span>none | <span class="nb">gzip</span> | mc pipe <span class="nt">--tags</span> <span class="s2">"src=399&amp;tgt=402"</span> s3/s3backup/mn4y.solidbackup-sb02.402.gz
+</code></pre></div></div>
 
-<p>I paired the clusters, created two equally sized volumes (2GB, one on each cluster), set the one on <code class="language-plaintext highlighter-rouge">thin</code> to be Replication Target, paired the volumes for asynchronous replication, and used a Linux client to perform I/O to the volume on the Source cluster (<code class="language-plaintext highlighter-rouge">thick</code>).</p>
+<p><img src="/assets/images/solidbackup-with-minio-client-01.png" alt="SolidBackup with Minio client" /></p>
 
-<p>I wanted to see which type of traffic - Management or Storage - will increase on the cluster hosting <em>the Replication Target</em> volume when bursts of I/O activity happen on the cluster hosting the Replication Source volume. (The image may be open in new tab.)</p>
+<p>The S3 bucket was populated with two compressed volume image files. Most of the time taken was to read the entire volume (2 GiB) - approximately 3 minutes (the curve in the screenshot above).</p>
 
-<p><img src="/assets/images/solidfire-replication-iscsi-vs-mgmt.png" alt="SolidFire node NICs during replication" /></p>
+<p>The actual contents (about 30-50 MB) then took seconds to compress and seconds to upload from my home lab to a GCP-based VM with S3 service.</p>
 
-<p>As you can see, traffic peaks on the storage network were significant. Three <code class="language-plaintext highlighter-rouge">fio</code> runs resulted in three pronounced peaks seen in the chart on the right.</p>
+<p><img src="/assets/images/solidbackup-with-minio-client-02.png" alt="SolidBackup with Minio client" /></p>
 
-<p>However, the management network is still used, and must be redundant (and its traffic cannot fail-over to storage network).</p>
+<p>The first time I tried my backed up objects were 30 MiB each, but subsequently 48 MiB each. Strangely, <code class="language-plaintext highlighter-rouge">mc</code> reported different sizes depending on where backup was uploaded (Minio S3 or StorageGRID). And even when Minio server-side figures were considered, they weren’t consistent with <code class="language-plaintext highlighter-rouge">mc</code> client. If you get to use <code class="language-plaintext highlighter-rouge">mc</code> you may want to investigate this further.</p>
 
-<h2 id="demo">Demo</h2>
+<p>Just like with SolidBackup and Restic, you can do file backup (not just image backup) and your S3 target doesn’t have to be Minio. Here is the same thing with a StorageGRID cluster running version 11.5.</p>
 
-<ul>
-  <li><a href="https://youtu.be/F3lqv-PLXLM">Management and Storage network traffic resulting from async replication</a> (2m31s)</li>
-</ul>
+<p><img src="/assets/images/solidbackup-with-minio-client-03.png" alt="SolidBackup with Minio client and StorageGRID 11.5" /></p>
 
+<p>But to make a conclusion related to the objective of this post: you need to edit just one function (<code class="language-plaintext highlighter-rouge">NewSbBackupCommand</code>) to make SolidBackup work with backup client of your choice.</p>
 
       </article>
     </div>
@@ -142,7 +145,7 @@
     
     
       <a href="
-      /categories/#random">random</a>
+      /categories/#automation">automation</a>
        
     
   </span>
@@ -211,77 +214,11 @@
         
     
         
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
+          <div class = "related-posts">
+          <h5><a href="/2021/05/08/revisiting-solidbackup.html">• SolidBackup for data protection and workload mobility for SolidFire in Hybrid Cloud environments</a></h5>
+          </div>
+          
+          
         
     
       
@@ -293,7 +230,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2021/03/27/photon-ontap-on-arm64-iot-edge.html">• Experimenting with Edge-to-DC integrations with Photon IoT and ONTAP</a></h5>
+          <h5><a href="/2021/05/06/using-solidfire-maintenancemode.html">• SolidFire Maintenance Mode</a></h5>
           </div>
           
           
@@ -343,140 +280,8 @@
         
     
         
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
           <div class = "related-posts">
-          <h5><a href="/2021/01/21/splunk-sizing-with-dellemc-and-nutanix.html">• Splunk sizing with shared core HCI vendors</a></h5>
-          </div>
-          
-          
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/01/19/storagegrid-versioning-example.html">• StorageGRID object versioning</a></h5>
+          <h5><a href="/2021/04/21/solidfire-backup-to-s3.html">• Backup SolidFire volumes to S3-compatible storage</a></h5>
           </div>
           
           
@@ -617,7 +422,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2020/11/24/scary-bs-postman-ssl-certs.html">• Helpful waste of time</a></h5>
+          <h5><a href="/2021/02/05/get-solidfire-volume-efficiency-with-powershell.html">• Use SolidFire PowerShell Tools to find low efficiency volumes</a></h5>
           </div>
           
           
