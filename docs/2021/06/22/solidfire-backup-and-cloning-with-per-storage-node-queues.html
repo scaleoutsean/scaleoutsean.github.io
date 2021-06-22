@@ -100,7 +100,7 @@
 
   
   
-    4 minute read
+    5 minute read
   
 
     </span>
@@ -108,11 +108,11 @@
   
         <p>SolidFire can backup volumes to S3-compatible Object Storage. How to do it in parallel, I wrote about <a href="/2021/04/21/solidfire-backup-to-s3.html">here</a>.</p>
 
-<p>Volume cloning and copying is a similar type of background job, and those can also be executed in parallel. We get to use this in automation, for example, when you may need to clone a volume 100 times, or perhaps start with three “template” volumes (Windows, Ubuntu, Red Hat) and make 32 copies of each. I use volume copying in <a href="/2021/05/08/revisiting-solidbackup.html">SolidBackup</a> scripts.</p>
+<p>Volume cloning and copying is a similar type of background job, and those can also be executed in parallel. We get to use this in automation, for example when you need to clone a volume 100 times, or perhaps start with three “template” volumes (Windows, Ubuntu, Red Hat) and make 32 copies of each. I use volume copying in <a href="/2021/05/08/revisiting-solidbackup.html">SolidBackup</a> scripts.</p>
 
-<p>What’s common to both is there’s a maximum number of jobs that can be scheduled on a SolidFire storage node at the same time. If that number is 8 and you attempt to schedule another job, that job will immediately fail. It’s not a big deal - it can be resubmitted - but you unnecessarily consume API resources, pollute your SolidFire logs and prevent anyone else from submitting their job.</p>
+<p>What’s common to both is there’s the maximum number of jobs that can be scheduled on a SolidFire storage node at the same time (you can find the limits in the SolidFire Release Notes or with the API). If that number is 8, there’s 8 jobs running and you attempt to schedule another job that lands on that node, that job will immediately fail. It’s not a big deal - job can be resubmitted - but you unnecessarily consume API resources, pollute your SolidFire logs, have to handle job failures in your scripts, and still prevent anyone else from submitting their jobs while you occupy all job slots available.</p>
 
-<p>As we saw in the linked posts, we can deal with this by parallelizing job submission to a safe per-cluster level (say, 16 jobs on a 4-node cluster) that makes it quite unlikely that we’d hit errors and have to retry if any single node gets the 9th concurrent job.</p>
+<p>As we saw in the linked posts, we can deal with this by parallelizing job submission to a “safe” per-cluster level (say, 16 jobs on a 4-node cluster) that makes it unlikely that we’d hit “node queue full” errors and have to retry if any single node hits the job limit.</p>
 
 <p>A script that does that for Backup can be found in my Awesome SolidFire repo on Github.</p>
 
@@ -149,6 +149,8 @@
 <h2 id="conclusion">Conclusion</h2>
 
 <p>32 vs. 20 jobs is still a nice improvement which eliminates the risk of failed jobs and still leaves a free slot per each storage node for on-demand backup and restore jobs. If you know your environment you can set parallelism to 8-per-node and run up to 40 jobs in parallel (5 nodes x 8 jobs), effectively doubling the number of jobs compared to the earlier approach.</p>
+
+<p>If you also incorporate QoS pre-post adjustments for each volume before and after backup to S3 (I wrote a script for that, too), you should be able to read SolidFire at &gt; 1GB/s. Unfortunately, the upload performance of Backup to S3 is slow, but we can’t optimize that with a script (I think SolidBackup should be used by those who wish to improve that).</p>
 
 <p>Backup jobs take longer to run, but clone jobs run faster and cutting a 10 minute mass cloning job down to less than 6 minutes would be nice, especially if your build job (or whatever you do after that) takes 15-20 minutes to complete - you could run up to 20% more build jobs per day.</p>
 
@@ -330,7 +332,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-06-22 16:05 </p>
+    <p>2021-06-22 16:18 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
