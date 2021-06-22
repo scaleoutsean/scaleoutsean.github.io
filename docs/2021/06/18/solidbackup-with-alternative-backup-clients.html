@@ -100,17 +100,17 @@
 
   
   
-    1 minute read
+    2 minute read
   
 
     </span>
   </div>
   
-        <p>As I mentioned in one of previous posts on the topic of SolidBackup, we use SolidSync to sync Source volume(s) to Clone volume(s), and then SolidBackup generates scripts to run backup. My first example uses Restic, but it can be anything you fancy.</p>
+        <p>As I mentioned in one of previous posts on the topic of SolidBackup, we first use SolidSync to sync SolidFire Source volume(s) to Clone volume(s), and then SolidBackup generates scripts to run backup off those Clone volume(s). The first example I shared uses Restic, but it can be anything you fancy. How?</p>
 
-<p>Given two volume pairs, (Src/Dst 398/401 and 399/402) and assuming volume (image) backup, we just need to adjust the function in SolidBackup that generates backup commands.</p>
+<p>Given two volume pairs, (Src/Dst 398/401 and 399/402) and assuming volume (image) backup, we just need to adjust the SolidBackup function that generates backup commands.</p>
 
-<p>In order to use Minio client I replaced <code class="language-plaintext highlighter-rouge">restic backup</code> with <code class="language-plaintext highlighter-rouge">minio pipe</code> in SolidBackup-generated backup script. Object tags can be set in <code class="language-plaintext highlighter-rouge">minio pipe</code> or separately with <code class="language-plaintext highlighter-rouge">mc tag</code>.</p>
+<p>In order to use Minio client I replaced <code class="language-plaintext highlighter-rouge">restic backup</code> with <code class="language-plaintext highlighter-rouge">minio pipe</code> in SolidBackup-generated backup script. Minio object tags can be set in <code class="language-plaintext highlighter-rouge">minio pipe</code> or separately with <code class="language-plaintext highlighter-rouge">mc tag</code>.</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
 <span class="nb">sudo dd </span><span class="k">if</span><span class="o">=</span>/dev/disk/by-path/ip-192.168.103.30:3260-iscsi-iqn.2010-01.com.solidfire:mn4y.solidbackup-sb01.401-lun-0 <span class="se">\</span>
@@ -123,19 +123,20 @@
 
 <p><img src="/assets/images/solidbackup-with-minio-client-01.png" alt="SolidBackup with Minio client" /></p>
 
-<p>The S3 bucket was populated with two compressed volume image files. Most of the time taken was to read the entire volume (2 GiB) - approximately 3 minutes (the curve in the screenshot above).</p>
+<p>The S3 bucket was populated with two compressed volume image files. Most of the time taken was to read the entire volume (2 GiB) - approximately 3 minutes (the curve in the screenshot above) because I use SolidFire Demo VM.</p>
 
-<p>The actual contents (about 30-50 MB) then took seconds to compress and seconds to upload from my home lab to a GCP-based VM with S3 service.</p>
+<p>The actual contents (about 50 MB per volume/image) took seconds to compress and seconds to upload from my home lab to a GCP-based VM with S3 service.</p>
 
 <p><img src="/assets/images/solidbackup-with-minio-client-02.png" alt="SolidBackup with Minio client" /></p>
 
-<p>The first time I tried my backed up objects were 30 MiB each, but subsequently 48 MiB each. Strangely, <code class="language-plaintext highlighter-rouge">mc</code> reported different sizes depending on where backup was uploaded (Minio S3 or StorageGRID). And even when Minio server-side figures were considered, they weren’t consistent with <code class="language-plaintext highlighter-rouge">mc</code> client. If you get to use <code class="language-plaintext highlighter-rouge">mc</code> you may want to investigate this further.</p>
+<p>The first time I tried my backed up objects were 30 MiB each, but subsequently 48 MiB each. Strangely, <code class="language-plaintext highlighter-rouge">mc</code> reported different sizes from one run to another and this was observed with both StorageGRID and Minio S3 object stores. Minio server-side figures from the UI weren’t consistent with what <code class="language-plaintext highlighter-rouge">mc</code> client was showing. That’s likely related to how object overwrite works (it takes an hour or two for eventual consistency to kick in and utilization to look like expected) but in any case, if the sum of backup jobs is 10 TB you may always need to have 10 TB free to be able to handle overwrites if temporary quota overruns aren’t allowed.</p>
 
 <p>Just like with SolidBackup and Restic, you can do file backup (not just image backup) and your S3 target doesn’t have to be Minio. Here is the same thing with a StorageGRID cluster running version 11.5.</p>
 
 <p><img src="/assets/images/solidbackup-with-minio-client-03.png" alt="SolidBackup with Minio client and StorageGRID 11.5" /></p>
 
-<p>But to make a conclusion related to the objective of this post: you need to edit just one function (<code class="language-plaintext highlighter-rouge">NewSbBackupCommand</code>) to make SolidBackup work with backup client of your choice.</p>
+<p>The bottom line is we need to edit just one function (<code class="language-plaintext highlighter-rouge">NewSbBackupCommand</code>) to make SolidBackup work with a backup client of your choice.</p>
+
 
       </article>
     </div>
@@ -162,6 +163,21 @@
     
     
     
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/06/22/solidfire-backup-and-cloning-with-per-storage-node-queues.html">• Maximum parallelization of SolidFire Backup and Volume Copy/Clone jobs</a></h5>
+          </div>
+          
+          
+        
+    
+      
     
         
         
@@ -285,147 +301,6 @@
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/02/05/get-solidfire-volume-efficiency-with-powershell.html">• Use SolidFire PowerShell Tools to find low efficiency volumes</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -433,7 +308,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-06-18 12:55 </p>
+    <p>2021-06-22 16:05 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
