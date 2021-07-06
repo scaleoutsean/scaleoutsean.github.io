@@ -14,11 +14,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Get started with solidfire-exporter | Acting Technologist
+            Faster initialization and rebalancing with Dynamic Disk Pools on NetApp E-Series | Acting Technologist
       
     </title>
     <meta name="description" content="
-     SolidFire metrics for Kubernetes and other clusters
+     How fast can DDP be initialized and voluems expanded
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -90,93 +90,45 @@
 
     <div class="post-container">
       <article id = "post">
-        <h2 id = "post-title">Get started with solidfire-exporter</h2>
+        <h2 id = "post-title">Faster initialization and rebalancing with Dynamic Disk Pools on NetApp E-Series</h2>
 
   
   <div class = "post-info">
     <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>09 Mar 2021</span> - <i class="far fa-clock"></i> 
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>06 Jul 2021</span> - <i class="far fa-clock"></i> 
 
 
   
   
-    2 minute read
+    1 minute read
   
 
     </span>
   </div>
   
-        <p>In yesterday’s <a href="https://scaleoutsean.github.io/2021/03/08/hcicollector-v0.7.html">post</a> about HCICollector v0.7 I mentioned <a href="https://github.com/mjavier2k/solidfire-exporter">solidfire-exporter</a>.</p>
+        <p><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">Here</a> I explained how Dynamic Disk Pools (DDP) work and how they differ from traditional RAID6 (or RAID5) data protection.</p>
 
-<p>Here’s how to get started with it without Kubernetes and Docker in under 2 minutes.</p>
+<p>Recently I had a query about the need for DDP for which I revisited some details from that post and the TR mentioned in it. The next question was “But then why do people still use RAID6?”</p>
 
-<p>You can read the project’s README file to the same effect, but in coming weeks I’ll expand this post to cover more than just how to get started so I’ll start with the basics and update the post later.</p>
+<p>They use it because for some workloads and use cases, RAID6 is more suitable. But the person who asked wasn’t one of those users - one of their primary requirements was to be able to quickly and easily expand volumes and DDP below them while using NL-SAS HDDs (with SSDs or NVMe, RAID5 volume groups also expand quickly).</p>
 
-<h2 id="get-started">Get started</h2>
+<p>In that case, DDP may indeed be more suitable. Check the TR I mentioned above for the details (you may have some important requirement that conflicts with DDP, say you have a bunch of sites with 10 disks per E-2812 - you can’t do DDP that way).</p>
 
-<p>Assuming you’ll run both Prometheus and <code class="language-plaintext highlighter-rouge">solidfire-exporter</code> on your client, you can use 127.0.0.1 for both apps (i.e. listen address of solidfire-exporter and Web UI of Prometheus). My SolidFire management IP is 192.168.1.30 and I have version 12.2 (you may set this to 11.0 if on v11).</p>
+<p>Now let’s say DDP is what you need. Let us see how long it takes to these operations that the person I talked to has to do once a month (enlarge a DDP, create new volumes, etc.). This DDP has 21 1.8TB drives.</p>
 
-<ul>
-  <li>config.yaml for solidfire-exporter:</li>
-</ul>
+<p><img src="/assets/images/e-series-ddp-expansion-01.png" alt="E-Series DDP" /></p>
 
-<pre><code class="language-raw">listen:
-  address: 127.0.0.1:9987
-client:
-  endpoint: https://192.168.1.30/json-rpc/12.2
-  username: admin
-  password: admin
-  insecure: true
-  timeout: 30
-</code></pre>
+<p>I’ve added two HDDs to this DDP and created a new volume. Without other I/O, estimated time for each was a little over two hours.</p>
 
-<p>Download, decompress (if you downloaded the compressed binary) and run <code class="language-plaintext highlighter-rouge">solidfire-exporter</code> on your client. I built mine from source (I’m happy to report that it appears to works fine on AMD64 as well as ARM64).</p>
+<p><img src="/assets/images/e-series-ddp-expansion-volume-initialization-and-rebalancing-02.png" alt="E-Series DDP " /></p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># chmod 700 solidfire-exporter</span>
-./solidfire-exporter <span class="nt">-c</span><span class="o">=</span>config.yaml
-</code></pre></div></div>
+<p>What if the controllers and disks were loaded? Well, then it’d be slower, but these are two operations (one could be faster) and you should be able to finish the same day.</p>
 
-<p>Open another terminal session for Prometheus.</p>
+<p><img src="/assets/images/e-series-ddp-expansion-controller-loading-during-rebalancing-03.png" alt="E-Series DDP " /></p>
 
-<p>Download and decompress Prometheus, <code class="language-plaintext highlighter-rouge">cd</code> to decompressed directory and either replace the pre-created prometheus.yml or create a new one (in its place or elsewhere, just remember to tell Prometheus where it is):</p>
+<p>In fact, this E-5760 system had one faulty controller, and the remaining controller needed only 20% CPU resources for these two operations. That means that in all likelihood only HDD utilization on the same DDP would impact time required to complete the tasks.</p>
 
-<pre><code class="language-raw"># my global config
-global:
-  scrape_interval:     60s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 60s # Evaluate rules every 15 seconds. The default is every 1 minute.
-
-# Alertmanager configuration
-alerting:
-  alertmanagers:
-  - static_configs:
-    - targets:
-      # - alertmanager:9093
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label `job=&lt;job_name&gt;` to any timeseries scraped from this config.
-  - job_name: 'prometheus'
-
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-
-    static_configs:
-    - targets: ['localhost:9090','127.0.0.1:9987']
-</code></pre>
-
-<p>Note that I have two targets, one (9090) is Prometheus itself, the second one (127.0.0.1:9987) is my solidfire-exporter running on the same system.</p>
-
-<p>Note that I set scrape and evaluation interval to 60 seconds. It doesn’t make much sense to fetch SolidFire metrics every 10 seconds. You can, of course.</p>
-
-<p>Start Prometheus by telling it where your config file is and where to listen (use 0.0.0.0:9090 for all interfaces). I didn’t change directory so my prometheus file is outside of the decompressed Prometheus tree.</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># chmod 700 /prometheus-2.25.0.linux-arm64/prometheus</span>
-./prometheus-2.25.0.linux-arm64/prometheus <span class="nt">--config</span>.file<span class="o">=</span><span class="s2">"prometheus.yml"</span> <span class="nt">--web</span>.listen-address<span class="o">=</span><span class="s2">"127.0.0.1:9090"</span>
-</code></pre></div></div>
-
-<p>Start up your browser and go to http://127.0.0.1:9090. JFGI for the rest.</p>
-
+<p><img src="/assets/images/e-series-ddp-expansion-volumes-in-ddp-04.pn" alt="E-Series DDP " /></p>
 
       </article>
     </div>
@@ -186,7 +138,7 @@ scrape_configs:
     
     
       <a href="
-      /categories/#projects">projects</a>
+      /categories/#storage">storage</a>
        
     
   </span>
@@ -273,12 +225,6 @@ scrape_configs:
         
     
         
-          <div class = "related-posts">
-          <h5><a href="/2021/05/19/solidfire-exporter-monitor-solidfire-network-interfaces-with-prometheus-and-grafana.html">• Monitor SolidFire Network with SolidFire-Exporter, Prometheus and Grafana</a></h5>
-          </div>
-          
-          
-        
     
       
     
@@ -287,129 +233,6 @@ scrape_configs:
     
         
     
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2021/03/08/hcicollector-v0.7.html">• Announcing HCICollector v0.7</a></h5>
-          </div>
-          
-          
         
     
       
@@ -717,11 +540,122 @@ scrape_configs:
         
     
         
-          <div class = "related-posts">
-          <h5><a href="/2020/11/16/solid-rancher.html">• solid-rancher</a></h5>
-          </div>
-          
-          
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
         
     
       
