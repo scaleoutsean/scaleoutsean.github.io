@@ -1,0 +1,309 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Data Path in SolidFire clusters with Protection Domains | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     How does SolidFire with Protection Domains store data
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Data Path in SolidFire clusters with Protection Domains</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>06 Jul 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>In the <a href="/2021/06/08/solidfire-availability-zones">post that compares SolidFire Protection Domains with Availability Zones</a> I had this illustration of network connectivity among SolidFire v12 cluster nodes and between SolidFire and iSCSI clients.</p>
+
+<p><img src="/assets/images/solidfire-protection-domains-and-availability-zones.png" alt="SolidFire Protection Domains" /></p>
+
+<p>Sometimes one wonders if it’d be better if clients had some intelligence about storage layout. In this post I explain why I don’t think that would be beneficial to SolidFire.</p>
+
+<p>Let’s take a quick look at some examples of how data flows in a SolidFire v12 cluster with three Protection Domains (PD’s).</p>
+
+<p>First, when an iSCSI client (container, VM, physical server - it doesn’t matter) connects to a volume, that volume can be anywhere. In this case, it’s in another rack (or floor, or building), and client must make three hops (local Leaf, Spine, remote Leaf) to get to the volume. This applies to 66.66% of connections - they be remote.</p>
+
+<p><img src="/assets/images/sf-protection-domain-data-flow-01.png" alt="SolidFire nodes fetches blocks client connects to volume in another rack" /></p>
+
+<p>If it’s a read request the SolidFire storage node running “slice” (metadata) service for this volume must fetch data blocks on behalf of the client - each block from either copy (SolidFire Double Helix aims to maintain two copies of each block on different nodes and even in different PDs’, as is the case here).</p>
+
+<p>With three Protection Domains, 2/3rds of all requests have to make three hops to get to the block. One third needs just one hop or less (when the block that’s being fetched is in the same PD, including the node running slice service).</p>
+
+<p><img src="/assets/images/sf-protection-domain-data-flow-02.png" alt="SolidFire node fetches data to satisfy read request" /></p>
+
+<p>As the storage node has to serve <em>all</em> requested blocks to satisfy that read request, getting 1/3rd of the requested blocks from nodes in local PD doesn’t make much difference.</p>
+
+<p>After all the blocks have been gathered and decompressed, data is sent to client via iSCSI.</p>
+
+<p><img src="/assets/images/sf-protection-domain-data-flow-03.png" alt="SolidFire node returns data to iSCSI client in another rack" /></p>
+
+<p>Now one may wonder if it wouldn’t be better if iSCSI connection and all block fetching (or dispatching) could somehow happen within the same protection domain to minimize network hops.</p>
+
+<p><img src="/assets/images/sf-protection-domain-data-flow-04.png" alt="iSCSI client connects to volume in same rack" /></p>
+
+<p>This looks slick, right?</p>
+
+<p>But when you consider that each block still has to be protected across two PD’s, this doesn’t buy us much. When we write a new block, in 2/3rds of cases the SolidFire node running slice service needs to make at least one three-hop trip to another storage node in the cluster.</p>
+
+<p><img src="/assets/images/sf-protection-domain-data-flow-05.png" alt="SolidFire Double Helix protects written blocks" /></p>
+
+<p>Another thing that instinctively comes to one’s mind is how localizing iSCSI and intra-node (for SolidFire) traffic could save network resources and lower I/O latency. But you can also think of it this way:</p>
+
+<ul>
+  <li>Any write that does <em>not</em> cross PD boundary is not protected, so we still have to write new blocks to other nodes</li>
+  <li>If your Spine &amp; Leaf network would really benefit from decreasing cross-PD traffic by 1-2 GB/s, maybe you have a networking problem?</li>
+</ul>
+
+<p>There is just one scenario for which I think some built-in intelligence may be nice to have, and that is for reads that have a copy in the same PD - if SolidFire had a way to prefer copies from local PD, it could eliminate some 3-hop reads. But:</p>
+
+<ul>
+  <li>Such cases are already a minority (only 1/3rd of all reads can be local in a cluster with 3 PD’s)</li>
+  <li>There’d be more risk of hotspotting nodes in local PD</li>
+  <li>We’d still have to wait for blocks that must be fetched from remote PD’s</li>
+  <li>Writes would still have to be sent out to protect new or overwritten data</li>
+</ul>
+
+<p>So even this doesn’t sound too useful.</p>
+
+<p>In the past I’ve worked with HPC storage that could benefit from preferring local nodes or storage pools for reads, but that was before fast &amp; affordable Spine &amp; Leaf architectures, it was meant for use cases that involved reading huge amounts of I/O, and users had to be careful about job placement (to avoid hotspotting local storage or network).</p>
+
+<p>For SolidFire I like the current approach. Traffic flows all over the place, but you don’t have to pay attention to it. Mellanox SN2700 and SN2100 (or SN2010) switches that many NetApp HCI customers have deployed are very affordable and great building blocks for Spine &amp; Leaf networks serving iSCSI. You can use other switches as well, of course (just stay away from stackable switch designs).</p>
+
+<p>Once you get the network right, Protection Domains just work. You don’t have to mind them, you can schedule your containers or VMs anywhere, and you don’t need a PhD in SolidFire cluster philosophy. Which is exactly how SolidFire is supposed to be - simple.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#automation">automation</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/06/22/solidfire-backup-and-cloning-with-per-storage-node-queues.html">• Maximum parallelization of SolidFire Backup and Volume Copy/Clone jobs</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/06/18/solidbackup-with-alternative-backup-clients.html">• SolidBackup with alternative backup clients</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/05/08/revisiting-solidbackup.html">• SolidBackup for data protection and workload mobility for SolidFire in Hybrid Cloud environments</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/05/06/using-solidfire-maintenancemode.html">• SolidFire Maintenance Mode</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-07-06 11:02 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
