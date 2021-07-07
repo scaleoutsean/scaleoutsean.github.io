@@ -126,13 +126,16 @@
 
 <ul>
   <li>Prompt the user for SolidFire cluster Management VIP and cluster administrator credentials, and from this point continue unattended</li>
-  <li>Get the list of active SolidFire nodes</li>
-  <li>Connect to one node, generate Support Bundle and wait until it’s ready</li>
-  <li>As soon as this log is ready, I create a download job and send it to background. You may need 20 GB per each SolidFire storage node!</li>
-  <li>Connect to the next node until all Support Bundles have been generated and download jobs sent to background</li>
+  <li>Get the list of active SolidFire nodes
+    <ul>
+      <li>Connect to one node, call the generate Support Bundle API method and wait until the bundle is ready (minutes)</li>
+      <li>As soon as the archive is ready I create a download job and send it to background. You may need 20 GB per each SolidFire storage node, so run the script from where you have enough capacity!</li>
+      <li>Connect to the next node to do the same until all Support Bundles have been generated and download jobs sent to background</li>
+    </ul>
+  </li>
 </ul>
 
-<p>This doesn’t gather logs in parallel, it only <em>downloads</em> them in parallel. With old logs <em>deleted</em> in Node Web Management UI, it takes me about 10 minutes to run this script on a SolidFire v12.3 cluster with five nodes. The first log is generated in little under 2 minutes, which means background downloads are almost free.</p>
+<p>This doesn’t gather logs in parallel, that is done sequentially. It only <em>downloads</em> them in parallel. With old logs <em>deleted</em> in Node Web Management UI prior to running this script, it takes me about 10 minutes to run this script on a SolidFire v12.3 cluster with five nodes. The first log is ready in little under 2 minutes, which means background downloads are almost free (time-wise).</p>
 
 <p><img src="/assets/images/solidfire-onecollect-get-support-logs-01-scripted-download.png" alt="Collect SolidFire or eSDS logs with PowerShell" /></p>
 
@@ -142,15 +145,15 @@
 
 <p>So this is pretty nice - it’s simple, safe and fast.</p>
 
-<p>Of course, we don’t need gigabytes of logs for every single Support case. Usually you need just a handful of diag commands, and NetApp has a tool called OneCollect (I recorded a video about running it in an unsupported manner - on HCC VM - you can find it on YouTube) which can run out of a Docker container or from regular OS X, Linux or Windows OS. You run it on your client and access it at http://localhost:8888 (default).</p>
+<p>Of course, we don’t need gigabytes of logs for every single Support case. Usually you need just the output of a handful of diagnostic commands. NetApp has a tool called OneCollect (I recorded a video about running it in an unsupported manner - on HCC VM - you can find it on YouTube) which runs in a Docker container or on regular mainstream OS (x86-64 version of OS X, Linux or Windows). You execute it on your client and access its Web UI at http://localhost:8888 (default port).</p>
 
 <p><img src="/assets/images/solidfire-onecollect-get-support-logs-03-one-collect-lightweight-collection.png" alt="Generate and download SolidFire or eSDS logs with NetApp ActiveIQ OneCollect tool" /></p>
 
-<p>Because these logs tend to be smaller, OneCollect is quick and can also login to NetApp support and upload these logs for you.</p>
+<p>Because these logs tend to be much smaller, OneCollect is and convenient for that, and can also login to NetApp support and upload these logs for you.</p>
 
 <p><img src="/assets/images/solidfire-onecollect-get-support-logs-04-onecollect-lightweight-collection-complete.png" alt="NetApp ActiveIQ OneCollect tool job summary" /></p>
 
-<p>But it doesn’t do Support Bundles, as far as I can tell (I tried today). So should you need to collect those, you may still want to use a script to gather Support Bundle files, and then use OneCollect’s Data Files upload to upload one or more Support Bundle files.</p>
+<p>But it doesn’t do Support Bundles, as far as I can tell (I tried today). Should you need to collect those logs, you may still want to use a script to gather Support Bundle files, and <em>then</em> use OneCollect’s Data Files upload to upload them to NetApp Support servers.</p>
 
 <p><img src="/assets/images/solidfire-onecollect-get-support-logs-05-onecollect-upload-support-bundle-files.png" alt="Upload SolidFire or eSDS logs with NetApp ActiveIQ OneCollect tool" /></p>
 
@@ -158,7 +161,8 @@
 
 <p>Because NetApp ActiveIQ OneCollect (or most browser upload utilities) can compress files on the fly, it’s probably okay to upload them uncompressed - upload times may not be considerably worse and it’s faster to unpack them when they’re not compressed. I don’t have a NetApp Support account so I can’t tell if my guess regarding upload time is about right, but if I hear otherwise I could change the script to compress the logs on the fly as I download them, or later.</p>
 
-<p>Of course the script could do more, but over the next 12 months even this basic version should save me enough time to pay back for its development. I’ll put it on Github once I tidy up the code, add some logging and so on.</p>
+<p>Of course the script could do more, but over the next 12 months even this basic version should save me enough time to pay back for its development. I’ll put it on Github once I tidy up the code, add some logging and so on (I’m thinking about adding parameters to gather logs from only selected nodes, but I don’t know if that is how it works in real life - I’ll try to find out).</p>
+
 
       </article>
     </div>
@@ -303,7 +307,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-07-07 13:53 </p>
+    <p>2021-07-07 14:51 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
