@@ -126,43 +126,46 @@
 
 <p>As the storage node has to serve <em>all</em> requested blocks to satisfy that read request, getting 1/3rd of the requested blocks from nodes in local PD doesn’t make much difference.</p>
 
-<p>After all the blocks have been gathered and decompressed, data is sent to client via iSCSI.</p>
+<p>After all the blocks requested by the client have been gathered and decompressed, data is sent to the client via iSCSI.</p>
 
 <p><img src="/assets/images/sf-protection-domain-data-flow-03.png" alt="SolidFire node returns data to iSCSI client in another rack" /></p>
 
-<p>Now one may wonder if it wouldn’t be better if iSCSI connection and all block fetching (or dispatching) could somehow happen within the same protection domain to minimize network hops.</p>
+<p>Now, one might wonder if it wouldn’t be better if the iSCSI connection and all block fetching (or dispatching) could somehow happen within the same protection domain in order to minimize network hops.</p>
 
 <p><img src="/assets/images/sf-protection-domain-data-flow-04.png" alt="iSCSI client connects to volume in same rack" /></p>
 
-<p>This looks slick, right?</p>
+<p>This would be great, right?</p>
 
-<p>But when you consider that each block still has to be protected across two PD’s, this doesn’t buy us much. When we write a new block, in 2/3rds of cases the SolidFire node running slice service needs to make at least one three-hop trip to another storage node in the cluster.</p>
+<p>But when we consider that each block written still has to be protected across two PD’s, this doesn’t buy us much. When we write a new block, in 2/3rds of all cases the SolidFire node running slice service (home node for the iSCSI volume) needs to make at least one three-hop trip to another storage node <em>in another protection domain</em> to save the second copy of the data.</p>
 
 <p><img src="/assets/images/sf-protection-domain-data-flow-05.png" alt="SolidFire Double Helix protects written blocks" /></p>
 
 <p>Another thing that instinctively comes to one’s mind is how localizing iSCSI and intra-node (for SolidFire) traffic could save network resources and lower I/O latency. But you can also think of it this way:</p>
 
 <ul>
-  <li>Any write that does <em>not</em> cross PD boundary is not protected, so we still have to write new blocks to other nodes</li>
-  <li>If your Spine &amp; Leaf network would really benefit from decreasing cross-PD traffic by 1-2 GB/s, maybe you have a networking problem?</li>
+  <li>Any write that lands in only one PD (even if there are redundant replicas in two different storage nodes) is not protected, so we must write at least one replica to another PD (sometimes both replicas have to be saved to other PDs, in order to keep cpacity utilization evenly balanced among nodes and PDs)</li>
+  <li>If your Spine &amp; Leaf network would benefit from decreasing cross-PD traffic by 1-2 GB/s, maybe you have a networking problem?</li>
 </ul>
 
-<p>There is just one scenario for which I think some built-in intelligence may be nice to have, and that is for reads that have a copy in the same PD - if SolidFire had a way to prefer copies from local PD, it could eliminate some 3-hop reads. But:</p>
+<p>There is just one scenario for which I think some built-in intelligence may be nice to have, and that is for reads that have a copy in the same PD - if SolidFire had a way to prefer reading replicas from local PD, it could eliminate some 3-hop reads. But:</p>
 
 <ul>
   <li>Such cases are already a minority (only 1/3rd of all reads can be local in a cluster with 3 PD’s)</li>
-  <li>There’d be more risk of hotspotting nodes in local PD</li>
+  <li>The risk of hotspotting nodes in local PD would increase</li>
   <li>We’d still have to wait for blocks that must be fetched from remote PD’s</li>
-  <li>Writes would still have to be sent out to protect new or overwritten data</li>
+  <li>Writes would still have to be sent out to other PDs to protect new or overwritten data</li>
 </ul>
 
-<p>So even this doesn’t sound too useful.</p>
+<p>So even this doesn’t sound too useful. It’d have to be a very predictable and controlled workload, which is rarely the case outside of HPC or single application environments.</p>
 
-<p>In the past I’ve worked with HPC storage that could benefit from preferring local nodes or storage pools for reads, but that was before fast &amp; affordable Spine &amp; Leaf architectures, it was meant for use cases that involved reading huge amounts of I/O, and users had to be careful about job placement (to avoid hotspotting local storage or network).</p>
+<p>I’ve worked with HPC storage that could benefit from preferring local nodes or storage pools for reads, but that was before fast &amp; affordable Spine &amp; Leaf architectures, it was meant for use cases that involved reading huge amounts of data (many TBs in one go), and the users had to be very careful about job placement (to avoid hotspotting local storage or network).</p>
 
-<p>For SolidFire I like the current approach. Traffic flows all over the place, but you don’t have to pay attention to it. Mellanox SN2700 and SN2100 (or SN2010) switches that many NetApp HCI customers have deployed are very affordable and great building blocks for Spine &amp; Leaf networks serving iSCSI. You can use other switches as well, of course (just stay away from stackable switch designs).</p>
+<p>For SolidFire and workloads that run on it, the way PDs work looks fine to me. Traffic flows all over the place, but you don’t have to pay attention to it.</p>
 
-<p>Once you get the network right, Protection Domains just work. You don’t have to mind them, you can schedule your containers or VMs anywhere, and you don’t need a PhD in SolidFire cluster philosophy. Which is exactly how SolidFire is supposed to be - simple.</p>
+<p>Mellanox SN2700 and SN2100 (or SN2010) switches that many NetApp HCI customers have deployed are affordable and great building blocks for Spine &amp; Leaf networks serving iSCSI and application traffic. You can use other switches as well, of course (just stay away from stackable switch designs).</p>
+
+<p>Once you get the networking right, Protection Domains just work. You don’t have to mind them, you can schedule your containers or VMs anywhere, and you don’t need a PhD in SolidFire cluster philosophy. Which is exactly how SolidFire is supposed to be - simple.</p>
+
 
       </article>
     </div>
@@ -307,7 +310,7 @@
 
     
   </div><footer class= "footer">
-    <p>2021-07-07 14:51 </p>
+    <p>2021-07-14 18:43 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
