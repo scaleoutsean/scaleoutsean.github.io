@@ -1,0 +1,955 @@
+<!doctype html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Monitor SolidFire with SNMP | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Notes on SodliFire Performance and Event Monitoring with SNMP
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h1>Acting Technologist</h1>
+		</a>
+		
+		<h2>
+			civilizations are created by individuals
+		</h2>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+    <div class="post-container">
+      <article id = "post">
+        <h2 id = "post-title">Monitor SolidFire with SNMP</h2>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>19 Jul 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    12 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#get-solidfire-mibs">Get SolidFire MIBs</a></li>
+  <li><a href="#whats-in-solidfire-mibs">What’s in SolidFire MIBs</a></li>
+  <li><a href="#enable-snmp-service-on-solidfire-cluster">Enable SNMP service on SolidFire cluster</a></li>
+  <li><a href="#what-to-monitor-documentation-and-reference-material">What to monitor (documentation and reference material)</a>
+    <ul>
+      <li><a href="#events-and-faults">Events and Faults</a></li>
+      <li><a href="#performance">Performance</a></li>
+      <li><a href="#storage-management">Storage Management</a></li>
+      <li><a href="#cluster-and-node-monitoring">Cluster and Node Monitoring</a></li>
+    </ul>
+  </li>
+  <li><a href="#adrem-netcrunch-with-netapp-solidfire">AdRem NetCrunch with NetApp SolidFire</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="get-solidfire-mibs">Get SolidFire MIBs</h2>
+
+<p>Login to the SolidFire Web UI and download the two MIBs from the Cluster Tab.</p>
+
+<h2 id="whats-in-solidfire-mibs">What’s in SolidFire MIBs</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Group</th>
+      <th style="text-align: left">Description</th>
+      <th style="text-align: left">Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">0</td>
+      <td style="text-align: left">notifications</td>
+      <td style="text-align: left">clusterFaultNotification</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1</td>
+      <td style="text-align: left">volumes</td>
+      <td style="text-align: left">volByAccountStatsZeroBlocks</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">2</td>
+      <td style="text-align: left">nodes</td>
+      <td style="text-align: left">nodeStatsCpuUtilization</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">3</td>
+      <td style="text-align: left">cluster</td>
+      <td style="text-align: left">clusterStatsPercentUtilization</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">4</td>
+      <td style="text-align: left">drives</td>
+      <td style="text-align: left">eventDriveID (indirectly, in reports)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">5</td>
+      <td style="text-align: left">reports</td>
+      <td style="text-align: left">eventSeverity</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>To translate OIDs to English, we can use at least 2 ways:</p>
+
+<ul>
+  <li>review entries in your SNMP browser (easy; see screenshots at the bottom), or</li>
+  <li>run <code class="language-plaintext highlighter-rouge">snmptranslate</code> (assuming you’ve compiled the two SolidFire MIBs on this system) on OID 1.3.6.1.4.1.38091 (the SolidFire OID.)</li>
+</ul>
+
+<p>Most of SolidFire SNMP workload is reports (event logs). The second category is usually volume objects (volume IDs, perf metric,s etc.) - depending on how many you have.</p>
+
+<p>Example from a five-node SolidFire cluster:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Group</th>
+      <th style="text-align: center">Events/Items</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.1</td>
+      <td style="text-align: center">2904</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.2</td>
+      <td style="text-align: center">60</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.3</td>
+      <td style="text-align: center">6</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.4</td>
+      <td style="text-align: center">0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.5</td>
+      <td style="text-align: center">7500</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Note that you can also enable SNMP on the hardware level, see <a href="/2021/03/24/netapp-hci-compute-node-local-hardware-monitoring.html">this post</a>. This is more useful for NetApp HCI compute nodes and not very useful for NetApp HCI (or SolidFire) storage nodes, because SolidFire will alert you to hardware problems you need to know about.</p>
+
+<p>But if you want to monitor hardware temperature or watch RPMs of your PSU, that’s <a href="https://github.com/scaleoutsean/hcicollector/tree/v0.7/images">available</a>. For NetApp HCI nodes, contact NetApp Support for the hardware MIB file.</p>
+
+<h2 id="enable-snmp-service-on-solidfire-cluster">Enable SNMP service on SolidFire cluster</h2>
+
+<p>In Cluster &gt; SNMP:</p>
+
+<ul>
+  <li>“General SNMP Settings” - enable SNMP and make it accessible to your monitoring solution.</li>
+  <li>“SNMP Trap Settings” - this can create a lot of entries, so use sparingly, or not at all (see below)</li>
+</ul>
+
+<p>To let the requestor receive SNMP events you may need to open firewall ports. For example, in my environment I have SolidFire mNode, Demo VM Physical IP and Demo VM Virtual IP at 192.168.1.28 - 192.168.1.31, so <code class="language-plaintext highlighter-rouge">iptables -A INPUT -s 192.168.1.29/30 -p udp --dport 161 -j ACCEPT</code> (note: use the recommended firewall interface for your OS) would take care of all three (if I were to forward mNode OS logs, and unblock both virtual and physical IPs for SolidFire. For physical nodes you may also want to allow IPMI (BMC) NICs, if you’ve enabled SNMP there as well. Then save iptables or otherwise persist your firewall rules.</p>
+
+<p>If you’ve enabled SNMP v2 on the IP address $MVIP (community: public), you should be able to SNMP-walk the cluster with: <code class="language-plaintext highlighter-rouge">snmpwalk -v2 -c public $MVIP -O e 1.3.6.1.4.1.38091</code></p>
+
+<h2 id="what-to-monitor-documentation-and-reference-material">What to monitor (documentation and reference material)</h2>
+
+<p>This is the hardest question. Generally, I would suggest to not monitor what you have no influence over. One example that I mention in the video (at the bottom)</p>
+
+<ul>
+  <li>NetApp SolidFire User Guide for ActiveIQ - you can find it on a search engine or <a href="https://help.monitoring.solidfire.com/Resources/Active%20IQ%20User%20Guide_Ext.pdf">somewhere on the NetApp Web site</a>. This UG should tell you what NetApp sees as important, so I think it’s the 80% from the famous 80/20 rule.</li>
+  <li>NetApp TR-4694 - you may have problems finding this one, but there’s a copy <a href="https://github.com/scaleoutsean/hcicollector/blob/v7/TR-4694-0618-Visualizing-NetApp-HCI-Performance.pdf">here</a>. If you can find it, you can also read the SolidFire documentation, including API documentation, to see how performance, disk utilization, capacity utilization and error reporting works</li>
+</ul>
+
+<p>You could also take a look at NetApp Cloud Insights demo with SolidFire, or view sample screenshots from <a href="https://github.com/scaleoutsean/hcicollector/tree/v0.7/images">HCI Collector</a> (Grafana) or <a href="https://github.com/mjavier2k/solidfire-exporter">SolidFire Exporter</a> (also Grafana) to see what metrics they emphasize (SolidFire Exporter gets many - if not all). The last two are community projects.</p>
+
+<h3 id="events-and-faults">Events and Faults</h3>
+
+<p>Note that SolidFire events are many - it can be hundreds per minute. You’d probably like to just watch for notifications (<code class="language-plaintext highlighter-rouge">clusterFaultNotification</code>, <code class="language-plaintext highlighter-rouge">clusterFaultResolvedNotification</code>) and for faults that persist (i.e. no resolution) check the SolidFire UI or HCC or ActiveIQ.</p>
+
+<p>Severity levels Critical and Error are something that should be dealt with promptly.</p>
+
+<p>Example of an event with the severity level Warning, due to over-provisioned IOPS (on SolidFire Demo VM, which is capped at 3,000):</p>
+
+<p><img src="/assets/images/solidfire-snmp-06-warning.png" alt="Event severity levels in SolidFire" /></p>
+
+<p>The same via SNMP:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iso.3.6.1.4.1.38091.1.1.5.1.1.9.377.3155484232.1 = STRING: "clusterIOPSAreOverProvisioned"
+iso.3.6.1.4.1.38091.1.1.5.1.1.10.377.3155484232.1 = STRING: "{\"blocksUpgrade\":false,\"clusterFaultID\":181,\"code\":\"clusterIOPSAreOverProvisioned\",\"data\":null,\"date\":\"2021-05-30T07:02:34.824274Z\",\"details\":\"The sum of all minimum QoS IOPS (5300) is greater than the expected IOPS (3000) of the cluster. The minimum QoS can not be maintained for all volumes simultaneously in this condition. Adjust QoS settings on one or more volumes to not exceed available cluster IOPS.\",\"driveID\":0,\"driveIDs\":[],\"externalSource\":\"\",\"networkInterface\":\"\",\"nodeHardwareFaultID\":0,\"nodeID\":0,\"resolved\":false,\"resolvedDate\":\"\",\"serviceID\":0,\"severity\":\"warning\",\"type\":\"cluster\"}"
+</code></pre></div></div>
+
+<p>There’s no way to monitor individual drives through SolidFire SNMP but, as mentioned above, <code class="language-plaintext highlighter-rouge">eventDriveID</code> can call out drive ID if a drive fails or has other problems.</p>
+
+<p>It seems there’s also no way to monitor cluster storage fullness (not directly at least), which is something that’s very useful, but as you get closer and hit various levels of fullness (there’s several), you get Warnings for that too. So just make sure you watch these, as they compensate for the lack of some SNMP counters.</p>
+
+<h3 id="performance">Performance</h3>
+
+<p>Like I said above, I would recommend to minimize the amount of indicators watched - it is aesthetically pleasing but it doesn’t necessarily help you manage better.</p>
+
+<p>I recommend to review the documentation and external resources mentioned above, but aside from that I’ll state personal preferences and opinions about counters related to performance in SNMP-based monitoring:</p>
+
+<ul>
+  <li>volActualIOPs - may help identify busy volumes (or completely idle volumes)</li>
+  <li>volAvgIOPSize - if you’re not sure about the “average” IO size, may help you adjust QoS or alert you to the possibility of highly sequential workloads on a VMware datastore, for example</li>
+  <li>volBurstOPSCredit - better to sometimes check ActiveIQ for QoS recommendations, although even those cannot be correct - only <em>you</em> know what’s right for your environment</li>
+  <li><strong>volThrottle</strong> - this one is useful, it can highlight volumes where workload is often throttled, i.e. you may want to check top 5 throttled once a week to see if those are just unimportant workloads being throttled, or important apps that could benefit from a better Max or Burst QoS. If the volume is a datastore, maybe you don’t want to be alerted all the time, but if it’s a Docker ext4 or Windows NTFS volume used by only SQL Server, you’d probably want to examine QoS settings if throttling goes on for 60 minutes</li>
+  <li>volReadOps - mostly for reporting/charts, not very actionable, but can be useful to application users or other stakeholders</li>
+  <li>volWriteOps - mostly for reporting/charts, not very actionable, but can be useful to application users or other stakeholders</li>
+  <li>volUnalignedReads - no longer important in the context of VMs and containers</li>
+  <li>volUnalignedWrites - no longer important in the context of VMs and containers</li>
+  <li><strong>volPercentUtilization</strong> - can be used to better adjust QoS policies (downgrade volume QoS for apps that need less, give more to apps that need more) - see reference material for the details</li>
+  <li><strong>volClientQDepth</strong> - SolidFire caps I/O queue at 32; may appear in parallel with volThrottle, but to eliminate false warnings, maybe alert only if this persists over 30 minutes or few hours (some throttling is normal due to Max/Burst QoS or queue depth limit (32))</li>
+  <li>volReadLatencyUS - not that useful unless cluster is very heavily loaded and normally goes above 2,000 us (2ms+) when workload is much higher than QoS, but can be interesting to various stakeholders</li>
+  <li>volWriteLatencyUS - not that useful unless cluster is very heavily loaded and normally goes above 2,000 us (2ms+) when workload is much higher than QoS, but can be interesting to various stakeholders</li>
+  <li>volTotalLatencyUS - not very actionable, but can be interesting to various stakeholders</li>
+</ul>
+
+<p>My main objection to trying to manage storage by following (most of) these indicators via SNMP is that without knowing QoS settings on (say) vSphere datastores, and why you set them, it’s not useful to know that some volume is doing 15,000 or 150 IOPS. On SolidFire you are unlikely to see 150 IOPS if Min QoS is 2,000, <em>unless</em> the application is idle.</p>
+
+<p>Because of that it’s usually less urgent to deal with “insufficient volume performance” issues. Even throttling and client queue depth are not actionable information on their own (without knowing the context), but at least we can occasionally pick Top 5 throttled volumes and review the stack from a holistic application and storage perspective.</p>
+
+<p>One note about volThrottle vs. volClientQDepth: if my Max is 1,000 IOPS, after 60 seconds of reading at 10 MB/s I will be throttled, but my client queue depth may still be low (5, for example). But if I attempted to write for just 65 seconds at 100 MB/s in this situation, then I would fill the volume’s I/O queue and see 32 on that counter.</p>
+
+<h3 id="storage-management">Storage Management</h3>
+
+<ul>
+  <li>volByAccountStatsAccountID - if you have more than one storage account (say, one VMware and one Kubernetes, or two VMware environments) - this lets us compare user groups in aggregate account-level terms (IOPS, capacity, efficiency, etc.) but such reports may be easier to do in ActiveIQ or with HCI Collector or SolidFire Exporter</li>
+  <li>volByAccountStatsUnalignedReads - not very relevant except for physical servers</li>
+  <li>volByAccountStatsUnalignedWrites - not very relevant except for physical servers</li>
+  <li><strong>volByAccountStatsNonZeroBlocks</strong> - used (non-empty blocks) - SolidFire volumes are thin-provisioned, so the ratio of zero blocks (below) vs non-zero blocks shows <em>real</em> volume fullness</li>
+  <li><strong>volByAccountStatsZeroBlocks</strong> - can be useful in the sense that when zero blocks divided by non-zero blocks is very low (say, 20%), it may be that discard/rethin/fstrim is not enabled on the client (vSphere, Windows physical server, KVM server, container, etc.) which means that eventually your volume utilization will seemingly hit 100% although the volume may be just half-full</li>
+  <li>volByAccountStatsAccessGroups - can be interesting with several storage accounts on the SolidFire cluster, to see which VMware or Kubernetes Cluster or group of HA nodes</li>
+</ul>
+
+<h3 id="cluster-and-node-monitoring">Cluster and Node Monitoring</h3>
+
+<p>This isn’t a complete list but I marked only one as very useful. The reason is it there’s any problem that matters, we learn of it through Events and Faults.</p>
+
+<ul>
+  <li><strong>clusterStatsPercentUtilization</strong> - useful; if you’re doing 200,000 IOPS on a 4-node H610S (100K/node) cluster, this should show 50 (%). Because volumes are automatically balanced for both capacity and performance across all cluster members, it makes sense to watch just one, cluster-wide performance utilization counter</li>
+  <li>nodeStatsClusterBytesIn - bytes are always coming in or going out and when they don’t, we get cluster-level faults, so not particularly interesting</li>
+  <li>nodeStatsClusterBytesOut - same as above, but may be useful when monitoring SolidFire’s Backup-to-S3 traffic</li>
+  <li>networkUtilizationCluster - same as above (this is for Management interface)</li>
+  <li>networkUtilizationStorage - same as above (this is for iSCSI interface)</li>
+  <li>nodeStatsStorageBytesIn - same as above</li>
+  <li>nodeStatsStorageBytesOut - same as above, but may be useful when monitoring backup or replication traffic</li>
+  <li>nodeStatsMgmtBytesIn -  not very actionable and when it stops we get cluster-level faults anyway</li>
+  <li>nodeStatsMgmtBytesOut  - not very useful, there’s always bytes In or Out</li>
+  <li>nodeStatsCpuUtilization - not very useful; SolidFire nodes have enough CPU power to deliver promised throughput, storage efficiencies and storage maintenance (GC runs once an hour and there are automated background tasks which also consume CPU resources), so there isn’t much we need to do with this information</li>
+  <li>nodeStatsUsedMemory - same as above, not very actionable - SolidFire nodes have enough RAM for their rated performance, and we can’t add more even if we wanted to</li>
+</ul>
+
+<p>We can use some counters to compute useful indicators. One example is (volByAccountStatsNonZeroBlocks / (volByAccountStatsZeroBlocks + volByAccountStatsNonZeroBlocks)), another would be the sum of all volumes (SolidFire 12.3 supports up to 400 actively used iSCSI volumes per node).</p>
+
+<h2 id="adrem-netcrunch-with-netapp-solidfire">AdRem NetCrunch with NetApp SolidFire</h2>
+
+<p>Here are some example screenshots from one of SNMP monitoring applications I like, <a href="https://www.adremsoft.com/netcrunch/products/snmp">NetCrunch</a> (runs on Windows).</p>
+
+<p>You can add SolidFire nodes as generic Linux nodes, but you can also provide your own icons, etc.</p>
+
+<p><img src="/assets/images/solidfire-snmp-00-add-solidfire-device.png" alt="Add SolidFire Device Type" /></p>
+
+<p>NetCrunch has an easy-to-use SNMP Manager that lets you add and compile SolidFire MIBs. After compiling, you can browse the details in NetCrunch SNMP Manager:</p>
+
+<p><img src="/assets/images/solidfire-snmp-01-mib-browser.png" alt="Compile SolidFire MIBs" /></p>
+
+<p>These correspond to the five categories from the table at the top of this post.</p>
+
+<p>Cluster utilization (%) is one of the useful indicators:</p>
+
+<p><img src="/assets/images/solidfire-snmp-02-mib-browser.png" alt="Browse SolidFire MIBs" /></p>
+
+<p>To monitor IOPS on individual Volume ID, find and pick the counter:</p>
+
+<p><img src="/assets/images/solidfire-snmp-03-counters.png" alt="Monitor SolidFire SNMP counters" /></p>
+
+<p>Add it to the list of monitored counters:</p>
+
+<p><img src="/assets/images/solidfire-snmp-04-monitor-vol-counter.png" alt="Monitor SolidFire SNMP counters" /></p>
+
+<p>Pick Volume by ID: you can identify the IDs in SolidFire Web UI. By default many NetApp HCI customers have volume IDs 1 and 2 used for vCenter and mNnode (HCC), for example. Here those two are lightly utilized.</p>
+
+<p><img src="/assets/images/solidfire-snmp-05-monitor-vol-counter.png" alt="Monitor SolidFire SNMP counters" /></p>
+
+<p>SolidFire SNMP and NetCrunch will also let you obtain various Linux SNMP counters, but to me a lot of that is just unnecessary data, not information. So I would recommend against showing more than the absolute minimum you need to  efficiently manage your storage services with the least amount of work.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<ul>
+  <li>Review ActiveIQ and TR-4694 (or SolidFire Admin Guide and API documentation) for the details on what is commonly monitored.</li>
+  <li>SolidFire SNMP counters (as you can see in the MIB files) don’t have everything that is available through through the SolidFire API. In addition to that, some “analytics” insights require more than one compute operation which makes it a bit hard to do in SNMP applications. Because of that it makes sense to:
+    <ul>
+      <li>Focus on the important and available, such as (1) cluster faults and events, (2) cluster utilization, (3) volume QoS and queues</li>
+      <li>Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter)</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li>Very simple example of compiling SolidFire MIBs and using it in AdRem NetCrunch: <a href="https://youtu.be/4SmN2FYzr28">1m19s</a></li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related">
+
+    <h4>Possibly related</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/07/16/iqn-level-chap-authentiation-on-solidfire.html">• Storage account-level vs. IQN-level CHAP on SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2021/07/06/e-series-ddp-expansion-and-rebalancing.html">• Faster initialization and rebalancing with Dynamic Disk Pools on NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+    </div>
+    
+
+    
+  </div><footer class= "footer">
+    <p>2021-07-19 19:37 </p>
+    <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+<script data-goatcounter="https://ers3x2m6spekxd.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
