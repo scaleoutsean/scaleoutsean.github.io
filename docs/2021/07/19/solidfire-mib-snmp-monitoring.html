@@ -114,7 +114,7 @@
     <ul>
       <li><a href="#events-and-faults">Events and Faults</a>
         <ul>
-          <li><a href="#severity-in-clusterfaultdetails-136141380911151110">Severity in clusterFaultDetails (1.3.6.1.4.1.38091.1.1.5.1.1.10)</a></li>
+          <li><a href="#event-severity-in-clusterfaultdetails-136141380911151110">Event Severity in clusterFaultDetails (1.3.6.1.4.1.38091.1.1.5.1.1.10)</a></li>
           <li><a href="#event-types-13614138091115216">Event Types (1.3.6.1.4.1.38091.1.1.5.2.1.6)</a></li>
           <li><a href="#cluster-fault-error-codes-13614138091115119">Cluster Fault Error Codes (1.3.6.1.4.1.38091.1.1.5.1.1.9)</a></li>
         </ul>
@@ -124,7 +124,7 @@
       <li><a href="#cluster-and-node-monitoring">Cluster and Node Monitoring</a></li>
     </ul>
   </li>
-  <li><a href="#adrem-netcrunch-with-netapp-solidfire">AdRem NetCrunch with NetApp SolidFire</a></li>
+  <li><a href="#walk-through-adrem-netcrunch-with-netapp-solidfire">Walk-Through: AdRem NetCrunch with NetApp SolidFire</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#demo">Demo</a></li>
 </ul>
@@ -244,18 +244,18 @@
 
 <ul>
   <li>NetApp SolidFire User Guide for ActiveIQ - you can find it on a search engine or <a href="https://help.monitoring.solidfire.com/Resources/Active%20IQ%20User%20Guide_Ext.pdf">somewhere on the NetApp Web site</a>. This UG should tell you what NetApp sees as important, so I think it’s the 80% from the famous 80/20 rule.</li>
-  <li>NetApp TR-4694 - you may have problems finding this one, but there’s a copy <a href="https://github.com/scaleoutsean/hcicollector/blob/v7/TR-4694-0618-Visualizing-NetApp-HCI-Performance.pdf">here</a>. If you can find it, you can also read the SolidFire documentation, including API documentation, to see how performance, disk utilization, capacity utilization and error reporting works</li>
+  <li>NetApp TR-4694 (on SolidFire performance and capacity monitoring) - you may have problems finding this one, but there’s a copy <a href="https://github.com/scaleoutsean/hcicollector/blob/v7/TR-4694-0618-Visualizing-NetApp-HCI-Performance.pdf">right here</a>. If you can find it, you can also read the SolidFire documentation, including API documentation, to see how performance, disk utilization, capacity utilization and error reporting works</li>
 </ul>
 
 <p>You could also take a look at NetApp Cloud Insights demo with SolidFire, or view sample screenshots from <a href="https://github.com/scaleoutsean/hcicollector/tree/v0.7/images">HCI Collector</a> (Grafana) or <a href="https://github.com/mjavier2k/solidfire-exporter">SolidFire Exporter</a> (also Grafana) to see what metrics they emphasize (SolidFire Exporter gets many - if not all). The last two are community projects.</p>
 
 <h3 id="events-and-faults">Events and Faults</h3>
 
-<p>Note that SolidFire events are many - it can be hundreds per minute. You’d probably like to just watch for notifications (<code class="language-plaintext highlighter-rouge">clusterFaultNotification</code>, <code class="language-plaintext highlighter-rouge">clusterFaultResolvedNotification</code>) and for faults that persist (i.e. no resolution) check the SolidFire UI or HCC or ActiveIQ.</p>
+<p>Note that SolidFire events are many - there can be hundreds per minute. You’d probably like to just watch for notifications (<code class="language-plaintext highlighter-rouge">clusterFaultNotification</code>, <code class="language-plaintext highlighter-rouge">clusterFaultResolvedNotification</code>) and for faults that persist (i.e. no resolution) check the SolidFire UI or HCC or ActiveIQ.</p>
 
 <p>Severity levels Critical and Error are something that should be dealt with promptly.</p>
 
-<p>Example of an event with severity level Warning, due to over-provisioned IOPS (on SolidFire Demo VM, which is capped at 3,000):</p>
+<p>Example of an event with the severity level Warning, due to over-provisioned IOPS (on a SolidFire Demo VM, which is capped at 3,000 IOPS):</p>
 
 <p><img src="/assets/images/solidfire-snmp-06-warning.png" alt="Event severity levels in SolidFire" /></p>
 
@@ -264,10 +264,6 @@
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iso.3.6.1.4.1.38091.1.1.5.1.1.9.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"clusterIOPSAreOverProvisioned"</span>
 iso.3.6.1.4.1.38091.1.1.5.1.1.10.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"{</span><span class="se">\"</span><span class="s2">blocksUpgrade</span><span class="se">\"</span><span class="s2">:false,</span><span class="se">\"</span><span class="s2">clusterFaultID</span><span class="se">\"</span><span class="s2">:181,</span><span class="se">\"</span><span class="s2">code</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">clusterIOPSAreOverProvisioned</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">data</span><span class="se">\"</span><span class="s2">:null,</span><span class="se">\"</span><span class="s2">date</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">2021-05-30T07:02:34.824274Z</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">details</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">The sum of all minimum QoS IOPS (5300) is greater than the expected IOPS (3000) of the cluster. The minimum QoS can not be maintained for all volumes simultaneously in this condition. Adjust QoS settings on one or more volumes to not exceed available cluster IOPS.</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">driveID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">driveIDs</span><span class="se">\"</span><span class="s2">:[],</span><span class="se">\"</span><span class="s2">externalSource</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">networkInterface</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">nodeHardwareFaultID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">nodeID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">resolved</span><span class="se">\"</span><span class="s2">:false,</span><span class="se">\"</span><span class="s2">resolvedDate</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">serviceID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">severity</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">warning</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">type</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">cluster</span><span class="se">\"</span><span class="s2">}"</span>
 </code></pre></div></div>
-
-<p>There’s no way to monitor individual drives through SolidFire SNMP but, as mentioned above, <code class="language-plaintext highlighter-rouge">eventDriveID</code> can call out drive ID if a drive fails or has other problems.</p>
-
-<p>It seems there’s also no way to monitor cluster storage fullness (not directly at least), which is something that’s very useful, but as you get closer and hit various levels of fullness (there’s several), you get Warnings for that too. So just make sure you watch these, as they compensate for the lack of some SNMP counters.</p>
 
 <h4 id="event-severity-in-clusterfaultdetails-136141380911151110">Event Severity in clusterFaultDetails (1.3.6.1.4.1.38091.1.1.5.1.1.10)</h4>
 
@@ -300,7 +296,7 @@ snmpwalk <span class="nt">-v2c</span> <span class="nt">-c</span> public <span cl
   <li>serviceEvent - various service-related notifications</li>
 </ul>
 
-<p>As for <code class="language-plaintext highlighter-rouge">driveEvent</code>, I added it manually because that’s the one everyone wants to know about.</p>
+<p>As for <code class="language-plaintext highlighter-rouge">driveEvent</code>, I added it manually because that’s the one everyone wants to know about. There’s no way to monitor individual disk drive events through SolidFire SNMP but, <code class="language-plaintext highlighter-rouge">eventDriveID</code> can call out disk ID if a drive fails or has other problem.</p>
 
 <p>A complete list of SolidFire Event Types can be found in the <a href="https://docs.netapp.com/us-en/vcp/vcp_task_reports_event_logs.html">SolidFire documentation</a>. From that page, among the more interesting ones (that should happen extremely rarely) could be:</p>
 
@@ -334,7 +330,7 @@ snmpwalk <span class="nt">-v2c</span> <span class="nt">-c</span> public <span cl
   <li>volumesOffline - volumes offline (could be to multiple concurrent node or disk failures or something else)</li>
 </ul>
 
-<p>As you can see from that KB link (for <code class="language-plaintext highlighter-rouge">clusterCannotSync</code>) or <a href="https://kb.netapp.com/Advice_and_Troubleshooting/Data_Storage_Software/Element_Software/blockServiceUnhealthy_and_clusterCannotSync_alerts_after_upgrade_to_12.0">this one</a>) (NetApp Support login required), most if not all errors and what to do about them is documented in the SolidFire documentation, ActiveIQ or Support portal (KBs).</p>
+<p>As you can see from that KB link (for <code class="language-plaintext highlighter-rouge">clusterCannotSync</code>, above, or <a href="https://kb.netapp.com/Advice_and_Troubleshooting/Data_Storage_Software/Element_Software/blockServiceUnhealthy_and_clusterCannotSync_alerts_after_upgrade_to_12.0">this one</a>) (NetApp Support login required), most if not all errors and what to do about them is documented in the SolidFire documentation, ActiveIQ or Support portal (KBs).</p>
 
 <h3 id="performance">Performance</h3>
 
@@ -395,7 +391,9 @@ snmpwalk <span class="nt">-v2c</span> <span class="nt">-c</span> public <span cl
 
 <p>We can use some of these counters to compute useful indicators. One example is (volByAccountStatsNonZeroBlocks / (volByAccountStatsZeroBlocks + volByAccountStatsNonZeroBlocks)), another would be the sum of all volumes (SolidFire 12.3 supports up to 400 actively used iSCSI volumes per node).</p>
 
-<h2 id="adrem-netcrunch-with-netapp-solidfire">AdRem NetCrunch with NetApp SolidFire</h2>
+<p>It seems there’s no way to monitor cluster storage fullness (not directly at least), which is something that would be very useful, but as you get closer and hit various levels of fullness (there’s several), you get a Warning (or later Error, and Critical) severity event as those occur. So just make sure you watch those events, as they compensate for the lack of some SNMP counters for storage capacity.</p>
+
+<h2 id="walk-through-adrem-netcrunch-with-netapp-solidfire">Walk-Through: AdRem NetCrunch with NetApp SolidFire</h2>
 
 <p>Here are some example screenshots from one of SNMP monitoring applications I like, <a href="https://www.adremsoft.com/netcrunch/products/snmp">NetCrunch</a> (runs on Windows).</p>
 
@@ -1019,7 +1017,7 @@ snmpwalk <span class="nt">-v2c</span> <span class="nt">-c</span> public <span cl
 
     
   </div><footer class= "footer">
-    <p>2021-07-21 00:44 </p>
+    <p>2021-07-21 22:25 </p>
     <p>Copyright © 2021 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
