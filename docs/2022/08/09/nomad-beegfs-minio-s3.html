@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Nomad-managed MinIO service on BeeGFS filesystem
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Nomad-managed MinIO service on BeeGFS filesystem" />
+<meta property="og:description" content="Nomad-managed MinIO service on BeeGFS filesystem" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/08/09/nomad-beegfs-minio-s3.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/08/09/nomad-beegfs-minio-s3.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-09T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO","dateModified":"2022-08-09T00:00:00+08:00","datePublished":"2022-08-09T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/08/09/nomad-beegfs-minio-s3.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/08/09/nomad-beegfs-minio-s3.html","description":"Nomad-managed MinIO service on BeeGFS filesystem","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>09 Aug 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    5 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>I have a small Nomad cluster which can access a BeeGFS filesystem.</p>
+
+<p>One of these host runs Nomad server <em>and</em> client, another runs just Nomad client. Both are also BeeGFS clients.</p>
+
+<p>I want to make a BeeGFS directory accessible via S3. Download MinIO, accept the license, etc. Then run this Nomad job.</p>
+
+<div class="language-hcl highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">job</span> <span class="s2">"minio-service"</span> <span class="p">{</span>
+  <span class="nx">datacenters</span> <span class="p">=</span> <span class="p">[</span><span class="s2">"dc1"</span><span class="p">]</span>
+  <span class="nx">type</span> <span class="p">=</span> <span class="s2">"service"</span>
+  <span class="nx">group</span> <span class="s2">"nodes"</span> <span class="p">{</span>
+    <span class="nx">count</span> <span class="p">=</span> <span class="s2">"2"</span>
+    <span class="nx">constraint</span> <span class="p">{</span>
+      <span class="nx">distinct_hosts</span> <span class="p">=</span> <span class="s2">"true"</span>
+    <span class="p">}</span>
+    <span class="nx">task</span> <span class="s2">"payload"</span> <span class="p">{</span>
+      <span class="nx">driver</span> <span class="p">=</span> <span class="s2">"raw_exec"</span>
+      <span class="nx">user</span> <span class="p">=</span> <span class="s2">"root"</span>
+      <span class="nx">config</span> <span class="p">{</span>
+        <span class="nx">command</span> <span class="p">=</span> <span class="s2">"minio"</span>
+        <span class="nx">args</span>    <span class="p">=</span> <span class="p">[</span><span class="s2">"server"</span><span class="p">,</span> <span class="s2">"--address"</span><span class="p">,</span> <span class="s2">":9000"</span><span class="p">,</span> <span class="s2">"--console-address"</span><span class="p">,</span> <span class="s2">":9090"</span><span class="p">,</span> <span class="s2">"/mnt/beegfs/data-volume"</span><span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This results in each BeeGFS client running a MinIO server.</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-04.png" alt="MinIO jobs running on Nomad/BeeGFS clients" /></p>
+
+<p>Each MinIO instance can be accessed on Nomad/BeeGFS client’s IP address. Create a bucket (<code class="language-plaintext highlighter-rouge">test</code>) and upload a file to it.</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-01.png" alt="Bucket view from the first stand-alone MinIO node" /></p>
+
+<p>On the other Nomad/BeeGFS node, we can see the bucket <code class="language-plaintext highlighter-rouge">test</code> and file even though the instances are completely independent:</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-02.png" alt="Bucket view from the other stand-alone MinIO node" /></p>
+
+<p>This test bucket can be viewed from any BeeGFS client that has access to that path.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/data-volume/test
+total 2
+drwxr-xr-x 3 root             root             1 Aug 10 06:34 <span class="nb">.</span>
+drwxr-xr-x 2 root             root             1 Aug 10 06:17 iscsi-vlan-add.png
+drwxrwxrwx 4 systemd-coredump systemd-coredump 4 Aug 10 06:14 ..
+</code></pre></div></div>
+
+<p>(systemd-coredump can be ignored - Docker used to map to that user’s UID/GID but username has changed since then)</p>
+
+<p>That object can be accessed from either of the MinIO stand-alone server instances because they can both access data on shared file system and use the same user (root) to run.</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-03.png" alt="Download MinIO object from any MinIO instance" /></p>
+
+<p>One Nomad client was rebooted to see if Nomad server could detect it.</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-06.png" alt="Nomad server detects Nomad/BeeGFS client downtime" /></p>
+
+<p>After the rebooted Nomad client recovered, Nomad restarted MinIO service on it, and everything was fine again.</p>
+
+<h2 id="challenges-and-to-dos">Challenges and To-Do’s</h2>
+
+<p>This setup looks usable. But there be dangers.</p>
+
+<p>For example, one thing I didn’t notice before is that MinIO objects are saved as directories. That’s interesting… I have an older MinIO elsewhere and it doesn’t save objects as directories. After writing this post I looked it up and the details are available <a href="https://blog.min.io/minio-versioning-metadata-deep-dive/">here</a>.</p>
+
+<p>In any case, because of that one can’t just create a file on Nomad/BeeGFS client and see it in the MinIO Web UI.</p>
+
+<p>To copy an object, I copied the existing image file like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cp</span> <span class="nt">-pr</span> iscsi-vlan-add iscsi-vlan-add-sytem-copy
+
+<span class="nv">$ </span>ll
+total 2
+drwxr-xr-x 4 root             root             2 Aug 10 06:52 ./
+drwxrwxrwx 4 systemd-coredump systemd-coredump 4 Aug 10 06:14 ../
+drwxr-xr-x 2 root             root             1 Aug 10 06:17 iscsi-vlan-add-system-copy.png/
+drwxr-xr-x 2 root             root             1 Aug 10 06:17 iscsi-vlan-add.png/
+</code></pre></div></div>
+
+<p>What’s in those subdirectories? Object data (and probably some metadata) in binary format.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll iscsi-vlan-add-system-copy.png/
+total 20
+drwxr-xr-x 2 root root     1 Aug 10 06:17 ./
+drwxr-xr-x 4 root root     2 Aug 10 06:52 ../
+<span class="nt">-rw-r--r--</span> 1 root root 18497 Aug 10 06:17 xl.meta
+</code></pre></div></div>
+
+<p>When a MinIO object is created like that, it can be viewed and accessed from the MinIO Web console.</p>
+
+<p><img src="/assets/images/nomad-beegfs-minio-service-05.png" alt="Download MinIO object from any MinIO instance" /></p>
+
+<p>To create a new image from Linux shell, I had to create a directory and copy existing xl.meta from another directory. That worked - I was able to see (preview) the new image in MinIO console.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir </span>cli-image.png
+
+<span class="nv">$ </span>ll
+total 2
+drwxr-xr-x 5 root             root             3 Aug 10 06:59 ./
+drwxrwxrwx 4 systemd-coredump systemd-coredump 4 Aug 10 06:14 ../
+drwxr-xr-x 2 root             root             0 Aug 10 06:59 cli-image.png/
+drwxr-xr-x 2 root             root             1 Aug 10 06:17 iscsi-vlan-add-system-copy.png/
+drwxr-xr-x 2 root             root             1 Aug 10 06:17 iscsi-vlan-add.png/
+
+<span class="nv">$ </span><span class="nb">cp</span> <span class="nt">-pr</span> iscsi-vlan-add.png/xl.meta cli-image.png/
+</code></pre></div></div>
+
+<p>This isn’t very convenient, and as noted earlier, these binary blobs could contain various object metadata so it may be dangerous to copy them like this. Instead, we should deploy MinIO client to copy data from BeeGFS to MinIO directory on BeeGFS (or in reverse).</p>
+
+<p>Copying in reverse is just as inconvenient. And there may be other issues with larger (multi-part) objects. As long as we can’t avoid this behavior we must use the S3 API to copy files to and from MinIO bucket.</p>
+
+<p>Of course, all this is very inefficient as data moves between BeeGFS and MinIO via S3 client even though the file and object may be on the same file system.</p>
+
+<p>Maybe one could deploy an <a href="https://dl.min.io/server/minio/release/linux-amd64/archive/">older version of MinIO</a> (in which objects map to files 1:1), and then upgrade MinIO to latest to get the old 1:1 mapping between files and objects and still have a new version with bug and security updates. My long-running MinIO instance setup some time ago but now running “latest”, still creates new objects with 1:1 mapping, which indicates that this workaround could work (edit: I’ve since tried this on a new system and it works for now; edit 2 (Dec 15, 2022): see <a href="https://min.io/docs/minio/linux/operations/install-deploy-manage/migrate-fs-gateway.html">this</a>).</p>
+
+<p>In terms of making this deployment production-worthy, we should not run MinIO service as root, we should use TLS certificates, deploy Consul (for service mesh) and Vault (for secrets), and add a front-end HTTPS load-balancer. You’ve probably noticed I didn’t create any users in MinIO but if I did, I’d have to do that consistently on both sides which wouldn’t be fun, even if it worked, so it’d be better to use external authentication (OpenID, ADS, LDAP) for non-admin users.</p>
+
+<p>Individual users who need S3 for upload/download via S3 to a directory they own could probably run a single stand-alone MinIO instance using their user name (rather than the root user) - just make sure to get a TLS certificate and a matching DNS entry, and configure a non-default MinIO admin name and password. Maybe also pick a non-default port to avoid port collision with other MinIO instances (if you can’t use Consul or existing reverse proxy). But if security and auditing are required, it’s best to have MinIO properly managed by administrators.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Monitor SolidFire with SNMP | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Notes on SodidFire Performance and Event Monitoring with SNMP
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Monitor SolidFire with SNMP | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Monitor SolidFire with SNMP" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Notes on SodidFire Performance and Event Monitoring with SNMP" />
+<meta property="og:description" content="Notes on SodidFire Performance and Event Monitoring with SNMP" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/07/19/solidfire-mib-snmp-monitoring.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/07/19/solidfire-mib-snmp-monitoring.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-19T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Monitor SolidFire with SNMP","dateModified":"2021-07-19T00:00:00+08:00","datePublished":"2021-07-19T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/07/19/solidfire-mib-snmp-monitoring.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2021/07/19/solidfire-mib-snmp-monitoring.html","description":"Notes on SodidFire Performance and Event Monitoring with SNMP","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Monitor SolidFire with SNMP</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>19 Jul 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    31 minute read
+  
+
+    </span>
+  </div>
+  
+        <p><strong>NOTICE</strong>: any and all credentials and tokens on this page are samples, not leaked.</p>
+
+<!-- TOC -->
+
+<ul>
+  <li><a href="#get-solidfire-mibs">Get SolidFire MIBs</a></li>
+  <li><a href="#whats-in-solidfire-mibs">What’s in SolidFire MIBs</a></li>
+  <li><a href="#enable-snmp-service-on-solidfire-cluster">Enable SNMP service on SolidFire cluster</a>
+    <ul>
+      <li><a href="#snmp-v2">SNMP v2</a></li>
+      <li><a href="#snmp-v3">SNMP v3</a></li>
+    </ul>
+  </li>
+  <li><a href="#what-to-monitor-documentation-and-reference-material">What to monitor (documentation and reference material)</a>
+    <ul>
+      <li><a href="#events-and-faults">Events and Faults</a>
+        <ul>
+          <li><a href="#event-severity-in-clusterfaultdetails-136141380911151110">Event Severity in clusterFaultDetails (1.3.6.1.4.1.38091.1.1.5.1.1.10)</a></li>
+          <li><a href="#event-types-13614138091115216">Event Types (1.3.6.1.4.1.38091.1.1.5.2.1.6)</a></li>
+          <li><a href="#cluster-fault-error-codes-13614138091115119">Cluster Fault Error Codes (1.3.6.1.4.1.38091.1.1.5.1.1.9)</a></li>
+        </ul>
+      </li>
+      <li><a href="#performance">Performance</a></li>
+      <li><a href="#storage-management">Storage Management</a></li>
+      <li><a href="#cluster-and-node-monitoring">Cluster and Node Monitoring</a></li>
+    </ul>
+  </li>
+  <li><a href="#walk-through-adrem-netcrunch-with-netapp-solidfire">Walk-Through: AdRem NetCrunch with NetApp SolidFire</a>
+    <ul>
+      <li><a href="#configuration">Configuration</a></li>
+      <li><a href="#snmp-events-errors-and-events-vs-snmp-traps">SNMP Events (Errors and Events) vs. SNMP Traps</a></li>
+      <li><a href="#snmp-performance-monitoring">SNMP Performance Monitoring</a></li>
+      <li><a href="#alerts-for-performance-snmp-variable-values-and-cluster-errorsevents">Alerts for performance, SNMP variable values and Cluster errors/events</a>
+        <ul>
+          <li><a href="#snmpwalk-for-cluster-errors-and-events">snmpwalk for Cluster Errors and Events</a></li>
+        </ul>
+      </li>
+      <li><a href="#snmp-traps-cluster-fault-trap-and-cluster-resolved-fault-trap-examples">SNMP Traps: Cluster Fault Trap and Cluster Resolved Fault Trap examples</a>
+        <ul>
+          <li><a href="#cluster-fault-trap">Cluster Fault Trap</a></li>
+          <li><a href="#cluster-resolved-fault-trap">Cluster Resolved Fault Trap</a></li>
+          <li><a href="#apply-group-filters-to-snmp-traps-from-all-solidfire-nodes">Apply group filters to SNMP Traps from all SolidFire nodes</a></li>
+          <li><a href="#loose-vs-strict-rules">Loose vs. strict rules</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#demo">Demo</a></li>
+  <li><a href="#appendix-a">Appendix A</a></li>
+</ul>
+
+<!-- /TOC -->
+
+<h2 id="get-solidfire-mibs">Get SolidFire MIBs</h2>
+
+<p>Login to the SolidFire Web UI and download the two MIBs from Cluster tab.</p>
+
+<p>Compile them using a MIB compiler for your monitoring solution.</p>
+
+<h2 id="whats-in-solidfire-mibs">What’s in SolidFire MIBs</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Group</th>
+      <th style="text-align: left">Description</th>
+      <th style="text-align: left">Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">0</td>
+      <td style="text-align: left">notifications</td>
+      <td style="text-align: left">clusterFaultNotification</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1</td>
+      <td style="text-align: left">volumes</td>
+      <td style="text-align: left">volByAccountStatsZeroBlocks</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">2</td>
+      <td style="text-align: left">nodes</td>
+      <td style="text-align: left">nodeStatsCpuUtilization</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">3</td>
+      <td style="text-align: left">cluster</td>
+      <td style="text-align: left">clusterStatsPercentUtilization</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">4</td>
+      <td style="text-align: left">drives</td>
+      <td style="text-align: left">eventDriveID (in reports)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">5</td>
+      <td style="text-align: left">reports</td>
+      <td style="text-align: left">eventSeverity</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Group 0 is SNMP Traps (notifications) for Faults, while Group 5 is SF Errors and Events (the content of each group are visible in <a href="#snmp-events-errors-and-events-vs-snmp-traps">these screenshots</a>).</p>
+
+<p>To translate OIDs to English, we can use at least 2 methods:</p>
+
+<ul>
+  <li>review entries in your SNMP browser (easy; see screenshots at the bottom), or</li>
+  <li>run <code class="language-plaintext highlighter-rouge">snmptranslate</code> (assuming you’ve compiled the two SolidFire MIBs on this system) on OID 1.3.6.1.4.1.38091 (the SolidFire OID).</li>
+</ul>
+
+<p>A lot of SolidFire SNMP data comes from reports (event logs). The second significant category is usually volume objects (volume IDs, volume performance metrics….) - depending on how many volumes there are.</p>
+
+<p>Example from a five-node SolidFire cluster:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Group</th>
+      <th style="text-align: center">Events/Items</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.1</td>
+      <td style="text-align: center">2904</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.2</td>
+      <td style="text-align: center">60</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.3</td>
+      <td style="text-align: center">6</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.4</td>
+      <td style="text-align: center">0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">1.3.6.1.4.1.38091.1.1.5</td>
+      <td style="text-align: center">7500</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Note that you can also enable SNMP on hardware level - see <a href="/2021/03/24/netapp-hci-compute-node-local-hardware-monitoring">this post</a>. This is more useful for NetApp HCI compute nodes and not very useful for NetApp HCI (or SolidFire) storage nodes, because SolidFire SNMP alerts cluster administrator to all appliance hardware problems you need to know about - the “extra” stuff from hardware is usually noise.</p>
+
+<p>But if you want to monitor hardware temperature or watch RPMs of your PSU, that’s <a href="https://github.com/scaleoutsean/hcicollector/tree/v0.7/images">available</a>. For NetApp HCI compute appliances, contact NetApp Support for the hardware MIB file.</p>
+
+<h2 id="enable-snmp-service-on-solidfire-cluster">Enable SNMP service on SolidFire cluster</h2>
+
+<p>In Cluster &gt; SNMP:</p>
+
+<ul>
+  <li>“General SNMP Settings” - enable SNMP and make it accessible to your monitoring solution.</li>
+  <li>“SNMP Trap Settings” - this can create a lot of entries, so use sparingly (only for Cluster Fault Traps and  Cluster Resolved Fault Traps, for example)</li>
+</ul>
+
+<p><img src="/assets/images/solidfire-snmp-23-snmp-trap-faults-only.png" alt="SNMP Traps enabled, but without SNMP Event Traps" /></p>
+
+<p>Further below you can see screenshots of three SNMP tables (Traps, Errors, Events).</p>
+
+<p>To let SNMP Trap Recipient receive SNMP traps we usually need to open port UDP/162). For example, in my environment I have a SolidFire mNode, Demo VM Physical IP and Demo VM Virtual IP at 192.168.1.28 - 192.168.1.31, so this was enough for me (I set a “range” but you could set rules for individual IP addresses, of course):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iptables <span class="nt">-A</span> INPUT <span class="nt">-s</span> 192.168.1.29/30 <span class="nt">-p</span> udp <span class="nt">--dport</span> 162 <span class="nt">-j</span> ACCEPT
+</code></pre></div></div>
+
+<p>As you can see in that walk-through below, SNMP Traps are sent from physical nodes’ management IPs (i.e. MIP’s, not from the Cluster Management Virtual IP (MVIP)).</p>
+
+<p>Remember to use the recommended firewall CLI command for your OS (not necessarily <code class="language-plaintext highlighter-rouge">iptables</code>). On a system where iptables may be used, the above would take care of all three SNMP client IPs. For physical SolidFire nodes (appliances) and 3rd party storage systems with eSDS you may also want to allow incoming SNMP Trap traffic from IPMI (BMC) NICs, if you’ve enabled SNMP Traps on BMC. Then we’d save iptables or otherwise persist your SNMP server’s firewall rules (depending on your OS).</p>
+
+<p>For cluster monitoring snmpwalk MVIP, for SNMP Trap notifications allow access to SNMP Trap ports to all SolidFire MIPs and possibly BMCs and mNode/HCC:</p>
+
+<p><img src="/assets/images/solidfire-snmp-24-snmp-vs-snmp-traps-mvip-vs-mip.png" alt="Gather SNMP info via MVIP, receive SNMP Traps from MIPs" /></p>
+
+<h3 id="snmp-v2">SNMP v2</h3>
+
+<p>If we’ve enabled SNMP v2 on MVIP (community: public), we should be able to SNMP-walk the cluster with:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">MVIP</span><span class="o">=</span><span class="s2">"11.11.11.11"</span>
+snmpwalk <span class="nt">-v2</span> <span class="nt">-c</span> public <span class="nv">$MVIP</span> <span class="nt">-O</span> e 1.3.6.1.4.1.38091
+</code></pre></div></div>
+
+<p>If at least one SNMP Trap target is configured, Python 3 fans can install these modules and test traps from the CLI to check if traps can reach the receiver(s):</p>
+
+<ul>
+  <li>solidfire-cli==1.7.0.154</li>
+  <li>solidfire-sdk-python==12.3.0.203</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">solidfire.common</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">solidfire.factory</span> <span class="kn">import</span> <span class="n">ElementFactory</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sfe</span> <span class="o">=</span> <span class="n">ElementFactory</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="s">'192.168.1.30'</span><span class="p">,</span> <span class="s">'admin'</span><span class="p">,</span> <span class="s">'p@ssw0rD'</span><span class="p">,</span> <span class="n">verify_ssl</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">print_ascii_art</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sfe</span><span class="p">.</span><span class="n">snmp_send_test_traps</span><span class="p">()</span>
+<span class="mi">2021</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">06</span> <span class="mi">00</span><span class="p">:</span><span class="mi">23</span><span class="p">:</span><span class="mi">31</span><span class="p">,</span><span class="mi">561</span> <span class="o">-</span> <span class="n">solidfire</span><span class="p">.</span><span class="n">Element</span> <span class="o">-</span> <span class="n">INFO</span> <span class="o">-</span> <span class="p">{</span><span class="s">"method"</span><span class="p">:</span> <span class="s">"SnmpSendTestTraps"</span><span class="p">,</span> <span class="s">"id"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">"params"</span><span class="p">:</span> <span class="p">{}}</span>
+<span class="n">SnmpSendTestTrapsResult</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">'complete'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>You could also use <a href="https://github.com/solidfire/postman">Postman</a> or SolidFire PowerShell Tools (<code class="language-plaintext highlighter-rouge">Invoke-SFApi -Method SnmpSendTestTraps</code> - this is done by connecting to the MVIP, by the way. It can’t be executed from a node connection).</p>
+
+<p>The SolidFire SNMP test trap is SNMPv2-formatted and its source is MVIP.</p>
+
+<h3 id="snmp-v3">SNMP v3</h3>
+
+<p>Here’s an example of UMS configuration for SolidFire SNMP v3. Not all items are visible in the Web UI, but they are via <code class="language-plaintext highlighter-rouge">GetSNMP</code> method and can be set from the API, too:</p>
+
+<ul>
+  <li>access: <code class="language-plaintext highlighter-rouge">rouser</code> (default and fixed; not visible in the SolidFire Web UI)</li>
+  <li>name: <code class="language-plaintext highlighter-rouge">netapp</code></li>
+  <li>password: <code class="language-plaintext highlighter-rouge">NetApp123$</code></li>
+  <li>passphrase: <code class="language-plaintext highlighter-rouge">NetApp123$</code></li>
+  <li>secLevel: <code class="language-plaintext highlighter-rouge">auth</code> (default, not visible in the Web UI, can be set to <code class="language-plaintext highlighter-rouge">priv</code> via the API)</li>
+</ul>
+
+<p>Having the above saved in the UI, we run <code class="language-plaintext highlighter-rouge">GetSnmpInfo</code> and get this back from the API:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"snmpV3Enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"usmUsers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"access"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rouser"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"netapp"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"passphrase"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NetApp123$"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"password"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NetApp123$"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"secLevel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Notes:</p>
+
+<ul>
+  <li>Authentication password uses MD5</li>
+  <li>Encryption passphrase uses DES</li>
+  <li>Using SolidFire (Python) CLI for Linux, the equivalent command would be: <code class="language-plaintext highlighter-rouge">createUser netapp MD5 "NetApp123$" DES "NetApp123$"</code></li>
+</ul>
+
+<p>SolidFire SNMP v3 EngineID isn’t visible in the Web UI and can’t be obtained via the API. To get it, in SolidFire Web UI enable SNMP v3, create an UMS user for SNMP v3, then on your client start Wireshark or tcpdump and from that client run snmpwalk to each node’s MIP to find  <code class="language-plaintext highlighter-rouge">msgAuthoritativeEngineID</code> for the node. Or try the Perl script from Appendix A. You should see something like this:</p>
+
+<pre><code class="language-raw">msgAuthoritativeEngineID: 80001f8880a6591019263a675f00000000
+    1... .... = Engine ID Conformance: RFC3411 (SNMPv3)
+    Engine Enterprise ID: net-snmp (8072)
+    Engine ID Format: Reserved/Enterprise-specific (128): Net-SNMP Random
+    Engine ID Data: a6591019
+    Engine ID Data: Creation Time: Sep 20, 2020 19:16:54 CST
+</code></pre>
+
+<p><img src="/assets/images/solidfire-snmp-31-snmpv3-engineid.png" alt="Example SolidFire msgAuthoritativeEngineID in SNMP v3" /></p>
+
+<p><code class="language-plaintext highlighter-rouge">snmp.msgAuthoritativeEngineID</code> is different on every SolidFire node.</p>
+
+<p>This is an example of a minimal snmpwalk for v3:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># MVIP = 192.168.1.30, Password = NetApp123$, Passphrase = NetApp123$</span>
+<span class="nv">$ </span>snmpwalk <span class="nt">-v3</span> <span class="nt">-l</span> AuthNoPriv <span class="nt">-u</span> netapp <span class="nt">-a</span> MD5 <span class="nt">-A</span> <span class="s2">"NetApp123$"</span> <span class="nt">-x</span> DES <span class="nt">-X</span> <span class="s2">"NetApp123$"</span> 192.168.1.30  sysName.0
+SNMPv2-MIB::sysName.0 <span class="o">=</span> STRING: tw1
+</code></pre></div></div>
+
+<p>As of 12.3, SolidFire <code class="language-plaintext highlighter-rouge">SnmpSendTestTraps</code> are still not using SNMP v3.</p>
+
+<h2 id="what-to-monitor-documentation-and-reference-material">What to monitor (documentation and reference material)</h2>
+
+<p>This is the hardest question. Generally, I would suggest to not monitor what you have no influence over. One example that I mention is in the first video (at the bottom of this page).</p>
+
+<ul>
+  <li>NetApp SolidFire User Guide for ActiveIQ - you can find it on a search engine or <a href="https://help.monitoring.solidfire.com/Resources/Active%20IQ%20User%20Guide_Ext.pdf">somewhere on the NetApp Web site</a>. This UG should tell you what NetApp sees as important, so I think it’s the 80% from the famous 80/20 rule.</li>
+  <li>NetApp TR-4694 (on SolidFire performance and capacity monitoring) - you may have problems finding this one, but there’s a copy <a href="https://github.com/scaleoutsean/hcicollector/blob/v7/TR-4694-0618-Visualizing-NetApp-HCI-Performance.pdf">right here</a>. You can also read the SolidFire documentation, including API documentation, to see how performance, disk utilization, capacity utilization and error reporting works (but mind the fact that not everything is exposed through SNMP!)</li>
+</ul>
+
+<p>You could also take a look at some NetApp Cloud Insights demo with SolidFire, or view sample screenshots from <a href="https://github.com/scaleoutsean/hcicollector/tree/v0.7/images">HCI Collector</a> (for Grafana) or <a href="https://github.com/mjavier2k/solidfire-exporter">SolidFire Exporter</a> (also for Grafana) to see what metrics they emphasize (SolidFire Exporter gets many - if not all). The last two are permissively-licensed community projects.</p>
+
+<h3 id="events-and-faults">Events and Faults</h3>
+
+<p>Note that SolidFire events are many - there can be hundreds per minute. You’d probably like to just watch for trap notifications (<code class="language-plaintext highlighter-rouge">clusterFaultNotification</code>, <code class="language-plaintext highlighter-rouge">clusterFaultResolvedNotification</code>) and for faults that persist (i.e. no resolution) check the SolidFire UI or HCC or ActiveIQ.</p>
+
+<p>Severity levels Critical and Error are something that should be dealt with promptly.</p>
+
+<p>Example of an event with the severity level Warning (due to over-provisioned IOPS on a SolidFire Demo VM, which is capped at 3,000 IOPS):</p>
+
+<p><img src="/assets/images/solidfire-snmp-06-warning.png" alt="Event severity levels in SolidFire" /></p>
+
+<p>The same in SNMP Errors:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iso.3.6.1.4.1.38091.1.1.5.1.1.9.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"clusterIOPSAreOverProvisioned"</span>
+iso.3.6.1.4.1.38091.1.1.5.1.1.10.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"{</span><span class="se">\"</span><span class="s2">blocksUpgrade</span><span class="se">\"</span><span class="s2">:false,</span><span class="se">\"</span><span class="s2">clusterFaultID</span><span class="se">\"</span><span class="s2">:181,</span><span class="se">\"</span><span class="s2">code</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">clusterIOPSAreOverProvisioned</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">data</span><span class="se">\"</span><span class="s2">:null,</span><span class="se">\"</span><span class="s2">date</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">2021-05-30T07:02:34.824274Z</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">details</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">The sum of all minimum QoS IOPS (5300) is greater than the expected IOPS (3000) of the cluster. The minimum QoS can not be maintained for all volumes simultaneously in this condition. Adjust QoS settings on one or more volumes to not exceed available cluster IOPS.</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">driveID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">driveIDs</span><span class="se">\"</span><span class="s2">:[],</span><span class="se">\"</span><span class="s2">externalSource</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">networkInterface</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">nodeHardwareFaultID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">nodeID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">resolved</span><span class="se">\"</span><span class="s2">:false,</span><span class="se">\"</span><span class="s2">resolvedDate</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">serviceID</span><span class="se">\"</span><span class="s2">:0,</span><span class="se">\"</span><span class="s2">severity</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">warning</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">type</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">cluster</span><span class="se">\"</span><span class="s2">}"</span>
+</code></pre></div></div>
+
+<h4 id="event-severity-in-clusterfaultdetails-136141380911151110">Event Severity in clusterFaultDetails (1.3.6.1.4.1.38091.1.1.5.1.1.10)</h4>
+
+<p>Because cluster fault details are inserted as escaped JSON messages, to find them with grep, we would do something like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">MVIP</span><span class="o">=</span><span class="s2">"192.168.1.30"</span> <span class="c"># your SolidFire Management VIP</span>
+snmpwalk <span class="nt">-v2c</span> <span class="nt">-c</span> public <span class="nv">$MVIP</span> <span class="nt">-O</span> e 1.3.6.1.4.1.38091.1.1.5.1.1.10 | <span class="se">\</span>
+  <span class="nb">grep</span> <span class="nt">-e</span> <span class="s1">'"severity\\":\\"warning\\"'</span> | <span class="nb">grep</span> <span class="nt">-e</span> <span class="s1">'"resolved\\":false'</span>
+<span class="c"># another example:</span>
+<span class="c"># snmpwalk -v2c -c public $MVIP -O e 1.3.6.1.4.1.38091.1.1.5.1.1.10 | grep -e '"severity\\":\\"critical\\"' | grep -e '"resolved\\":true'</span>
+</code></pre></div></div>
+
+<p>Different tools use different approaches to parse SNMP messages.</p>
+
+<p>There are three types of severity that should be watched, so modify your filter accordingly:</p>
+
+<ul>
+  <li>Critical</li>
+  <li>Error</li>
+  <li>Warning</li>
+</ul>
+
+<p>In the SolidFire UI you may see the fourth category, Best Practices, but that was added more recently and SNMP doesn’t seem to implement that event (maybe it does under another severity level - I haven’t been able to find it so I’m not sure).</p>
+
+<h4 id="event-types-13614138091115216">Event Types (1.3.6.1.4.1.38091.1.1.5.2.1.6)</h4>
+
+<p>I think we should simply let event severity guide our actions rather than look for individual events, but in terms of frequent event types, these are some I found in my SNMP logs:</p>
+
+<ul>
+  <li>apiEvent - any API calls including from various CLIs and plugins such as vShere Plug-in</li>
+  <li>clusterMasterEvent - configuration changes or other cluster changes</li>
+  <li>driveEvent - I added this one manually; disk failures and other disk drive events</li>
+  <li>encryptionAtRestEvent - enable, disable, set external key manager, etc.</li>
+  <li>gcEvent - routine, Garbage Collection</li>
+  <li>networkEvent - network-related events, may be interruptions as well</li>
+  <li>serviceEvent - various service-related notifications</li>
+</ul>
+
+<p>As for <code class="language-plaintext highlighter-rouge">driveEvent</code>, I added it manually (didn’t have any in my log) because that’s the one everyone wants to know about. There’s no way to monitor individual disk drive events through SolidFire SNMP but, <code class="language-plaintext highlighter-rouge">eventDriveID</code> can call out disk ID if a drive fails or has other problem. And if you watch Warning, Error, and Critical events, you’ll see it.</p>
+
+<p>The complete list of SolidFire Event Types can be found in the <a href="https://docs.netapp.com/us-en/vcp/vcp_task_reports_event_logs.html">SolidFire documentation</a>. From that page, among the more interesting ones (that should happen extremely rarely) could be:</p>
+
+<ul>
+  <li>csumEvent - invalid data checksum on disk</li>
+  <li>ieEvent - internal system error</li>
+  <li>limitEvent - too many volumes, or iSCSI connections or hitting some other cluster limit (see <code class="language-plaintext highlighter-rouge">Get-SFLimit</code>)</li>
+  <li>platformHardwareEvent - hardware issues</li>
+  <li>unexpectedException - as the name says</li>
+  <li>ureEvent - unrecoverable read error</li>
+</ul>
+
+<p>Again, anything that requires attention should be surfaced to your attention through Critical, Error, or Warning event severity tags - I don’t think there’s a need to focus on individual events.</p>
+
+<h4 id="cluster-fault-error-codes-13614138091115119">Cluster Fault Error Codes (1.3.6.1.4.1.38091.1.1.5.1.1.9)</h4>
+
+<p>Examples of error codes seen in Cluster Fault messages:</p>
+
+<ul>
+  <li>blockClusterFull - no space (you should probably delete old snapshots or unessential volumes)</li>
+  <li>blocksDegraded - maybe recovering from disk or node or network failure</li>
+  <li>clusterCannotSync - insufficient space to resync offline drives (<a href="https://kb.netapp.com/Advice_and_Troubleshooting/Data_Storage_Software/Element_Software/AutoSupport_Message%3A_clusterCannotSync">NetApp KB</a>)</li>
+  <li>clusterIOPSAreOverProvisioned - best practice (sum of all Min’s shouldn’t be higher than cluster IOPS rating)</li>
+  <li>disconnectedClusterPair - replication-related</li>
+  <li>disconnectedRemoteNode - replication related</li>
+  <li>driveAvailable - appears during node expansion or drive replacement</li>
+  <li>ntpServerUnreachable - nodes should have access to NTP for consistent cluster time</li>
+  <li>remoteRepAsyncDelayExceeded - lagging replication network</li>
+  <li>sliceServiceUnhealthy - metadata service issues (maybe rebuilding or recovering)</li>
+  <li>unresponsiveService - maybe a sign of overloading</li>
+  <li>volumesOffline - volumes offline (could be to multiple concurrent node or disk failures or something else)</li>
+</ul>
+
+<p>As you can see from that KB link (for <code class="language-plaintext highlighter-rouge">clusterCannotSync</code>, above, or <a href="https://kb.netapp.com/Advice_and_Troubleshooting/Data_Storage_Software/Element_Software/blockServiceUnhealthy_and_clusterCannotSync_alerts_after_upgrade_to_12.0">this one</a>) (NetApp Support login required), most if not all errors and what to do about them is documented in the SolidFire documentation, ActiveIQ or Support portal (KBs).</p>
+
+<h3 id="performance">Performance</h3>
+
+<p>Like I said above, I would recommend to minimize the amount of indicators watched - it is aesthetically pleasing, but it doesn’t necessarily help you manage better.</p>
+
+<p>I recommend to review the documentation and external resources mentioned above, but aside from that I’ll state personal preferences and opinions about counters related to performance in SNMP-based monitoring:</p>
+
+<ul>
+  <li>Useful:
+    <ul>
+      <li>volThrottle - this one is useful, it can highlight volumes where workload is often throttled, i.e. you may want to check top 5 throttled once a week to see if those are just unimportant workloads being throttled, or important apps that could benefit from a better Max or Burst QoS. If the volume is a datastore, maybe you don’t want to be alerted all the time, but if it’s a Docker ext4 or Windows NTFS volume used by only SQL Server, you’d probably want to examine QoS settings if throttling goes on for 60 minutes</li>
+      <li>volPercentUtilization - can be used to better adjust QoS policies (downgrade volume QoS for apps that need less, give more to apps that need more) - see reference material for the details</li>
+      <li>volClientQDepth - SolidFire caps I/O queue at 32; may appear in parallel with volThrottle, but to eliminate false warnings, maybe alert only if this persists over 30 minutes or few hours (some throttling is normal due to Max/Burst QoS or queue depth limit (32))</li>
+    </ul>
+  </li>
+  <li>Nice to have:
+    <ul>
+      <li>volActualIOPs - may help identify busy volumes (or completely idle volumes)</li>
+      <li>volAvgIOPSize - if you’re not sure about the “average” IO size, may help you adjust QoS or alert you to the possibility of highly sequential workloads on a VMware datastore, for example</li>
+      <li>volReadLatencyUS - not that useful unless cluster is very heavily loaded and normally goes above 2,000 us (2ms+) when workload is much higher than QoS, but can be interesting to various stakeholders</li>
+      <li>volWriteLatencyUS - not that useful unless cluster is very heavily loaded and normally goes above 2,000 us (2ms+) when workload is much higher than QoS, but can be interesting to various stakeholders</li>
+      <li>volTotalLatencyUS - not very actionable, but can be interesting to various stakeholders</li>
+    </ul>
+  </li>
+  <li>Non-essential:
+    <ul>
+      <li>volBurstOPSCredit - the amount of unused Burst IOPS; it’s better to occasionally check ActiveIQ for QoS recommendations (although even those may not always be correct - only <em>you</em> know what’s right for your environment)</li>
+      <li>volReadOps - mostly for reporting/charts, not very actionable, but can be useful to application users or other stakeholders; these are cumulative so you need to look for “per sec” delta increments</li>
+      <li>volWriteOps - mostly for reporting/charts, not very actionable, but can be useful to application users or other stakeholders; these are cumulative so you need to look for “per sec” delta increments</li>
+      <li>volUnalignedReads - no longer important in the context of VMs and containers</li>
+      <li>volUnalignedWrites - no longer important in the context of VMs and containers</li>
+    </ul>
+  </li>
+</ul>
+
+<p>My main objection to trying to manage storage by following (most of) these indicators via SNMP is that without knowing QoS settings on (say) vSphere datastores, and why you set them, it’s not useful to know that some volume is doing 15,000 or 150 IOPS (that doesn’t tell you anything useful). On SolidFire you are unlikely to see 150 IOPS if Min QoS is 2,000, <em>unless</em> the application is idling.</p>
+
+<p>Because of that it’s usually less critical to deal with “insufficient volume performance” issues. Even throttling and client queue depth are not actionable information on their own (without knowing the context), but at least we can occasionally pick Top 5 throttled volumes and review the application stack from a holistic application and storage perspective.</p>
+
+<p>One note about volThrottle vs. volClientQDepth: if Max IOPS for a volume is 1,000 IOPS, after 60 seconds of reading at 1250 IOPS or 10 MB/s this application will be throttled, but its client queue depth may remain low (5, for example). But if we attempted to use a multi-threaded application to write to that volume at 100 MB/s for 65 seconds, then we would likely fill the volume’s I/O queue depth and potentially see 32 on that counter. So these two indicators may not always act consistently.</p>
+
+<h3 id="storage-management">Storage Management</h3>
+
+<ul>
+  <li>Nice to have:
+    <ul>
+      <li>volByAccountStatsAccountID - if you have more than one storage account (say, one VMware and one Kubernetes, or two VMware environments) - this lets us compare user groups in aggregate account-level terms (IOPS, capacity, efficiency, etc.) but such reports may be easier to do in ActiveIQ or with HCI Collector or SolidFire Exporter</li>
+      <li>volByAccountStatsUnalignedReads - not very relevant except for physical servers</li>
+      <li>volByAccountStatsUnalignedWrites - not very relevant except for physical servers</li>
+      <li>volByAccountStatsNonZeroBlocks - used (non-empty blocks) - SolidFire volumes are thin-provisioned, so the ratio of zero blocks (below) vs non-zero blocks shows <em>real</em> volume fullness</li>
+      <li>volByAccountStatsZeroBlocks - can be useful in the sense that when zero blocks divided by non-zero blocks is very low (say, 20%), it may be that discard/rethin/fstrim is not enabled (or not periodically executed, in the case of fstrim) on the client (vSphere, Windows physical server, KVM server, container, etc.) which means that eventually your volume utilization will seemingly hit 100% although the volume may be just half-full</li>
+      <li>volByAccountStatsAccessGroups - can be interesting with several storage accounts on the SolidFire cluster, to see which VMware or Kubernetes Cluster or group of HA nodes</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="cluster-and-node-monitoring">Cluster and Node Monitoring</h3>
+
+<p>This isn’t a complete list but I marked only one as very useful. The reason is it there’s any problem that matters, we learn of it through Events and Faults.</p>
+
+<ul>
+  <li>Useful:
+    <ul>
+      <li>clusterStatsPercentUtilization - if we’re doing 200,000 4kB IOPS on a 4-node H610S (100K/node) cluster, this counter should show 50 (%). Because volumes are automatically balanced for both capacity and performance across all cluster members, it makes sense to watch just one, cluster-wide performance utilization counter</li>
+    </ul>
+  </li>
+  <li>Non-essential:
+    <ul>
+      <li>nodeStatsClusterBytesIn - bytes are always coming in or going out and when they don’t, we get cluster-level faults, so not particularly interesting</li>
+      <li>nodeStatsClusterBytesOut - same as above, but may be useful when monitoring SolidFire’s Backup-to-S3 traffic</li>
+      <li>networkUtilizationCluster - same as above (this is for Management interface aka Cluster Management Network)</li>
+      <li>networkUtilizationStorage - same as above (this is for iSCSI interface i.e. Storage Network)</li>
+      <li>nodeStatsStorageBytesIn - same as above</li>
+      <li>nodeStatsStorageBytesOut - same as above, but may be useful when monitoring backup or replication traffic</li>
+      <li>nodeStatsMgmtBytesIn -  not very actionable and when it stops we get cluster-level faults anyway</li>
+      <li>nodeStatsMgmtBytesOut  - not very useful, there’s always bytes coming in In or going Out</li>
+      <li>nodeStatsCpuUtilization - not very useful; SolidFire nodes have enough CPU power to deliver promised throughput, storage efficiencies and storage maintenance (GC runs once an hour and there are automated background tasks which also consume CPU resources), so there isn’t much we need to do with this information</li>
+      <li>nodeStatsUsedMemory - same as above, not very actionable - SolidFire appliances have enough RAM for their rated performance, and we can’t add more even if we wanted to; RAM utilization goes up and down based not just on workload but also internal jobs</li>
+    </ul>
+  </li>
+</ul>
+
+<p>We can use some of these counters to compute useful indicators. One example is (volByAccountStatsNonZeroBlocks / (volByAccountStatsZeroBlocks + volByAccountStatsNonZeroBlocks)), another would be the sum of all volumes (SolidFire 12.3 supports up to 400 actively used iSCSI volumes per node).</p>
+
+<p>It seems there’s no way to monitor cluster storage fullness (not directly at least), which is something that would be very useful, but as you get closer and hit various levels of fullness (there’s several), you get a Warning (or later Error, and Critical) severity event as those happen.</p>
+
+<p>So just make sure you watch Warning, Error and Critical events as they compensate for the lack of some SNMP counters related to storage capacity.</p>
+
+<h2 id="walk-through-adrem-netcrunch-with-netapp-solidfire">Walk-Through: AdRem NetCrunch with NetApp SolidFire</h2>
+
+<h3 id="configuration">Configuration</h3>
+
+<p>Here are some example screenshots from one of SNMP monitoring applications I like, <a href="https://www.adremsoft.com/netcrunch/products/snmp">NetCrunch</a> (runs on Windows).</p>
+
+<p>You can add SolidFire nodes as generic Linux nodes, but you can also provide your own icons, etc.</p>
+
+<p><img src="/assets/images/solidfire-snmp-00-add-solidfire-device.png" alt="Add SolidFire Device Type" /></p>
+
+<p>NetCrunch has an easy-to-use SNMP Manager that lets you add and compile SolidFire MIBs. After compiling, you can browse the details in NetCrunch SNMP Manager:</p>
+
+<p><img src="/assets/images/solidfire-snmp-01-mib-browser.png" alt="Compile SolidFire MIBs" /></p>
+
+<p>These correspond to the five categories from the table at the top of this post.</p>
+
+<h3 id="snmp-events-errors-and-events-vs-snmp-traps">SNMP Events (Errors and Events) vs. SNMP Traps</h3>
+
+<p>If you watch errors and events via “pull” (snmpwalk), you’d always consider Errors:</p>
+
+<p><img src="/assets/images/solidfire-snmp-33-snmp-event-errorLog-table.png" alt="SNMP Events - Error Log" /></p>
+
+<p>Errors are the first table from “Group 5” (from the table at the very top of this page). The second table from Group 5 is Events:</p>
+
+<p><img src="/assets/images/solidfire-snmp-34-snmp-event-eventLog-table.png" alt="SNMP Events - Event Log" /></p>
+
+<p>Group 0 has just one section - notifications - which are delivered as SNMP Traps:</p>
+
+<p><img src="/assets/images/solidfire-snmp-32-snmptrap-table.png" alt="SNMP Traps - notifications" /></p>
+
+<h3 id="snmp-performance-monitoring">SNMP Performance Monitoring</h3>
+
+<p>Cluster utilization (%) is one of the useful SNMP performance indicators:</p>
+
+<p><img src="/assets/images/solidfire-snmp-02-mib-browser.png" alt="Browse SolidFire MIBs" /></p>
+
+<p>To monitor IOPS on a Volume ID, first find and pick the counter you’re interested in:</p>
+
+<p><img src="/assets/images/solidfire-snmp-03-counters.png" alt="SolidFire SNMP performance monitoring counters" /></p>
+
+<p>Add the counter to the list of monitored counters:</p>
+
+<p><img src="/assets/images/solidfire-snmp-04-monitor-vol-counter.png" alt="SolidFire SNMP performance monitoring counter - volActualIOPs" /></p>
+
+<p>Pick a Volume by its Volume ID: you can identify the desired IDs in the SolidFire Web UI. By default, many NetApp HCI customers have volume IDs 1 and 2 used for vCenter and mNnode (HCC) VMs, for example. On this cluster, those two are present and lightly utilized.</p>
+
+<p><img src="/assets/images/solidfire-snmp-05-monitor-vol-counter.png" alt="SolidFire SNMP performance monitoring counter - volActualIOPs instance for Volume ID 1" /></p>
+
+<p>SolidFire SNMP and NetCrunch will also let you obtain various Linux SNMP counters, but to me that’s just unnecessary data, not necessary information. I would recommend against showing more than the absolute minimum you need to efficiently manage your storage services with least amount of work.</p>
+
+<p>This screenshot shows three indicators; cluster utilization and two volumes (volume IDs 1 and 2, which contain vCenter, mNode and few other infrastructure VMs):</p>
+
+<p><img src="/assets/images/solidfire-snmp-13-performance-monitoring.png" alt="Monitor SolidFire performance with SNMP " /></p>
+
+<p>You can also create these in the performance view. Example of a volume IOPS gauge for Volume ID 2:</p>
+
+<p><img src="/assets/images/solidfire-snmp-14-perfomance-monitoring-volume-gauge.png" alt="SolidFire SNMP performance monitor gauge for volume 1" /></p>
+
+<p>Example of cluster utilization chart:</p>
+
+<p><img src="/assets/images/solidfire-snmp-15-perfomance-monitoring-cluster-utilization-chart.png" alt="SolidFire SNMP performance monitor chart for cluster utilization" /></p>
+
+<p>A version with multiple performance counters on the same page. We use gauges and charts. There’s a small amount of IO on volume IDs 1 &amp; 2 with volume utilization slightly more pronounced on volume ID 2; both volumes have an empty I/O queue:</p>
+
+<p><img src="/assets/images/solidfire-snmp-22-performance-monitoring-dashboard.png" alt="SolidFire SNMP performance monitor dashboard with charts and gauges" /></p>
+
+<h3 id="alerts-for-performance-snmp-variable-values-and-cluster-errorsevents">Alerts for performance, SNMP variable values and Cluster errors/events</h3>
+
+<p>This segment illustrates how to set up alerts for errors/events, various SNMP values, and SNMP performance counters.</p>
+
+<p><img src="/assets/images/solidfire-snmp-07-event-perf-snmp-counter-alerts.png" alt="Alerts for SNMP events, performance and counter values" /></p>
+
+<p>Examples of how these could be used:</p>
+
+<ul>
+  <li>Informational: volumeThrottle (i.e. volume hitting its Maximum IOPS) - on any change in throttling % value, log it; we can analyze logs periodically to see if any changes may be necessary. This may create a lot of activity so I’d use it just for few important volumes at first</li>
+  <li>Warning: warn when clusterStatsPercentUtilization &gt; 90%, if we’re concerned about hitting 100%; if this warning appears often maybe we should add another node or adjust QoS policies</li>
+  <li>Critical: any SolidFire event where event severity equals any of: warning, error, critical. For these we can perform multiple follow-up actions depending on our requirements (UI alert, log, email, Webhook - depending on the management software and integrations)</li>
+</ul>
+
+<p>Once an alert kicks in, NetCrunch will show something like this:</p>
+
+<p><img src="/assets/images/solidfire-snmp-11-cluster-utilization-alert.png" alt="Critical alert" /></p>
+
+<p>In this example below, cluster utilization hit the limit (to trigger this alert instantly, I set it to activate at &gt; 0% utilization):</p>
+
+<p><img src="/assets/images/solidfire-snmp-11-cluster-utilization-alert.png" alt="Cluster Utilization above Threshold" /></p>
+
+<p>NetCrunch can self-acknowledge an alert when the fault is resolved. Example: the cluster utilization drops below a certain level (say, the average of 3 samples &lt; 1 %; in real life I’d probably use the average of 3 consecutive samples &lt; 75%)</p>
+
+<p><img src="/assets/images/solidfire-snmp-12-cluster-utilization-alert-history.png" alt="Cluster Utilization above Threshold in alert history" /></p>
+
+<h4 id="snmpwalk-for-cluster-errors-and-events">snmpwalk for Cluster Errors and Events</h4>
+
+<p>As you generate alert condition on SolidFire in order to test your work, watch the alert appear in the SolidFire UI (the first screenshot in this post), then check Reporting &gt; Event Log and Reporting &gt; Alerts in the SolidFire Web UI and try to see what those map to in SNMP.</p>
+
+<p>As an example, using my SoldiFire Demo VM (example from the top) we first look for unresolved faults, then find what that fault is.</p>
+
+<p>Please make sure you test your alerts in pre-production by temporarily pulling a network cable (one at a time, with 30s in between!), for example.</p>
+
+<p>When I ran snmpwalk against MVIP looking for unresolved faults, I found this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>snmpwalk <span class="nt">-v</span> 2c <span class="nt">-c</span> public <span class="nt">-Os</span> <span class="nv">$MVIP</span> 1.3.6.1.4.1.38091.1.1.5.1.1.7 | <span class="nb">grep false 
+</span>clusterFaultResolved.377.3155484232.1 <span class="o">=</span> INTEGER: <span class="nb">false</span><span class="o">(</span>2<span class="o">)</span>
+<span class="nv">$ </span>snmpwalk <span class="nt">-v</span> 2c <span class="nt">-c</span> public <span class="nt">-Os</span> <span class="nv">$MVIP</span> iso.3.6.1.4.1.38091.1.1.5.1.1.9 | <span class="nb">grep</span> <span class="s2">"clusterFaultErrorCode.377.3155484232.1"</span>
+clusterFaultErrorCode.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"clusterIOPSAreOverProvisioned"</span>
+<span class="nv">$ </span>snmpwalk <span class="nt">-v</span> 2c <span class="nt">-c</span> public <span class="nt">-Os</span> <span class="nv">$MVIP</span> iso.3.6.1.4.1.38091.1.1.5.1.1.10 | <span class="nb">grep </span>clusterFaultDetails.377.3155484232
+<span class="c"># JSON string in FaultDetails has been shortened - full version without escape characters can be found further below</span>
+clusterFaultDetails.377.3155484232.1 <span class="o">=</span> STRING: <span class="s2">"{</span><span class="se">\"</span><span class="s2">blocksUpgrade</span><span class="se">\"</span><span class="s2">:false,</span><span class="se">\"</span><span class="s2">clusterFaultID</span><span class="se">\"</span><span class="s2">:181,</span><span class="se">\"</span><span class="s2">code</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">clusterIOPSAreOverProvisioned</span><span class="se">\"</span><span class="s2">...}"</span>
+</code></pre></div></div>
+
+<p>What are these OIDs?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>snmptranslate <span class="nt">-m</span>+ALL 1.3.6.1.4.1.38091.1.1.5.1.1
+SOLIDFIRE-STORAGECLUSTER-MIB::errorLogEntry
+<span class="nv">$ </span>snmptranslate <span class="nt">-m</span>+ALL 1.3.6.1.4.1.38091.1.1.5.1.1.7
+SOLIDFIRE-STORAGECLUSTER-MIB::clusterFaultResolved
+<span class="nv">$ </span>snmptranslate <span class="nt">-m</span>+ALL 1.3.6.1.4.1.38091.1.1.5.1.1.9
+SOLIDFIRE-STORAGECLUSTER-MIB::clusterFaultErrorCode
+<span class="nv">$ </span>snmptranslate <span class="nt">-m</span>+ALL 1.3.6.1.4.1.38091.1.1.5.1.1.10
+SOLIDFIRE-STORAGECLUSTER-MIB::clusterFaultDetails
+</code></pre></div></div>
+
+<p>The shortened JSON message from SOLIDFIRE-STORAGECLUSTER-MIB::clusterFaultDetails (iso.3.6.1.4.1.38091.1.1.5.1.1.10) is shown here, in the case you’re curious. I formatted this as valid JSON (with escape characters inserted in SNMP message removed) to make it easier to read.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+	</span><span class="nl">"blocksUpgrade"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"clusterFaultID"</span><span class="p">:</span><span class="w"> </span><span class="mi">181</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"clusterIOPSAreOverProvisioned"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"data"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2021-05-30T07:02:34.824274Z"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The sum of all minimum QoS IOPS (5300) is greater than the expected IOPS (3000) of the cluster.
+  The minimum QoS can not be maintained for all volumes simultaneously in this condition. 
+  Adjust QoS settings on one or more volumes to not exceed available cluster IOPS."</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"driveID"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"driveIDs"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+	</span><span class="nl">"externalSource"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"networkInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"nodeHardwareFaultID"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"nodeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"resolvedDate"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"serviceID"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
+	</span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cluster"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>This clusterFaultDetails value is what SolidFire services log, and what you get in SNMP Traps as well. The SolidFire Web UI, Events and Faults would show same information.</p>
+
+<p>IMPORTANT: when creating SNMP filters for alerts, make sure you insert proper escape characters if necessary! JSON message above is proper JSON, but in SNMP error message that be more like:
+<code class="language-plaintext highlighter-rouge">\"code\":\"clusterIOPSAreOverProvisioned\"...</code></p>
+
+<p>Whether you need to escape certain characters or not depends on what software or command you use. As you can seen from the screenshots below, I didn’t have to escape anything when creating filters in NetCrunch, but when I used <code class="language-plaintext highlighter-rouge">grep</code> in Linux (see <a href="#event-severity-in-clusterfaultdetails-136141380911151110">above</a>) I had to.</p>
+
+<p>So that is how we get SolidFire errors and events with <code class="language-plaintext highlighter-rouge">snmpwalk</code>!</p>
+
+<p>In order to get “push alerts” from SNMP when a fault occurs, we would use SNMP Fault Traps (to learn of <em>new</em> fault traps) and similarly, to learn about resolved issues (SNMP Resolved Fault Traps).</p>
+
+<h3 id="snmp-traps-cluster-fault-trap-and-cluster-resolved-fault-trap-examples">SNMP Traps: Cluster Fault Trap and Cluster Resolved Fault Trap examples</h3>
+
+<p>Here’s how I created a working set of SNMP Trap-based alerts for the above cluster fault (overprovisioned IOPS), but I made it generic enough to capture other, similar faults.</p>
+
+<p>My objective was to create two generic alerts:</p>
+
+<p>a) Alert on every new cluster fault - failed disk, pulled network cable, etc.</p>
+
+<p>b) Alert on every resolved cluster fault - replaced disk, reconnected network cable, etc. For b) I want information-type alert, so that I don’t get too stressed about it.</p>
+
+<p>I first added individual SolidFire storage nodes (appliances) to a separate group of monitored hosts. For that group, I created rules for Cluster Fault Trap and Cluster Resolved Trap notifications and instructed NetCrunch to raise a warning when the following alert rules are met.</p>
+
+<h4 id="cluster-fault-trap">Cluster Fault Trap</h4>
+
+<p>For new faults I wanted to try two approaches:</p>
+
+<p><img src="/assets/images/solidfire-snmp-26-alert-filter-logEntry-vs-logSeverity.png" alt="Warning-level alert for unresolved warning, error and critical severity messages" /></p>
+
+<ul>
+  <li>Approach 1 that filters only logEntryDetails: filter embedded JSON messages (see the nicely formatted JSON example above) for combinations of certain key-value pairs, such as <code class="language-plaintext highlighter-rouge">"severity": "warning"</code></li>
+  <li>Approach 2 which relies for logEntrySeverity for severity info: here we look at the value of logEntrySeverity (and raise alert if the value is one of Warning, Error,Critical) to determine severity</li>
+</ul>
+
+<p>For alerts I’ll configure the both (so I’ll get two alerts per new fault), but normally we’d chose just one.</p>
+
+<p>Here’s how we could do it in Approach 1: raise alert when all of the following conditions are met: severity is warning or error or critical AND resolved is False.</p>
+
+<p><img src="/assets/images/solidfire-snmp-25-alert-filter-for-snmp-message-description.png" alt="Warning-level alert for unresolved warning, error and critical severity messages" /></p>
+
+<p>With this I will capture all new faults from SNMP Traps.</p>
+
+<p>In Approach 2, I can get the same outcome by simply matching values in logEntrySeverity. Notice the case difference: it’s <em>warning</em> in JSON (logEntryDetails) vs. <em>Warning</em> in logEntrySeverity!</p>
+
+<p>We still need to look for <code class="language-plaintext highlighter-rouge">"resolved": false</code> as that detail is only available in logEntryDetails!</p>
+
+<p><img src="/assets/images/solidfire-snmp-28-logSeverity-approach.png" alt="Warning-level alert for unresolved warning, error and critical severity messages" /></p>
+
+<p><code class="language-plaintext highlighter-rouge">notifications.clusterFaultNotification</code> (SNMP Trap, OID iso.3.6.1.4.1.38091.1.1.0.2) was used for this and also in the next example.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>snmptranslate iso.3.6.1.4.1.38091.1.1.0.2
+SOLIDFIRE-STORAGECLUSTER-MIB::clusterFaultNotifications
+</code></pre></div></div>
+
+<h4 id="cluster-resolved-fault-trap">Cluster Resolved Fault Trap</h4>
+
+<p>Create exactly the same rule as for new fault, but with two differences:</p>
+
+<ul>
+  <li>Instead of <code class="language-plaintext highlighter-rouge">"resolved": false</code>, match on <code class="language-plaintext highlighter-rouge">"resolved": true</code> - we want to be notified when a fault is resolved</li>
+  <li>Instead of alerting a bunch of people and causing several minor heart attacks in the process, we choose a milder action such as “Informational Alert”</li>
+</ul>
+
+<p><img src="/assets/images/solidfire-snmp-27-resolved-info-filter-for-snmp-message-description.png" alt="Informational notification for resolved fault" /></p>
+
+<h4 id="apply-group-filters-to-snmp-traps-from-all-solidfire-nodes">Apply group filters to SNMP Traps from all SolidFire nodes</h4>
+
+<p>SNMP Trap rules and actions were applied to all SolidFire appliances. SNMP Traps with Cluster Faults come only from one node (current Cluster Master) which in my case was this node (x.x.x.55). <em>But</em> any node can become Cluster Master, so you need to access to SNMP Trap port to all nodes.</p>
+
+<p>To generate a new cluster fault, I edited a SolidFire QoS policy rule to bloat total provisioned Min IOPS over cluster Maximum IOPS, and less than a minute later I got an alert (examples above).</p>
+
+<p>As you can see, cluster fault alerts reach NetCrunch (SNMP Trap destination/recepient) from Management IP of <em>current</em> SolidFire Cluster Master node.</p>
+
+<p><img src="/assets/images/solidfire-snmp-19-solidfire-cluster-fault-host-view.png" alt="Alerts arriving from physical IP of Cluster Master" /></p>
+
+<p>I acted on that alarm by assigning it to a storage or automation specialist. Depending on your tool you could automate this in different ways.</p>
+
+<p><img src="/assets/images/solidfire-snmp-18-dealing-with-solidfire-fault-alert.png" alt="NetCrunch makes it easy to act on alerts" /></p>
+
+<p>That person happens to be me, so I went back to the SolidFire UI and adjusted the offending QoS policy. Seconds later my next alert fired up: informational message about a resolved cluster fault! (golf clap)</p>
+
+<h4 id="loose-vs-strict-rules">Loose vs. strict rules</h4>
+
+<p>We could build advanced alert-matching rules based on <a href="#cluster-fault-error-codes-13614138091115119">Cluster Fault Error Codes (1.3.6.1.4.1.38091.1.1.5.1.1.9)</a> for a more precise &amp; automated issue classification and assignment system, but that would be slightly more work in terms of configuring alert conditions. With this we could alert the network admin for network-related (DNS, NTP, link down) issues and the storage admin about cluster capacity hitting 75%, for example.</p>
+
+<p>Personally I would prefer to keep the rules coarse (if not always, then at least initially): if it’s a Warning, or Error, or Critical event and not resolved, alert me. If it’s the same severity but Resolved, only log or inform/notify me. With that you should be able to capture everything you need.</p>
+
+<p>As an example, here’s what my alerts (Approaches 1 &amp; 2) from Cluster Fault Trap section caught this morning: network issues with node <code class="language-plaintext highlighter-rouge">node5</code>:</p>
+
+<p><img src="/assets/images/solidfire-snmp-29-node-alert-example.png" alt="Loose-matching rules catch another type of fault" /></p>
+
+<p>Notice that severity=warning and resolved=false. That’s how and why it matched our filters from Approach 1.</p>
+
+<p>But also notice that type=node (not type=cluster), and nodeID=5, which is great - we are able to capture useful node fault with the same rule originally aimed at capturing overprovisioned IOPS on the cluster.</p>
+
+<p>We could get fancy and create a spin-off rule that adds an <code class="language-plaintext highlighter-rouge">AND</code> condition that says if <code class="language-plaintext highlighter-rouge">details=Network interface</code>, and then alert only network admin(s) rather than all admins, but I’d rather use one generic filter and decide what to tune by looking at monthly alerts at the end of every month. In SNMP Traps, Approach 2 (with logEntrySeverity) requires slightly less typing when filters are created, but both approaches can be used to create fine-tuned alert filters if need be.</p>
+
+<p>Next day, when I logged in to NetCrunch I found two new fault alerts (the fault triggered both alerts designed for Approaches 1 &amp; 2) and one informational “fault resolved” alert - all of the rules matched perfectly even though this was a node-level network issue. (It looks like the switch may have been rebooted.)</p>
+
+<p><img src="/assets/images/solidfire-snmp-30-node-alert-example-alert-and-info.png" alt="Loose matching rule and informational alert after fault resolution" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<ul>
+  <li>Review ActiveIQ and TR-4694 (or the SolidFire Admin Guide and API documentation) for the details on what is commonly monitored.</li>
+  <li>SolidFire SNMP counters (as you can see in the MIB files) don’t have everything that is available through the SolidFire API. In addition to that, some “analytics” insights require more than one compute operation which may be hard to do in SNMP applications. Because of that it makes sense to:
+    <ul>
+      <li>Focus on the important and available, such as (1) cluster faults (especially severity levels Warning, Error and Critical), (2) cluster utilization, (3) volume QoS and queues</li>
+      <li>Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter, <a href="https://scaleoutsean.github.io/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html">ELK</a>, etc.)</li>
+    </ul>
+  </li>
+  <li>Many monitoring applications provide not just SNMP, but various other means of integration including plugins, Webhooks or scripts. For some tasks it <em>very easy</em> to integrate those rather than rely on SNMP (especially when, like in this case, not everything is available via SNMP). In the case of SolidFire it literally takes a 10 line script to create a reliable PowerShell or Python script to check on something. Example: basic <a href="https://github.com/scaleoutsean/nagfire">SolidFire plugin for Nagios</a> that I keep alive for reference purposes.</li>
+</ul>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li>Note: screenshots in this post have been improved after videos were created, so they are better and more correct than what you can see in the videos
+    <ul>
+      <li>Very simple example of compiling SolidFire MIBs and using it in AdRem NetCrunch: <a href="https://youtu.be/4SmN2FYzr28">1m19s</a></li>
+      <li>More complex example with using SNMP performance counters, alarms and configurig event conditions: <a href="https://youtu.be/rxkPxiBGRTk">6m58s</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="appendix-a">Appendix A</h2>
+
+<p>Get SNMP v3 EngineID with Perl (no Wireshark) (<a href="https://community.opmantek.com/display/NMIS/SNMP+v3+Troubleshooting">source</a>):</p>
+
+<div class="language-perl highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/perl</span>
+ 
+<span class="k">use</span> <span class="nv">strict</span><span class="p">;</span>
+<span class="k">use</span> <span class="nv">warnings</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Net::</span><span class="nv">SNMP</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">Data::</span><span class="nv">Dumper</span><span class="p">;</span>
+ 
+<span class="k">my</span> <span class="nv">$hostname</span> <span class="o">=</span> <span class="p">'</span><span class="s1">192.168.1.30</span><span class="p">';</span> <span class="c1"># IP or hostname</span>
+<span class="k">my</span> <span class="nv">$username</span> <span class="o">=</span>  <span class="p">'</span><span class="s1">netapp</span><span class="p">';</span>
+<span class="k">my</span> <span class="nv">$authpasswd</span> <span class="o">=</span> <span class="p">'</span><span class="s1">NetApp123$</span><span class="p">';</span>
+<span class="k">my</span> <span class="nv">$authproto</span> <span class="o">=</span> <span class="p">'</span><span class="s1">MD5</span><span class="p">';</span> 
+<span class="k">my</span> <span class="nv">$privpasswd</span> <span class="o">=</span><span class="p">'</span><span class="s1">NetApp123$</span><span class="p">';</span>
+<span class="k">my</span> <span class="nv">$privproto</span> <span class="o">=</span> <span class="p">'</span><span class="s1">DES</span><span class="p">';</span> 
+ 
+<span class="k">my</span> <span class="nv">$port</span> <span class="o">=</span> <span class="p">'</span><span class="s1">161</span><span class="p">';</span>
+<span class="k">my</span> <span class="nv">$maxmsgsize</span> <span class="o">=</span> <span class="p">'</span><span class="s1">1472</span><span class="p">';</span> <span class="c1">#range (484..65535)</span>
+ 
+<span class="p">(</span><span class="k">my</span> <span class="nv">$session</span><span class="p">,</span> <span class="k">my</span> <span class="nv">$error</span><span class="p">)</span> <span class="o">=</span> <span class="nn">Net::</span><span class="nv">SNMP</span><span class="o">-&gt;</span><span class="nv">session</span><span class="p">(</span>
+                            <span class="o">-</span><span class="s">hostname</span>      <span class="o">=&gt;</span> <span class="nv">$hostname</span><span class="p">,</span>
+                            <span class="o">-</span><span class="s">port</span>          <span class="o">=&gt;</span> <span class="nv">$port</span><span class="p">,</span>
+                            <span class="o">-</span><span class="s">version</span>       <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span>
+                            <span class="c1">#-community    =&gt; $community,   # v1/v2c</span>
+                            <span class="o">-</span><span class="s">username</span>      <span class="o">=&gt;</span> <span class="nv">$username</span><span class="p">,</span>    <span class="c1"># v3</span>
+                            <span class="o">-</span><span class="s">authpassword</span>  <span class="o">=&gt;</span> <span class="nv">$authpasswd</span><span class="p">,</span>  <span class="c1"># v3</span>
+                            <span class="o">-</span><span class="s">authprotocol</span>  <span class="o">=&gt;</span> <span class="nv">$authproto</span><span class="p">,</span>   <span class="c1"># v3</span>
+                            <span class="o">-</span><span class="s">privpassword</span>  <span class="o">=&gt;</span> <span class="nv">$privpasswd</span><span class="p">,</span>  <span class="c1"># v3</span>
+                            <span class="o">-</span><span class="s">privprotocol</span>  <span class="o">=&gt;</span> <span class="nv">$privproto</span><span class="p">,</span>   <span class="c1"># v3</span>
+                            <span class="o">-</span><span class="s">debug</span>         <span class="o">=&gt;</span> <span class="p">'</span><span class="s1">0x10</span><span class="p">',</span>
+                            <span class="o">-</span><span class="s">maxmsgsize</span>    <span class="o">=&gt;</span> <span class="nv">$maxmsgsize</span><span class="p">,</span>
+<span class="p">);</span>
+ 
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">defined</span> <span class="nv">$session</span><span class="p">)</span> <span class="p">{</span>
+<span class="nb">printf</span> <span class="p">"</span><span class="s2">ERROR %s.</span><span class="se">\n</span><span class="p">",</span> <span class="nv">$error</span><span class="p">;</span>
+<span class="nb">exit</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+ 
+<span class="k">for</span> <span class="p">(</span><span class="k">my</span> <span class="nv">$i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="nv">$i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">print</span> <span class="nv">Dumper</span><span class="p">(</span><span class="nv">$session</span><span class="o">-&gt;</span><span class="nv">get_next_request</span><span class="p">(</span><span class="o">-</span><span class="s">varbindlist</span> <span class="o">=&gt;</span> <span class="p">["</span><span class="s2">1.3.6.1.4.1.38091.</span><span class="si">$i</span><span class="p">"]));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Output:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>perl /tmp/sf.pl| <span class="nb">grep</span> <span class="nt">-i</span> engine
+debug: <span class="o">[</span>989] Net::SNMP::Security::USM::_engine_id_discovery<span class="o">()</span>: engineID <span class="o">=</span> 0x80001f8880a6591019263a675f00000000
+error: <span class="o">[</span>1065] Net::SNMP::PDU::_report_pdu_error<span class="o">()</span>: Received usmStatsUnknownEngineIDs.0 Report-PDU with value 29
+error: <span class="o">[</span>299] Net::SNMP::MessageProcessing::prepare_data_elements<span class="o">()</span>: Received usmStatsUnknownEngineIDs.0 Report-PDU with value 29
+error: <span class="o">[</span>398] Net::SNMP::Dispatcher::_transport_response_received<span class="o">()</span>: Received usmStatsUnknownEngineIDs.0 Report-PDU with value 29
+error: <span class="o">[</span>2520] Net::SNMP::__ANON__<span class="o">()</span>: Received usmStatsUnknownEngineIDs.0 Report-PDU with value 29 during discovery
+</code></pre></div></div>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

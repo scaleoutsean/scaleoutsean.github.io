@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Zero-out and rethin VMDKs on NFS | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Make your VMDKs skinny again
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Zero-out and rethin VMDKs on NFS | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Zero-out and rethin VMDKs on NFS" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="Make your VMDKs skinny again" />
+<meta property="og:description" content="Make your VMDKs skinny again" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/03/29/zeroout-with-storage-vmotion-rethin.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/03/29/zeroout-with-storage-vmotion-rethin.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-03-29T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Zero-out and rethin VMDKs on NFS","dateModified":"2023-03-29T00:00:00+08:00","datePublished":"2023-03-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/03/29/zeroout-with-storage-vmotion-rethin.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/03/29/zeroout-with-storage-vmotion-rethin.html","description":"Make your VMDKs skinny again","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Zero-out and rethin VMDKs on NFS</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>29 Mar 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    6 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#a-workaround-for-rethinning">A workaround for rethinning</a></li>
+  <li><a href="#create-multiple-nfs-shares-for-esxi">Create multiple NFS shares for ESXi</a></li>
+  <li><a href="#mount-nfs-shares-in-esxi">Mount NFS shares in ESXi</a></li>
+  <li><a href="#create-a-vm-with-extra-data-disk-on-one-of-nfs-shares">Create a VM with extra data disk on one of NFS shares</a></li>
+  <li><a href="#ensure-vm-is-running-and-devsdb-is-usable">Ensure VM is running and /dev/sdb is usable</a></li>
+  <li><a href="#format-data-disk-in-linux-vm">Format data disk in Linux VM</a></li>
+  <li><a href="#fill-up-data-disk">Fill up data disk</a></li>
+  <li><a href="#remove-50-of-data-and-confirm-no-rethinning-has-happened">Remove 50% of data and confirm no rethinning has happened</a></li>
+  <li><a href="#make-sure-thin-provisioning-is-enabled-on-nfs-storage">Make sure Thin Provisioning is enabled on NFS storage</a></li>
+  <li><a href="#review-current-storage-view-from-esxi">Review current storage view from ESXi</a></li>
+  <li><a href="#review-current-vmdk-location">Review current VMDK location</a></li>
+  <li><a href="#move-zeroed-out-vmdk-to-another-nfs-share">Move zeroed-out VMDK to another NFS share</a></li>
+  <li><a href="#observe-data-movement-between-nfs-shares-or-between-nfs-and-vmfs">Observe data movement between NFS shares (or between NFS and VMFS)</a></li>
+  <li><a href="#observe-capacity-utilization-on-destination-growing">Observe capacity utilization on destination growing</a></li>
+  <li><a href="#confirm-zeroed-out-vmdk-has-been-relocated">Confirm zeroed-out VMDK has been relocated</a></li>
+  <li><a href="#review-current-capacity-utilization-on-vmw2">Review current capacity utilization on vmw2</a></li>
+  <li><a href="#check-storage-efficiency-with-thin-provisioning-deduplication-and-compression-all-enabled">Check storage efficiency with Thin Provisioning, Deduplication and Compression all enabled</a></li>
+  <li><a href="#optionally-move-vm-back-to-the-original-nfs-share-vmw1">Optionally move VM back to the original NFS share vmw1</a></li>
+  <li><a href="#observe-vmw1-utilization-is-going-up-as-linux-vm-is-being-migrated-back">Observe vmw1 utilization is going up as Linux VM is being migrated back</a></li>
+  <li><a href="#upon-completion-storage-efficiency-of-vmw1-is-expected-to-remain-the-same">Upon completion storage efficiency of vmw1 is expected to remain the same</a></li>
+  <li><a href="#nfs-share-vmw1-after-vm-data-was-moved-and-with-thin-provisioning-deduplication-and-compression">NFS share vmw1 after VM data was moved and with Thin Provisioning, Deduplication and Compression</a></li>
+  <li><a href="#automate">Automate</a></li>
+</ul>
+
+<h3 id="a-workaround-for-rethinning">A workaround for rethinning</h3>
+
+<p>vSphere 7.0 requires VMFS to unmap or “rethin” disks on which data has been deleted.</p>
+
+<p>If you have vSphere 6.7 or 7.0, VMDKs on NFS will grow fat.</p>
+
+<p>To rethin them, we can do this for Linux VMs (for Windows, use SDelete):</p>
+
+<ul>
+  <li>Delete empty blocks on device level (not just remove filesystem metadata)</li>
+  <li>Move the VMDK to another data store or NFS share (and optionally back)</li>
+</ul>
+
+<p>Let’s say  we have this situation in a VM’s /dev/sdb mounted at /data:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">du</span> <span class="nt">-sh</span>
+1.0G	<span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Normally if we delete a 500 MB file with <code class="language-plaintext highlighter-rouge">rm -rf file.bin</code>, this will only remove filesystem metadata for the file. VMDK will still be 1 GB large, and NFS share will show it occupies 1 GB (or even more).</p>
+
+<p>The first step is therefore to truly remove old data. Assuming this VMDK is 1 GB and contains 500 MB of existing data, we have close to 500 MB that can be zeroed-out:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dd </span><span class="k">if</span><span class="o">=</span>/dev/null <span class="nv">of</span><span class="o">=</span>/data/temp-junkfile.tmp <span class="nv">bs</span><span class="o">=</span>1M <span class="nv">count</span><span class="o">=</span>450
+<span class="nv">$ </span><span class="nb">rm</span> <span class="nt">-rf</span> /data/temp-junkfile.tmp 
+</code></pre></div></div>
+
+<p>This will fill it up 95% full, and then we can delete the 450 MB temporary file filled with zeroes.</p>
+
+<p>At this point we can move this VM or just VMDK to another NFS share or VMFS and then optionally back.</p>
+
+<p>Now, since only 500 MB of data are non-0’s, if NFS server supports Thin Provisioning, VMDK can be shrunk to 500-600 MB.</p>
+
+<p>With Deduplication and Compression, it could be even 300 MB.</p>
+
+<p>Let’s see this in practice, with ESXi 7.0U3 and NFS v3.</p>
+
+<p>Initially:</p>
+
+<ul>
+  <li>vmw1 - first NFS share, with Thin Provisioning ON, Deduplication &amp; Compression <strong>OFF</strong></li>
+  <li>vmw2 - second NFS share, with Thin Provisioning ON, Deduplication &amp; Compression ON</li>
+</ul>
+
+<h3 id="create-multiple-nfs-shares-for-esxi">Create multiple NFS shares for ESXi</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-01-ontap-nfs-shares-before.png" alt="Create multiple NFS shares for ESXi" /></p>
+
+<p>vmw1 has a tiny stub file from another app which occupies 4 MB and can be ignored.
+vmw2 is empty.</p>
+
+<h3 id="mount-nfs-shares-in-esxi">Mount NFS shares in ESXi</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-02-esxi-datastores-before.png" alt="Mount NFS shares in ESXi" /></p>
+
+<p>In ESXi, we mount the two NFS v3 shares. Thin Provisioning is shown as supported.</p>
+
+<h3 id="create-a-vm-with-extra-data-disk-on-one-of-nfs-shares">Create a VM with extra data disk on one of NFS shares</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-03-esxi-vm-create-flatcar-linux-w-1g-data-disk-vmw1.png" alt="Create a VM with data disk on one of NFS shares" /></p>
+
+<p>I used Kinvolk’s <a href="/2021/12/07/flatcar-linux-with-solidfire-iscsi.html">Flatcar Linux</a> Stable, with one disk for OS, and an other (1 GiB, Thin Provisioned) for application data</p>
+
+<h3 id="ensure-vm-is-running-and-devsdb-is-usable">Ensure VM is running and /dev/sdb is usable</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-05-esxi-vm-create-flatcar-linux-w-1g-data-disk-detected.png" alt="Ensure VM is running and /dev/sdb is usable" /></p>
+
+<p>Everything is looking fine.</p>
+
+<h3 id="format-data-disk-in-linux-vm">Format data disk in Linux VM</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-06-esxi-vm-create-flatcar-linux-w-1g-data-disk-formatted.png" alt="Format data disk in Linux VM" /></p>
+
+<p>In Flatcar Linux, format data disk (/dev/sdb) and mount it (/mnt/flatcar1g-tp).</p>
+
+<h3 id="fill-up-data-disk">Fill up data disk</h3>
+
+<p>Write 950 GiB to data disk’s filesystem mounted at /mnt/flatcar1g-tp to fill it up, and observe capacity utilization of the NFS share vmw1.</p>
+
+<p><img src="/assets/images/vmware-nfs-ontap-07-ontap-vmw1-with-flatcar-os-and-data-disks-2gb.png" alt="Fill up data disk" /></p>
+
+<p>It’s close to 2 GB (~1 GB OS, ~1 GB data).</p>
+
+<h3 id="remove-50-of-data-and-confirm-no-rethinning-has-happened">Remove 50% of data and confirm no rethinning has happened</h3>
+
+<p>Remove part of data (e.g. 475 MiB out of 950 MiB).</p>
+
+<p><img src="/assets/images/vmware-nfs-ontap-08-ontap-vmw1-with-flatcar-data-disks-475mb-data-removed.png" alt="Remove 50% of data and confirm no rethinning has happened" /></p>
+
+<p>Capacity utilization on the NFS share vmw1 should remain unchanged because unmap can’t work.</p>
+
+<h3 id="make-sure-thin-provisioning-is-enabled-on-nfs-storage">Make sure Thin Provisioning is enabled on NFS storage</h3>
+
+<p>If you haven’t, enable Thin Provisioning on both vmw1 and vmw2.</p>
+
+<p><img src="/assets/images/vmware-nfs-ontap-09-ontap-vmw1-vmw-thin-enabled.png" alt="Make sure Thin Provisioning is enabled" /></p>
+
+<p>Optionally enable Deduplication and Compression (under Storage Efficiency).</p>
+
+<h3 id="review-current-storage-view-from-esxi">Review current storage view from ESXi</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-10-esxi-datastores-after-delete-wo-unmap.png" alt="Review current storage view from ESXi" /></p>
+
+<p>It should be the same as before, because:</p>
+<ul>
+  <li>Inline compression had no effect on existing data</li>
+  <li>Background compression hasn’t had time to run</li>
+  <li>ESXi 7 and 6.7 don’t support unmap on NFS</li>
+</ul>
+
+<h3 id="review-current-vmdk-location">Review current VMDK location</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-11-esxi-flatcar-vm-after-delete-wo-unmap.png" alt="Review current VMDK location" /></p>
+
+<p>They’re both on vmw1.</p>
+
+<h3 id="move-zeroed-out-vmdk-to-another-nfs-share">Move zeroed-out VMDK to another NFS share</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-12-esxi-datastore-storage-vmotion-vm-from-nfs-vmw1-to-vmw2.png" alt="Move zeroed-out VMDK to another NFS share" /></p>
+
+<p>The OS VMDK hasn’t been zeroed out, but it doesn’t matter - we’ll move both to vmw2.</p>
+
+<h3 id="observe-data-movement-between-nfs-shares-or-between-nfs-and-vmfs">Observe data movement between NFS shares (or between NFS and VMFS)</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-13-ontap-datastore-storage-vmotion-nfs-vmw1-to-vmw2.png" alt="Observe data movement between NFS shares" /></p>
+
+<h3 id="observe-capacity-utilization-on-destination-growing">Observe capacity utilization on destination growing</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-14-ontap-datastore-storage-capacity-changing-vmw1-to-vmw2.png" alt="Observe capacity utilization on destination growing" /></p>
+
+<h3 id="confirm-zeroed-out-vmdk-has-been-relocated">Confirm zeroed-out VMDK has been relocated</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-15-ontap-datastore-storage-vmotion-vmw1-to-vmw2-done.png" alt="Confirm zeroed-out VMDK has been relocated" /></p>
+
+<h3 id="review-current-capacity-utilization-on-vmw2">Review current capacity utilization on vmw2</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-16-ontap-datastore-storage-vmotion-with-se-on-vmw2.png" alt="Review current capacity utilization on vmw2" /></p>
+
+<p>It’s smaller than before? WTF is going on?</p>
+
+<ul>
+  <li>As VMware moved data zeroed-out blocks were compressed to nothing and deduplicated</li>
+  <li>Thin Provisioning could provision smaller files</li>
+  <li>OS data was unchanged, but both it and data on data disk got deduplicated and compressed</li>
+</ul>
+
+<h3 id="check-storage-efficiency-with-thin-provisioning-deduplication-and-compression-all-enabled">Check storage efficiency with Thin Provisioning, Deduplication and Compression all enabled</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-17-ontap-datastore-storage-vmotion-with-se-details-vmw2.png" alt="Check storage efficiency with Thin Provisioning, Deduplication and Compression all enabled" /></p>
+
+<p>This is now good. If multiple copies of Flatcar Linux were installed, it’d be even better.</p>
+
+<h3 id="optionally-move-vm-back-to-the-original-nfs-share-vmw1">Optionally move VM back to the original NFS share vmw1</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-18-ontap-datastore-storage-vmotion-nfs-back-vmw2-to-vmw1.png" alt="Optionally move VM back to the original NFS share vmw1" /></p>
+
+<p>This is optional, but overall a good idea because you don’t have to wonder where your VM normally lives.</p>
+
+<p>If you automate this, you can move back and forth in the same script, so that the VM resides on vmw2 just a few seconds.</p>
+
+<h3 id="observe-vmw1-utilization-is-going-up-as-linux-vm-is-being-migrated-back">Observe vmw1 utilization is going up as Linux VM is being migrated back</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-19-ontap-datastore-storage-capacity-changing-vmw2-to-vm1.png" alt="Observe vmw1 utilization is going up as VM is being migrated" /></p>
+
+<h3 id="upon-completion-storage-efficiency-of-vmw1-is-expected-to-remain-the-same">Upon completion storage efficiency of vmw1 is expected to remain the same</h3>
+
+<p>(The screenshot shows 2.5 GB used because it was taken while VM was being copied.)</p>
+
+<p><img src="/assets/images/vmware-nfs-ontap-20-ontap-datastore-storage-vmotion-with-se-details-vmw1.png" alt="Upon return storage efficiency is expected to remain the same" /></p>
+
+<p>When we started, vmw1 had Deduplication and Compression both disabled, but now - apart from that 4 MB stub file - the settings on vmw2 and vmw1 are identical - Thin Provisioning, Deduplication and Compression are enabled across the board.</p>
+
+<h3 id="nfs-share-vmw1-after-vm-data-was-moved-and-with-thin-provisioning-deduplication-and-compression">NFS share vmw1 after VM data was moved and with Thin Provisioning, Deduplication and Compression</h3>
+
+<p><img src="/assets/images/vmware-nfs-ontap-21-ontap-nfs-shares-after.png" alt="NFS share vmw1 after VM data was moved and with Thin Provisioning, Deduplication and Compression" /></p>
+
+<h3 id="automate">Automate</h3>
+
+<p>This is easy to automate with Power CLI or other tools.</p>
+
+<p>I’d move VMs once a week, maybe over weekend.</p>
+
+<p>If there’s hundreds of them, then maybe 100 every night.</p>
+
+<p>Each VM “owner” should zero out their disks with big churn, and be careful to not fill them up. Dynamic determination should be better, e.g. obtain available space in bytes, deduct 10%, then use <code class="language-plaintext highlighter-rouge">dd</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">df</span> | <span class="nb">grep</span> <span class="s1">'/sqldata'</span> | <span class="nb">awk</span> <span class="s1">'{ print $4}'</span>
+4208640
+</code></pre></div></div>
+
+<p>The above is an example of how <code class="language-plaintext highlighter-rouge">/home/brandon/yuge_junk_dir/sqldata</code> can mess your script up. If you can’t do it right, it’s best to use a fixed conservative value (20% of volume size) and review it once a month.</p>
+
+<p>Also set up some OS monitoring to watch OS and data disk utilization of these VMs.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/18/netapp-hci-broadcom-vmware-new-license-calculator.html">• VMware license calculator for VVF and VCF</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/15/storagegrid-on-vmware.html">• NetApp StorageGRID on VMware</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">• Add NetApp SolidFire iSCSI storage to KVM</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/07/migrate-netapp-hci-from-vmware.html">• How to change NetApp HCI from VMware to alternatives</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/02/12/backup-restore-kubevirt-vms-with-solidfire-kasten-kubernetes.html">• KubeVirt backup, restore with NetApp SolidFire & Kasten K10</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

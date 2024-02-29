@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Apache Hadoop 3 with NetApp E-Series | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     NetApp E-Series as Apache HDFS storage back-end
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Apache Hadoop 3 with NetApp E-Series | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Apache Hadoop 3 with NetApp E-Series" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="NetApp E-Series as Apache HDFS storage back-end" />
+<meta property="og:description" content="NetApp E-Series as Apache HDFS storage back-end" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/06/22/e-series-hdfs.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/06/22/e-series-hdfs.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-06-22T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Apache Hadoop 3 with NetApp E-Series","dateModified":"2022-06-22T00:00:00+08:00","datePublished":"2022-06-22T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/06/22/e-series-hdfs.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/06/22/e-series-hdfs.html","description":"NetApp E-Series as Apache HDFS storage back-end","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Apache Hadoop 3 with NetApp E-Series</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>22 Jun 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    14 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#hdfs-durability-and-external-protected-storage">HDFS Durability and External Protected Storage</a></li>
+  <li><a href="#does-everyone-need-rf2">Does everyone need RF2</a></li>
+  <li><a href="#hdfs">HDFS</a>
+    <ul>
+      <li><a href="#erasure-coding">Erasure Coding</a></li>
+      <li><a href="#compression">Compression</a></li>
+    </ul>
+  </li>
+  <li><a href="#nfs-gateway">NFS gateway</a></li>
+  <li><a href="#snapshots">Snapshots</a></li>
+  <li><a href="#httpfs-webhdfs">HttpFS, WebHDFS</a></li>
+  <li><a href="#recommended-settings-for-e-series">Recommended settings for E-Series</a></li>
+  <li><a href="#recommendations-for-cloudera-enterprise">Recommendations for Cloudera Enterprise</a></li>
+  <li><a href="#summary">Summary</a></li>
+</ul>
+
+<h2 id="hdfs-durability-and-external-protected-storage">HDFS Durability and External Protected Storage</h2>
+
+<p>For a long while HDFS predominantly used three replica policy (sometimes shortened as “RF3”) with the less popular RF2 option used mostly by highly available external storage such as E-Series.</p>
+
+<p>The idea behind HDFS R2 and E-Series was and still is that by using RF2 over RAID6, you can lower overhead with more upsides than downsides.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>HDFS durability</th>
+      <th style="text-align: center">Storage durability</th>
+      <th style="text-align: center">Total overhead</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RF3 (default)</td>
+      <td style="text-align: center">JBOD</td>
+      <td style="text-align: center">3 x 100%</td>
+    </tr>
+    <tr>
+      <td>RF2</td>
+      <td style="text-align: center">External HA RAID 6</td>
+      <td style="text-align: center">2 x (8+2)/8</td>
+    </tr>
+    <tr>
+      <td>RF2</td>
+      <td style="text-align: center">External HA DDP (24(2))</td>
+      <td style="text-align: center">2 x (24/22)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In the latter case, RF2 over RAID6 (8+2) means 2 x (10/8) or 250%. (You’d have some hot spares on the side, but you’d have even more of them for JBOD storage.)</p>
+
+<p>In the case of DDP, or Dynamic Disk Pools, protection overhead is even lower (see <a href="https://scaleoutsean.github.io/2021/07/06/e-series-ddp-expansion-and-rebalancing.html">here</a>).</p>
+
+<p>External storage - whether it uses DDP or RAID6 or something else - needs controllers and enclosures, so there’s additional cost to that, but for many users these trade-offs are well worth it:</p>
+
+<ul>
+  <li>Disaggregate compute &amp; storage
+    <ul>
+      <li>Scale only resources you need</li>
+    </ul>
+  </li>
+  <li>Use lower-cost 1U servers instead of 2U or 4U servers</li>
+  <li>Save on compute nodes by not needing extra nodes to overcome drop in performance during disk rebuilds (which are required after node failures as well)</li>
+  <li>Save software licensing fees</li>
+  <li>Save rack space</li>
+  <li>Save energy</li>
+  <li>Easily manage compute (because there’s just ephemeral storage on it) and storage (because it’s redundant)</li>
+  <li>etc.</li>
+</ul>
+
+<p>See this dated <a href="https://www.netapp.com/pdf.html?item=/media/16462-tr-3969pdf.pdf&amp;v=20209385">TR-3969</a> for additional details on that.</p>
+
+<p>Here’s what the Cloudera documentation says about RF3:</p>
+
+<blockquote>
+  <p>A lower replication factor leads to a situation where the data is more vulnerable to DataNode failures since there are fewer copies of data spread out across fewer DataNodes.</p>
+</blockquote>
+
+<p>That is true if you use servers as storage. But HDFS/E-Series users do not.</p>
+
+<p>E-Series storage systems are more reliable than servers, have redundant controllers and can withstand the loss of at least two disks per RAID6 or DDP group without requiring HDFS rebuild (E-Series volume remains, and is eventually rebuilt or “reconstructed”, depending on whether it’s RAID 6 or DDP (which “reconstructs” to recover from disk failures)).</p>
+
+<h2 id="does-everyone-need-rf2">Does everyone need RF2</h2>
+
+<p>One common recommendation for HDFS on white box servers is to use multiple copies for Hadoop clusters spanning multiple racks.</p>
+
+<p>E-Series recommends RF2, which protects from array downtime caused by a single rack downtime.</p>
+
+<p>Now, depending on the situation, I would say sometimes it’s okay to use just one E-Series array. As an example, instead of buying two EF300 I may propose a single EF600. I get the same performance, the same capacity (unless EF300 were sized to be maxed out), but it costs me less and I have just one array to manage.</p>
+
+<p>What about rack failures?</p>
+
+<p>Well, do you need to care about rack failures? Do you need 6 9’s?</p>
+
+<p>I’ve seen a number of Hadoop users who have 10-20 Hadoop nodes (which tend to be 2U servers). If you refresh those with new 1U servers, you may need just 8 1U servers, and then both E-Series and Hadoop servers can all fit into a single 40U rack.</p>
+
+<p>The same customers have no rack redundancy for almost any data-heavy service, so why overspend only on your Hadoop cluster?</p>
+
+<p>And why bother with extra racks unless you need five 9’s for Hadoop (many Hadoop users of the kind I described do not)? And I bet it’s cheaper and in many cases more feasible to fail service over to the public cloud, than have two racks (and still go down when your site loses power). You need to sync data to S3 or NFS in the cloud in order to have it ready, so that you can stand up a backup cluster in 25 minutes, and have it start running jobs minutes later.</p>
+
+<p>For Spark workloads you don’t even need to build a backup cluster - Spot.io can do that for you with serverless <a href="https://spot.io/products/ocean-apache-spark/">Spark on Kubernetes</a>. Just sync your data to S3 once a day, and you can move your Spark workload to the cloud if your single rack (or site) is going to be down for more than 24 hours, for example. And you can eliminate one entire rack from your DC.</p>
+
+<p>Note that RF2 can be used with just one E-Series array, and that we can have two E-Series arrays in a single rack (which may be needed for various reasons, including when you simply can’t get enough performance with just one array), but the point is when there’s no reason to span racks, why do it?</p>
+
+<h2 id="hdfs">HDFS</h2>
+
+<p>These days HDFS has a lot more features, and given the age of that TR (it has nothing on modern Hadoop 3), I thought to write a post about that.</p>
+
+<h3 id="erasure-coding">Erasure Coding</h3>
+
+<p>Erasure Coding (EC) is available and can lower storage overheads, but has some <a href="https://hadoop.apache.org/docs/r3.1.0/hadoop-project-dist/hadoop-hdfs/HDFSErasureCoding.html#Limitations">limitations</a> - not everyone can just switch to EC and call it a day. in the case of Cloudera CD Private Cloud Base 7.6.1, only Hive, MapReduce and Spark can be used with EC.</p>
+
+<p>Users who you can do it pick a Data + Parity schema and cell (which is the size of EC “chunk”) size. For example, EC 6D3P (128kiB) would add three parity chunks to every 6 data chunks, and write that stripe as a 9 * 128kiB (1,152KiB) strips to E-Series volumes. And E-Series is generally happy with 128kB requests.</p>
+
+<p>There are no official recommendations for HDFS EC configuration with E-Series, but we can draw some parallels between NetApp StorageGRID and E-Series here.</p>
+
+<p>NetApp StorageGRID is an object storage storage solution that many customers deploy in the form of StorageGRID appliances, which are in turn based on StorageGRID software and customized E-Series appliances (there may also be server “heads” attached, depending on the model of StorageGRID appliance).</p>
+
+<p>StorageGRID software running on StorageGRID appliances <em>defaults</em> to making two copies of each object (aka “RF2”, which StorageGRID calls 2-copy Policy), which get stored on different StorageGRID appliances. If objects are large (i.e. container images, for example), one of several supported Erasure Coding schemas may be used for better results (lower overhead, more capacity, sometimes even better performance).</p>
+
+<p>Sound familiar?</p>
+
+<p>So, 2-copy and EC durability schemas run on hundreds if not thousands of StorageGRID appliances out there. E-Series doesn’t know whether it’s HDFS or StorageGRID or Ceph accessing its volumes. HDFS is just another RF2/2-copy or EC workload.</p>
+
+<p>This is why I don’t expect surprises with HDFS EC on E-Series, although I don’t have first- or second-hand information about any experiences, good or bad.</p>
+
+<p>What “chunk” size should be used with HDFS EC? HDFS didn’t have EC when the TR was written, but while the size of RAID6 <a href="https://docs.netapp.com/us-en/e-series-santricity-116/sm-storage/what-is-segment-sizing.html">segments</a> can be tuned, default 128kiB should work just fine. (Incidentally, VMFS also uses up to 128kB chunks, see page 6 of <a href="https://www.netapp.com/media/17017-tr4789.pdf">this</a> PDF.)</p>
+
+<blockquote>
+  <p>For example, in a 5-drive RAID 5 volume group (4+1), if the typical read/write “chunk” size is 2 MiB, a segment size of 512 KiB (an even fraction [1/4] of the total chunk size) would be the best choice for the application’s volume segment size because it ensures that each read/write is written as a single stripe of the volume group drives.</p>
+</blockquote>
+
+<p>With RAID 6 (8+2) and 1 MB HDFS requests, 128kiB should be fine and that happens to be default anyway.</p>
+
+<p>How “wide” should EC N+M be? With a single EF array, I’d keep it at 1MiB (which nicely lands on RAID 6 or DDP volumes). With multiple E-Series arrays across different racks, we’d want to make sure that a downed rack doesn’t take down HDFS, so use N+M which equals the number of racks (or arrays, given one array per rack), so 4+1 for 5 racks with 5 arrays. I suspect any minor deviations such as going from 128kiB to 256kiB segment size if you suspect your IO requests are 2MiB or want to use 2MiB EC stripes wouldn’t cause a big drop in performance as long as you’re not completely wrong about the nature of your workload.</p>
+
+<p>With tiering and hybrid E-Series, we could even use multiple approaches at the same time. Because of multiple filesystems and different media, we can segregate data by workload or by media type and for SSDs the impact of small writes is much smaller which allows us more flexibility when choosing these parameters.</p>
+
+<p>Let’s add two examples with EC to the earlier table:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>HDFS durability</th>
+      <th style="text-align: center">Storage durability</th>
+      <th style="text-align: center">Total overhead</th>
+      <th style="text-align: right">Overhead (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RF3 (default)</td>
+      <td style="text-align: center">JBOD</td>
+      <td style="text-align: center">3 x 100%</td>
+      <td style="text-align: right">300</td>
+    </tr>
+    <tr>
+      <td>RF2</td>
+      <td style="text-align: center">External HA RAID 6</td>
+      <td style="text-align: center">2 x (8+2)/8</td>
+      <td style="text-align: right">250</td>
+    </tr>
+    <tr>
+      <td>RF2</td>
+      <td style="text-align: center">External HA DDP (24(2))</td>
+      <td style="text-align: center">2 x (24/22)</td>
+      <td style="text-align: right">218</td>
+    </tr>
+    <tr>
+      <td>EC 6+2 on R6</td>
+      <td style="text-align: center">External HA RAID 6</td>
+      <td style="text-align: center">(6+2)/6 x (8+2)/8</td>
+      <td style="text-align: right">166</td>
+    </tr>
+    <tr>
+      <td>EC 6+3 on DDP</td>
+      <td style="text-align: center">External HA DDP (18(2))</td>
+      <td style="text-align: center">(6+3)/6 x (16+2)/16</td>
+      <td style="text-align: right">168</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>DDP (pools) usually have between 11 and 60 drives in a single pool, so the last row can have many variations based on storage durability: DDP (11) can have 11/10 overhead (one disk worth of spare capacity for reconstruction), DDP (24) would normally use two (24/22 overhead) and DDP (30) the same (30/28), etc.</p>
+
+<p>Unlike fixed JBOD or internal RAID storage, this makes it easy to pick most suitable configuration and change it over time if workload changes.</p>
+
+<h3 id="compression">Compression</h3>
+
+<p>Another interesting addition in newer HDFS versions is compression, which E-Series doesn’t target as its focus applications tend to either implement it on its own (CCTV servers, NOSQL databases), or don’t want it (so that I/O latency remains as low as possible).</p>
+
+<p>HDFS users normally default to Gzip, but BZip2, Lzo, and Snappy are also supported. Because compression and decompression is done client-side, this is transparent to E-Series.</p>
+
+<p>Assuming N% reduction, we can get up to 100/(100-N) percent more capacity and throughput (although, as always, “it depends”). Some of those gains are spent on the clients to compress and decompress data, but overall it should be helpful if you deal with compressible data such as text files and generic application logs.</p>
+
+<h2 id="nfs-gateway">NFS gateway</h2>
+
+<p>HDFS can be exported (shared) to non-HDFS clients via a built-in NFS gateway. While it has significant limitations, it still can be useful.</p>
+
+<h2 id="snapshots">Snapshots</h2>
+
+<p><a href="https://hadoop.apache.org/docs/r3.3.3/hadoop-project-dist/hadoop-hdfs/HdfsSnapshots.html">Snapshots</a> may be taken on snapshottable directories.</p>
+
+<p>Once you have a snapshot, you can <a href="https://scaleoutsean.github.io/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html">copy</a> its files to S3, ONTAP, <a href="https://scaleoutsean.github.io/2022/06/14/batch-copy-files-beegfs.html">BeeGFS</a>, or public cloud targets using either NetApp XCP (NetApp-to-NetApp only), <a href="https://scaleoutsean.github.io/2022/01/18/using-netapp-cloudsync-api.html">CloudSync</a> (any-to-any), DataOps Toolkit, or other utilities and services of your choosing.</p>
+
+<p>NetApp XCP and CloudSync can work with NFS sources, which is one of the situations where having snapshot directories available through NFS gateway can be useful (which I why I mentioned it earlier).</p>
+
+<h2 id="httpfs-webhdfs">HttpFS, WebHDFS</h2>
+
+<p>I don’t know if there are important use cases where these would be preferred over S3, but they provide additional protocols to access HDFS.</p>
+
+<p>If you happen to dislike HDFS, you may as well migrate some or all of your data to object storage such as StorageGRID rather than manage and secure HttpFS and WebHDFS in addition to HDFS which you cannot stand. With StorageGRID you get 2-Copy and several EC schemas, security, encryption, built-in async <a href="https://docs.netapp.com/us-en/storagegrid-116/tenant/configuring-cloudmirror-replication.html">replication</a> to AWS S3, auditing, etc. - out of the box. If you want to keep some workloads on a fast tier, use something like <a href="https://scaleoutsean.github.io/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html">Alluxio</a> to move data on-demand to RAM, local disks, or a smaller all flash array (E-Series EF300 with 20-200 TiB), while persisting new writes to StorageGRID. And you could cache these S3 reads from cloud-based Spark or Hadoop instances as well (just deploy Alluxio on them and let it access on-premises StorageGRID) and eliminate extra redundancy for on-prem Hadoop or Spark.</p>
+
+<h2 id="recommended-settings-for-e-series">Recommended settings for E-Series</h2>
+
+<p>TR linked at the top has a recommendation to “set a cache block size of 32KB” (this is granularity of E-Series controller cache allocation size), but even that may be workload dependent.</p>
+
+<p>32kiB is the largest setting available on E-Series and suitable for application with large IO requests, so that recommendation is unlikely to change for recent versions of HDFS. If you have workloads that generate small IO and that’s the bulk of the workload you could try 16kiB, but I wouldn’t even try if I didn’t have SSD media (with small sized requests NL-SAS will be slow anyway).</p>
+
+<p>The rest is standard best practices that apply for many Big Data workloads on E-Series.</p>
+
+<h2 id="recommendations-for-cloudera-enterprise">Recommendations for Cloudera Enterprise</h2>
+
+<p>I looked up some sizing recommendations from Cloudera, which may not be up to date, but most of them likely still apply.</p>
+
+<p><a href="https://docs.cloudera.com/documentation/other/reference-architecture/topics/ra_private_cloud.html">Here</a> we can find about general recommendations by Cloudera. We E-Series we don’t <em>have</em> to use FC SAN, of course - it supports IB and other protocols.</p>
+
+<p><img src="/assets/images/cloudera_eseries-private_cloud_image8.png" alt="Cloudera Enterprise with External Storage" /></p>
+
+<p>They recommend up to 800 MB/s per Worker Node, which makes it easy to size for E-Series. For example, 16 nodes need 16 GB/s, which can be satisfied by a single EF300 (100% sequential, 80/20 read-write) or EF600 (100% sequential write), depending on read-write ratio and whether RF2 is used or not.</p>
+
+<p>On the same page there’s another general guidance, 50 MB/s per VM core, which means that for 16 1U servers with 64 cores each we would need around 50 GB/s, which - if read-write ratio is high (90/10) - may be achievable with a single NVMe-based EF600, but more likely than not you’d need two EF600, especially if you use RF2 or need more than just NVMe flash media. For example, some data may be more suitable for NL-SAS which in both EF300 and EF600 can be added with expansion shelves; we’d need dozens of NL-SAS spindles to get a decent performance out of NL-SAS, resulting in a NL-SAS tier few hundred TB large (e.g. one 60 disk expansion enclosure = 60 * (8+2)/2 * 12 TB = 900 TB usable and perhaps around 10 GB/s from this NL-SAS tier).</p>
+
+<p>If there are workloads with very varying characteristics (in terms of request size, performance requirements, read-write ratio and such), we’d probably want to use different RAID levels or media types. As an example: SSDs in RAID 10 for Kafka, and HDDs in DDP for read-mostly analysis of older data sets.</p>
+
+<p>The Cloudera page contains some other valuable insights related to sizing, so please check it out, as well as <a href="https://docs.cloudera.com/documentation/other/reference-architecture/topics/ra_storage_device_acceptance.html">Enterprise Storage Device Acceptance Criteria Guide</a>. A reference for Bare Metal deployments can be found <a href="https://docs.cloudera.com/documentation/other/reference-architecture/PDF/cloudera_ref_arch_metal.pdf">here</a>.</p>
+
+<p>CDP Private Cloud Base has newer documentation (for version 7), but it’s not as detailed regarding HDFS which may be a sign that Hadoop users have had enough of using HDFS according to their JBOD recipes. I should also mention that Cloudera now also ships Apache Ozone which comes with a modern HDFS-compatible OzoneFS (see <a href="/2022/07/06/apache-ozone-netapp-eseries.html">this post</a>; Azure Ozone also has an S3 gateway built-in.)</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>A lot has changed in Hadoop (and HDFS) 3 since Hadoop 2, but the nature of Hadoop workloads hasn’t changed much. Hadoop 3 does a lot of things better and can do more in general, but Hadoop workloads are still mostly sequential and I think the new features don’t negate any of the advantages of E-Series described in the old TR from 2018.</p>
+
+<p>Other technologies haven’t stood still either - these days there’s a lot more Spark, Kubernetes, S3 in Hadoop environments, in-memory caching, and easy-to-consume Spark on Kubernetes can be executed on demand using lowest-cost, Spot VM instances in the cloud.</p>
+
+<p>Existing Hadoop users can take advantage of improvements in Hadoop 3 with E-Series, but NetApp can do a lot more to help you modernize and transform Big Data workloads with on-prem S3, synchronization/replication workflows (XCP, CloudSync, StorageGRID CloudMirror), local and remote caching (with Alluxio), and hybrid cloud (Spot.io) and Kubernetes integrations (Spot.io, DataOps Toolkit).</p>
+
+<p>Get rid of 2U severs and improve Hadoop storage management by moving HDFS to E-Series, or even S3 or NFS. Your next Big Data environment can be better than your current Hadoop environment.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

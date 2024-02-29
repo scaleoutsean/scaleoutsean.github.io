@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Evaluating ONTAP S3 performance with s3tester | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Finding viable ONTAP configuration for specific S3 use case
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Evaluating ONTAP S3 performance with s3tester | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Evaluating ONTAP S3 performance with s3tester" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Finding viable ONTAP configuration for specific S3 use case" />
+<meta property="og:description" content="Finding viable ONTAP configuration for specific S3 use case" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/03/17/ontap-s3-performance-test.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/03/17/ontap-s3-performance-test.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-03-17T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Evaluating ONTAP S3 performance with s3tester","dateModified":"2022-03-17T00:00:00+08:00","datePublished":"2022-03-17T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/03/17/ontap-s3-performance-test.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/03/17/ontap-s3-performance-test.html","description":"Finding viable ONTAP configuration for specific S3 use case","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Evaluating ONTAP S3 performance with s3tester</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>17 Mar 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>ONTAP has had S3 service for a while now. While ONTAP S3 isn’t meant to take over large and complex S3 workloads in which NetApp StorageGRID excels, it is more than capable of servicing many S3 requirements.</p>
+
+<p>People use ONTAP S3 for various purposes, from container registry (Red Hat <a href="/2022/01/17/redhat-quay-with-ontap-s3.html">Quay</a>) to generic small to medium S3 workloads.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<p>Recently I got a question about the viability of ONTAP S3 for the hosting of JavaScript libraries and similar static files for internal Web applications.</p>
+
+<p>This customer has a few thousand users and one of existing all-flash ONTAP appliances would be used to provide S3 service.</p>
+
+<p>This sounded like a relatively simple question. I figured we’d need about few hundred requests per second and probably even less if a caching layer is in place. Should be easy!</p>
+
+<h2 id="tests">Tests</h2>
+
+<p>Despite these guesstimates, I wanted to run some tests to see if those assumptions sounded about right.</p>
+
+<p>I used <a href="https://github.com/s3tester/s3tester">s3tester</a> to evaluate GET (which I figure could be 90% of the workload) and HEAD performance on ONTAP 9.10.1.</p>
+
+<p>I ran the usual test (PUT, GET, HEAD, DELETE) to evaluate requests per second, focusing on GET.</p>
+
+<p>I was relying on ONTAP System Manager performance charts here, and quickly concluded that with 50 concurrent requests (see the second run in green rectangle) I could get IOPS similar to what I get with 100 concurrent requests (the first two Latency bumps in green rectangle), but with a much better latency.</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-00-concurrency-adjustment.png" alt="s3tester concurrency impact on latency and performance" /></p>
+
+<p>Why there are two latency bumps in each run?</p>
+
+<ul>
+  <li>PUT - 100% writes, latency goes up</li>
+  <li>GET - 100% read, latency drops to almost zero, but IOPS go to maximum</li>
+  <li>HEAD - 100% small read, latency very low, very little network traffic</li>
+  <li>DELETE - 100% delete, latency goes up again, very little network traffic</li>
+</ul>
+
+<p>s3tester spits out a result for each test and GET got me around 9,000 requests per second with 10ms latency. I used a consistent 8KB object size in all tests.</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-01-concurrency-adjustment-100rps-example.png" alt="s3tester at 100 requests per second with OTS S3" /></p>
+
+<p>Later on I tried few more variants, and concurrency level (not “rps”) 80 worked best in this environment. Although the chart lines hadn’t been drawn yet, we can see the IOPS number shows 9.87k (GET) IOPS per second.</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-02-concurrency-adjustment.png" alt="s3tester optimal result at 80 rps" /></p>
+
+<p>I took a screenshot of the same period again to show that point drawn on the chart (orange circle). You can also see my annotations for stages of each run at the center.</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-03-rps-rates.png" alt="s3tester various test results" /></p>
+
+<p>I forgot to save the result with concurrency 80, but here’s the GET result with concurrency 70:</p>
+
+<pre><code class="language-raw">        --- Total Results ---
+Operation: get
+Endpoint: https://s3.com.org:443
+Concurrency: 70
+Total number of requests: 199990
+Total number of unique objects: 199990
+Failed requests: 0
+Total elapsed time: 22.024509172s
+Average request time: 7.592932ms
+Minimum request time: 670µs
+Maximum request time: 457.99ms
+Nominal requests/s: 9219.1
+Actual requests/s: 9080.3
+Content throughput: 69.277485 MB/s
+Average Object Size: 8000
+Total Object Size: 1599920000
+Response Time Percentiles
+50     :   6.67 ms
+75     :   10.24 ms
+90     :   14.25 ms
+95     :   16.52 ms
+99     :   20.2 ms
+99.9   :   26.56 ms
+Latency(ms) : Operations
+  0 - 1   : 18156 ||||||||||||||||||||||
+  2 - 3   : 35321 ||||||||||||||||||||||||||||||||||||||||||
+  4 - 7   : 67644 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+  8 - 15  : 66855 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+ 16 - 31  : 11897 |||||||||||||||
+ 32 - 63  : 47    |
+ 64 - 127 : 2     |
+128 - 255 : 27    |
+256 - 458 : 41    |
+</code></pre>
+
+<p>Compared to results with 90 concurrent requests this result has a lower latency. In the both cases we had no failed GET requests.</p>
+
+<p>I think less than 1,000 GET requests per second should enough for this customer, especially if a reverse proxy were to be added in front of ONTAP S3. But clearly ONTAP S3 is capable of much more.</p>
+
+<p>This isn’t to say it can handle anything. I did manage to hit some timeouts (not on <code class="language-plaintext highlighter-rouge">GET</code>s, though).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2022/03/16 18:48:37 Failed delete on object bucket <span class="s1">'bucket/test-146604'</span>: ServiceUnavailable: Reduce your request rate.
+        status code: 503, request <span class="nb">id</span>: , host <span class="nb">id</span>:
+</code></pre></div></div>
+
+<p>Is this concerning? And shouldn’t latency on flash be lower? No and no.</p>
+
+<p>First, I ran s3tester from a single VM which was a bottleneck itself.</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-04-ots-vm-bottleneck.png" alt="s3tester with client bottleneck" /></p>
+
+<p>Second, ONTAP S3 itself was just a VM. (VM label is misleading as VM was upgraded to 9.10.1 since it was deployed.)</p>
+
+<p><img src="/assets/images/ontap-s3-s3tester-05-vm-bottleneck.png" alt="ONTAP Select with h/w bottleneck" /></p>
+
+<p>And that was a small VM (4 vCPU, ESXi 7, Xeon Silver from 2018) with external storage on a single NetApp HCI (SolidFire iSCSI) volume, so one thing that we can safely conclude here is that s3tester and ONTAP Select managed to max out the modest VM resources allocated to S3 client and ONTAP Select S3 server. We could have increased these resources, but we were interested in meeting a specific requirement rather than achieving the maximum S3 server performance.</p>
+
+<h2 id="take-aways">Take aways</h2>
+
+<p>In conclusion, even this ONTAP Select can more than satisfy customer’s requirements.</p>
+
+<p>Any all-flash ONTAP appliance should be able to deliver S3 performance that’s multiple times higher than what we observed in these s3tester runs.</p>
+
+<p>Reverse proxies could be added to further improve GET and HEAD performance.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

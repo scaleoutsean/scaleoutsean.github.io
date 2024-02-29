@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Storage efficiency with Kafka 3.2 and NetApp SolidFire 12 | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Effects of enabling Kafka compression and RF >1 on SolidFire storage efficiency
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Storage efficiency with Kafka 3.2 and NetApp SolidFire 12 | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Storage efficiency with Kafka 3.2 and NetApp SolidFire 12" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Effects of enabling Kafka compression and RF &gt;1 on SolidFire storage efficiency" />
+<meta property="og:description" content="Effects of enabling Kafka compression and RF &gt;1 on SolidFire storage efficiency" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/07/05/kafka-solidfire-efficiency.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/07/05/kafka-solidfire-efficiency.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-07-05T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Storage efficiency with Kafka 3.2 and NetApp SolidFire 12","dateModified":"2022-07-05T00:00:00+08:00","datePublished":"2022-07-05T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/07/05/kafka-solidfire-efficiency.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/07/05/kafka-solidfire-efficiency.html","description":"Effects of enabling Kafka compression and RF &gt;1 on SolidFire storage efficiency","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Storage efficiency with Kafka 3.2 and NetApp SolidFire 12</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>05 Jul 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    6 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#objective">Objective</a></li>
+  <li><a href="#how-i-tested">How I tested</a></li>
+  <li><a href="#kafka-tests-and-results">Kafka tests and results</a>
+    <ul>
+      <li><a href="#random-ascii-records">Random ASCII records</a></li>
+      <li><a href="#storagegrid-audit-log">StorageGRID audit log</a></li>
+    </ul>
+  </li>
+  <li><a href="#protecting-kafka-on-a-single-site">Protecting Kafka on a single site</a></li>
+  <li><a href="#sizing-with-rf2">Sizing with RF2</a></li>
+  <li><a href="#summary-and-conclusion">Summary and conclusion</a></li>
+</ul>
+
+<h2 id="objective">Objective</h2>
+
+<p>I wanted to see how much data efficiency is lost on SolidFire with Kafka’s RF2 and RF3 as well as due to optional compression.</p>
+
+<p>As I mentioned in the post on <a href="/2022/06/28/kafka-eseries-object-storage.html">Tiered Kafka with E-Series</a>, with protected storage RF2 is enough and RF3 is wasteful. That also applies to SolidFire, but even more so (compared to E-Series) because all unique storage blocks on SolidFire are global and all volumes are protected by RF2 (SolidFire Double Helix) so doing another RF3 outside is either very wasteful (if Kafka-made copies do not get deduplicated on SolidFire) or unnecessary (if copies made by Kafka do get deduplicated, that doesn’t give you additional protection).</p>
+
+<p>Should we use even RF2 on Kafka? I think we should: that protects you from filesystem corruption and Kafka broker node loss and potentially improves performance (as data compressed on Kafka and then sent to SolidFire targets consumes less storage bandwidth than uncompressed data sent to SolidFire).</p>
+
+<p>Now the very important question here is how much storage efficiency do we lose due to RF2 on Kafka, especially if data is already compressed on broker. But we’d also like to know if uncompressed RF2 deduplicates as we expect it would.</p>
+
+<h2 id="how-i-tested">How I tested</h2>
+
+<ul>
+  <li>Three Kafka 3.2.0 containers, each backed by a 2GiB SolidFire volume</li>
+  <li>Create a topic with 1 partition and replication factor 3</li>
+  <li>Send data to Kafka. The first batch of tests created random ASCII so I saw no point in batching requests; the JSON file test used batching</li>
+  <li>After reach run, delete topic data, rethin SolidFire volumes host-side, and wait for efficiency and fullness results after next SolidFire garbage collection run</li>
+  <li>Rinse and repeat</li>
+</ul>
+
+<p>Everything was done in two VMs, one for Kafka on Ubuntu, another SolidFire Demo VM providing iSCSI storage.</p>
+
+<p><img src="/assets/images/kafka-solidfire-00-producer-test.png" alt="Kafka producer running against SolidFire-backed Kafka" /></p>
+
+<h2 id="kafka-tests-and-results">Kafka tests and results</h2>
+
+<p>With this thing the more tests you do the more questions you get (which is one of the reasons I put conclusion at the top of this post).</p>
+
+<p>But these results, however limited, satisfy my initial curiosity. I’d certainly do additional tests before committing to a real-life solution.</p>
+
+<h3 id="random-ascii-records">Random ASCII records</h3>
+
+<p>This test generated around 1.5 GiB of 1kB records made up of random ASCII characters, generated using Kafka producer tool.</p>
+
+<ul>
+  <li>Uncompressed random records, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-01-random-uncompressed-rf3.png" alt="Disk fullness after uncompressed ingress" />
+<img src="/assets/images/kafka-solidfire-02-random-uncompressed-rf3-efficiency.png" alt="Account efficiency after uncompressed ingress" /></p>
+
+<p>Uncompressed records were nicely deduplicated, which was expected. Still, 2.89x savings from deduplication with RF3 is very good. Compression was low (1.05x), but data was random so I didn’t expect compression to be higher than 1.2x.</p>
+
+<ul>
+  <li>gzip-compressed random records, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-04-random-gzip-rf3.png" alt="Disk fullness after gzip'd ingress" />
+<img src="/assets/images/kafka-solidfire-05-random-gzip-rf3-efficiency.png" alt="Account efficiency after gzip'd ingress" /></p>
+
+<p>Here we observe space savings from compressing Kafka-side, and deduplication still gets very good results. In terms of broker or producer performance, added resource consumption from compression slows down throughput and increases latency, but in terms of SolidFire performance, 47% / 72% (uncompressed disk fullness, above) represents up to 35% in maximum storage throughput.</p>
+
+<ul>
+  <li>Snappy-compressed random records, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-06-random-snappy-rf3.png" alt="Disk fullness after snappy'd ingress" />
+<img src="/assets/images/kafka-solidfire-07-random-snappy-rf3-efficiency.png" alt="Account efficiency after gzip'd ingress" /></p>
+
+<p>Snappy didn’t work as well as gzip here, but SolidFire deduplication was effective.</p>
+
+<ul>
+  <li>zstd-compressed random records, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-08-random-zstd-rf3.png" alt="Disk fullness after snappy'd ingress" />
+<img src="/assets/images/kafka-solidfire-09-random-zstd-rf3-efficiency.png" alt="Account efficiency after zstd'd ingress" /></p>
+
+<p>zstd was similar to gzip, but to figure out which one is “better” we’d have to look at CPU, RAM and latency effects of one vs. another, which wasn’t measured as I was only concerned about the effects on stoarge efficiency.</p>
+
+<h3 id="storagegrid-audit-log">StorageGRID audit log</h3>
+
+<ul>
+  <li>JSON audit log generated by my StorageGRID audit log converter from NetApp StorageGRID 11.5; 35000 JSON files, total 17 MB size on disk</li>
+  <li>Because of original data size is small (17 MB), disk fullness looks very low compared to the first test. Note that even “empty” Kafka disks have some data in them (few MBs), but even that is significant compared to post-compressed size of 17 MB JSON log file. Because of that volume “fullness” percentages seen in screenshots below can be deceiving</li>
+  <li>Here a 500ms linger and batching was used as I expected Kafka compression could be effective on non-random records like these</li>
+</ul>
+
+<p>The tests:</p>
+
+<ul>
+  <li>Uncompressed JSON log, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-10-json-auditlog-uncompressed-rf3.png" alt="Disk fullness after uncompressed ingress" />
+<img src="/assets/images/kafka-solidfire-11-json-auditlog-uncompressed-rf3-efficiency.png" alt="Account efficiency after uncompressed ingress" /></p>
+
+<p>Here all data was ingested uncompressed so SolidFire could do a better job: 1.70x savings from compression, and deduplication was 1.32 (combined efficiency: 2.24x for RF3 - not bad!). We’d probably get different results with different batching and linger settings, but I didn’t have that much time (just waiting for Garbage Collection between tests meant I needed 10+ hours to get these results).</p>
+
+<ul>
+  <li>gzip-compressed JSON log, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-12-json-auditlog-gzip-rf3.png" alt="Disk fullness after snappy'd ingress" />
+<img src="/assets/images/kafka-solidfire-13-json-auditlog-gzip-rf3-efficiency.png" alt="Account efficiency after gzip'd ingress" /></p>
+
+<p>Kafka’s gzip compression impacted SolidFire’s, but I’m still surprised that compression was so high (1.58x). Total: 1.58x * 1.08x = 1.70x.</p>
+
+<ul>
+  <li>Snappy-compressed JSON log, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-14-json-auditlog-snappy-rf3.png" alt="Disk fullness after snappy'd ingress" />
+<img src="/assets/images/kafka-solidfire-15-json-auditlog-snappy-rf3-efficiency.png" alt="Account efficiency after snappy'd ingress" /></p>
+
+<p>Snappy was slightly more cooperative than gzip, as far as SolidFire is concerned. Total: 1.77x.</p>
+
+<ul>
+  <li>zstd-compressed JSON log, RF3:</li>
+</ul>
+
+<p><img src="/assets/images/kafka-solidfire-16-json-auditlog-zstd-rf3.png" alt="Disk fullness after snappy'd ingress" />
+<img src="/assets/images/kafka-solidfire-17-json-auditlog-zstd-rf3-efficiency.png" alt="Account efficiency after zstd'd ingress" /></p>
+
+<p>Total 1.73x - very similar to Snappy.</p>
+
+<h2 id="protecting-kafka-on-a-single-site">Protecting Kafka on a single site</h2>
+
+<p>If you have at least 6 SolidFire nodes, you can distribute them evenly across three racks to <a href="/2021/07/06/solidfire-protection-domains-data-path.html">protect your Kafka from a single rack failure</a>.</p>
+
+<p>If you have at least 8 SolidFire nodes, then - 4 nodes being the minimum - you can have RF2 on Kafka with each copy going to a separate SolidFire cluster.</p>
+
+<p>Multi-site protection should be done with Kafka Geo-Replication.</p>
+
+<h2 id="sizing-with-rf2">Sizing with RF2</h2>
+
+<p>Let’s say we have 100,000 events per second, 512 bytes per event, and RF2. That’s about 50 MB/s, and with 5 Kafka brokers about 10 MB/s per broker.</p>
+
+<ul>
+  <li>Kafka with RF2: 20 MB/s per broker</li>
+  <li>Kafka RF2 with 30% savings from Kafka compression: 14 MB/s per broker</li>
+</ul>
+
+<p>Both of these are easy to achieve with 1ms storage latency. We can get several times as much even on the smallest SolidFire cluster (H610S-1 x 4 nodes). SolidFire is good for hundreds of megabytes per second. If you need gigabytes per second, use E-Series.</p>
+
+<p>Storing Kafka data on SolidFire would probably be prohibitively expensive, so I’d definitively recommend using tiering to S3 (which I wrote about in <a href="/2022/06/28/kafka-eseries-object-storage.html">Tiered Kafka with E-Series post</a>).</p>
+
+<p>Storage capacity requirements would work similar to this: assuming total 2x savings on SolidFire with Kafka RF2, 2x efficiency on SolidFire would get canceled out by RF2 (Double Helix data protection) <strong>of</strong> SolidFire so we’d effectively need 1TB of raw disk capacity to store 1TB of Kafka data with RF2 and (Kafka-side) efficiency 2X. Some topics could be left uncompressed, others would benefit from compression and actual efficiencies would depend on several factors as indicated in this post.</p>
+
+<p>Note that Kafka with S3 tiering would need very little capacity on Hot Tier (SolidFire) - Kafka data would be evacuated to S3 within minutes or at most days.</p>
+
+<h2 id="summary-and-conclusion">Summary and conclusion</h2>
+
+<p>Surprisingly, it wasn’t that bad - SolidFire manages to save space even with Kafka compression enabled. In fact it’s much better than I expected.</p>
+
+<p>With this encouraging result, I would use Kafka RF2 with SolidFire and:</p>
+
+<ul>
+  <li>Enable compression appropriate for my use case (i.e. mind the latency and CPU consumption, as well as total efficiency on SolidFire)</li>
+  <li>Use RF2 on Kafka, and SolidFire will do another RF2 (Double Helix)</li>
+</ul>
+
+<p>When it comes to sizing, Kafka on SolidFire is similar to <a href="/2022/03/06/elastic-elk-stack-on-netapp.html">Elasticsearch on SolidFire</a> - it’s not meant for big clusters, but it should work well with small to medium. (Note, I don’t think Elasticsearch efficiencies would translate as well to SolidFire as Kafka’s do, but I’ll leave this for another blog post).</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

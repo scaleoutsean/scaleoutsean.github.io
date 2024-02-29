@@ -1,0 +1,1318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            SBOM with signed Apptainer containers on BeeGFS | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Use Apptainer to secure applications and data on NetApp E-Series BeeGFS clusters
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>SBOM with signed Apptainer containers on BeeGFS | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="SBOM with signed Apptainer containers on BeeGFS" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use Apptainer to secure applications and data on NetApp E-Series BeeGFS clusters" />
+<meta property="og:description" content="Use Apptainer to secure applications and data on NetApp E-Series BeeGFS clusters" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/08/30/apptainer-beegfs-software-bom-sbom.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/08/30/apptainer-beegfs-software-bom-sbom.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-30T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"SBOM with signed Apptainer containers on BeeGFS","dateModified":"2022-08-30T00:00:00+08:00","datePublished":"2022-08-30T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/08/30/apptainer-beegfs-software-bom-sbom.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/08/30/apptainer-beegfs-software-bom-sbom.html","description":"Use Apptainer to secure applications and data on NetApp E-Series BeeGFS clusters","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">SBOM with signed Apptainer containers on BeeGFS</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>30 Aug 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#why">Why</a></li>
+  <li><a href="#build-data-app-container-and-check-its-inventory">Build data-app container and check its inventory</a></li>
+  <li><a href="#use-it">Use it</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>To give credit where credit is due - this post is inspired by a recent update from Singularity in which they noted that Syft has added support for the SIF format used by Singularity (and Apptainer).</p>
+
+<p>I thought to give this workflow a try and write a post that outlines additional advantages of Apptainer containers. I got some help from an Apptainer expert which helped me save time, and referenced the official Apptainer documentation for the rest.</p>
+
+<h2 id="why">Why</h2>
+
+<p>As most readers know, NetApp has an E-Series BeeGFS solution which I often write about.</p>
+
+<p>Although E-Series arrays have very strong security features, and NetApp’s BeeGFS solution is based on BeeGFS with enterprise features which includes ACLs, BeeGFS itself currently has no encryption. This may pose challenges in some environments.</p>
+
+<p>Many NetApp users keep highly secure data on ONTAP systems or StorageGRID (Object Storage), but there are cases (performance, cost, etc.) where keeping such data on BeeGFS is desired.</p>
+
+<p>Anther, generic challenge is the security and portability of applications, where Singularity-type containers shine. SBOM-features of Syft only add to those strengths and now that Syft supports SIF (Singularity) archives, we can do this and more:</p>
+
+<ul>
+  <li>Create Singularity/Apptainer containers on BeeGFS</li>
+  <li>Package data with applications if we want to create a seamless user experience or ship application with data (dark sites, offline use, etc.)</li>
+  <li>Check packaged Apptainer containers for vulnerabilities</li>
+  <li>Cryptographically sign (clear-sign) such containers to assure the user of their integrity (they would need to have, and trust, our public key)</li>
+  <li>Create SBOM for such containers, so that the user can inspect them without scanning those (maybe TB-sized) containers, although they can still do that, too</li>
+  <li>Encrypt and sign containers on BeeGFS (which makes data secure, but obviously such containers can no longer be scanned after the fact)</li>
+  <li>Do other neat stuff (more on that below)</li>
+</ul>
+
+<p>To learn about Software Bill of Materials aka SBOM, see <a href="https://www.cisa.gov/sbom">here</a>.</p>
+
+<h2 id="build-data-app-container-and-check-its-inventory">Build data-app container and check its inventory</h2>
+
+<p>Download or copy data (logo.png) your application will use and prepare a definition file that combines your app and data.</p>
+
+<p>In our case that file is caddy.def:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Bootstrap: docker
+From: caddy:latest
+
+%files
+  logo.png /srv/view-me.png
+
+%startscript
+  caddy file-server <span class="nt">--browse</span> <span class="nt">--listen</span> :8080 <span class="nt">--root</span> /srv
+</code></pre></div></div>
+
+<p>Build:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apptainer build caddy.sif caddy.def
+</code></pre></div></div>
+
+<p>Use <code class="language-plaintext highlighter-rouge">apptainer key</code> sub-commands on this new image:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">create</code> (a new PGP key)</li>
+  <li><code class="language-plaintext highlighter-rouge">sign caddy.sif</code></li>
+  <li><code class="language-plaintext highlighter-rouge">verify caddy.sif</code></li>
+</ul>
+
+<p>Repeat the build with a different container file name for the encrypted version:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apptainer build <span class="nt">--passphrase</span> caddy-encrypted.sif caddy.def
+</code></pre></div></div>
+
+<p>Create a software BOM for the first application-data image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>syft singularity:caddy.sif <span class="nt">-o</span> <span class="nv">json</span><span class="o">=</span>caddy.sbom.cdx.json
+</code></pre></div></div>
+
+<p>What’s in an SBOM file? Stuff like this (shortened for brevity):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+ </span><span class="nl">"artifacts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+   </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35085779bdf473bb"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alpine-baselayout"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.2.0-r22"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"apk"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"foundBy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"apkdb-cataloger"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"locations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+     </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/lib/apk/db/installed"</span><span class="p">,</span><span class="w">
+     </span><span class="nl">"layerID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256:a7f6a64cd530e56e9a10d50c21751550d382085eee14bb35b2e314172ac83033"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+   </span><span class="p">],</span><span class="w">
+   </span><span class="nl">"licenses"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"GPL-2.0-only"</span><span class="w">
+   </span><span class="p">],</span><span class="w">
+   </span><span class="nl">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"cpes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"cpe:2.3:a:alpine-baselayout:alpine-baselayout:3.2.0-r22:*:*:*:*:*:*:*"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"cpe:2.3:a:alpine:alpine_baselayout:3.2.0-r22:*:*:*:*:*:*:*"</span><span class="w">
+   </span><span class="p">],</span><span class="w">
+   </span><span class="nl">"purl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pkg:alpine/alpine-baselayout@3.2.0-r22?arch=x86_64&amp;upstream=alpine-baselayout&amp;distro=alpine-3.16.2"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"metadataType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ApkMetadata"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"package"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alpine-baselayout"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"originPackage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alpine-baselayout"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"maintainer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Natanael Copa &lt;ncopa@alpinelinux.org&gt;"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.2.0-r22"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"license"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GPL-2.0-only"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"architecture"</span><span class="p">:</span><span class="w"> </span><span class="s2">"x86_64"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Alpine base dir structure and init scripts"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">11126</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"installedSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">348160</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"pullDependencies"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alpine-baselayout-data=3.2.0-r22 /bin/sh so:libc.musl-x86_64.so.1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"pullChecksum"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Q1l6/nM0K+cyVdqNfgkp1/c6Ylzk0="</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"gitCommitOfApkPort"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cb70ca5c6d6db0399d2dd09189c5d57827bce5cd"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"files"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+     </span><span class="p">{</span><span class="err">...</span><span class="p">}</span><span class="w"> </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="err">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Check the SBOM file for known and published vulnerabilities:</p>
+
+<p><img src="/assets/images/apptainer-sbom-beegfs-02.png" alt="Grype result of SBOM scan" /></p>
+
+<p>This works with clear-signed Apptainer containers, too:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>grype sbom:caddy-signed.sbom.cdx.json
+ ✔ Vulnerability DB        <span class="o">[</span>no update available]
+ ✔ Scanned image           <span class="o">[</span>2 vulnerabilities]
+
+NAME                        INSTALLED  FIXED-IN  TYPE       VULNERABILITY   SEVERITY 
+google.golang.org/protobuf  v1.28.0              go-module  CVE-2015-5237   High      
+google.golang.org/protobuf  v1.28.0              go-module  CVE-2021-22570  High   
+</code></pre></div></div>
+
+<p>This container contains one vulnerable Go module with two published CVEs. For CVEs as old as that it’s weird that <code class="language-plaintext highlighter-rouge">FIXED-IN</code> is empty (usually it’s not). I had to check and found <a href="https://github.com/advisories/GHSA-jwvw-v7c5-m82h">this</a> which shows there’s a fix. Maybe that’s a Grype bug.</p>
+
+<p>Our Web application exposes container data in read-only fashion, so we’ll proceed anyway. We could build a newer Caddy container to fix this, of course.</p>
+
+<p>Once a container is cryptographically signed, application and data in it can be implicitly trusted for trusted PGP keys.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>apptainer verify caddy-encrypted.sif
+Verifying image: caddy-encrypted.sif
+<span class="o">[</span>LOCAL]   Signing entity: Sean XXXXXXX &lt;XXXXXXXXXXX@netapp.com&gt;
+<span class="o">[</span>LOCAL]   Fingerprint: 9D1AC07D2BA49D2BB70B3E9D59624FF646415296
+Objects verified:
+ID  |GROUP   |LINK    |TYPE
+<span class="nt">------------------------------------------------</span>
+1   |1       |NONE    |Def.FILE
+2   |1       |NONE    |JSON.Generic
+3   |1       |NONE    |JSON.Generic
+4   |1       |NONE    |FS
+Container verified: caddy-encrypted.sif
+</code></pre></div></div>
+
+<h2 id="use-it">Use it</h2>
+
+<p>Now that we got our app+data container, we can move it around without the fear of tampering.</p>
+
+<p>The container itself <em>could</em> be uploaded to a container registry, but I don’t expect that <em>large</em> containers that pack data would be commonly stored in a container registry. But sometimes you may want to do that.</p>
+
+<p>Some random thoughts about that:</p>
+
+<ul>
+  <li>Signed containers without data can of course be stored in container registry (see this <a href="https://medium.com/@panda1100/aws-elastic-container-registry-as-apptainer-image-registry-bc82eca59375">example</a> of using AWS Elastic Container Registry to store Apptainer images)</li>
+  <li>Tamper-proof (i.e. signed) containers that include data (which can be very large!) are suitable for keeping on BeeGFS with properly configured ACLs if data is not very sensitive</li>
+  <li>Encrypted signed containers that package data can be kept on BeeGFS even if data in the container is sensitive
+    <ul>
+      <li>Apptainer SBOM must be generated before the container is encrypted. SBOM reports can be clear-signed with PGP and left on BeeGFS</li>
+      <li>Vulnerability scan result can also be included with the image; otherwise the Grype output file that goes with the container would have to be signed as well (so that it cannot be tampered with)</li>
+    </ul>
+  </li>
+  <li>You must be careful about storing passwords in containers (best approach: don’t do it). For example, even in caddy-encrypted.sif it’s possible to see the start script. If there was a password in that line, that could be bad - especially for signed-only data+app containers:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env run-singularity</span>
+SIF_MAGIC-TON-OF-BINARY-STUFF-HERE
+c02Bootstrap: docker-TON-OF-BINARY-STUFF-HERE
+From: caddy:latest
+
+%files
+  logo.png /srv/view-me.png
+
+%startscript
+  caddy file-server <span class="nt">--browse</span> <span class="nt">--listen</span> :8080 <span class="nt">--root</span> /srv
+</code></pre></div></div>
+
+<p>Once our app+data container is ready, we can keep it on BeeGFS and run it when we need to.</p>
+
+<p>Starting and stopping these instances (one at a time, if you haven’t changed application port for different builds) is easy:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>apptainer instance start <span class="nt">--passphrase</span> caddy-encrypted.sif web1
+<span class="nv">$ </span>apptainer instance stop web1
+</code></pre></div></div>
+
+<p>Common steps in one big screenshot:</p>
+
+<p><img src="/assets/images/apptainer-sbom-beegfs-01.png" alt="Check container source and run it" /></p>
+
+<p>Knowing that our app binds <code class="language-plaintext highlighter-rouge">*:8080</code>, we can access it from a Web browser:</p>
+
+<p><img src="/assets/images/apptainer-sbom-beegfs-03.png" alt="Caddy instance in encrypted Apptainer" /></p>
+
+<p>Access application data (view-me.png):</p>
+
+<p><img src="/assets/images/apptainer-sbom-beegfs-04.png" alt="Packaged data in encrypted Apptainer" /></p>
+
+<p>While this demo container runs a Web application, Apptainer containers can be built to run services, batch jobs and more.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Syft support for the SIF format adds valuable features to Apptainer containers - not just “app+data containers”, but all Apptainer containers.</p>
+
+<p>NetApp BeeGFS users benefit from other Apptainer features (see <a href="/2022/08/08/apptainer-with-beegfs-mounts.html">this post</a>, for example), but signing and encryption not only prevents tampering, but it also provides a simple way to bundle data and application SBOM files and vulnerability reports within Apptainer containers.</p>
+
+<p>While SBOM and vulnerability data should probably be easy to access via an API and in an automated fashion, nothing prevents us from <em>also</em> storing SBOM files and vulnerability reports elsewhere. Today many users still do not have a formal way to store and query SBOMs and vulnerability scan results, so being able to include that in data and app containers and archives can be useful.</p>
+
+<p>The approach of packaging data with applications is useful for other reasons as well, for example in hybrid multi-cloud environments.</p>
+
+<p>Data on an encrypted filesystem normally loses protection as soon as it’s moved to another location. There are ways to solve that, for example with file encryption that relies on external key manager or using filesystem replication. But these approaches can be expensive, complex, or inconvenient. Once a file is copied off an encrypted filesystem to a remote location it needs to be checked for integrity (and maybe not just while copying, but before each and every use) and then accessed by the application which the destination may not have available in a convenient container format such as Apptainer.</p>
+
+<p>Signed app+data Apptainer containers, on the other hand, are completely self-contained, portable, tamper-proof (even from bit rot), easy to inspect (SBOM) and use. Signed encrypted containers are also tamper-proof and offer additional data security to users who need it.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#containers">containers</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/01/19/containerized-netapp-cloudsync.html">• Containerized Cloud Sync Data Broker for Docker, Kubernetes and Nomad</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/01/17/eseries-ssd-overprovisioning.html">• Flash media overprovisioning on NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html">• NetApp E-Series Performance Analyzer in orchestrated container environments</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2022/09/27/beegfs-csi-nomad-kubernetes.html">• Speed of volume creation with BeeGFS CSI</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2022/09/25/unofficial-netapp-trident-for-arm64.html">• NetApp Trident v22.07.0 for ARM64</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

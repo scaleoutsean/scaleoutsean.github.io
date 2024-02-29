@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Snapshots and ILM with Elasticsearch 8 | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Notes and observations about snapshots and ILM in Elasticsearch 8 from a NetApp E-Series perspective
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Snapshots and ILM with Elasticsearch 8 | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Snapshots and ILM with Elasticsearch 8" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Notes and observations about snapshots and ILM in Elasticsearch 8 from a NetApp E-Series perspective" />
+<meta property="og:description" content="Notes and observations about snapshots and ILM in Elasticsearch 8 from a NetApp E-Series perspective" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/11/30/elasticsearch-ilm-netapp-eseries.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/11/30/elasticsearch-ilm-netapp-eseries.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-11-30T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Snapshots and ILM with Elasticsearch 8","dateModified":"2023-11-30T00:00:00+08:00","datePublished":"2023-11-30T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/11/30/elasticsearch-ilm-netapp-eseries.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/11/30/elasticsearch-ilm-netapp-eseries.html","description":"Notes and observations about snapshots and ILM in Elasticsearch 8 from a NetApp E-Series perspective","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Snapshots and ILM with Elasticsearch 8</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>30 Nov 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    16 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#elasticsearch-snapshots">Elasticsearch “snapshots”</a>
+    <ul>
+      <li><a href="#snapshot-to-s3-vs-snapshot-to-path">Snapshot to S3 vs. snapshot to Path</a></li>
+      <li><a href="#multiple-repositories">Multiple repositories</a></li>
+      <li><a href="#backup-performance">Backup performance</a></li>
+    </ul>
+  </li>
+  <li><a href="#elasticsearch-ilm">Elasticsearch ILM</a></li>
+  <li><a href="#relationship-between-ilm-snapshots-and-searchable-snapshots">Relationship between ILM, snapshots and searchable snapshots</a></li>
+  <li><a href="#what-does-any-of-this-have-to-do-with-e-series">What does any of this have to do with E-Series?</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---selected-api-responses">Appendix A - selected API responses</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>I’ve written several posts about Elasticsearch (find them in archives or search), but I haven’t yet blogged about S3 integrations.</p>
+
+<p>It is widely known Elasticsearch is moving to “stateless” where object storage will play a big role, so I decided to create these notes for Elasticsearch users.</p>
+
+<p>These notes aren’t specific to NetApp E-Series disk arrays, but as I make storage-related observations I will only focus on E-Series as I find this product line of NetApp to be the most suitable for Elasticsearch.</p>
+
+<h2 id="elasticsearch-snapshots">Elasticsearch “snapshots”</h2>
+
+<p>As storage professionals well know, snapshots are not backups. But here they are. Which is wrong.</p>
+
+<p>Elasticsearch uses the wrong terminology picked from inferior storage solutions - Elasticsearch “snapshots” are really backups (dumps) to S3 and not really snapshots. This doesn’t mean there’s anything wrong with Elasticsearch snapshots or their approach - that’s all good. But dumps or backups shouldn’t be called “snapshots”.</p>
+
+<p>That aside, the feature is configured in Snapshot and Restore (why not “Backup &amp; Restore”, right?).</p>
+
+<p>There we define our S3 back-end which with “snapshots” that land on E-Series usually means the user’s NetApp StorageGRID (VMs) or MinIO (VMs or containers) using E-Series NL-SAS volumes.</p>
+
+<p>I’m not showing any S3 settings here because most of them are done in the CLI and the Elasticsearch documentation tells you how to configure them.</p>
+
+<p>Then in Kibana we just register S3 repo name and the only setting we need to provide is the bucket which we want to use.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-01.png" alt="" /></p>
+
+<p>With that done, we create a snapshot policy that uses the new S3 repository.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-02.png" alt="" /></p>
+
+<p>That policy includes a schedule, retention, what to dump to S3, and such.</p>
+
+<p>As you can see here, I keep my backups for 3 days in this test environment.</p>
+
+<p>I haven’t double-checked this, but I think if you use Elasticsearch ILM we’d retain index snapshots at least as long as ILM policies mandate. So, if we use ILM to manage data up to 60 days, we shouldn’t delete snapshots before that.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-03.png" alt="" /></p>
+
+<p>As policy runs, or we manually execute on-demand snapshots, snapshots start appearing in their tab.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-04.png" alt="" /></p>
+
+<p>In this case I’m backing up a datastream of custom logs I generate from a client. I had no idea how to custom-name these from Elasticsearch client (more on that later), so they get these “system” names (<code class="language-plaintext highlighter-rouge">.ds-yourname-*</code>) and Elasticsearch adds a date plus index file integer suffix which is why the date appears twice (my name included the date, and Elasticsearch added its own date stamp).</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-05.png" alt="" /></p>
+
+<p>If I wanted to restore data from any individual snapshot, I could pick only selected indexes or index files an index.</p>
+
+<p>This is obviously useful if you want to add data to some old indexes, or if certain index files get lost/deleted/corrupt and need to be selectively recovered.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-06.png" alt="" /></p>
+
+<h3 id="snapshot-to-s3-vs-snapshot-to-path">Snapshot to S3 vs. snapshot to Path</h3>
+
+<p>Elasticsearch allows snapshots to be made to an S3 bucket as well as to a directory (path).</p>
+
+<p>I haven’t tried using path-based snapshots because for that I’d have to mount another disk (or perhaps NFS share) and in this time and age having a backup copy on the same servers where Elasticsearch runs doesn’t seem like a great idea.</p>
+
+<p>In my view the biggest difference between on-premises snapshots to a path compared to an S3 bucket is that by setting up StorageGRID SDS or MinIO I make data copies to a different security domain.</p>
+
+<p>In both cases - filesystem paths or StorageGRID / MinIO buckets - data may land on the same E-Series storage array.</p>
+
+<p>But with S3, if Elasticsearch gets compromised and Object Versioning with some retention (e.g. Snapshot policy retention + 10 days) is configured, I can still get my backups from S3 back, while backup data on filesystems could be more easily compromised (“rm -rf /mnt/snapshots/*”, or encrypted) by an attacker.</p>
+
+<p>This isn’t to say there’s no way to handle filesystem threats on E-Series. We can take Consistency Group snapshots and, as I wrote in the Rest Server <a href="/2022/04/03/restic-server-netapp-eseries.html#dealing-with-the-risk-of-storage-side-snapshot-rotation">post</a>, we can stop writes to base volumes (i.e. stop “rm -rf” from or encryption from rotating out existing valid E-Series array snapshot data) if reserve capacity runs out. But S3 with Object Locking seems like a more elegant solution.</p>
+
+<p>Another argument against using local backup volumes (ext4, xfs, etc.) is that we’d also have to provide HA. If you have Elasticsearch in VMs, that’s fine - vSphere can take care of it. If Elasticsearch is containerized, then HA gets more annoying and having RF1 (2 copies) becomes more desirable because with just one copy only one server can get to snapshot data.</p>
+
+<p>With a copy on two servers, two servers can serve snapshot data but that’s still less than from S3 where - similar to Splunk SmartStore - all Elasticsearch servers can access S3.</p>
+
+<p>One argument in favor of Path-based snapshot repositories is that two servers can get to data faster than when using S3. While we can easily get a few GBs from object stores with data on E-Series NL-SAS, we can get the maximum storage performance with direct block access (using local disks).</p>
+
+<h3 id="multiple-repositories">Multiple repositories</h3>
+
+<p>It is possible to configure multiple snapshot repositories. For example:</p>
+
+<ul>
+  <li>Two S3 repositories, each on a different site, with two schedules; this can be used to create two backup dump schedules</li>
+  <li>One S3 repository, one Path repository; these can be used to dump Elasticsearch to local disk (fast; can be done every 6 hours) and S3 (maybe daily)</li>
+</ul>
+
+<h3 id="backup-performance">Backup performance</h3>
+
+<p>By “backup performance” I mean “snapshot performance”, but that would sound silly. (I also omit restore (performance) making that subtitle incomplete, but that’s deliberate as restores are actually performance-tuned elsewhere, as we shall see shortly.)</p>
+
+<p>The <a href="https://www.elastic.co/guide/en/elasticsearch/reference/8.11/repository-s3.html#repository-s3-repository">docs</a> show the options supported by S3 snapshot repository settings. The main ones related to object storage performance and capacity, together with some comments:</p>
+
+<ul>
+  <li>chunk_size - as the name says, this is about chunk sizes and I suspect 512MB-1GB could be a good size for SDS running in VMs or containers.</li>
+  <li>buffer_size - buffer_size is for individual upload request size; I wouldn’t increase the default for S3 running in VMs or containers</li>
+  <li>compress - default is ON, and that’s a good idea for Elasticsearch or S3 on E-Series because E-Series doesn’t have compression</li>
+  <li>max_restore_bytes_per_sec - you can increase this if your object store is fast enough; for restores you should also increase <code class="language-plaintext highlighter-rouge">indices.recovery.*</code> settings (documented elsewhere as those aren’t specific to S3 or snapshots in general)</li>
+  <li>max_snapshot_bytes_per_sec - see the comment for “restore” bytes per second, above</li>
+</ul>
+
+<p>Regarding maximum bytes per second, those are per-repository settings so I expect that if you have different policies and therefore schedules, several could be sharing the same bandwidth to S3. As I mentioned, a single MinIO can give you 2 GB/s write and 4 GB/s read, but “it depends” so do your testing and then limit the maximum bandwidth to your S3 repository.</p>
+
+<h2 id="elasticsearch-ilm">Elasticsearch ILM</h2>
+
+<p>In Elasticsearch 8 ILM is not directly related to Elasticsearch Snapshot &amp; Restore. We can configure ILM through the API or Kibana using Index Management and Index Lifecycle Policies menu items from just above Snapshot and Restore.</p>
+
+<p>I created a policy named sean-syslog-ilm and once everything was configured I had it linked to an index template, and linked indexes were many (which is based on index alias, so that all <code class="language-plaintext highlighter-rouge">.ds-sean-*</code> indices are picked by that alias).</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-07.png" alt="" /></p>
+
+<p>This part of the UI is intuitive - Hot, Warm Cold. Set the criteria needed to move indices through this lifecycle and enable/disable the options you need/don’t need.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-08.png" alt="" /></p>
+
+<p>One part that I didn’t try is related to Searchable Snapshots. Below we can see that Enterprise license is required for this feature.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-09.png" alt="" /></p>
+
+<p>You could test the feature by running Elasticsearch in evaluation mode which would enable the feature for 30 days.</p>
+
+<p>I haven’t tried to use evaluation license because I wasn’t sure if I’ll have time to test this within 30 days and I didn’t want to have the license expire in the middle of testing.</p>
+
+<p>That aside, “searchable snapshot” is what ties ILM to snapshots.</p>
+
+<h2 id="relationship-between-ilm-snapshots-and-searchable-snapshots">Relationship between ILM, snapshots and searchable snapshots</h2>
+
+<p>When Elasticsearch first <a href="https://www.elastic.co/blog/introducing-elasticsearch-frozen-tier-searchbox-on-s3">introduced</a> ILM in v7.12, ILM of Cold Tier data made copied data to S3 and left one replica on disk, while Frozen eliminated local copies and downloaded data from S3 on demand.</p>
+
+<blockquote>
+  <p>The frozen tier leverages searchable snapshots to decouple compute from storage. As data migrates from warm or cold to frozen based on your index lifecycle management (ILM) policy, your indices on local nodes are migrated to S3 or your object store of choice. The cold tier migrates indices to the object store, but it still retains a single, full copy of the data on local nodes to ensure fast and consistent searches. The frozen tier, on the other hand, eliminates the local copy altogether and directly searches the data in the object store.</p>
+</blockquote>
+
+<p>Searchable snapshots supported Cold and Frozen from the beginning.</p>
+
+<p>If we visualize the progression of ILM, once it’s set up and indices start hitting limits defined in our ILM policy that affects them, “New” and “Hot” will appear immediately, and “Warm” after first buckets hit the ILM criteria (shard size, number of documents, age, etc).</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-10.png" alt="" /></p>
+
+<p>As we move on, the number of shards may increase, and oldest may fulfill the criteria for Cold tier.</p>
+
+<p><img src="/assets/images/elasticsearch-ilm-snapshots-11.png" alt="" /></p>
+
+<p>Back to “searchable snapshots” feature that requires enterprise license. From <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-searchable-snapshot.html">the docs</a>:</p>
+
+<blockquote>
+  <p>Takes a snapshot of the managed index in the configured repository and mounts it as a searchable snapshot. If the index is part of a data stream, the mounted index replaces the original index in the stream.</p>
+</blockquote>
+
+<p>How does it work? From the same page:</p>
+
+<blockquote>
+  <p>The action uses the index.routing.allocation.include._tier_preference setting to mount the index directly to the phase’s corresponding data tier. In the frozen phase, the action mounts a partially mounted index prefixed with partial- to the frozen tier. In other phases, the action mounts a fully mounted index prefixed with restored- to the corresponding data tier.</p>
+</blockquote>
+
+<p>I wasn’t able to use Frozen tier, or searchable snapshots in the first place, so I won’t share anything on that. But related to snapshot (backup) retention and ILM-driven deletes mentioned earlier - what if there’s a mismatch in durations? Here’s what the same page says about searchable snapshots.</p>
+
+<blockquote>
+  <p>By default, this snapshot is deleted by the delete action in the delete phase. To keep the snapshot, set delete_searchable_snapshot to false in the delete action. This snapshot retention runs off the index lifecycle management (ILM) policies and is not effected by snapshot lifecycle management (SLM) policies.</p>
+</blockquote>
+
+<p>I take this to mean that backups (“snapshots”) are not impacted by deletion of searchable snapshots in SLM (ILM policies related to snapshots).</p>
+
+<h2 id="what-does-any-of-this-have-to-do-with-e-series">What does any of this have to do with E-Series?</h2>
+
+<p>Not much.</p>
+
+<p>But the relationship between ILM and snapshots is more obvious and while there are many advanced configuration features that require Elasticsearch expertise, we can more easily understand snapshot- and ILM-related requirements and configure E-Series to meet them.</p>
+
+<ul>
+  <li>Elasticsearch snapshots work to both S3 and Path</li>
+  <li>A big advantage of S3 is better anti-ransomware features, and - with multi-site StorageGRID deployment - DR for Elasticsearch backup and SLM data - while the advantage of Path based snapshots is a higher performance which shouldn’t matter except in largest deployments (few GB/s in object storage performance is usually more than enough for most Cold tiers)</li>
+  <li>Since most large environments need both high performance and DR/BC, multi-site StorageGRID (even as dedicated appliances) - may be better for them</li>
+  <li>Path-based snapshots in multi-site deployments could rely on E-Series’ synchronous replication, but there’s no need to do that if we set RF1 (2 copies) and let Elasticsearch replicate by itself, or use Cross-Cluster Replication when network latency between sites is high</li>
+  <li>Snapshots and ILM tiers can use same NL-SAS disk tier on E-Series or EF-Series and DDP (pool) is the simplest way to provide this capacity</li>
+  <li>Small-to-medium Elasticsearch clusters could use one big SSD pool for all tiers, and configure R1-type LUNs for Hot and R6-type LUNs for the rest (including object storage)</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Elasticsearch snapshots are both powerful and complicated to use. I got that feeling when I first read about it some 1-2 years ago, but I wasn’t sure as I didn’t have any first-hand experience.</p>
+
+<p>Maybe these features have to be complicated because they are so powerful, but my impression is Elasticsearch features have gotten ahead of the Kibana UI, Beats and Logstash.</p>
+
+<p>Perhaps I shouldn’t expect to be able to use such powerful features without RTFM and training and I’m sure that if somebody showed me how to do it, I’d know how to duplicate the procedure, but still… It could be easier.</p>
+
+<p>Specifically:</p>
+
+<ul>
+  <li>Relationship between Beats or Logstash or other clients on the one hand, and Elasticsearch settings on the other is hard to figure out</li>
+  <li>Elasticsearch ILM is <a href="https://www.elastic.co/guide/en/elasticsearch/reference/8.11/index-lifecycle-management.html">on by default</a> which is great because there’s no need to configure it, but then Data Streams and other (missing) settings that ILM depends on get in your way</li>
+  <li>Index templates, aliases, and so on - it’s confusing and not easy to configure them correctly</li>
+</ul>
+
+<blockquote>
+  <p>Default index lifecycle management policies are created automatically when you use Elastic Agent, Beats, or the Logstash Elasticsearch output plugin to send data to the Elastic Stack.</p>
+</blockquote>
+
+<p>Now if you’re doing this the first time, and don’t have aliases, templates and other details in place, good luck figuring it out…</p>
+
+<p>It’d be nice if Kibana had One Wizard (TM) where you could just configure the whole thing in one go and then paste a config “key” in Beats or Logstash, which would pull all the settings that you need. Maybe there’s something like that already, but I didn’t see it.</p>
+
+<p>Because of all these moving parts, clicking around all the manual pages (5+ browser tabs for Beats and Logstash, 10+ for Elasticsearch) was overwhelming.</p>
+
+<p>I got the feeling that Kibana hasn’t quite figured out where to put what, so even within Kibana, one has to do a fair bit of clicking around to check all the different settings and going back to a pane or tab where some non-default checkbox is required means you need to check that checkbox again. So eventually I ended up opening multiple tabs for Kibana as well.</p>
+
+<p>For example, if you want to display “hidden” indices (which is what my <code class="language-plaintext highlighter-rouge">.ds-</code> data stream indices were), you need to do that every single time you visit the page with indices.</p>
+
+<p>What I’m getting at with these comments is: on the road to <a href="https://www.elastic.co/search-labs/blog/articles/stateless-your-new-state-of-find-with-elasticsearch">stateless Elasticsearch</a>, Elasticsearch seems to be moving faster than Kibana, Beats, Logstash and related documentation.</p>
+
+<p>That aside, everything works and I think enterprise customers should simply pay for some hand-holding and advice to not only eliminate this frustration and trial and error, but to also take advantage of the more advanced features and implement best practices. So it’s not a huge problem.</p>
+
+<p>I didn’t spend a lot of time on E-Series in this post, but that’s in part because I’ve already written several posts on various aspects of using E-Series with both Elasticsearch and S3 SDS.</p>
+
+<p>This evaluation helped me gain additional clarity in terms of snapshot options, performance- and capacity-related settings and ILM, so I think I’ve reached the 80/20 rule now, where knowing about 20% of Elasticsearch gets me to 80% of what I need to know/do with it.</p>
+
+<h2 id="appendix-a---selected-api-responses">Appendix A - selected API responses</h2>
+
+<p>This isn’t meant to be used by those seeking to get ILM or snapshot configured - the exact values will depend on your environment - but I just want to show my ILM policies.</p>
+
+<p>I have Hot, Cold and Warm, with no replicas because I have just one Elasticsearch node, so there isn’t much value in having more than the original (i.e. 0 “additional” replicas).</p>
+
+<p>But with three or more Elasticsearch nodes normally we’d have 2 (RF=1), or even (multi-DC) 3 (RF=2) replicas of Hot/Warm, and 1 (RF=0) or 2 for Cold.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"sean-syslog-ilm"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"modified_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2023-11-29T14:35:35.983Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"phases"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"warm"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6h"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"forcemerge"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max_num_segments"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"allocate"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"number_of_replicas"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"include"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"exclude"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"require"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"shrink"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"number_of_shards"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"cold"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12h"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"readonly"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"allocate"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"number_of_replicas"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"include"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"exclude"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"require"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"hot"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0ms"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"rollover"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1d"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"max_primary_shard_docs"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"max_docs"</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"max_primary_shard_size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1mb"</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"max_size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1gb"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"forcemerge"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max_num_segments"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"in_use_by"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"indices"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">".ds-sean-syslog-2023-11-29-14-2023.11.29-000002"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">".ds-sean-syslog-2023-11-28-14-2023.11.29-000002"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">".ds-sean-syslog-2023-11-28-21-2023.11.28-000003"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nl">"data_streams"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"sean-syslog-2023-11-29-19"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"sean-syslog-2023-11-27-17"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"sean-syslog-2023-11-28-20"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nl">"composable_templates"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"sean-syslog-template"</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If we examine the status of an individual index file, we may find its phase is one of <code class="language-plaintext highlighter-rouge">hot</code>, <code class="language-plaintext highlighter-rouge">warm</code>, <code class="language-plaintext highlighter-rouge">cold</code>.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"indices"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">".ds-sean-syslog-2023-11-27-05-2023.11.28-000001"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"index"</span><span class="p">:</span><span class="w"> </span><span class="s2">".ds-sean-syslog-2023-11-27-05-2023.11.28-000001"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"managed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"policy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sean-syslog-ilm"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"index_creation_date_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701149122864</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"time_since_index_creation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.8d"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"lifecycle_date_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701235715870</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19.27h"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"phase"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cold"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"phase_time_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701278915885</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"action"</span><span class="p">:</span><span class="w"> </span><span class="s2">"complete"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"action_time_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701279516381</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"step"</span><span class="p">:</span><span class="w"> </span><span class="s2">"complete"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"step_time_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701279516381</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"phase_execution"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"policy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sean-syslog-ilm"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"phase_definition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"min_age"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12h"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"readonly"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"allocate"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"number_of_replicas"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"include"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"exclude"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"require"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"modified_date_in_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1701268535983</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Object storage bucket “native” where I store snapshots has meta and snap objects. Indices are backed up to the bucket’s “indices” path.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> mc <span class="nb">ls </span>os3/native
+<span class="o">[</span>2023-11-30 09:00:00 CST]  87KiB index-106
+<span class="o">[</span>2023-11-30 09:30:02 CST] 127KiB index-107
+<span class="o">[</span>2023-11-30 09:30:02 CST]     8B index.latest
+<span class="o">[</span>2023-11-29 01:00:00 CST] 112KiB meta--Zn0Q60LQEy0_w4m1PKqoQ.dat
+...
+<span class="o">[</span>2023-11-30 09:00:00 CST] 114KiB meta-zCwY6hsIRbSi1I3aRMFnTA.dat
+<span class="o">[</span>2023-11-29 16:00:00 CST] 114KiB meta-zJ_O7qV3So-lxAN1AmZFIw.dat
+<span class="o">[</span>2023-11-29 01:00:00 CST]   901B snap--Zn0Q60LQEy0_w4m1PKqoQ.dat
+...
+<span class="o">[</span>2023-11-30 04:00:00 CST]   902B snap-smdYNZIxT-iLvC3Mmjkv6w.dat
+<span class="o">[</span>2023-11-30 09:00:00 CST]   901B snap-zCwY6hsIRbSi1I3aRMFnTA.dat
+<span class="o">[</span>2023-11-29 16:00:00 CST]   903B snap-zJ_O7qV3So-lxAN1AmZFIw.dat
+<span class="o">[</span>2023-11-30 09:30:03 CST]     0B indices/
+
+</code></pre></div></div>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

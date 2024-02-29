@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Speed of volume creation with BeeGFS CSI | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Fast creation and deletion of CSI volumes
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Speed of volume creation with BeeGFS CSI | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Speed of volume creation with BeeGFS CSI" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Fast creation and deletion of CSI volumes" />
+<meta property="og:description" content="Fast creation and deletion of CSI volumes" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/09/27/beegfs-csi-nomad-kubernetes.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/09/27/beegfs-csi-nomad-kubernetes.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-09-27T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Speed of volume creation with BeeGFS CSI","dateModified":"2022-09-27T00:00:00+08:00","datePublished":"2022-09-27T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/09/27/beegfs-csi-nomad-kubernetes.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/09/27/beegfs-csi-nomad-kubernetes.html","description":"Fast creation and deletion of CSI volumes","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Speed of volume creation with BeeGFS CSI</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>27 Sep 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>While reading the excellent article <a href="https://thenewstack.io/conductor-why-we-migrated-from-kubernetes-to-nomad">Why We Migrated from Kubernetes to Nomad</a> (2021) it occurred to me I spotted some of the same advantages while working on Nomad <a href="/2022/04/24/nomad-batch-job-scale-out-parallel-filesystem-beegfs-e-netapp-series.html">posts</a> for this blog.</p>
+
+<p>I then thought to do a simple experiment to quantity one of the things I noticed, which is faster volume creation with Nomad CSI compared to Kubernetes.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Test</th>
+      <th style="text-align: right">Nomad 1.3.0</th>
+      <th style="text-align: right">Kubernetes v1.23.5</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Create 100 PVCs</td>
+      <td style="text-align: right">8s</td>
+      <td style="text-align: right">22s</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Delete 100 PVCs</td>
+      <td style="text-align: right">19s</td>
+      <td style="text-align: right">11s</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In both cases commands were executed on Server/Master, respectively.</p>
+
+<p>If you’re not familiar with BeeGFS, which is the underlying parallel filesystem used here, these “volumes” are just directories on the filesystem.</p>
+
+<p>Nomad creates PVCs a lot faster. But is this apples to apples?</p>
+
+<p>It’s not:</p>
+
+<ul>
+  <li>Both are running out of small VMs with slightly different specs, but not low on RAM</li>
+  <li>There’s one Nomad Server</li>
+  <li>There’s one Kubernetes Master</li>
+</ul>
+
+<p>My Nomad cluster consists of a single server (b5) and single client (b6) node:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nomad operator raft list-peers
+Node       ID                                    Address             State   Voter  RaftProtocol
+b5.global  90abf6de-ca2e-edb5-c8cc-ae401b41f172  192.168.1.195:4647  leader  <span class="nb">true   </span>3
+
+<span class="nv">$ </span>nomad agent-info
+client
+  heartbeat_ttl <span class="o">=</span> 17.085690119s
+  known_servers <span class="o">=</span> 192.168.1.195:4647
+  last_heartbeat <span class="o">=</span> 14.301982699s
+  node_id <span class="o">=</span> 67b64e4d-9d6f-3122-808c-50aaa85460fc
+  num_allocations <span class="o">=</span> 3
+nomad
+  bootstrap <span class="o">=</span> <span class="nb">true
+  </span>known_regions <span class="o">=</span> 1
+  leader <span class="o">=</span> <span class="nb">true
+  </span>leader_addr <span class="o">=</span> 192.168.1.195:4647
+  server <span class="o">=</span> <span class="nb">true</span>
+
+<span class="nv">$ </span>nomad node status
+ID        DC   Name  Class   Drain  Eligibility  Status
+70d83013  dc1  b6    &lt;none&gt;  <span class="nb">false  </span>eligible     ready
+67b64e4d  dc1  b5    &lt;none&gt;  <span class="nb">false  </span>eligible     ready
+</code></pre></div></div>
+
+<p>BeeGFS cluster: both Nomad Server and Client are BeeGFS clients:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs-check-servers 
+Management
+<span class="o">==========</span>
+b1 <span class="o">[</span>ID: 1]: reachable at 192.168.1.191:8008 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+
+Metadata
+<span class="o">==========</span>
+b2 <span class="o">[</span>ID: 1]: reachable at 192.168.1.192:8005 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+
+Storage
+<span class="o">==========</span>
+b3-8003 <span class="o">[</span>ID: 1]: reachable at 192.168.103.193:8003 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Kubernetes has also one master, but two workers:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME      STATUS   ROLES                  AGE    VERSION
+k8s-m-1   Ready    control-plane,master   171d   v1.23.5
+k8s-n-1   Ready    &lt;none&gt;                 171d   v1.23.5
+k8s-n-2   Ready    &lt;none&gt;                 171d   v1.23.5
+</code></pre></div></div>
+
+<p>Kubernetes is probably worse-off in terms of BeeGFS configuration - Kubernetes Master is both Management and Metadata node for BeeGFS, while it’s first Worker is BeeGFS Storage node.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>beegfs-check-servers 
+Management
+<span class="o">==========</span>
+k8s-m-1 <span class="o">[</span>ID: 1]: reachable at 192.168.105.11:8008 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+
+Metadata
+<span class="o">==========</span>
+k8s-m-1 <span class="o">[</span>ID: 2]: reachable at 192.168.105.11:8005 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+
+Storage
+<span class="o">==========</span>
+k8s-n-1 <span class="o">[</span>ID: 1]: reachable at 192.168.105.12:8003 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+k8s-n-2 <span class="o">[</span>ID: 2]: reachable at 192.168.105.13:8003 <span class="o">(</span>protocol: TCP<span class="o">)</span>
+</code></pre></div></div>
+
+<p>While it’s clear the two clusters aren’t very similar, I am not going to reconfigure everything to make it apples-to-apples - instead I’ll just decide that Nomad is faster in what matters when running short-lived jobs, which is PVC creation. As mentioned in that blog post, seconds saved are dollars saved.</p>
+
+<p>I know that’s not scientific at all, but the difference is significant. And although Kubernetes “completes” <code class="language-plaintext highlighter-rouge">create pvc</code> commands, PVs aren’t actually ready immediately after that.</p>
+
+<p>Instead they be “pending” for a minute or so. Here we see volume 71 was just bound, and volume 74 is in getting bound.</p>
+
+<p><img src="/assets/images/beegfs-csi-nomad-kubernetes-volume-creation-01.png" alt="Pending create PVC command" /></p>
+
+<p>It takes around 60-70 seconds for all 100 volumes to become “bound”.</p>
+
+<p>Compared to Nomad where there’s very little server activity during CSI volume creation, Kubernetes API server is relatively busy (considering there’s no other activity).</p>
+
+<p><img src="/assets/images/beegfs-csi-nomad-kubernetes-volume-creation-02.png" alt="Kube API seems slow" /></p>
+
+<p>This binding happens after volume creation, so to keep things fair, I did not include this time in Kubernetes’ volume creation time.</p>
+
+<p>For comparison, after a Nomad volume has been created it simply becomes “schedulable”. “Allocs”, or allocations, happen only after work that requires these volumes is dispatched to Nomad clients.</p>
+
+<p><img src="/assets/images/beegfs-csi-nomad-kubernetes-volume-creation-03.png" alt="Nomad volumes aren't bound by default" /></p>
+
+<p>I could have measured and compared long it takes to start 100 containers attached to those PVs, but I did not. Why?</p>
+
+<ul>
+  <li>My hardware resources are already constrained and the slowness would likely impact outcomes</li>
+  <li>Should we measure the average delay from volume create until a pod is up, time until pod 100 is up and running, or something else? We can’t tell without knowing the workload. Some workloads may need all pods to start before they can work, some won’t.</li>
+  <li>If we wanted to analyze these details we should use a like-for-like configuration which would mean I’d have to setup a new cluster or two new clusters and the blog post at the top already did a great real-life comparison for us</li>
+  <li>My objective was to check one step in a workflow that I can measure reasonably well without a lot of resources, which is the speed of CSI API response</li>
+</ul>
+
+<p>Considering that Kubernetes volumes are bound automatically after creation, maybe 100 pods would start faster on Kubernetes. But unlike on Nomad, we’d have to wait until a PV has been bound before we could start a pod that uses it. As the API server is already busy during parallel volume creation, throwing more requests to check PVC status could also extend the time required to bind all PVs, etc.</p>
+
+<p>This 15s animated GIF shows an instance of a PVC create test running on each cluster. Nomad in the tab before the last, Kubernetes in the last tab. Nomad test completes in &lt;9 seconds and Kubernetes doesn’t within 15 seconds. The animation loops so don’t watch it twice!</p>
+
+<p><img src="/assets/images/beegfs-csi-nomad-kubernetes-volume-creation-03.gif" alt="Nomad CSI vs Kubernetes CSI" /></p>
+
+<p>While this isn’t a scientific comparison of like-for-like clusters, it measures one specific step that may be important for users who run tens or hundreds of thousands of batch jobs that use PVs.</p>
+
+<p>It doesn’t surprise me that Nomad was faster - the moment you install and start using it, it doesn’t take long to realize 90% of the Kubernetes bloat is gone.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#containers">containers</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

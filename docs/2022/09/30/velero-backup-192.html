@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Velero 1.9 with AWS and CSI plugins for ARM64 | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Notes on Velero v1.9 and recent improvements including unofficial ARM64 version of CSI plugin
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Velero 1.9 with AWS and CSI plugins for ARM64 | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Velero 1.9 with AWS and CSI plugins for ARM64" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Notes on Velero v1.9 and recent improvements including unofficial ARM64 version of CSI plugin" />
+<meta property="og:description" content="Notes on Velero v1.9 and recent improvements including unofficial ARM64 version of CSI plugin" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/09/30/velero-backup-192.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/09/30/velero-backup-192.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-09-30T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Velero 1.9 with AWS and CSI plugins for ARM64","dateModified":"2022-09-30T00:00:00+08:00","datePublished":"2022-09-30T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/09/30/velero-backup-192.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/09/30/velero-backup-192.html","description":"Notes on Velero v1.9 and recent improvements including unofficial ARM64 version of CSI plugin","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Velero 1.9 with AWS and CSI plugins for ARM64</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>30 Sep 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    9 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#non-csi-with-restic-and-netapp-beegfs-csi">Non-CSI with Restic and NetApp BeeGFS CSI</a></li>
+  <li><a href="#csi-with-netapp-trident">CSI with NetApp Trident</a></li>
+  <li><a href="#whats-new-in-19-and-18">What’s new in 1.9 and 1.8</a></li>
+  <li><a href="#velero-on-arm64">Velero on ARM64</a>
+    <ul>
+      <li><a href="#restic-arm64">Restic (ARM64)</a></li>
+      <li><a href="#csi-arm64">CSI (ARM64)</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>See how to prepare the S3 credentials file in <a href="/2022/03/15/velero-18-with-restic-and-trident-2201.html">this</a> post. Then install after inserting your own S3-related values in the below. AWS S3 users can install without the complex backup-location-config - the below is useful for on-premises S3.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero <span class="nb">install</span> <span class="se">\</span>
+  <span class="nt">--features</span><span class="o">=</span>EnableCSI <span class="se">\</span>
+  <span class="nt">--provider</span> aws <span class="se">\</span>
+  <span class="nt">--bucket</span> <span class="k">${</span><span class="nv">BUCKET</span><span class="k">}</span> <span class="se">\</span>
+  <span class="nt">--secret-file</span> ./credentials-velero <span class="se">\</span>
+  <span class="nt">--backup-location-config</span> <span class="nv">region</span><span class="o">=</span><span class="k">${</span><span class="nv">REGION</span><span class="k">}</span>,s3ForcePathStyle<span class="o">=</span><span class="s2">"true"</span>,s3Url<span class="o">=</span><span class="k">${</span><span class="nv">API_ENDPOINT</span><span class="k">}</span> <span class="se">\</span>
+  <span class="nt">--plugins</span> velero/velero-plugin-for-aws:v1.5.1,velero/velero-plugin-for-csi:v0.3.1
+</code></pre></div></div>
+
+<p>This time I used HTTP (not even HTTPS) connection to S3. BeeGFS CSI doesn’t support snapshots which is one of the reasons I enabled Restic. For Trident I enabled CSI.</p>
+
+<p>If you want to use CSI, as that is more complex please read the documentation for Velero 1.9. If planing to use snapshots with Trident install <a href="https://docs.netapp.com/us-en/trident/trident-use/vol-snapshots.html">volume snapshot CRDs and snapshot controller</a>.</p>
+
+<h2 id="non-csi-with-restic-and-netapp-beegfs-csi">Non-CSI with Restic and NetApp BeeGFS CSI</h2>
+
+<p>With this setup I did a simple test - backup a pod from the default namespace.</p>
+
+<p>The pod had a BeeGFS PVC, but since there’s no CSI and no snapshots involved, that was easy. Backup status:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME                 STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+csi-beegfs-dyn-app   Completed   0        1          2022-09-30 10:26:39 +0000 UTC   29d       default            &lt;none&gt;
+</code></pre></div></div>
+
+<p>Backup job description:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup describe csi-beegfs-dyn-app
+Name:         csi-beegfs-dyn-app
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.23.5
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>23
+
+Phase:  Completed
+
+Errors:    0
+Warnings:  1
+
+Namespaces:
+  Included:  default
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included:        <span class="k">*</span>
+  Excluded:        &lt;none&gt;
+  Cluster-scoped:  auto
+
+Label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:  auto
+
+TTL:  720h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2022-09-30 10:26:39 +0000 UTC
+Completed:  2022-09-30 10:26:50 +0000 UTC
+
+Expiration:  2022-10-30 10:26:39 +0000 UTC
+
+Total items to be backed up:  927
+Items backed up:              927
+
+Velero-Native Snapshots: &lt;none included&gt;
+</code></pre></div></div>
+
+<p>As you can see there’s nothing about snapshots in there.</p>
+
+<p>In the backup bucket, Velero created two top level “directories”: one for Restic itself ($BUCKET/restic) and another for this backup ($BUCKET/backups):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">===&gt;</span> velero/restic/default
+<span class="o">[</span>2022-09-30 18:26:49 CST]   155B STANDARD config
+<span class="o">[</span>2022-09-30 18:28:05 CST]     0B keys/
+
+<span class="o">===&gt;</span> velero/backups/csi-beegfs-dyn-app/
+<span class="o">[</span>2022-09-30 18:26:50 CST]    29B STANDARD csi-beegfs-dyn-app-csi-volumesnapshotclasses.json.gz
+<span class="o">[</span>2022-09-30 18:26:51 CST]    29B STANDARD csi-beegfs-dyn-app-csi-volumesnapshotcontents.json.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST]    29B STANDARD csi-beegfs-dyn-app-csi-volumesnapshots.json.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST]  30KiB STANDARD csi-beegfs-dyn-app-logs.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST]    29B STANDARD csi-beegfs-dyn-app-podvolumebackups.json.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST]  12KiB STANDARD csi-beegfs-dyn-app-resource-list.json.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST]    29B STANDARD csi-beegfs-dyn-app-volumesnapshots.json.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST] 150KiB STANDARD csi-beegfs-dyn-app.tar.gz
+<span class="o">[</span>2022-09-30 18:26:50 CST] 2.1KiB STANDARD velero-backup.json
+</code></pre></div></div>
+
+<p>Restores are logged to the restore “subdirectory” in the bucket as ${BACKUP}-${DATE}:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">===&gt;</span> velero/restores
+<span class="o">[</span>2022-09-30 19:47:30 CST]     0B csi-beegfs-dyn-app-20220930103620/
+<span class="o">[</span>2022-09-30 19:47:30 CST]     0B csi-beegfs-dyn-app-20220930103837/
+<span class="o">[</span>2022-09-30 19:47:30 CST]     0B csi-beegfs-dyn-sc-20220930104253/
+
+<span class="o">===&gt;</span> velero/restores/csi-beegfs-dyn-sc-20220930104253
+<span class="o">[</span>2022-09-30 18:42:54 CST] 1.6KiB STANDARD restore-csi-beegfs-dyn-sc-20220930104253-logs.gz
+<span class="o">[</span>2022-09-30 18:42:54 CST]    49B STANDARD restore-csi-beegfs-dyn-sc-20220930104253-results.gz
+</code></pre></div></div>
+
+<h2 id="csi-with-netapp-trident">CSI with NetApp Trident</h2>
+
+<p>To recap, I enabled Restic, but not by default. If you did enable Restic as default backup method, you can disable it for individual backup jobs or schedules.</p>
+
+<p>I also enabled CSI plugin. Once you install Velero like that, you should have a crapload of CSI related plugins. Your Volume Snapshot Class should have a Velero snapshot label.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero plugin get| <span class="nb">grep </span>csi
+velero.io/csi-pvc-backupper                     BackupItemAction
+velero.io/csi-volumesnapshot-backupper          BackupItemAction
+velero.io/csi-volumesnapshotclass-backupper     BackupItemAction
+velero.io/csi-volumesnapshotcontent-backupper   BackupItemAction
+velero.io/csi-volumesnapshot-delete             DeleteItemAction
+velero.io/csi-volumesnapshotcontent-delete      DeleteItemAction
+velero.io/csi-pvc-restorer                      RestoreItemAction
+velero.io/csi-volumesnapshot-restorer           RestoreItemAction
+velero.io/csi-volumesnapshotclass-restorer      RestoreItemAction
+velero.io/csi-volumesnapshotcontent-restorer    RestoreItemAction
+
+<span class="nv">$ </span><span class="nb">cat </span>snapshot-class.yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  labels:
+      velero.io/csi-volumesnapshot-class: <span class="s2">"true"</span>        
+</code></pre></div></div>
+
+<p>I created a Redis pod with this PVC:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> web
+NAME          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+redis-basic   Bound    pvc-eee553c4-4f21-4b55-be6a-a9e042e41fbb   1Gi        RWX            basic          139m
+</code></pre></div></div>
+
+<p>Backup of this <code class="language-plaintext highlighter-rouge">pvc-eee</code> PV with Restic disabled:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup create redis-backup <span class="nt">--default-volumes-to-restic</span><span class="o">=</span><span class="nb">false</span> <span class="nt">--include-namespaces</span> web
+</code></pre></div></div>
+
+<p>Snapshot:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get volumesnapshots
+NAME             READYTOUSE   SOURCEPVC  RESTORESIZE   SNAPSHOTCLASS       SNAPSHOTCONTENT                                    CREATIONTIME   AGE
+basic-snapshot   <span class="nb">true         </span>basic      300Ki         csi-snapshotclass   snapcontent-a2d6aebd-fdbc-4978-b2c3-594d25997d37   3h24m          3h24m
+</code></pre></div></div>
+
+<p>Result:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME                 STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+redis-backup         Completed   0        0          2022-09-30 16:18:27 +0000 UTC   29d       default            &lt;none&gt;
+
+<span class="nv">$ </span>velero backup describe redis-backup <span class="nt">--details</span>
+Name:         redis-backup
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.23.5
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>23
+
+Phase:  Completed
+
+Errors:    0
+Warnings:  0
+
+Namespaces:
+  Included:  web
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included:        <span class="k">*</span>
+  Excluded:        &lt;none&gt;
+  Cluster-scoped:  auto
+
+Label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:  auto
+
+TTL:  720h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2022-09-30 16:18:27 +0000 UTC
+Completed:  2022-09-30 16:18:41 +0000 UTC
+
+Expiration:  2022-10-30 16:18:27 +0000 UTC
+
+Total items to be backed up:  10
+Items backed up:              10
+
+Resource List:
+  snapshot.storage.k8s.io/v1/VolumeSnapshot:
+    - web/velero-redis-basic-scklx
+  snapshot.storage.k8s.io/v1/VolumeSnapshotClass:
+    - csi-snapshotclass
+  snapshot.storage.k8s.io/v1/VolumeSnapshotContent:
+    - snapcontent-f1db5b43-7910-4153-9ba9-57a64d199539
+  v1/ConfigMap:
+    - web/kube-root-ca.crt
+  v1/Namespace:
+    - web
+  v1/PersistentVolume:
+    - pvc-eee553c4-4f21-4b55-be6a-a9e042e41fbb
+  v1/PersistentVolumeClaim:
+    - web/redis-basic
+  v1/Pod:
+    - web/redis
+  v1/Secret:
+    - web/default-token-q7x6h
+  v1/ServiceAccount:
+    - web/default
+
+Velero-Native Snapshots: &lt;none included&gt;
+
+CSI Volume Snapshots:
+Snapshot Content Name: snapcontent-f1db5b43-7910-4153-9ba9-57a64d199539
+  Storage Snapshot ID: pvc-eee553c4-4f21-4b55-be6a-a9e042e41fbb/snapshot-f1db5b43-7910-4153-9ba9-57a64d199539
+  Snapshot Size <span class="o">(</span>bytes<span class="o">)</span>: 344064
+  Ready to use: <span class="nb">true</span>
+</code></pre></div></div>
+
+<p>Right here in CSI Volume Snapshots section, which was empty when Restic was used, has the original volume (pve-eee) and its snapshot (snapshot-f1db) which is a Trident CSI snapshot.</p>
+
+<p>Backup contents in my S3 bucket:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">===&gt;</span> velero/backups/redis-backup
+<span class="o">[</span>2022-10-01 00:18:42 CST]   365B STANDARD redis-backup-csi-volumesnapshotclasses.json.gz
+<span class="o">[</span>2022-10-01 00:18:42 CST]   688B STANDARD redis-backup-csi-volumesnapshotcontents.json.gz
+<span class="o">[</span>2022-10-01 00:18:42 CST]   578B STANDARD redis-backup-csi-volumesnapshots.json.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST] 5.1KiB STANDARD redis-backup-logs.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST]    29B STANDARD redis-backup-podvolumebackups.json.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST]   291B STANDARD redis-backup-resource-list.json.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST]    29B STANDARD redis-backup-volumesnapshots.json.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST] 7.0KiB STANDARD redis-backup.tar.gz
+<span class="o">[</span>2022-10-01 00:18:41 CST] 2.2KiB STANDARD velero-backup.json
+</code></pre></div></div>
+
+<h2 id="whats-new-in-19-and-18">What’s new in 1.9 and 1.8</h2>
+
+<p>If you haven’t kept an eye on this  and wonder what’s new in recent versions of Velero, you can check velero.io and their Github, but here are some highlights:</p>
+
+<ul>
+  <li>Backup improvements
+    <ul>
+      <li>Backup storage locations (BSL’s) can be two</li>
+      <li>Restic can be used backup to multiple storage locations</li>
+      <li>It’s possible to backup on one cluster for the purpose of restoring on another (see Restore below)</li>
+      <li>Restic may use <code class="language-plaintext highlighter-rouge">--insecure-skip-tls-verify</code> if you can’t avoid dealing with Snake Oil TLS certificates</li>
+    </ul>
+  </li>
+  <li>CSI improvements
+    <ul>
+      <li>CSI volume snapshot uses the v1 API</li>
+      <li>No VolumeSnapshot is left in the source namespace of the workload after a backup finishes (I think I spotted this when I used Velero 1.5.2 with CSI)</li>
+      <li>Velero now reports metrics for CSI snapshots including number of snapshots attempted</li>
+      <li>CSI snapshots are (officially) supported for AKS/EKS clusters; with NetApp Astra Trident you’re on your own but it costs nothing</li>
+    </ul>
+  </li>
+  <li>Restore improvements
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">restoreStatus</code> spec allows to pick a resource or resources to be restored</li>
+      <li><code class="language-plaintext highlighter-rouge">--preserve-nodeports</code> may be used to preserve Service nodePorts, but this may fail if the ports are already allocated or outside of the node port range on target cluster</li>
+      <li><code class="language-plaintext highlighter-rouge">ExistingResourcePolicy</code> gives flexibility to deal with slightly different versions of Source and Target. For example we may restore to a slightly newer cluster and use the same (slightly older) API, or pick the new API version as long as it’s not different by more than .1 (e.g. 1.1 can be restored to 1.2beta1). See <a href="https://velero.io/docs/v1.9/api-types/restore/">this</a> for more.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>As the number of features has increased, it seems the complexity of figuring out how to use them has followed. The documentation doesn’t seem easy to use or complete enough - it’s hard to tell, but I struggled installing Velero 1.9.2 despite having previous experience with multiple releases of Velero.</p>
+
+<p>Later I may do a post on cross-cluster restore from S3. At this time my clusters are on different versions <em>and</em> architectures, so I suspect it may take a few hours of troubleshooting.</p>
+
+<h2 id="velero-on-arm64">Velero on ARM64</h2>
+
+<p>Indeed, installing on ARM didn’t go that well. On one of the workers, Restic container couldn’t start and it turns out Velero plugins aren’t built for non-x86_64 architectures at this time.</p>
+
+<p>It seems I picked the wrong time (Saturday afternoon) to use Velero 1.9 on ARM64…</p>
+
+<p>What needs to be done for the plugins is build an ARM64 version. After some trial and error I built the plugins for ARM64, but continued to have strange problems with the CSI container refusing to run - it appears plugin itself was fine, but the container was not.</p>
+
+<p>Then three hours into this, as I was planning to build own containers, I discovered that Velero has started building their AWS plugin for <a href="https://hub.docker.com/r/velero/velero-plugin-for-aws/tags">ARM64</a>. But Velero CSI plugin is not yet built for ARM64.</p>
+
+<p>I chose the easy way out: install Velero using latest plugin for AWS and without CSI.</p>
+
+<h3 id="restic-arm64">Restic (ARM64)</h3>
+
+<p>That worked fine and with Velero on Kubernetes v1.24 (ARM64) I was able to:</p>
+
+<ul>
+  <li>View backups made on Kubernetes v1.23 (AMD64)</li>
+  <li>Restore a backup from AMD64 to ARM64</li>
+  <li>Backup a namespace (using Restic) from ARM64 to the same S3 repository</li>
+</ul>
+
+<p>Restore worked:</p>
+
+<p><img src="/assets/images/velero-19-arm64-csi-01.png" alt="Velero on ARM64 with AWS plugin viewing backups from x86_64" /></p>
+
+<p>Restic-based backup worked as well:</p>
+
+<p><img src="/assets/images/velero-19-arm64-csi-02.png" alt="Velero (Restic) restore on ARM64" /></p>
+
+<p>Velero bucket with backup data from ARM64:</p>
+
+<p><img src="/assets/images/velero-19-arm64-csi-03.png" alt="Velero (Restic) backup to S3" /></p>
+
+<h3 id="csi-arm64">CSI (ARM64)</h3>
+
+<p>I eventually managed to build a good Velero CSI (ARM64) container as well and you can get it <a href="https://hub.docker.com/repository/registry-1.docker.io/scaleoutsean/velero-plugin-for-csi">here</a>.</p>
+
+<p>If you want to use both Restic and CSI on ARM64 and there’s nothing official yet, try to install the same way as at the very top, just use these plugins:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># use velero-plugin-for-aws:latest if you need to, but check Velero compatibility information before that</span>
+<span class="nt">--plugins</span> scaleoutsean/velero-plugin-for-csi:v0.3.1,velero/velero-plugin-for-aws:v1.5.1
+</code></pre></div></div>
+
+<p>If you install it properly, you’ll notice Velero was installed with CSI plugins.</p>
+
+<p><img src="/assets/images/velero-19-arm64-csi-04.png" alt="Velero on ARM64 with AWS and CSI plugin" /></p>
+
+<p>If everything works out, when you create a backup a snapshot will be taken as seen here (the new one is at the top taken at 2:17 PM):</p>
+
+<p><img src="/assets/images/velero-19-arm64-csi-05.gif" alt="Velero on ARM64 with AWS and CSI plugin backing up a Trident CSI volume" /></p>
+
+<p>It’s interesting that job log doesn’t show CSI details like it does on AMD64. This needs additional checking.</p>
+
+<p>As far as PV data is concerned as long as the snapshot is there, PV data can be restored with CSI from Kubernetes. That snapshot got removed after I executed <code class="language-plaintext highlighter-rouge">velero backup delete redis-backup-arm64</code> as expected.</p>
+
+<p>Both <a href="/2022/04/30/beegfs-csi-on-arm64.html">NetApp BeeGFS CSI</a> and <a href="/2022/09/25/unofficial-netapp-trident-for-arm64.html">Trident CSI</a> have an (unofficial) ARM64 build, so now you can use these providers and back them up with Velero using both CSI snapshots (Trident CSI PVCs) and Restic (both BeeGFS CSI and Trident CSI PVCs).</p>
+
+<p>There are likely bugs involved, but if you spot any please highlight them in the Velero Community (not all architectures are officially supported, so in some cases architecture-specific bugs may not be appropriate for Issues).</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

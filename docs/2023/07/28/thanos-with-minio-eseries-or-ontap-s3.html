@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Pointers for Thanos with various NetApp storage backends
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="Pointers for Thanos with various NetApp storage backends" />
+<meta property="og:description" content="Pointers for Thanos with various NetApp storage backends" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-28T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series","dateModified":"2023-07-28T00:00:00+08:00","datePublished":"2023-07-28T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html","description":"Pointers for Thanos with various NetApp storage backends","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>28 Jul 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <h2 id="introduction">Introduction</h2>
+
+<p>Thanos’ object storage component seems to use S3-compliant object stores in reasonably simple ways which lead me to believe it should be easy to get working.</p>
+
+<p>In this post I examine different choices and mention some high-level guidelines to help NetApp customers determine what may be better for them.</p>
+
+<h2 id="architecture">Architecture</h2>
+
+<p>I don’t want to rehash what so many sites explain perfectly well: basically it’s “if you use Prometheus you can add Thanos to it, and Thanos will help you evacuate data to S3 which lowers the cost of storing Prometheus metrics and solves some other challenges”. (Image credit: Corelogix)</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-01.png" alt="Prometheus-Thanos-Grafana relationship" /></p>
+
+<p>The topmost Thanos (Thanos Sidecar) is the main one that’s “added” to Prometheus deployments.</p>
+
+<p>Splunk SmartStore, Loki, Kafka and others use similar approaches in tiering: data is first gathered in a hot tier and then moved to S3. Sometimes it’s “ASAP”, other times when it hits certain age or fullness watermark.</p>
+
+<h2 id="general-storage-thoughts">General storage thoughts</h2>
+
+<p>Thanos doesn’t require all-flash S3 object stores, but you can certainly use such media. Small (say, 50TB these days) object stores are cheaper to deploy on existing all-flash arrays, especially if query workload is high (Thanos has group cache which may offload some queries from S3) it may be a good way to save time.</p>
+
+<p>All modern storage supports flash, and some (E-Series, ONTAP) also support NL-SAS which is still a great choice for very large (PB+) object stores.</p>
+
+<ul>
+  <li>If you own an all flash array, it may be cheaper to deploy a 20TB software-defined S3 application for Thanos than buy dedicated S3 storage</li>
+  <li>If you have a hybrid storage array with SSDs used by Kubernetes and need to add 1.4PB for Thanos - well, it will likely be cheaper to buy 96 18TB NL-SAS drives (or NL-SAS based S3 appliance nodes)</li>
+</ul>
+
+<h3 id="netapp-storagegrid">NetApp StorageGRID</h3>
+
+<p>StorageGRID is the main S3 object storage software that NetApp has.</p>
+
+<p>It scales out to dozens of PBs, provides multi-site access (and it can provide strong consistency across sites), and users usually buy engineered appliances (some of the hardware leverages E-Series arrays) which are hardened, integrated and take less time to deploy.</p>
+
+<p>If you need very reliable object storage with DR capability or need to access it locally at multiple sites, StorageGRID will do that better than the other two.</p>
+
+<p>Because StorageGRID requires at least three nodes, it will work better for around 300TB or more of S3 storage capacity.</p>
+
+<h3 id="netapp-e-series-with-minio">NetApp E-Series with MinIO</h3>
+
+<p>MinIO, of course, isn’t a NetApp product, but it is an open source object store that works in many environments. That includes x64 Linux servers attached to NetApp E-Series.</p>
+
+<p>MinIO seems to be the “default” object store used for testing and evaluation in many projects, including Thanos, so we don’t need to worry if it can work.</p>
+
+<p>The free version costs nothing, but it does make the user in charge of maintaining the OS or at least the MinIO container (if you run it containerized).</p>
+
+<p>Multi-site features are not as good as StorageGRID’s, but it may be good enough for single site Thanos deployments, especially where budget is limited.</p>
+
+<p>You can see <a href="/2022/10/21/minio-performance-netapp-e-series.html">here</a> - it’s easy to achieve multiple gigabytes per second (using MinIO in a single VM, without any multi-VM scaling).</p>
+
+<p>Thanos’ MinIO bucket could work off NL-SAS volumes (blue; RAID6 or DDP), and “hot” tier could use flash storage (red; I’d recommend RAID 10 or DDP).</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-02.png" alt="MinIO with E-Series" /></p>
+
+<p>As mentioned earlier, I wouldn’t attempt to stretch MinIO across sites: I’d use this approach in single site deployments or when replication is done externally (in Thanos layer) so that MinIO at each site still works unaware of replication.</p>
+
+<h3 id="netapp-ontap-s3">NetApp ONTAP S3</h3>
+
+<p>ONTAP S3 is the latest protocol available on unified ONTAP appliances which started as NAS and added SAN functionality after that.</p>
+
+<p>As we provision storage resources, we can choose to enable S3 protocol. From there it takes 2-3 steps to configure accounts and create access and secret keys and we get a very low maintenance Object Store!</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-12-ontap-svm.png" alt="ONTAP SVM" /></p>
+
+<p>There’s no scale out for S3 service and no multi-site capability (as of the current version 9.13.1), but performance is good and ONTAP S3 requires very little maintenance.</p>
+
+<p>ONTAP S3 has best Kubernetes and VI support among NetApp storage, so non-S3 advantages include excellent VMware and Kubernetes integrations which comes handy if you want to use the same array for container or VM orchestration software.</p>
+
+<h2 id="dedicated-vs-unified-object-storage">Dedicated vs. unified object storage</h2>
+
+<p>StorageGRID and MinIO clusters offer S3 only. Even if you want a dedicated S3-only storage appliance, you still need a place to run Thanos, Prometheus, Grafana, and other applications.</p>
+
+<p>E-Series offers block services (iSCSI, FC, etc.) and ONTAP offers even more, so S3 here becomes one of several services used by applications.</p>
+
+<p>Like in the schematic for MinIO with E-Series, these days containerized or virtualized applications would use flash storage (NFS or block) in addition to S3 used by Thanos.</p>
+
+<p>Organizations with smaller data footprints usually choose unified storage appliances (e.g. ONTAP), or block storage such as E-Series where S3 software services use E-Series block storage.</p>
+
+<p>ONTAP S3 and MinIO with E-Series can start very small (e.g. 100GB) alongside other workloads, and grow to PB.</p>
+
+<h2 id="thanos-walk-through">Thanos walk-through</h2>
+
+<p>Since MinIO is well-tested and commonly used with Thanos, I tried Thanos with ONTAP S3. If you’re interested in MinIO and E-Series, please see the archive or use the search feature to find posts about this combination.</p>
+
+<p>Multiple Prometheus instances can work with multiple Thanos Sidecar instances, and use one and the same S3 bucket.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONTAINER ID   NAMES            STATUS       PORTS
+f474068e2411   prometheus_one   Up 2 hours   0.0.0.0:9001-&gt;9001/tcp, :::9001-&gt;9001/tcp, 9090/tcp
+b13dd9fc37c1   prometheus_two   Up 2 hours   9002/tcp, 9090/tcp
+
+</code></pre></div></div>
+
+<p>To integrate Thanos, we need two sidecars, one for each Prometheus instance, and few other containers including Thanos Query Frontend.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONTAINER ID   NAMES                   STATUS       PORTS
+2a39d8016101   thanos_query_frontend   Up 2 hours   0.0.0.0:19090-&gt;19090/tcp, :::19090-&gt;19090/tcp
+1322a61e2c69   thanos_compactor        Up 2 hours   10901/tcp, 0.0.0.0:10922-&gt;10902/tcp, :::10922-&gt;10902/tcp
+d733844ba1f1   thanos_sidecar_one      Up 2 hours   10901-10902/tcp
+926be081aa9c   thanos_sidecar_two      Up 2 hours   10901-10902/tcp
+8c4f3f32d9bc   thanos_querier          Up 2 hours   10901/tcp, 0.0.0.0:10902-&gt;10902/tcp, :::10902-&gt;10902/tcp
+721d3d05f79c   thanos_store            Up 2 hours   10901/tcp, 0.0.0.0:10912-&gt;10902/tcp, :::10912-&gt;10902/tcp
+
+</code></pre></div></div>
+
+<p>Prometheus was a recent version from July 25, while Thanos was built from current source (July 27).</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-07-thanos-prometheus-versions.png" alt="Prometheus and Thanos versions used" /></p>
+
+<p>Thanos sidecars were configured to use the bucket named <code class="language-plaintext highlighter-rouge">backup</code>. Thanos lets us use HTTP which is what I used.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-04-ontap-s3-bucket.png" alt="ONTAP S3 bucket for Thanos" /></p>
+
+<p>On ONTAP, S3 service may be enabled - along other protocols - in virtualized configurations called SVMs (Storage Virtual Machines).</p>
+
+<p>SVM also has a per-protocol performance monitor which here shows there’s regular but low activity from our two Thanos sidecar instances.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-05-ontap-svm-s3-perfmon.png" alt="ONTAP SVM performance monitor for S3" /></p>
+
+<p>Thanos creates multiple “random” paths underneath which it stores its data and metadata. Here there’s a 58 MiB data chunk from Prometheus instance number two.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-06-thanos-bucket-data.png" alt="Thanos S3 bucket data" /></p>
+
+<p>Accessing Thanos Query Frontend and the same from Prometheus, we can see that they look quite similar. Except for MinIO - which was down because I used ONTAP S3 - all services were up and running.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-08-thanos-prometheus-running.png" alt="Prometheus and Thanos container services" /></p>
+
+<p>Grafana, using this Thanos back-end, was able to query Prometheus metrics from Thanos. And not only that, it was able to obtain multi-hour metrics.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-09-thanos-grafana-query.png" alt="Grafana with Thanos backend" /></p>
+
+<p>That is significant - I think - because Prometheus by default retains two hours of metrics, so querying Prometheus should show only metrics for the past two hours, while querying the same metric in Thanos should go multiple hours.</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-10-thanos-prometheus-query.png" alt="Prometheus vs Thanos data rentetion" /></p>
+
+<p>And indeed, by now Thanos (and Prometheus) have been up for 15 hours, so it makes sense that Grafana and Thanos show metrics for multiple hours.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONTAINER ID   NAMES                   STATUS        PORTS
+2a39d8016101   thanos_query_frontend   Up 15 hours   0.0.0.0:19090-&gt;19090/tcp, :::19090-&gt;19090/tcp
+1322a61e2c69   thanos_compactor        Up 15 hours   10901/tcp, 0.0.0.0:10922-&gt;10902/tcp, :::10922-&gt;10902/tcp
+d733844ba1f1   thanos_sidecar_one      Up 15 hours   10901-10902/tcp
+926be081aa9c   thanos_sidecar_two      Up 15 hours   10901-10902/tcp
+8c4f3f32d9bc   thanos_querier          Up 15 hours   10901/tcp, 0.0.0.0:10902-&gt;10902/tcp, :::10902-&gt;10902/tcp
+721d3d05f79c   thanos_store            Up 15 hours   10901/tcp, 0.0.0.0:10912-&gt;10902/tcp, :::10912-&gt;10902/tcp
+
+</code></pre></div></div>
+
+<p>I have re-installed Thanos two-three times without deleting bucket contents, but I can tell bucket utilization went up 2GiB in past 12 hours (demo video below - recorded 12 hours ago - shows 500 MiB).</p>
+
+<p><img src="/assets/images/thanos-minio-eseries-ontap-s3-11-ontap-s3-bucket.png" alt="Bucket utilization after 24 hours" /></p>
+
+<p>This - around 1GiB/day - is just from two small demo instances, so if you need to retain metrics with Thanos you should carefully consider budget and storage requirements.</p>
+
+<p>Remember that data can be down-sampled and deduplicated, so per-day increase shouldn’t apply to the entire lifecycle of archived data. But still, plan your requirements carefully!</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v32uekc-thanos-with-netapp-s3-storage.html">Thanos with ONTAP S3</a> - 6m13s</li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

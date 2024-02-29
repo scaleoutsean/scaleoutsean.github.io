@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Storage considerations for Memphis message broker | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     About Memphis (aka Memphis.dev)
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Storage considerations for Memphis message broker | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Storage considerations for Memphis message broker" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About Memphis (aka Memphis.dev)" />
+<meta property="og:description" content="About Memphis (aka Memphis.dev)" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/08/29/introduction-to-memphis-message-broker.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/08/29/introduction-to-memphis-message-broker.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-08-29T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Storage considerations for Memphis message broker","dateModified":"2023-08-29T00:00:00+08:00","datePublished":"2023-08-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/08/29/introduction-to-memphis-message-broker.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/08/29/introduction-to-memphis-message-broker.html","description":"About Memphis (aka Memphis.dev)","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Storage considerations for Memphis message broker</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>29 Aug 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    8 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#what-is-memphis">What is Memphis</a></li>
+  <li><a href="#storage-related-observations">Storage-related observations</a>
+    <ul>
+      <li><a href="#tiers">Tiers</a></li>
+      <li><a href="#s3-tier">S3 tier</a></li>
+      <li><a href="#disk-and-object-storage-s3-considerations">Disk and object storage (S3) considerations</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="what-is-memphis">What is Memphis</h2>
+
+<p>According to them, Memphis.dev is an intelligent, frictionless message broker.</p>
+
+<p>I would describe it is “Kafka minus headaches”. If you hate Java, you may like Memphis.</p>
+
+<p>At this time Memphis is at v1.2.0. Their Web site has a full list of features but I’ll highlight the ones I think are more important:</p>
+
+<ul>
+  <li>Production-ready message broker in minutes</li>
+  <li>Easy-to-use UI, CLI, and SDKs</li>
+  <li>Data-level observability</li>
+  <li>Dead-Letter Queue with automatic message retransmit</li>
+  <li>Schemaverse - embedded schema management for produced data (Protobuf/JSON/GraphQL/Avro) removes the hassle of dealing with it separately</li>
+  <li>Storage tiering</li>
+  <li>“End to end” message tracing</li>
+</ul>
+
+<p>After brief testing, I wouldn’t disagree with any of these claims.</p>
+
+<p>Memphis is currently still a young product, but versions &gt; v1 ought to be production-ready.</p>
+
+<p>You may ask: if it’s production ready, why aren’t more people using it?</p>
+
+<p>One of the reasons may be that some nine months ago they wised up and changed the software license from the Apache to <a href="https://github.com/memphisdev/memphis/commit/e0dcfabf7cb873513d9c76d3c9f4b24eb959c2aa">BSL 1.0</a>. (Notice how the commit is called “Update LICENSE” although it’s a complete replacement of the permissive Apache license…)</p>
+
+<p>In other words, Memphis may now be suffering the fate of Hashicorp, Elastic and other companies that attempted doing what they’re supposed to (make money). How dare they!</p>
+
+<p>If the case you wonder how Memphis compares vs. something else, see <a href="https://docs.memphis.dev/memphis/memphis-broker/comparisons">this</a> in their documentation. (Their current comparison with Kafka is slightly outdated; Kafka can now use RAFT which used by Memphis, too.)</p>
+
+<p>Among other systems, Memphis is also quite similar to NATS.</p>
+
+<h2 id="storage-related-observations">Storage-related observations</h2>
+
+<p>As far as I understand “front-end” and Tier 1 are very similar to the tech found in NATS Jetstream, whereas Tier 2 (S3) is a novelty in message brokers (although the code may be based on an existing implementation from a non-message broker project - I haven’t looked into that because it should be similar to how other projects use S3).</p>
+
+<h3 id="tiers">Tiers</h3>
+
+<p>Memphis v1.2.0 can use two tiers:</p>
+
+<ul>
+  <li>Memory or Disk: the former is faster, but even with multiple replicas (replication is available with multiple nodes) you can lose data if the cluster becomes affected by an unplanned network or power outage.</li>
+</ul>
+
+<p><img src="/assets/images/memphis-broker-02-ram-disk-tier.png" alt="Memphis memory or disk tier" /></p>
+
+<p>Configured first tier: store messages on disk and keep no more than 10.</p>
+
+<p><img src="/assets/images/memphis-broker-03-first-tier.png" alt="Configured Memphis first tier" /></p>
+
+<ul>
+  <li>S3: records that expire from Memory/Disk tier are migrated to an internal buffer and from it to S3</li>
+</ul>
+
+<p><img src="/assets/images/memphis-broker-03-s3-tier.png" alt="Configured Memphis S3 tier" /></p>
+
+<p>Memphis lets us pick Memory or Disk for Tier 1. Transaction logs are rolled every 8 seconds (default), packed up and shipped to S3 if S3 tier is enabled.</p>
+
+<p><img src="/assets/images/memphis-broker-04-s3-connect.png" alt="Memphis S3 connect" /></p>
+
+<p>Alternatively, X in “every X seconds” can be changed to another value. It is also possible to use “when Y MB of message data has piled up” or “when Z number of messages have been gathered” (as in that screenshot above).</p>
+
+<p>If there’s no S3 tier, then after that limit has been hit messages would be pruned from system.</p>
+
+<p>It is not possible to use only S3 tier - we’d use Memory and S3 if we didn’t have proper disk storage for Memphis instances.</p>
+
+<p>This is a sample of a station with two tiers, disk and S3, with on-disk retention of 1 hour, no replicas:</p>
+
+<p><img src="/assets/images/memphis-broker-06-settings.png" alt="Memphis broker settings" /></p>
+
+<p>I ran into some issues with S3 so I’ll share a few things about that.</p>
+
+<h3 id="s3-tier">S3 tier</h3>
+
+<p>This feature exists and no doubt the main scenario (Memphis-as-a-Service with tiering to AWS S3?) works, but it has bugs and doesn’t work at all for me.</p>
+
+<ul>
+  <li>API endpoint: s3</li>
+  <li>Bucket: memphis-store</li>
+  <li>Memphis “topic”: scaleoutsean</li>
+</ul>
+
+<p>If a memphis station scaleoutsean is configured as S3 tier, we’d expect to see messages tiered to it. But:</p>
+<ul>
+  <li>S3 tier setting sometimes persis, but it also disappears and becomes <code class="language-plaintext highlighter-rouge">-</code> (the hypen stands for “tier not configured” in the UI)</li>
+  <li>In the bucket, Memphis creates a path to tier producer data, for some reason appends <code class="language-plaintext highlighter-rouge">$1</code> to station (“topic”) name, and loses messages when tiering them to S3</li>
+  <li>There’s currently one S3 integration per Memphis cluster (that is, you can’t use two buckets, even though you may have 2 or more stations)</li>
+  <li>It’s impossible to edit S3 configuration even after the last station (topic) has been deleted. The docs say</li>
+</ul>
+
+<p>This is how the path to tiered data looks like. I don’t know why they need that <code class="language-plaintext highlighter-rouge">$1</code>… And (the bigger problem) the path is empty. Yes, tiered data is missing…</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls df</span>/memphis-store/memphis/global/scaleoutsean<span class="nv">$1</span>/
+<span class="err">$</span>
+</code></pre></div></div>
+
+<p>Memphis log says data has been uploaded. That seems inaccurate.</p>
+
+<pre><code class="language-raw">[1] 2023/08/28 14:17:15.792100 [INF] new file has been uploaded to S3: memphis/global/scaleoutsean$1/RBTQjjWLgfBoomxKM1OHKE(5).json
+</code></pre>
+
+<p>We know Memphis can write to this bucket because the user has necessary permissions, and when we started only <code class="language-plaintext highlighter-rouge">s3/memphis-store</code> existed and <code class="language-plaintext highlighter-rouge">${STATION}$1</code> name did not. I’m pretty sure this is a Memphis problem.</p>
+
+<h3 id="disk-and-object-storage-s3-considerations">Disk and object storage (S3) considerations</h3>
+
+<p>As far as NetApp disk storage is concerned, this is the same “NoSQL” requirement that I <a href="/2022/06/28/kafka-eseries-object-storage.html">wrote about before</a> on more than one occasion: we don’t need almost any features - we need reliable, fast storage capacity.</p>
+
+<p>If auto-scaling is required, then Kubernetes would be a better way to deploy Memphis. In a static environment, Docker would be fine.</p>
+
+<p>In a Kubernetes environment, we’d use Trident CSI for ONTAP and something like <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">DirectPV with E-Series</a>. Again, we wouldn’t care much about storage features in this situation - there’s no need to resize, backup, snapshot, recover, replicate, etc.</p>
+
+<p>In a static environment we could use Docker and configure static volumes or even use something like <a href="/2022/03/23/nomad-solidfire-hostpath-volumes.html">Nomad</a> or Terraform to deploy.</p>
+
+<p>I evaluated Memphis in a VM so I can’t guesstimate its performance requirements, but I imagine it should be similar to Kafka. I evaluated Kafka on E-Series <a href="/2022/06/28/kafka-eseries-object-storage.html#sequential-performance-vs-latency">here</a> and even after one or two extra copies, 100 MB/s is still a lot of compressed 500 byte messages! You’d need a big workload to need to worry about the performance, and if you had that problem you should look at E-Series EF300 or EF600 to solve it cost-effectively.</p>
+
+<p>Multi-AZ (or multi-rack) configurations would need multiple storage arrays which is another case where smaller dedicated arrays may need to be purchased. (This multi-AZ Kafka image is borrowed from <a href="/2022/11/11/netapp-spot-instaclustr-eseries.html">this</a> post.)</p>
+
+<p><img src="/assets/images/instaclustr-eseries-big-detailed.png" alt="Multi-AZ configuration" /></p>
+
+<p>(Cost of) capacity could be an important concern for those who keep days of messages (e.g. 14) on disk. Consider:</p>
+
+<ul>
+  <li>500 MB/s ingress</li>
+  <li>100 MB/s compressed</li>
+  <li>200 MB/s after extra replica</li>
+  <li>86400 * 0.2 = 17 TB per day</li>
+</ul>
+
+<p>I don’t know if it makes sense to keep data that long, but those who do probably want to access it faster than it’d be on S3 which is why I assume they’d want low-cost flash storage.</p>
+
+<p>For S3 I think performance isn’t a big concern - by the time data hits S3, it’s unlikely to be reused. S3 here could be more about reliability, governance, manageability, auditing, etc.</p>
+
+<p>Here most Memphis users could use StorageGRID (large performance and scale, single- or multi-site) or ONTAP S3 (small-to-medium, usually single-site) or the free MinIO on E-Series (fast, low cost, maybe more suitable for smaller, single-site and edge deployments where there’s no ONTAP).</p>
+
+<p>One thing that I will have to figure out later when I find a way to get S3 tiering to work is whether messages can be consumed from S3 tier, or only from Disk/Memory tier. It’s supposed to be transparent, in which case S3 performance may sometimes matter. Kafka’s storage tiering design (implementation is currently <a href="https://docs.memphis.dev/memphis/memphis-broker/comparisons">work-in-progress</a>) also behaves like that.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Memphis is predictable and while it has bugs, it actually makes me want to use it. I think that’s a great sign - it reminds me of SolidFire that way.</p>
+
+<p>Compared to Kafka, it should be said that Memphis is obviously a young and work-in-progress product: both the code and documentation have room for improvement, and need fixes.</p>
+
+<p>But it seems fine for simple use cases and projects if the non-OSS license isn’t a problem. If you need a message broker for non-mission critical internal use in 2024, maybe you’d be better off with Memphis than Kafka, unless you already have Kafka expertise and deployments which can grow: it is likely to save you money and time.</p>
+
+<p>For mission critical apps that need to run 10 years from now, Kafka a sure bet: it’s an Apache project with a huge, healthy ecosystem that’s still growing.</p>
+
+<p>Kafka-as-a-Service vs. Memphis-as-a-Service? Anyone can offer Kafka-as-a-Service, but thanks to its license <strong>not</strong> anyone can offer Memphis-as-a-Service. I think that’s the biggest challenge for Memphis. Management and ease-of-use-wise it seems superior to Kafka and that could make its hosting costs cheaper, too, but the service is offered by a small startup with few or no alternatives which probably causes some discomfort among potential as-a-service users who don’t have the ability or cannot operate the software by themselves (or indeed, aren’t allowed to do that by the Memphis’ BSL license).</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">• Snapshots and ILM with Elasticsearch 8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">• Postgres, pgvector, E-Series and Instaclustr</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/11/12/send-solidfire-metrics-splunk-hec-http-event-collector.html">• Send NetApp SolidFire metrics to Splunk HTTP Event Collector aka HEC</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/31/teradata-ons-s3-netapp.html">• Teradata Vantage with NetApp S3 object stores</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

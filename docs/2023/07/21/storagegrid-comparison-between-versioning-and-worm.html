@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Comparison between S3 object versioning and WORM with NetApp StorageGRID | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     What is S3 versioning, what is WORM and can they be used for the same purpose
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Comparison between S3 object versioning and WORM with NetApp StorageGRID | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Comparison between S3 object versioning and WORM with NetApp StorageGRID" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="What is S3 versioning, what is WORM and can they be used for the same purpose" />
+<meta property="og:description" content="What is S3 versioning, what is WORM and can they be used for the same purpose" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/07/21/storagegrid-comparison-between-versioning-and-worm.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/07/21/storagegrid-comparison-between-versioning-and-worm.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-21T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Comparison between S3 object versioning and WORM with NetApp StorageGRID","dateModified":"2023-07-21T00:00:00+08:00","datePublished":"2023-07-21T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/07/21/storagegrid-comparison-between-versioning-and-worm.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/07/21/storagegrid-comparison-between-versioning-and-worm.html","description":"What is S3 versioning, what is WORM and can they be used for the same purpose","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Comparison between S3 object versioning and WORM with NetApp StorageGRID</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Jul 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <h2 id="terms">Terms</h2>
+
+<ul>
+  <li>Versioning in the S3 API is a means of keeping multiple variants of an object in the same bucket, according to AWS.</li>
+  <li>WORM is a generic concept and stands for “Write Once, Read Many”. In data storage it describes the ability to create indelible files and directories. Obviously, with S3-compliant storage, that translates to paths/keys.</li>
+</ul>
+
+<p>What’s common to both is it’s possible to use them to prevent accidental deletion.</p>
+
+<h2 id="versioning">Versioning</h2>
+
+<p>Versioning is allows keeping and access to previous revisions of an object (e.g. <code class="language-plaintext highlighter-rouge">GET object.mp3?v=2</code> gets revision #2 of the object).</p>
+
+<p><em>If</em> users are allowed to overwrite objects, but are <em>not allowed</em> to delete old versions (not the default!), then objects practically become indelible to general users.</p>
+
+<p>But each revision is a copy that takes up disk space, so the benefit of versioning should be higher than its cost. Otherwise we should consider WORM or some other approach.</p>
+
+<p>One popular feature used in conjunction with S3 versioning is S3 Object Lock with specified retention, which guarantees retention until a certain date, but unlocks and allows deletion of older objects - very useful for backups that need to be ransomware-resistant as long as they’re needed.</p>
+
+<p>But even without any of these tricks, the versioning feature protects files from accidental deletion or change, as you can always GET object.mp4?v=2 and re-upload it to recover from deleting the object or uploading a wrong revision 3.</p>
+
+<h3 id="versioning-and-compliance">Versioning and compliance</h3>
+
+<p>Can a user delete a non-current version of an object? Sure!</p>
+
+<p>As mentioned earlier, S3 versioning prevents accidental deletion of S3 data:</p>
+
+<ul>
+  <li>Original (and current) revision is overwritten by another object, or even “deleted”</li>
+  <li>The original object version now becomes revision #1, while the new object becomes revision #2 and “current” version of the object. Even if the original object was deleted, revision #2 would become current (non-existing object).</li>
+  <li>If we delete revision #1 now, it’s no longer possible to recover it</li>
+</ul>
+
+<p>That’s what’s happening in this screenshot.</p>
+
+<p>We can see that s3access.txt was deleted, so the current version (revision #2) doesn’t exist, while the first/original revision #1 is also being deleted. After that it will no longer be possible to recover s3access.txt.</p>
+
+<p><img src="/assets/images/storagegrid-versioning-delete-old-version.png" alt="Deleting older version" /></p>
+
+<p>Compliance is another feature that <em>ensures</em> that non-current versions cannot be deleted. Versioning enables the creation of revisions, while compliance prevents the deletion of revisions.</p>
+
+<p>If you’re wondering about the relationship between Object Lock with S3 versioning and how it compares with legacy “Compliance” feature of StorageGRID, see <a href="https://docs.netapp.com/us-en/storagegrid-117/ilm/managing-objects-with-s3-object-lock.html">the docs</a> for that.</p>
+
+<p>Versions allow other interesting features, such as the ability to easily restore an object from an older version (as soon as you know there is an older version). We may also use download older revisions for local processing, which is similar to using files from filesystem snapshots.</p>
+
+<p><img src="/assets/images/storagegrid-versioning-restore-old-version.png" alt="Other operations with versions" /></p>
+
+<h2 id="worm">WORM</h2>
+
+<p>“Software WORM” or ACLs-based WORM is simpler: it aims to prevent users from modifying and deleting existing objects.</p>
+
+<p>To do that we craft a bucket policy that denies the use of those API methods to non-admin.</p>
+
+<p>Let’s say we have a bucket <code class="language-plaintext highlighter-rouge">wormbucket</code>. In our <a href="https://netapp.io/2017/07/21/worm-s3-buckets-storagegrid-webscale-updated-july-2017/">bucket policy ACL</a> we would first Allow - in one or more rules - access to whomever needs it, and then Deny certain operations that we want to prevent.</p>
+
+<p>In this case those may be <code class="language-plaintext highlighter-rouge">s3:PutOverwriteObject</code>, <code class="language-plaintext highlighter-rouge">s3:DeleteObject</code> and such.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+   </span><span class="nl">"Effect"</span><span class="p">:</span><span class="s2">"Deny"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"Principal"</span><span class="p">:{</span><span class="w">
+     </span><span class="nl">"SGWS"</span><span class="p">:[</span><span class="s2">"11111111111111111111"</span><span class="p">]</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nl">"Action"</span><span class="p">:[</span><span class="w">
+     </span><span class="s2">"s3:PutOverwriteObject"</span><span class="p">,</span><span class="w">
+     </span><span class="s2">"s3:DeleteObject"</span><span class="p">,</span><span class="w">
+     </span><span class="s2">"s3:DeleteObjectVersion"</span><span class="p">,</span><span class="w">
+     </span><span class="s2">"s3:PutBucketPolicy"</span><span class="w">
+   </span><span class="p">],</span><span class="w">
+   </span><span class="nl">"Resource"</span><span class="p">:[</span><span class="w">
+     </span><span class="s2">"urn:sgws:s3:::wormbucket"</span><span class="p">,</span><span class="w">
+     </span><span class="s2">"urn:sgws:s3:::wormbucket/*"</span><span class="w">
+   </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Obviously, this isn’t as robust as compliance (where even administrators cannot delete objects), but it’s good for many purposes including the prevention of accidental modification or deletion of files/objects by regular users and - unlike versioning - does not take extra storage space.</p>
+
+<p>We could prevent users from deleting versioning-enabled objects by also taking away their ability to <code class="language-plaintext highlighter-rouge">s3:DeleteObjectVersion</code> or by enabling Compliance on the bucket, but it would make <a href="/2021/01/19/storagegrid-versioning-example.html">previous versions harder to find</a> and it would likely use more storage space.</p>
+
+<p>With WORM, if any of the operations from Deny list is attempted in a bucket where deletes are denied they simply fail.</p>
+
+<p>Here we can see two overwrites and two delete attempts failed.</p>
+
+<p><img src="/assets/images/storagegrid-worm-overwrite-delete.png" alt="WORM disables overwrites and deletes to non-admin users" /></p>
+
+<h2 id="demo">Demo</h2>
+
+<p>In this demo two buckets are created, one with versioning enable, and another with WORM-like ACLs, and then several basic operations (PUT, GET, DEL) are performed.</p>
+
+<ul>
+  <li><a href="https://rumble.com/v313be0-how-versioning-and-worm-like-acls-work-on-netapp-storagegrid.html">Comparison between S3 versioning and WORM using NetApp StorageGRID</a> - 3m53s</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Versioning and ACLs-based WORM are different features that sometimes can be used for the same use case.</p>
+
+<p>Even then, though, one may be more appropriate than the other, depending on the requirements.</p>
+
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

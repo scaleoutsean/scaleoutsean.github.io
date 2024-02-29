@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            LXD containers and VMs on BeeGFS with NetApp E-Series | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Use BeeGFS on E-Series as storage pools for LXD containers and VMs
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>LXD containers and VMs on BeeGFS with NetApp E-Series | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="LXD containers and VMs on BeeGFS with NetApp E-Series" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use BeeGFS on E-Series as storage pools for LXD containers and VMs" />
+<meta property="og:description" content="Use BeeGFS on E-Series as storage pools for LXD containers and VMs" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-09-02T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"LXD containers and VMs on BeeGFS with NetApp E-Series","dateModified":"2022-09-02T00:00:00+08:00","datePublished":"2022-09-02T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html","description":"Use BeeGFS on E-Series as storage pools for LXD containers and VMs","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">LXD containers and VMs on BeeGFS with NetApp E-Series</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>02 Sep 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    13 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#why-lxd-on-beegfs-with-or-without-netapp-e-series">Why LXD on BeeGFS (with or without NetApp E-Series)</a></li>
+  <li><a href="#get-started">Get started</a></li>
+  <li><a href="#optimal-beegfs-settings">Optimal BeeGFS settings</a></li>
+  <li><a href="#ha">HA</a></li>
+  <li><a href="#beegfs-client-in-lxd-vms-on-lxd-server-accessing-beegfs-on-e-series">BeeGFS client in LXD VMs on LXD server accessing BeeGFS on E-Series</a></li>
+  <li><a href="#storage-related-rant">Storage-related rant</a></li>
+  <li><a href="#issues-and-workarounds">Issues and workarounds</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>LXD is a handy virtualization platform for containers and virtual machines. It also supports Windows VMs, and doesn’t prevent you from using Docker containers if that’s what you like - some users run Docker containers in LXD VMs.</p>
+
+<p>I think it’s fair to say it’s a niche approach if you consider it for enterprise use, but it’s popular enough among non-enterprise users (especially Ubuntu users) and has its advantages.</p>
+
+<p>Because LXD is self-quarantined into that niche, its storage integrations are also - in my opinion - not of enterprise quality. You can read about storage options <a href="https://linuxcontainers.org/lxd/docs/master/storage/">here</a>.</p>
+
+<p>While this may sound too critical, I think it’s true and despite that, not a reason to not use LXD. If you want a virtualization management tool that does a lot of basic things very well, check it out!</p>
+
+<p>Personally, I’ve been meaning to check it on BeeGFS, because that’s one of my frequent topics here, and secondly, the docs (link above) are limited to those several options so the LXD and BeeGFS communities may benefit from experiments of this kind.</p>
+
+<h2 id="why-lxd-on-beegfs-with-or-without-netapp-e-series">Why LXD on BeeGFS (with or without NetApp E-Series)</h2>
+
+<p>I don’t have good reasons to share, and I even won’t say you <em>should</em> try this.</p>
+
+<p>BeeGFS - even with the features included in enterprise license support that NetApp sells - is also not an “enterprise file system for virtualization”. Its main characteristics are scalability and performance, and because of that it’s very popular in HPC.</p>
+
+<p>The goal of this post is not to encourage you to move your VMs from ESXi and VMFS to LXD and BeeGFS, but to show how to get started, after which you can explore it, and identify workloads and use cases where this combination makes sense.</p>
+
+<p>Suitable workloads are probably workloads that read/write in large requests. If you already have BeeGFS, you can run such workloads from containers or hosts, you don’t need to deploy VMs for that, but there may be situations where data doesn’t have to be shared among multiple users.</p>
+
+<p>One such example may be running Dev/Test/Lab workloads with Big Data/Analytics installed with Docker or Docker Compose. LXD VMs might be good for that:</p>
+
+<ul>
+  <li>Each VM is stand-alone, either pre-deployed or bare, to allow installation from scratch (for testing or learning)</li>
+  <li>IO is sequential</li>
+  <li>IO can burst to hundreds of MBs or several GB/s</li>
+</ul>
+
+<h2 id="get-started">Get started</h2>
+
+<p>What I used:</p>
+
+<ul>
+  <li>Ubuntu Linux 20.04 LTS</li>
+  <li>ThinkParQ BeeGFS 7.3.0</li>
+  <li>Ubuntu LXD 5.5 (snapd)</li>
+</ul>
+
+<p>We’ll use a “directory” based LXD storage pool. How does that compare to … something else? At this time a comparison can be found <a href="https://linuxcontainers.org/lxd/docs/master/reference/storage_drivers/#feature-comparison">here</a>. It doesn’t have many advantages, but it works inside an LXD container (although LXD container doesn’t seem to work with BeeGFS - more on that later). If you want to LXD with other drivers, you can - just create a volume on E-Series and present it directly to LXD server; once you have that block device, you can use BTRFS, LVM, etc. But this posts focuses only on <code class="language-plaintext highlighter-rouge">dir</code> driver.</p>
+
+<p>With that:</p>
+
+<ul>
+  <li>Create a directory on existing BeeGFS mount point, or a dedicated BeeGFS filesystem</li>
+  <li>Create a directory-type storage pool (<code class="language-plaintext highlighter-rouge">dir</code>) and give it a name such as <code class="language-plaintext highlighter-rouge">beegfs</code></li>
+  <li>Review</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> /mnt/beegfs/lxd-pool
+
+<span class="nv">$ </span>lxc storage create beegfs <span class="nb">dir source</span><span class="o">=</span>/mnt/beegfs/lxd-pool
+
+<span class="nv">$ </span>lxc storage list
++----------+--------+----------------------+-------------+---------+---------+
+|   NAME   | DRIVER |        SOURCE        | DESCRIPTION | USED BY |  STATE  |
++----------+--------+----------------------+-------------+---------+---------+
+| beegfs   | <span class="nb">dir</span>    | /mnt/beegfs/lxd-pool |             | 0       | CREATED |
++----------+--------+----------------------+-------------+---------+---------+
+</code></pre></div></div>
+
+<ul>
+  <li>If you look at the path you’ll see LXD created an empty directory structure for VMs, containers, plain “volumes” that can be attached to those.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo dir</span> <span class="nt">-lat</span> /mnt/beegfs/lxd-pool
+total 2
+drwx--x--x  3 root    root     1 Sep  1 15:18 virtual-machines
+drwxrwxr-x  9 sean    sean     7 Sep  1 15:16 <span class="nb">.</span>
+drwx--x--x  2 root    root     0 Sep  1 15:16 containers
+drwx--x--x  2 root    root     0 Sep  1 15:16 containers-snapshots
+drwx--x--x  2 root    root     0 Sep  1 15:16 custom
+drwx--x--x  2 root    root     0 Sep  1 15:16 custom-snapshots
+drwx--x--x  2 root    root     0 Sep  1 15:16 images
+drwx--x--x  2 root    root     0 Sep  1 15:16 virtual-machines-snapshots
+drwxrwxrwx 15 root    root    15 Sep  1 15:16 ..
+</code></pre></div></div>
+
+<ul>
+  <li>Create a VM that uses this pool you’ve just created</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>lxc launch ubuntu:22.04 <span class="nt">--vm</span> <span class="nt">--storage</span> beegfs
+</code></pre></div></div>
+
+<ul>
+  <li>This will download OS image and deploy a randomly named VM (e.g. smelly-sink). Get help for <code class="language-plaintext highlighter-rouge">lxc launch</code> if you want to customize. Use list to list all VMs, start and stop to start named VMs.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>lxc <span class="o">(</span>list|start|stop<span class="o">)</span> <span class="nv">$MY_VM_NAME</span>
+
+<span class="nv">$ </span><span class="nb">sudo </span>lxc info smelly-sink
+Name: smelly-sink
+Status: RUNNING
+Type: virtual-machine
+Architecture: x86_64
+PID: 53378
+Created: 2022/09/01 15:18 UTC
+Last Used: 2022/09/02 04:21 UTC
+
+Resources:
+  Processes: 21
+  CPU usage:
+    CPU usage <span class="o">(</span><span class="k">in </span>seconds<span class="o">)</span>: 54
+  Memory usage:
+    Memory <span class="o">(</span>current<span class="o">)</span>: 795.90MiB
+  Network usage:
+    enp5s0:
+      Type: broadcast
+      State: UP
+      Host interface: tapeb7fc4f8
+      MAC address: 00:16:3e:20:e0:72
+      MTU: 1500
+      Bytes received: 133.30MB
+      Bytes sent: 845.63kB
+      Packets received: 32995
+      Packets sent: 12256
+      IP addresses:
+        inet:  10.63.129.177/24 <span class="o">(</span>global<span class="o">)</span>
+        inet6: fe80::216:3eff:fe20:e072/64 <span class="o">(</span><span class="nb">link</span><span class="o">)</span>
+    lo:
+      Type: loopback
+      State: UP
+      MTU: 65536
+      Bytes received: 11.98kB
+      Bytes sent: 11.98kB
+      Packets received: 142
+      Packets sent: 142
+      IP addresses:
+        inet:  127.0.0.1/8 <span class="o">(</span><span class="nb">local</span><span class="o">)</span>
+        inet6: ::1/128 <span class="o">(</span><span class="nb">local</span><span class="o">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Enter the VM with <code class="language-plaintext highlighter-rouge">sudo lxc shell $MY_VM_NAME</code></p>
+  </li>
+  <li>
+    <p>What LXD volumes does my VM use? We need two variables here, one is pool name (beegfs) and another is VM name which we add as suffix to resource type (virtual-machine)</p>
+  </li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>lxc storage volume list beegfs <span class="nt">--all-projects</span>
++---------+-----------------+----------------+-------------+--------------+---------+
+| PROJECT |      TYPE       |      NAME      | DESCRIPTION | CONTENT-TYPE | USED BY |
++---------+-----------------+----------------+-------------+--------------+---------+
+| default | virtual-machine |   smelly-sink  |             | block        | 1       |
++---------+-----------------+----------------+-------------+--------------+---------+
+
+<span class="nv">$ </span>lxc storage volume show beegfs virtual-machine/smelly-sink
+config: <span class="o">{}</span>
+description: <span class="s2">""</span>
+name: smelly-sink
+<span class="nb">type</span>: virtual-machine
+used_by:
+- /1.0/instances/smelly-sink
+location: none
+content_type: block
+project: default
+</code></pre></div></div>
+
+<ul>
+  <li>Storage-wise, data will be stored in the virtual-machines sub-directory of your “directory” style pool. On BeeGFS, these files may be all over the place, or on just one storage device - that depends on settings you use</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo dir -lat /mnt/beegfs/lxd-pool/virtual-machines/smelly-sink
+total 3058532
+-rw-r--r-- 1 root root 10737418240 Sep  2 06:48 root.img
+-rw------- 1 lxd  root      131072 Sep  2 04:21 qemu.nvram
+-r-------- 1 root root        2199 Sep  2 04:21 backup.yaml
+dr-x------ 6 lxd  root          10 Sep  2 04:21 config
+d--x------ 4 root root          10 Sep  1 15:18 .
+-rw-r--r-- 1 root root         692 Sep  1 15:18 agent-client.crt
+-rw------- 1 root root         288 Sep  1 15:18 agent-client.key
+-rw-r--r-- 1 root root         721 Sep  1 15:18 agent.crt
+-rw------- 1 root root         288 Sep  1 15:18 agent.key
+drwx--x--x 3 root root           1 Sep  1 15:18 ..
+-rw-r--r-- 1 root root         295 Aug 10 07:29 metadata.yaml
+drwxr-xr-x 2 root root           1 Aug 10 07:29 templates
+</code></pre></div></div>
+
+<ul>
+  <li>Directory type pools don’t have many options, but one that works is the maximum volume size limit, e.g.:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lxc storage <span class="nb">set </span>beegfs volume.size 2000000000000000000
+</code></pre></div></div>
+
+<ul>
+  <li>With fully open source BeeGFS, quotas are disabled so that won’t have effect. For example, while trying to launch a LXD container, syslog tells us the FS doesn’t support quotas</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sep  2 08:51:52 b5 lxd.daemon[1733]: <span class="nb">time</span><span class="o">=</span><span class="s2">"2022-09-02T08:51:52Z"</span> <span class="nv">level</span><span class="o">=</span>warning <span class="nv">msg</span><span class="o">=</span><span class="s2">"The backing filesystem doesn't support quotas, skipping set quota"</span> <span class="nv">driver</span><span class="o">=</span><span class="nb">dir </span><span class="nv">path</span><span class="o">=</span>/var/snap/lxd/common/lxd/storage-pools/beegfs/containers/c1 <span class="nv">pool</span><span class="o">=</span>beegfs <span class="nv">size</span><span class="o">=</span>2000000000000000000 <span class="nv">volID</span><span class="o">=</span>2
+</code></pre></div></div>
+
+<h2 id="optimal-beegfs-settings">Optimal BeeGFS settings</h2>
+
+<p>I don’t know what they are. Generally speaking:</p>
+
+<ul>
+  <li>Use a small <code class="language-plaintext highlighter-rouge">chunksize</code> value and a low <code class="language-plaintext highlighter-rouge">numtargets</code> figure for VMs with small I/O requests. With BeeGFS on NetApp E-Series, because it uses protected storage, you can even use <code class="language-plaintext highlighter-rouge">numtargets 1</code>. A target can go down - temporary during BeeGFS server fail-over, or maybe even longer, but underlying volume will be there even if the server has to be replaced, and this will work without any BeeGFS software replication (which should help a lot in terms of write performance, but also cost).</li>
+  <li>Use larger chunk sizes and multiple storage targets for VMs with sequential I/O (e.g. 1MB or 100MB files)</li>
+</ul>
+
+<p>For a Web server, I may go with <code class="language-plaintext highlighter-rouge">chunksize 128KB</code> and <code class="language-plaintext highlighter-rouge">numtargets 1</code> (or 2, in the case there are large images).</p>
+
+<p>For MySQL, <code class="language-plaintext highlighter-rouge">chunksize 128KB</code> and <code class="language-plaintext highlighter-rouge">numtargets=1</code>.</p>
+
+<p>For MinIO we may decide based on workload characteristics - say for 4MB I/O requests we could use <code class="language-plaintext highlighter-rouge">chunksize 256KB</code> and <code class="language-plaintext highlighter-rouge">numtargets 4</code>(assuming you have that many disks) - it’s impossible to say what would be “best” without knowing more about the entire stack.</p>
+
+<p>These settings could be applied:</p>
+
+<ul>
+  <li>on FS level, for all data on a filesystem</li>
+  <li>on BeeGFS pool level, for all pool data</li>
+  <li>on VM/Container directory level (<em>before</em> a VM or container has been created), to make exceptions for unusual workloads</li>
+</ul>
+
+<h2 id="ha">HA</h2>
+
+<p>How do we do HA here? For BeeGFS with E-Series, storage HA is taken care of with HA functionality on <a href="/2022/08/28/configuring-netapp-e-series-solution-for-beegfs.html">BeeGFS storage servers connected to E-Series storage</a> - BeeGFS clients (LXD servers) connect to one or more BeeGFS servers to get to their shared storage.</p>
+
+<p>For LXD and VM/container services, you’d have to to use <a href="https://linuxcontainers.org/lxd/docs/master/clustering/">LXD clustering</a> which is more like a loose federation and less like VMware vSphere clusters with shared storage. I’ve clustered LXD before, but not with shared storage such as BeeGFS, so I can only assume that failing over VMs and containers should work just as it would with directories on NFS mount points. Dump container or VM config onto BeeGFS, and recreate it from another LXD host/BeeGFS client if you need to.</p>
+
+<p>The tricky part is disabling autostart on a dead host, or removing a stale VM configuration if we’ve resurrected the VM elsewhere. In other words, handling <em>unplanned</em> failures is the challenging part with LXD clusters backed by shared storage.</p>
+
+<p>For <em>planned</em> failover that involves persistent data we could also use the LXD volume copy and move features, although they are ineffective (more on that below).</p>
+
+<h2 id="beegfs-client-in-lxd-vms-on-lxd-server-accessing-beegfs-on-e-series">BeeGFS client in LXD VMs on LXD server accessing BeeGFS on E-Series</h2>
+
+<p>That’s a deliberate attempt to confuse, but a real-live question might be: can I run BeeGFS client in LXD VMs (which run on LXD hosts which themselves may or may not be BeeGFS clients)?</p>
+
+<p>I think that scenario is covered <a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">in this post</a> where I used BeeGFS in VMware VMs running on hosts that did not run BeeGFS (why, because those hosts were ESXi servers).</p>
+
+<p>However, while running LXD VM on GPU-enabled hosts, I did notice VMs behaved similar to Docker containers in the sense that certain h/w device modules had to be installed on the host to be accessible from a guest (VM). If you try BeeGFS on LXD VMs, you may want to install BeeGFS on the host.</p>
+
+<h2 id="storage-related-rant">Storage-related rant</h2>
+
+<p>At the top I mentioned about non-enterprise mindset - to see what I mean, read <a href="https://linuxcontainers.org/lxd/docs/master/howto/storage_move_volume/">this</a>.</p>
+
+<p>You can copy a volume from one LXD host to another. You can also move a volume (by copying it and then deleting the original file).</p>
+
+<p>While good, these features assume that storage is stupid, which is an assumption some users may not mind - especially if they have exactly such storage - but others, who could use LXD much better if they could simply migrate a <em>VM or container configuration file</em> from one LXD host to another and restart it there, have no choice but to use their feature-full storage in a stupid way. LXD’s Ceph integration attempts to improve on that, but with Ceph you still don’t have enterprise storage.</p>
+
+<p>I’m not ranting against the inability to better leverage BeeGFS here, or the fact that LXD has integration with Ceph, but against these storage “features” that were difficult to develop, are hard to use (how do you copy a VM if the LXD server is down?), and seem unreliable outside of simple demo scenarios.</p>
+
+<p>Had Ubuntu invested <strong>a fraction of the time and effort</strong> in creating integrations with NFS or SAN storage, they’d actually have something that works correctly and reliably 99.999% of time, and get a shot at becoming a Tier 2 virtualization platform (something <a href="/2022/04/05/proxmox-solidfire.html">Proxmox</a> and <a href="/2022/07/10/xcp-ng-with-netapp-solidfire-iscsi.html">XCP-NG</a> have both done). Without that, LXD is probably a Tier 3 choice for anyone with non-trivial clustering or storage requirements.</p>
+
+<p>I’ve been waiting for LXD (before LXD) to come up with something sensible in this area for half a decade now so the above amounts to approximately one ranting paragraph per year - I hope that’s not too bad, Ubuntu!</p>
+
+<h2 id="issues-and-workarounds">Issues and workarounds</h2>
+
+<ul>
+  <li>I had to uninstall open-vm-tools from Ubuntu 20.04 and reboot to be able to run the first lxc launch command (for VM). Then I reinstalled open-vm-tools and did not have any problems.</li>
+  <li>When <code class="language-plaintext highlighter-rouge">lxc</code> commands are executed from a BeeGFS path (e.g. normally that means somewhere in /mnt/beegfs/), they hang and after 9 minutes time out. Execute them from a non-BeeGFS path.</li>
+  <li>LXD container creation hangs, still trying to figure out why. It may be related to lack of hard link support and/or the need to enable ACLs (not available in non-licensed version of BeeGFS I use)</li>
+  <li>BeeGFS has no snapshots; E-Series does, but with BeeGFS snapshots should be taken on filesystem level. Backups can be taken by using application- or host-side tools or by simply copying (closed) files to another location. LXD also can <a href="https://linuxcontainers.org/lxd/docs/master/howto/storage_backup_volume/">backup volumes</a> (i.e. what we see as VM or container files on BeeGFS).</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>If you’re looking for a “KVM Lite that doesn’t suck”, LXD is great. Once it gets to LXD with persistent storage, or HA LXD, it depends.</p>
+
+<p>But I still recommend to evaluate it because LXD VMs are really good and single-host LXD is so much easier to use than KVM.</p>
+
+<p>If you don’t have any important container or VM workload that is IO-heavy and tends to work with 64kB requests or higher, there may be no value in adding BeeGFS to your LXD environment - you’d have extra software to manage and additional considerations to think about. As illustrated <a href="https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html#options-in-a-mixed-environment">here</a>, LXD servers can consume E-Series storage (block devices) directly from LXD hosts using LXD’s <a href="https://linuxcontainers.org/lxd/docs/master/reference/storage_lvm/#storage-lvm">LVM driver</a>, and BeeGFS can be using other E-Series storage for suitable workloads.</p>
+
+<p>On the other hand, IO-heavy containers and VMs with mixed or sequential workload could benefit from directory-style pools on BeeGFS storage.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#containers">containers</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

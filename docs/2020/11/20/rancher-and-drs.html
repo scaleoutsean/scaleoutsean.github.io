@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Deploying Rancher Worker VMs to NetApp HCI with VMware VSS | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     The impact of Virtual Standard Switch on Host Selection
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Deploying Rancher Worker VMs to NetApp HCI with VMware VSS | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Deploying Rancher Worker VMs to NetApp HCI with VMware VSS" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The impact of Virtual Standard Switch on Host Selection" />
+<meta property="og:description" content="The impact of Virtual Standard Switch on Host Selection" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2020/11/20/rancher-and-drs.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2020/11/20/rancher-and-drs.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-11-20T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Deploying Rancher Worker VMs to NetApp HCI with VMware VSS","dateModified":"2020-11-20T00:00:00+08:00","datePublished":"2020-11-20T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2020/11/20/rancher-and-drs.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2020/11/20/rancher-and-drs.html","description":"The impact of Virtual Standard Switch on Host Selection","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Deploying Rancher Worker VMs to NetApp HCI with VMware VSS</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>20 Nov 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    1 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>Earlier this week I spotted the advice to not select a VM host when deploying Rancher worker VMs to a vSphere environment where DRS is enabled, because “DRS is smarter than you.”</p>
+
+<p><img src="/assets/images/rancher-2-deploy-to-specific-vsphere-host.png" alt="Select VM Host in a DRS environment" /></p>
+
+<p>That’s almost certainly true - especially in the mid and long term - but at the moment of deployment you might have an edge.</p>
+
+<p>Situation:</p>
+
+<ul>
+  <li>Five VM hosts with ESXi</li>
+  <li>Virtual Standard Switch (VSS) because maybe you don’t have vSphere Enterprise Edition</li>
+  <li>Rancher VMs are commonly deployed on VM Hosts 1, 2, and 3 so that they don’t run all over the place</li>
+</ul>
+
+<p>If you use a Resource Pool and the three hosts are part of it, then it’s more likely that DRS will make better decisions over time.</p>
+
+<p>If you do not have a Resource Pool and only Hosts 1, 2 and 3 are connected to networks required by your Rancher workloads, it’s probably better to pick one of the hosts and manually redistribute VMs after that (add anti-affinity rules, etc.).</p>
+
+<p>One such situation is where only Hosts 1-3 have networks or allow VLANs that can allow Rancher VMs to get to SolidFire Storage Virtual IP (i.e. iSCSI).</p>
+
+<p>In a regular NetApp HCI environment only hosts (not VMs) need to get to SolidFire iSCSI IPs (each ESXi has 2 networks for that purpose). With VDS this is easy to apply and maintain over a cluster of hosts, but with VSS it takes some effort and some users may find value in limiting that complexity to only a subset of VM hosts.</p>
+
+<p>If you use VSS and run Rancher on a subset of VM hosts, it’s a good idea to create a Resource Pool with these “Rancher” Hosts.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/18/netapp-hci-broadcom-vmware-new-license-calculator.html">• VMware license calculator for VVF and VCF</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/15/storagegrid-on-vmware.html">• NetApp StorageGRID on VMware</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">• Add NetApp SolidFire iSCSI storage to KVM</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/07/migrate-netapp-hci-from-vmware.html">• How to change NetApp HCI from VMware to alternatives</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

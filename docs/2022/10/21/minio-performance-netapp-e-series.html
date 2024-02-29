@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Notes on MinIO performance with NetApp E-Series | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Performance-related notes on MinIO with E-Series
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Notes on MinIO performance with NetApp E-Series | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Notes on MinIO performance with NetApp E-Series" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Performance-related notes on MinIO with E-Series" />
+<meta property="og:description" content="Performance-related notes on MinIO with E-Series" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/10/21/minio-performance-netapp-e-series.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/10/21/minio-performance-netapp-e-series.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-10-21T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Notes on MinIO performance with NetApp E-Series","dateModified":"2022-10-21T00:00:00+08:00","datePublished":"2022-10-21T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/10/21/minio-performance-netapp-e-series.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/10/21/minio-performance-netapp-e-series.html","description":"Performance-related notes on MinIO with E-Series","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Notes on MinIO performance with NetApp E-Series</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>21 Oct 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>I’ve written about several ways we can take advantage of MinIO with NetApp E-Series back-ends, for example in the post on MinIO on HashiCorp Nomad with BeeGFS I show how BeeGFS/E-Series users can run MinIO to get S3 service without dedicated S3 appliances.</p>
+
+<p>I haven’t focused on performance because I don’t have a place to run proper performance tests.</p>
+
+<p>But I can run simple tests that may be representative enough.</p>
+
+<p>This week I used a Rocky 9 server with Docker CE to run MinIO server <em>and</em> client, and check performance of single-server MinIO backed by the previous generation of all-flash E-Series, EF570.</p>
+
+<ul>
+  <li>Single Linux server with Rocky Linux 9</li>
+  <li>iSER (iSCSI over <a href="https://en.wikipedia.org/wiki/ISCSI_Extensions_for_RDMA">RDMA</a>)</li>
+  <li>EF570 with less than 20 SAS SSDs (EF570 is not end-to-end NVMe) in a DDP with four R6-like 50G volumes created for MinIO</li>
+  <li>No tuning whatsoever</li>
+</ul>
+
+<p>In the case you’re wondering “WTF is DDP”, take a look <a href="/2021/07/06/e-series-ddp-expansion-and-rebalancing.html">here</a>.</p>
+
+<p>MinIO volumes were four:</p>
+
+<p><img src="/assets/images/minio-bench-01-e570-raid.png" alt="Four volumes on E570 with DDP" /></p>
+
+<p>Mixed workload from one MinIO instance with four volumes achieves around 2.5 GB/s, while GET hits 4 GB/s.</p>
+
+<p><img src="/assets/images/minio-bench-02-mixed-get.png" alt="Mixed and Get Benchmark" /></p>
+
+<p>To test I used MinIO Warp and because the chart above is less precise than benchmark output, here’s Warp output.</p>
+
+<p>PUT test: ~2 GB/s (roughly; results are actually in MiB).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>warp put <span class="nt">--host</span><span class="o">=</span>localhost:9000
+Throughput 1877.7MiB/s within 7.500000% <span class="k">for </span>10.262s. Assuming stability. Terminating benchmark.
+warp: Benchmark data written to <span class="s2">"warp-put-2022-10-19[042848]-K9KP.csv.zst"</span>
+Operation: PUT
+<span class="k">*</span> Average: 1929.19 MiB/s, 192.92 obj/s
+
+Throughput, <span class="nb">split </span>into 36 x 1s:
+ <span class="k">*</span> Fastest: 1992.9MiB/s, 199.29 obj/s
+ <span class="k">*</span> 50% Median: 1929.0MiB/s, 192.90 obj/s
+ <span class="k">*</span> Slowest: 1868.9MiB/s, 186.89 obj/s
+</code></pre></div></div>
+
+<p>GET test: ~4.5 GB/s.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ warp get --host=localhost:9000
+Throughput 4473.2MiB/s within 7.500000% for 10.024s. Assuming stability. Terminating benchmark.
+Operation: GET
+* Average: 4534.08 MiB/s, 453.41 obj/s
+
+Throughput, split into 35 x 1s:
+ * Fastest: 4697.6MiB/s, 469.76 obj/s
+ * 50% Median: 4553.1MiB/s, 455.31 obj/s
+ * Slowest: 4119.6MiB/s, 411.96 obj/s
+</code></pre></div></div>
+
+<p>Mixed test: ~3.7 GB/s.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>warp mixed <span class="nt">--host</span><span class="o">=</span>localhost:9000
+Throughput 187.6 objects/s within 7.500000% <span class="k">for </span>10.563s. Assuming stability. Terminating benchmark.
+warp: Benchmark data written to <span class="s2">"warp-mixed-2022-10-19[042630]-xqfm.csv.zst"</span>
+Mixed operations.
+Operation: DELETE, 10%, Concurrency: 20, Ran 37s.
+ <span class="k">*</span> Throughput: 62.70 obj/s
+
+Operation: GET, 45%, Concurrency: 20, Ran 37s.
+ <span class="k">*</span> Throughput: 2820.76 MiB/s, 282.08 obj/s
+
+Operation: PUT, 15%, Concurrency: 20, Ran 37s.
+ <span class="k">*</span> Throughput: 940.87 MiB/s, 94.09 obj/s
+
+Operation: STAT, 30%, Concurrency: 20, Ran 37s.
+ <span class="k">*</span> Throughput: 188.07 obj/s
+
+Cluster Total: 3759.99 MiB/s, 626.56 obj/s over 38s.
+</code></pre></div></div>
+
+<p>I didn’t run simple disk tests (without MinIO) to see if Rocky 9 host makes full use of storage performance, but that’s also because that didn’t interest me enough:</p>
+
+<ul>
+  <li>Both S3 client (MinIO Warp) and server (MinIO server) were sharing resources from the same host</li>
+  <li>I knew RAID6 (and DDP) won’t let MinIO get “maximum” performance - for that I’d use RAID10 but I didn’t have unused disks to try RAID10</li>
+  <li>EF570 is no longer sold; for fastest performance with all-flash E-Series array we should consider EF600 which is much faster, or EF300 (in performance similar to EF570, but end-to-end NVMe)</li>
+  <li>In summary: this is almost worst-case scenario</li>
+</ul>
+
+<p>Why did I run these test, then?</p>
+
+<p>These “worst case scenario” tests confirm earlier expectations that MinIO backed by E-Series performs fine even with RAID6-like volumes in DDP. DDP has a lower overhead and many users prefer it over RAID6 groups that on E-Series work best in 8D2P (10 disks) configuration. A DDP can have a lot more disks while getting similar performance and faster rebuilds.</p>
+
+<p>It is likely that Warp Mixed workload test with four MinIO servers using the smaller of all-flash E-Series models (EF300) could hit &gt;8GB/s PUT and &gt;16GB/s GET. EF600 is twice as fast so we can probably attach 8-16 MinIO servers to it, depending in hardware (server and network) and software (TLS On/Off, EC, etc.) configuration and workload.</p>
+
+<p>This lowers uncertainty when sizing for high-throughput use cases such as S3 archive tier for iRODS in a BeeGFS environment (I <a href="/2022/10/20/beegfs-hsm-irods-robinhood.html">blogged about that yesterday</a>). Another use case may be “low cost S3 backup target” where we use NL-SAS-backed S3 to dump backups to E-Series and don’t require non-essential features.</p>
+
+<p>If I find time to evacuate data from that DDP, I’ll also run tests  with RAID10 and RAID0 to see how they compare against DDP results provided above.</p>
+
+<p>RAID0 isn’t very useful, and although MinIO has Erasure Coding that when enabled can heal failed disks, most users I know prefer to not rely on RAID0 because failures cause a lot of network traffic - especially with NL-SAS storage - and increase burden on Operations. Still, I’m curious how it behaves compared to DDP and RAID10.</p>
+
+<p>RAID1 (or RAID10, when 4 or more disks are involved) is more interesting than RAID0 because it gives us the opportunity to use more capacity to get a better performance and still avoid dealing with MinIO healing when any of physical disks fails.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

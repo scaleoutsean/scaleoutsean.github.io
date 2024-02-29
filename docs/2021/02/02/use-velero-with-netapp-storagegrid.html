@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Use Velero with NetApp StorageGRID Object Storage | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Backup your K8s with Velero to NetApp StorageGRID
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Use Velero with NetApp StorageGRID Object Storage | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Use Velero with NetApp StorageGRID Object Storage" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Backup your K8s with Velero to NetApp StorageGRID" />
+<meta property="og:description" content="Backup your K8s with Velero to NetApp StorageGRID" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/02/02/use-velero-with-netapp-storagegrid.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/02/02/use-velero-with-netapp-storagegrid.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-02-02T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Use Velero with NetApp StorageGRID Object Storage","dateModified":"2021-02-02T00:00:00+08:00","datePublished":"2021-02-02T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/02/02/use-velero-with-netapp-storagegrid.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2021/02/02/use-velero-with-netapp-storagegrid.html","description":"Backup your K8s with Velero to NetApp StorageGRID","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Use Velero with NetApp StorageGRID Object Storage</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>02 Feb 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    2 minute read
+  
+
+    </span>
+  </div>
+  
+        <h2 id="tldr">tldr</h2>
+
+<p>Q: Can StorageGRID be used as an S3 provider for Velero?</p>
+
+<p>A: Looks like it.</p>
+
+<h2 id="set-things-up">Set things up</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ubuntu@helmetsky:~$ ./trident-installer/tridentctl get backend -n trident
++--------------------------+----------------+--------------------------------------+--------+---------+
+|           NAME           | STORAGE DRIVER |                 UUID                 | STATE  | VOLUMES |
++--------------------------+----------------+--------------------------------------+--------+---------+
+| solidfire_192.168.103.30 | solidfire-san  | e656fa37-ee5a-4b23-95f4-07482e2c6e5b | online |       0 |
++--------------------------+----------------+--------------------------------------+--------+---------+
+ubuntu@helmetsky:~$ kubectl get sc
+NAME                         PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+solidfire-bronze             csi.trident.netapp.io   Delete          Immediate              false                  11h
+solidfire-gold               csi.trident.netapp.io   Retain          Immediate              true                   11h
+solidfire-silver (default)   csi.trident.netapp.io   Retain          Immediate              false                  11h
+</code></pre></div></div>
+
+<h2 id="create-a-set-of-s3-access-keys-a-bucket-and-restrict-access-to-the-bucket-using-acls">Create a set of S3 access keys, a bucket, and restrict access to the bucket using ACLs</h2>
+
+<p>Save them to <code class="language-plaintext highlighter-rouge">credentials-velero</code> or whatever:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[default]
+aws_access_key_id = blablabla
+aws_secret_access_key = 1111111111111111111111111111111
+</code></pre></div></div>
+
+<h2 id="install-velero-with-aws-provider">Install Velero with AWS provider</h2>
+
+<p>Check the options in the Velero documentation and AWS Provider documentation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero install \
+    --provider aws \
+    --use-restic \
+    --default-volumes-to-restic \
+    --plugins velero/velero-plugin-for-aws:v1.1.0 \
+    --bucket solidfire-velero \
+    --secret-file ./credentials-velero \
+    --use-volume-snapshots=false \
+    --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://storagegrid.org.com:8443
+</code></pre></div></div>
+
+<h2 id="backup">Backup</h2>
+
+<p>Following the standard Velero example, create a sample app (<code class="language-plaintext highlighter-rouge">nginx</code>) and back it up:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero backup create nginx-backup --selector app=nginx
+</code></pre></div></div>
+
+<p>See what Velero is up to:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ velero backup logs nginx-backup
+time="2021-02-02T04:52:39Z" level=info msg="Setting up backup temp file" backup=velero/nginx-backup logSource="pkg/controller/backup_controller.go:534"
+time="2021-02-02T04:52:39Z" level=info msg="Setting up plugin manager" backup=velero/nginx-backup logSource="pkg/controller/backup_controller.go:541"
+..
+time="2021-02-02T04:52:42Z" level=info msg="Backed up a total of 7 items" backup=velero/nginx-backup logSource="pkg/backup/backup.go:419" progress=
+</code></pre></div></div>
+
+<h2 id="check-the-bucket">Check the bucket</h2>
+
+<p>Is it there yet? Yes it is.</p>
+
+<p><img src="/assets/images/velero-storagegrid-s3-provider.png" alt="Velero Bucket on StorageGRID Object Storage" /></p>
+
+<h2 id="simulate-data-loss">Simulate data loss</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ubuntu@helmetsky:~$ kubectl delete namespace nginx-example
+namespace "nginx-example" deleted
+ubuntu@helmetsky:~$ kubectl get deployments --namespace=nginx-example
+No resources found in nginx-example namespace.
+ubuntu@helmetsky:~$ kubectl get services --namespace=nginx-example
+No resources found in nginx-example namespace.
+ubuntu@helmetsky:~$ kubectl get namespace/nginx-example
+Error from server (NotFound): namespaces "nginx-example" not found
+</code></pre></div></div>
+
+<h2 id="restore">Restore</h2>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ubuntu@helmetsky:~<span class="nv">$ </span>velero restore create <span class="nt">--from-backup</span> nginx-backup
+Restore request <span class="s2">"nginx-backup-20210202050222"</span> submitted successfully.
+Run <span class="sb">`</span>velero restore describe nginx-backup-20210202050222<span class="sb">`</span> or <span class="sb">`</span>velero restore logs nginx-backup-20210202050222<span class="sb">`</span> <span class="k">for </span>more details.
+</code></pre></div></div>
+
+<h2 id="verify">Verify</h2>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ubuntu@helmetsky:~<span class="nv">$ </span>velero restore get
+NAME                          BACKUP         STATUS      STARTED                         COMPLETED                       ERRORS   WARNINGS   CREATED                         SELECTOR
+nginx-backup-20210202050222   nginx-backup   Completed   2021-02-02 05:02:22 +0000 UTC   2021-02-02 05:02:26 +0000 UTC   0        0          2021-02-02 05:02:22 +0000 UTC   &lt;none&gt;
+ubuntu@helmetsky:~<span class="nv">$ </span>kubectl get namespaces
+NAME                 STATUS   AGE
+default              Active   12h
+kube-node-lease      Active   12h
+kube-public          Active   12h
+kube-system          Active   12h
+local-path-storage   Active   12h
+nginx-example        Active   9s
+trident              Active   11h
+velero               Active   24m
+ubuntu@helmetsky:~<span class="nv">$ </span>kubectl get svc <span class="nt">-n</span> nginx-example
+NAME       TYPE           CLUSTER-IP     EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>        AGE
+my-nginx   LoadBalancer   10.96.121.63   &lt;pending&gt;     80:30729/TCP   19s
+</code></pre></div></div>
+
+<h2 id="video-demo">Video demo</h2>
+
+<p>Find it <a href="https://www.youtube.com/watch?v=EV7Ns_g3pic">here</a>.</p>
+
+<h2 id="notes">Notes</h2>
+
+<p>Note I didn’t use the Velero CSI plugin. The objective was to check and document how StorageGRID, not Trident CSI, can work with Velero.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/18/netapp-hci-broadcom-vmware-new-license-calculator.html">• VMware license calculator for VVF and VCF</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/15/storagegrid-on-vmware.html">• NetApp StorageGRID on VMware</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">• Add NetApp SolidFire iSCSI storage to KVM</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/07/migrate-netapp-hci-from-vmware.html">• How to change NetApp HCI from VMware to alternatives</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/03/29/zeroout-with-storage-vmotion-rethin.html">• Zero-out and rethin VMDKs on NFS</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

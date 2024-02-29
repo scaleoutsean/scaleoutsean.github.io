@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            An introduction to NetApp BeeGFS CSI | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     CSI provisioner for IO-intensive jobs with BeeGFS CSI and E-Series
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>An introduction to NetApp BeeGFS CSI | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="An introduction to NetApp BeeGFS CSI" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="CSI provisioner for IO-intensive jobs with BeeGFS CSI and E-Series" />
+<meta property="og:description" content="CSI provisioner for IO-intensive jobs with BeeGFS CSI and E-Series" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-04-09T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"An introduction to NetApp BeeGFS CSI","dateModified":"2022-04-09T00:00:00+08:00","datePublished":"2022-04-09T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html","description":"CSI provisioner for IO-intensive jobs with BeeGFS CSI and E-Series","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">An introduction to NetApp BeeGFS CSI</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>09 Apr 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    14 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#use-cases">Use cases</a></li>
+  <li><a href="#getting-started">Getting started</a></li>
+  <li><a href="#options-in-a-mixed-environment">Options in a mixed environment</a></li>
+  <li><a href="#deploy-and-use-beegfs-csi">Deploy and use BeeGFS CSI</a></li>
+  <li><a href="#data-protection">Data protection</a></li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>The E-Series devs behind BeeGFS CSI have done a great job not only developing this provisioner but also <a href="https://www.netapp.com/blog/kubernetes-meet-beegfs/">introducing</a> it to the world.</p>
+
+<p>HPC, ML and Data Analytics haven’t been unaffected by the changes that first affected (storage-)light-weight application servers.</p>
+
+<ul>
+  <li>Developers want to run workloads anywhere with as few adjustments as possible</li>
+  <li>Operations teams want to simplify their life by moving workloads to Kubernetes</li>
+  <li>Users want the same high performance that they got on physical or VM-based systems</li>
+</ul>
+
+<p>BeeGFS CSI can be used on any BeeGFS cluster, including with other NetApp or non-NetApp storage. Some advanced features rely on BeeGFS having advanced features enabled which requires subscription which can be bought from NetApp (if you use NetApp storage) or ThinkParQ partners.</p>
+
+<h2 id="use-cases">Use cases</h2>
+
+<p>Sometimes users of containerized applications have IO-intensive workloads, and sometimes they need parallel access to shared data and want a parallel file system for that.</p>
+
+<p>That’s why we need BeeGFS CSI for containerized environments. If you have IO-intensive workloads, you can take a closer look at the introductory post above.</p>
+
+<p>BeeGFS is not useful just in HPC and ML. If you process large amounts of text or binary files (say, file format conversion) it may not be “HPC”, but parallel filesytem can help you get things done faster.</p>
+
+<p>More often than not, even users with such workloads optimize their storage configuration around something else (rather than storage performance), but they are unaware how IO performance-dependent their workload is. If time to results matters and a 10x faster performance gets you 70% lower time to results, your “optimization” around some minor details won’t get your business too far. Or the alternative solution ends up costing five times more once the organization starts burning money on emergency measures, including dispatching batch jobs to the public cloud (common “solution”).</p>
+
+<h2 id="getting-started">Getting started</h2>
+
+<p>This <a href="https://www.netapp.com/blog/beegfs-for-beginners/">post</a> shows a “professional” setup with full-sized BeeGFS/Kubernetes nodes attached to E-Series and provides a good introduction.</p>
+
+<p>I’ll share screenshots to visualize things and maybe explain them differently, so I think this won’t be repetitive.</p>
+
+<p>My environment is much simpler, just 3 VMs, but built on the same principles:</p>
+
+<ul>
+  <li>one or more Kubernetes master nodes - k8s-m-1</li>
+  <li>two or more Kubernetes worker nodes - k8s-n-1, k8s-n-2</li>
+  <li>ThinkParQ BeeGFS
+    <ul>
+      <li>there are several “roles” but to make this simple we need BeeGFS client role on the workers where we want to consume BeeGFS</li>
+      <li>we also need a manager role and one of Kubernetes Masters is a good candidate for that</li>
+      <li>we need some nodes to serve (access) storage - these storage nodes need block storage for capacity &amp; performance, obviously, and with E-Series providing storage, BeeGFS storage nodes are usually deployed in HA pairs</li>
+      <li>we need metadata servers, which are similar to storage servers except that they serve filesystem metadata</li>
+    </ul>
+  </li>
+  <li>one or more NetApp E-Series storage arrays (E5760, EF300, EF600); depending on capacity and performance needs, these can be added to BeeGFS like Kubernetes workers are added to Kubernetes cluster. E-Series arrays are something like BeeGFS “storage workers”, if you will.</li>
+</ul>
+
+<p>Such a small cluster can’t follow all the best practices (again, see the “professional” setup and diagram for a production-ready version), so here’s how I deployed this on these three VMs:</p>
+
+<ul>
+  <li>BeeGFS Management Node - k8s-m-1</li>
+  <li>BeeGFS Metadata Server - k8s-m-1</li>
+  <li>BeeGFS Client, BeeGFS Server - k8s-n-[1,2]</li>
+</ul>
+
+<p>Corners were cut, yes. But - given that this stuff happens to be running in VMs - with vSphere one could run this in production and while availability would be lower than with a larger cluster, you’d get HA from VMware HA. And you could scale by adding additional VMs as we normaly do with Kubernetes on VMware or OpenStack.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>management
+k8s-m-1 <span class="o">[</span>ID: 1]
+
+<span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>meta
+k8s-m-1 <span class="o">[</span>ID: 2]
+
+<span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>storage
+k8s-n-1 <span class="o">[</span>ID: 1]
+k8s-n-2 <span class="o">[</span>ID: 2]
+
+<span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>client
+44A7-6251170F-k8s-n-1 <span class="o">[</span>ID: 1]
+524F-62511A55-k8s-n-2 <span class="o">[</span>ID: 3]
+</code></pre></div></div>
+
+<p>Some may be surprised, but it’s possible to get <a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">multiple GB/s of throughput</a> to shared filesystem with a configuration like this - running on just one ESXi server.</p>
+
+<h2 id="options-in-a-mixed-environment">Options in a mixed environment</h2>
+
+<p>Mixed how? That’s the point: any-how.</p>
+
+<p>Your options remain open. An example:</p>
+
+<p><img src="/assets/images/beegfs-csi-e-series.png" alt="BeeGFS CSI in a mixed environment" /></p>
+
+<p>Three things I’d like to highlight related to this particular diagram:</p>
+<ul>
+  <li>if you need a detailed design, those are available for highly-tuned and prescriptive solutions such as NetApp-NVIDIA AI-related solutions and usually delivered as “building blocks” (something like: 4 DGX nodes + 2 Mellanox IB switches + 2 E-Series arrays).</li>
+  <li>SolidFire uses single fabric, and E-Series uses dual fabric, so if you were to consume block storage via IP, we would use <em>at least</em> 3 iSCSI VLANs for iSCSI (or even more, if we had to serve iSCSI over multiple VLANs) - one iSCSI network and VLAN for SolidFire and its clients, and two other networks and VLANs on BeeGFS Storage and Metadata nodes or other iSCSI clients connecting to E-Series iSCSI</li>
+  <li>E-Series can use FC, iSCSI, IB, iSER, etc., and usually more than one at the same time. The E-Series team prefers certain options (see NetApp’s Technical Reports related to BeeGFS and other workloads of interest) and HPC users tend to use NVMe-over-FC (on BeeGFS storage servers), but you can certainly configure E-Series for more than just one connectivity protocol and use it with other clients. BeeGFS CSI talks to BeeGFS management service, not to E-Series array, and only BeeGFS Storage and Metadata nodes would connect to E-Series, while BeeGFS Clients talk to Storage and Metadata servers.</li>
+</ul>
+
+<p>Once you start to mix and match, sooner or later you discover you need either one storage that does everything, or two types of arrays. Left- and right-hand sides of the diagram serve different purposes and emphasize different features.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>LHS</th>
+      <th>RHS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VI, CSI</td>
+      <td>CSI, DAS</td>
+    </tr>
+    <tr>
+      <td>Integrations</td>
+      <td>Performance</td>
+    </tr>
+    <tr>
+      <td>Trident, vSphere</td>
+      <td>BeeGFS, vSphere, Nomad</td>
+    </tr>
+    <tr>
+      <td>S, M IO</td>
+      <td>L, XL IO</td>
+    </tr>
+    <tr>
+      <td>RND»SEQ</td>
+      <td>SEQ»RND</td>
+    </tr>
+    <tr>
+      <td>Block</td>
+      <td>File, block</td>
+    </tr>
+    <tr>
+      <td>ext[3,4], xfs</td>
+      <td>beegfs</td>
+    </tr>
+    <tr>
+      <td>Many, smaller apps</td>
+      <td>Fewer, larger workloads</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>On the left one can have a platform that hosts various management servers (including Kubernetes Master node(s)), VM boot disks, developer workstations, VDI, inferencing, databases, and so on. SolidFire and ONTAP users would use Trident or vSphere CSI for Kubernetes. In certain situations you may need to connect to E-Series from VI or Bare Metal servers - that works too.</p>
+
+<p>On the right we’d BeeGFS CSI would provision BeeGFS Persistent Volumes to pods, which would consume it through HA pairs of BeeGFS storage nodes backed by one or more E-Series.</p>
+
+<p>The right-hand side is usually dominated by sequential IO (64-8192 kB), while the left-hand side is random IO-dominated (4-64 kB).</p>
+
+<p>The Kubernetes storage classes would likely reflect the above.</p>
+
+<ul>
+  <li>Trident CSI: sc-1kiops</li>
+  <li>Trident CSI: sc-5kiops</li>
+  <li>Trident CSI: sc-5kiops-snap-dr</li>
+  <li>BeeGFS CSI: sc-bee-ssd</li>
+  <li>BeeGFS CSI: sc-bee-hdd</li>
+  <li>BeeGFS CSI: sc-bee-ssd-scratch-nobkp</li>
+</ul>
+
+<p>Later I tried this in practice. Trident CSI and BeeGFS CSI on the same cluster:</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-09-multiple-csi-backends.png" alt="Kubernetes cluster with Trident CSI and BeeGFS CSI" /></p>
+
+<p>Multiple Storage Classes, heterogeneous PVs:</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-10-multiple-csi-storage-classes.png" alt="Kubernetes cluster with Trident CSI and BeeGFS CSI" /></p>
+
+<h2 id="deploy-and-use-beegfs-csi">Deploy and use BeeGFS CSI</h2>
+
+<p>I started with three VMs running Kubernetes 1.23.5:</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-01-cluster.png" alt="Kubernetes 1.23.5 in VMs" /></p>
+
+<p>In my lab these three Kubernetes nodes had the following network configuration:</p>
+
+<ul>
+  <li>eth0 - “service” network (physical 192.168.1.0/24)</li>
+  <li>eth1 - Pod network (physical 192.168.105.0/24)</li>
+  <li>eth2 - iSCSI network (physical 192.168.103.0/24)</li>
+</ul>
+
+<p><img src="/assets/images/beegfs-csi-k8s-02-master-nic.png" alt="Kubernetes Pod network on eth1" /></p>
+
+<p>Once Kuberetes was up and running, I deployed <a href="https://github.com/NetApp/beegfs-csi-driver#basic-use">BeeGFS CSI</a> by following the instructions from its README.md. That took less than a minute.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-03-provisioner.png" alt="BeeGFS CSI Provisioner on Kubernetes" /></p>
+
+<p>Note here that BeeGFS CSI doesn’t “talk” to E-Series SANtricity like Trident CSI does. BeeGFS CSI talks to BeeGFS Management Service (which I happen to run on Kubernetes Master #1), so E-Series SANtricity (management API) is not exposed to your Kubernetes cluster.</p>
+
+<p>E-Series volumes are usually thick-provisioned using the NetApp E-Series BeeGFS <a href="https://www.netapp.com/blog/accelerate-deployment-of-ha-for-beegfs-with-ansible/">Ansible collection</a>, although you can do it on your own (if you don’t use E-Series, for example), so there’s no “disk array management” involved in daily operations. Everything CSI-related is done from Kubernetes and against BeeGFS management server.</p>
+
+<p>The examples directory of BeeGFS CSI source code has complete examples with both static and dynamic (plus some other variants) provisioning.</p>
+
+<p>I picked a dynamic CSI example from the BeeGFS CSI source code, and first deployed a storage class (partially shown below). Check the comments in parameters for key settings!</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Copyright 2021 NetApp, Inc. All Rights Reserved.</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0.</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">StorageClass</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">csi-beegfs-dyn-sc</span>
+<span class="na">provisioner</span><span class="pi">:</span> <span class="s">beegfs.csi.netapp.com</span>
+<span class="na">parameters</span><span class="pi">:</span>
+  <span class="c1"># in this cluster, eth1 IP address of k8s-m-1</span>
+  <span class="c1">#   where the BeeGFS management service is running</span>
+  <span class="na">sysMgmtdHost</span><span class="pi">:</span> <span class="s">192.168.105.11</span>
+  <span class="c1"># use k8s/${K8S-CLUSTER-NAME}/${WORKLOAD} to avoid collission among K8s clusters</span>
+  <span class="c1"># k8s/${K8S-CLUSTER-NAME}/dynamic would be better for production clusters</span>
+  <span class="na">volDirBasePath</span><span class="pi">:</span> <span class="s">k8s/name/dyn</span>
+</code></pre></div></div>
+
+<p><img src="/assets/images/beegfs-csi-k8s-04-storage-class.png" alt="BeeGFS CSI SC" /></p>
+
+<p>After that I created a PVC that uses this storage class:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc
+NAME                 STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+csi-beegfs-dyn-pvc   Bound    pvc-6de9d5b2   1Gi        RWX            csi-beegfs-dyn-sc   90m
+</code></pre></div></div>
+
+<p><img src="/assets/images/beegfs-csi-k8s-05-pvc.png" alt="BeeGFS CSI PVC" /></p>
+
+<p>And finally, I deployed an app which is a tiny container that touches the PV, leaving a tiny file to prove “I was here”, and then stays idle.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-06-pod.png" alt="Test pod on BeeGFS PV" /></p>
+
+<p>Notice this pod was scheduled to k8s-n-2 (under “Resource information”, above).</p>
+
+<p>If we scroll down to examine the app’s PVC we’ll see it’s right there, deployed in Read-Write <strong>Many</strong> mode set in the storage class.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-07-pod-storage.png" alt="Storage of test pod on BeeGFS" /></p>
+
+<p>We have two workers that are BeeGFS clients, so although k8s-n-2 is accessing the file system we could run a scale-out our workload - or run different workloads that share this data. Filesystem view from k8s-n-1 is identical to that of k8s-n-2:</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-08-other-beegfs-client.png" alt="Test pod on BeeGFS PV" /></p>
+
+<ul>
+  <li>BeeGFS filesystem mounted at <code class="language-plaintext highlighter-rouge">/mnt/beegfs</code></li>
+  <li>volDirBasePath (set in SC): <code class="language-plaintext highlighter-rouge">k8s/name/dyn</code></li>
+  <li>this PV: <code class="language-plaintext highlighter-rouge">pvc-6de9d5b2</code></li>
+  <li>full path to file created by our demo pod: <code class="language-plaintext highlighter-rouge">/mnt/beegfs/k8s/name/dyn/pvc-6de9d5b2</code></li>
+</ul>
+
+<p>If we wanted to play “flock() ping-pong” we could stand up another pod that briefly performs IO to the same file on the same PVC (csi-beegfs-dyn-pvc). (Old HPC hands who were around in the 00’s may remember the nice little demos <a href="https://en.wikipedia.org/wiki/Platform_Computing#History">Scali MPI</a> shipped with their software.)</p>
+
+<p>Or, in terms of modern, real-life workload examples:</p>
+<ul>
+  <li>two S3 pods ingressing IoT data and storing it on a BeeGFS CSI PVC (2 x 4 GB/s)</li>
+  <li>eight containerized apps analyzing and processing uploaded data without moving, downloading or copying (8 x 4 GB/s)</li>
+</ul>
+
+<p>This mixed workload (30+GB/s) should be doable with just a handful of servers running BeeGFS and one E-Series array (EF600, 2 RU). If you want to experiment with this on your own deploy MinIO and use a BeeGFS CSI.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-16-unified-fileobject.png" alt="MinIO Operator with BeeGFS CSI" /></p>
+
+<p>Note, however, that MinIO Operator imposes certain choices (“best practices”) which may not necessarily apply to this environment (such as Erasure Coding, which BeeGFS on E-Series RAID no only takes care of with its filesystem chunking, but also offloads on to BeeGFS metadata and storage nodes (chunking) and E-Series (data protection)). These MinIO Operator requirements also bloat CPU and memory resources required to deploy.</p>
+
+<p>Alternatively, consider <a href="https://github.com/minio/minio/tree/master/helm/minio">MinIO Helm Chart</a> in StandAlone mode with a BeeGFS CSI storage class tailored to your use pattern. My little test cluster didn’t have enough resources to deploy MinIO with Helm, so I leave this for another post.</p>
+
+<p>And one last example of the flexibility in mixed environments mentioned earlier: here’s the same pod executed with <em>two</em> Persistent Volumes from two back-ends managed by two CSI provisioners - BeeGFS CSI and Trident CSI:</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-12-multi-backend-pod.png" alt="Kubernetes Pod with Trident and BeeGFS PVs" /></p>
+
+<p>This pod runs the same example from BeeGFS CSI examples - it touches a file on a BeeGFS PV - and adds an extra step: it copies the file to a SolidFire volume (iSCSI PV provisioned by Trident CSI).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">touch</span> <span class="s2">"/mnt/dyn/touched-by-</span><span class="k">${</span><span class="nv">POD_UUID</span><span class="k">}</span><span class="s2">"</span> <span class="o">&amp;&amp;</span> <span class="nb">cp</span> /mnt/dyn/touched-by-<span class="k">*</span> /mnt/sf/ 
+</code></pre></div></div>
+
+<p>This is of little practical use (although you could move or copy files from one filesystem to another this way), but let’s consider a practical example:</p>
+
+<ul>
+  <li>researcher’s remote desktop with Jupyter and other tools running with guaranteed SLO in terms of IOPS (fast boot and consistent response). Data protection is done with snapshots and backup (enterprise-grade or free tools such as Velero or SolidFire’s built-in Backup to S3)</li>
+  <li>at the same time, shared access (can be read-only) to data on BeeGFS at gigabytes per second</li>
+  <li>…. and the same approach scales to dozens and hundreds of researchers</li>
+</ul>
+
+<h2 id="data-protection">Data protection</h2>
+
+<p>Because storage and metadata volumes may be located on many E-Series arrays, E-Series/SANtricity snapshots on one array can’t be used to protect data across all arrays.</p>
+
+<p>But generic utilities can be used to protect data using approaches such as replication and backup. It can’t be done in a point-in-time fashion across the entire filesystem, but PVs can be backed up. Let’s say a BeeGFS CSI PV has 10TiB of data. At 100MiB/s it takes one day to upload this to S3. And the second time it’ll take less because only changes have to be uploaded.</p>
+
+<p>To check if this can work I deployed latest Velero with Restic and told it to store backups on S3. If you want a simpler version, you could run scheduled Restic cronjobs outside of Kubernetes and backup data to S3 or <a href="/2022/04/03/restic-server-netapp-eseries.html">Rest Server</a>. But this is a Kubernetes-focused post so I created a new namespace (“backup”), redeployed the same demo app and backed it up.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-13-backup-to-s3.png" alt="Velero backup of BeeGFS data to S3" /></p>
+
+<p>I reused an old bucket I use for Restic testing so the bucket name may be confusing, but the important part is BeeGFS PV data was backed up along with the namespace and application details.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-14-velero-backup-on-s3.png" alt="Velero backup in S3 bucket" /></p>
+
+<p>As backup succeeded it was safe to delete the namespace and make sure the PV was gone, after which I attempted to restore. That worked, too.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-15-velero-restore-from-s3.png" alt="Velero restore to BeeGFS data" /></p>
+
+<p>Some applications may need to not modify data while backup job runs, and there may be some other gotchas. But this looks promising, and potentially viable for PVs up to several TB in size.</p>
+
+<p>Another approach I evaluated was Kanister, which is one of open source components used in Kasten K10. The approach I tried with MySQL on BeeGFS was <code class="language-plaintext highlighter-rouge">KubeExec</code> (this isn’t to say you should use BeeGFS for MySQL), but <code class="language-plaintext highlighter-rouge">BackupData</code> can be used for flat files. Or, if the main application is stopped, it is also safe to use <code class="language-plaintext highlighter-rouge">CopyVolumeData</code> to copy data to S3. Both <code class="language-plaintext highlighter-rouge">BackupData</code> and <code class="language-plaintext highlighter-rouge">CopyVolumeData</code> will give better results if files are not modified while they are being copied.</p>
+
+<p><img src="/assets/images/beegfs-csi-k8s-17-kanister-restore.png" alt="Kanister restore MySQL on BeeGFS" /></p>
+
+<p>In case anyone’s curious why I didn’t use Kasten: I wanted to, but I couldn’t make Kanister work because I couldn’t make Kasten’s Kanister jobs work without attempting to take a snapshot (which fails, because BeeGFS CSI doesn’t have snapshots). But I assume that correctly configured, the same Kanister jobs would work just fine in Kasten K10.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>Parallel file systems are specialized filesystems for workloads that significantly benefit from fast single file performance, fast aggregate performance (throughput or IOPS), the ability to write in parallel to the same file, precisely manage filesystem cache, and more.</p>
+
+<p>Not everyone needs this, and you wouldn’t run SQL Server on Kubernetes with BeeGFS CSI (of course, somebody should give it a shot to see if that’s possible).</p>
+
+<p>Evaluate with a handful of smallish Linux VMs, free BeeGFS, generic disks, and BeeGFS CSI to see if BeeGFS CSI is fits your requirements. NetApp also has an Ansible collection that can make deployment fast and consistent, but if you start small in an odd environment that doesn’t follow best practices, it may be faster to install manually.</p>
+
+<p>If you run generic (Linux) applications, mainstream HPC, or analytics applications in containers and you feel constrained in terms of performance and scale, or don’t have enough choice when it comes to HPC in a containerized environment, take a look at BeeGFS CSI and reach out to the fine folks from the E-Series Team for help with sizing and design for highly available production environments.</p>
+
+<p>BeeGFS CSI has initial (experimental) support for Nomad CSI (which itself is in Beta). In a recent post I blogged about <a href="/2022/04/05/nomad-beegfs-eseries.html">Nomad and BeeGFS Host Volumes</a> and that works fine. In one of next posts I’ll move on to BeeGFS CSI with Nomad CSI.</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v10dlqt-an-introduction-to-netapp-beegfs-csi.html">Walk-through BeeGFS CSI SC, PVC and PV creation in a Kubernetes cluster</a> - 4m54s</li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#containers">containers</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">• Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/08/beegfs-csi-driver-lives-on.html">• ThinkParQ takes over NetApp-created BeeGFS CSI driver</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">• Block volume mode in Kubernetes with SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/21/trident-new-stateful-set-delete-feature.html">• StatefulSet PVC Retention with Trident and SolidFire</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

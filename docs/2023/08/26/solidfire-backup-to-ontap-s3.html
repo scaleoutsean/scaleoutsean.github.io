@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            SolidFire backup-to-S3 using ONTAP S3 destination | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     How to backup SolidFire volumes to ONTAP S3
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>SolidFire backup-to-S3 using ONTAP S3 destination | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="SolidFire backup-to-S3 using ONTAP S3 destination" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="How to backup SolidFire volumes to ONTAP S3" />
+<meta property="og:description" content="How to backup SolidFire volumes to ONTAP S3" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/08/26/solidfire-backup-to-ontap-s3.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/08/26/solidfire-backup-to-ontap-s3.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-08-26T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"SolidFire backup-to-S3 using ONTAP S3 destination","dateModified":"2023-08-26T00:00:00+08:00","datePublished":"2023-08-26T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/08/26/solidfire-backup-to-ontap-s3.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/08/26/solidfire-backup-to-ontap-s3.html","description":"How to backup SolidFire volumes to ONTAP S3","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">SolidFire backup-to-S3 using ONTAP S3 destination</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>26 Aug 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    6 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#backup-to-ontap-s3">Backup to ONTAP S3</a>
+    <ul>
+      <li><a href="#network-configuration">Network configuration</a></li>
+      <li><a href="#workflow">Workflow</a></li>
+    </ul>
+  </li>
+  <li><a href="#discussion">Discussion</a>
+    <ul>
+      <li><a href="#backup-to-ontap-s3-1">Backup to ONTAP S3</a></li>
+      <li><a href="#dr-to-ontap-s3">DR to ONTAP S3</a></li>
+      <li><a href="#alternative-backup-to-s3-approaches">Alternative “backup to S3” approaches</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>SolidFire can backup its volume contents to, and restore from, generic S3 object stores. It’s a free feature included with every cluster.</p>
+
+<p>AWS S3, (post-v12) MinIO, and it appears even ONTAP S3 works.</p>
+
+<h2 id="backup-to-ontap-s3">Backup to ONTAP S3</h2>
+
+<p>I used ONTAP 9.12.1 with the default S3 settings and a self-signed TLS certificate (there’s no validation from SolidFire client in any case).</p>
+
+<h3 id="network-configuration">Network configuration</h3>
+
+<p>As noted in previous posts here - and probably in the SolidFire documentation - SolidFire backups go over Management Network.</p>
+
+<p>That means ONTAP S3 must be reachable by SolidFire over SolidFire’s management network. This was my setup:</p>
+
+<p>SolidFire:</p>
+<ul>
+  <li>Management: 192.168.1.0/24</li>
+  <li>iSCSI: 192.168.105.0/24</li>
+</ul>
+
+<p>ONTAP S3:</p>
+<ul>
+  <li>Management: any</li>
+  <li>S3 Data: 192.168.1.0/24</li>
+</ul>
+
+<p>Generally speaking, an environment usually won’t serve S3 data on a management network, but ONTAP lets us create and configure S3 data interfaces on any network that can be routed to ONTAP.</p>
+
+<h3 id="workflow">Workflow</h3>
+
+<p>Run backup command as you <a href="/2021/04/21/solidfire-backup-to-s3.html">normally would</a>. Values used:</p>
+
+<ul>
+  <li>Hostname (S3 API endpoint name): s52.datafabric.lan (internal FQDN of IP hosting ONTAP S3 service; no need to add https:// or :443)</li>
+  <li>Bucket name: backup</li>
+  <li>Keys: as provided by ONTAP</li>
+</ul>
+
+<p>Start backup:</p>
+
+<p><img src="/assets/images/solidfire-backup-to-ontap-s3-01.png" alt="Backup started" /></p>
+
+<p>S3 protocol activity seen in ONTAP System Manager.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-ontap-s3-02.png" alt="Activity on ONTAP S3" /></p>
+
+<p>Backup job has started and successfully completed.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-ontap-s3-03.png" alt="Event logs of successfully completed backup" /></p>
+
+<p>Volume 2 has been backed up to the bucket “backup” on ONTAP S3 running on SMV0. We can see the same manifest in the bucket “backup”.</p>
+
+<p><img src="/assets/images/solidfire-backup-to-ontap-s3-04.png" alt="Bucket contents" /></p>
+
+<p><em>Note 1:</em> <code class="language-plaintext highlighter-rouge">PROD</code> seen in above screenshots is the cluster name. Note that this is a bug which happened because I ran backup using Start-SFVolumeBackup from PowerShell Tools for SolidFire (see the detailed post on backup-to-S3). It’s supposed to be ${CLUSTER_NAME}-${CLUSTER_UUID}, but that PowerShell cmdlet drops the hyphen and UUID that should follow it. Invoke-SFApi could be used to work around it. Or just run backup jobs from the Web UI.</p>
+
+<p><em>Note 2:</em> If we were to restore this backup from the Web, it wouldn’t work because of what I mentioned in Note 1, as path to backup manifest is missing “-${CLUSTER_UUID}”. If we worked around the bug with Invoke-SFApi or used the Web UI or Python API, restore would work without an issue.</p>
+
+<p><em>Note 3:</em> Later I tried backup to IPv3 of S3 (did not use FQDN) and that worked as well. It should be noted that if no “https://” and “:443” is specified in destination endpoint, HTTPS would still be used, but the feature clearly doesn’t check TLS certificate validity, so it’s dangerous to use it on non-secure networks. Since SolidFire Backup-to-S3 happens over management LAN, that network is hopefully quite secure.</p>
+
+<h2 id="discussion">Discussion</h2>
+
+<p>I discussed strengths and weaknesses of this feature in many posts.</p>
+
+<p>The backup-to-S3 feature existed prior to NetApp’s acquisition of SolidFire in late 2015 and was never improved.</p>
+
+<p>There’s no deduplication across volumes, no resume of interrupted backup jobs, no fancy scheduling, no catalog, no incremental backups, etc.</p>
+
+<p>If you don’t have a lot of data, storage configuration doesn’t change all the time, and you don’t backup to S3 every day, this feature may be enough for you.</p>
+
+<p>It can be easily automated with Python or PowerShell and you can run a <a href="/2021/06/22/solidfire-backup-and-cloning-with-per-storage-node-queues.html">bunch of backup jobs at the same time</a>.</p>
+
+<p>I have two ONTAP S3-related observations: one relates to backup and another to DR.</p>
+
+<h3 id="backup-to-ontap-s3-1">Backup to ONTAP S3</h3>
+
+<p>SolidFire users who have ONTAP may choose to backup SolidFire volumes to ONTAP S3.</p>
+
+<p>SolidFire native backup format saves space due to compression and deduplication of volume data, so ONTAP S3 on all-flash FLexGroups is probably too expensive to be used here. Although, if data repeats across volumes, some savings may be obtained.</p>
+
+<p>ONTAP S3 on NL-SAS may be more appropriate as far as cost is concerned.</p>
+
+<h3 id="dr-to-ontap-s3">DR to ONTAP S3</h3>
+
+<p>SolidFire has a limited SnapMirror implementation that can copy data to/from ONTAP S3.</p>
+
+<p>It has no compression and no encryption, so it’s generally suitable for use on protected LANs and VPNs.</p>
+
+<p>Backup to S3 isn’t continuous and doesn’t give the same recovery time, but - because we can backup snapshots to S3 - it gives you the ability to backup to ONTAP S3 over public networks:</p>
+<ul>
+  <li>source-side compression - OK</li>
+  <li>source-side deduplication - OK</li>
+  <li>transport encryption (HTTPS) - OK</li>
+</ul>
+
+<p>This solves SnapMirror problems mentioned earlier.</p>
+
+<p><strong>Note:</strong> SolidFire’s “Backup to S3” allows self-signed certificates, so MITM attack is still a risk. It could be partially mitigated the same way the lack of HTTPS is addressed for SolidFire-ONTAP SnapMirror: add a secure HTTPS proxy on each side.</p>
+
+<p>Secondly, ONTAP S3 has a feature called S3 SnapMirror, which can replicate S3 data continuously or based on a custom schedule. We can’t use SolidFire to continuously backup-to-S3 and since each backup is full we can’t backup too frequently either, but for smaller volumes scheduled S3 SnapMirror replication can be used to copy daily backups to ONTAP at a remote site. S3 SnapMirror allows you to failover (for read-only access) bucket access to the remote ONTAP S3, or alternatively, to restore from that remote replica and thereby recover local data from a S3 SnapMirror destination.</p>
+
+<p>If S3 SnapMirror is used to replicate SolidFire S3 backups to a remote site, the remote site can be accessed in a read-only fashion from any location that permits HTTPS access. You’d naturally need a SolidFire demo VM or real cluster to “restore-from-S3” because by default backups are space-efficient. If, however, backup-to-S3 was done using <code class="language-plaintext highlighter-rouge">Uncompressed</code>, it may even be possible to restore backup with the <code class="language-plaintext highlighter-rouge">dd</code> command, but I haven’t tried that because backup sizes (and backup/restore times) would be grossly inefficient (5-10x bigger).</p>
+
+<h3 id="alternative-backup-to-s3-approaches">Alternative “backup to S3” approaches</h3>
+
+<p>We’re not limited by this one approach, of course:</p>
+
+<ul>
+  <li>Most commercial software applications (Veeam, etc.) can backup to S3; not many have been certified for ONTAP S3, but ONTAP S3 is relatively new and they’re being added.</li>
+  <li>Free utilities and community projects for client-side backup/restore. SolidFire can easily create clones from snapshots, and present them to dedicated hosts that can copy such data to S3, creating full and even incremental backups. This can be done with bare metal clients, VM clients and containers. An example can be found <a href="/2021/05/08/revisiting-solidbackup.html#backup-to-s3">here</a>. Kubernetes users can simply use Velero and backup volumes and snapshots to S3.</li>
+</ul>
+
+<p>One big advantage of “client-side” backup and restore (approach taken by both commercial and free utilities) is that they access storage from iSCSI network, so it’s possible to get to multi-gigabyte backup speeds. Another is significantly improved transport security: we can choose to encrypt data at source before deduplicating and sending it to S3, and validate TLS of S3 API endpoint.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>SolidFire’s “Backup to S3” feature has been available for ages, but it still finds new benefits due to S3 ecosystem improvements.</p>
+
+<p>Backup to ONTAP S3 is useful for smaller environments and partially solves data efficiency problems in SnapMirror implementation.</p>
+
+<p>In non-trivial cases it is suggested to use alternative approaches, as “Backup to S3” won’t see any enhancements and even if it did, it would be hard to match what freeware, let alone commercial backup software, can do from running on iSCSI clients.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

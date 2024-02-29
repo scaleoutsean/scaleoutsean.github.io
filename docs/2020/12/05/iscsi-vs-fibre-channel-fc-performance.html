@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            How much slower is iSCSI vs. Fibre Channel | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     About iSCSI and iSCSI vs. FC performance with NetApp HCI H615C and EF280 array
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>How much slower is iSCSI vs. Fibre Channel | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="How much slower is iSCSI vs. Fibre Channel" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About iSCSI and iSCSI vs. FC performance with NetApp HCI H615C and EF280 array" />
+<meta property="og:description" content="About iSCSI and iSCSI vs. FC performance with NetApp HCI H615C and EF280 array" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-05T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"How much slower is iSCSI vs. Fibre Channel","dateModified":"2020-12-05T00:00:00+08:00","datePublished":"2020-12-05T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html","description":"About iSCSI and iSCSI vs. FC performance with NetApp HCI H615C and EF280 array","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">How much slower is iSCSI vs. Fibre Channel</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>05 Dec 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>If you search for “iSCSI vs FC performance” it’s not easy to find a recent like-for-like comparison from enterprise vendors. I’ve been puzzled by this and I have some theories as to why, but regardless - the fact is there aren’t that many comparisons out there.</p>
+
+<p>Last time I looked really hard for such material from NetApp I found an old PDF with a comparison for ONTAP systems (FAS, at the time, if I recall correctly). I have this link in the Awesome SolidFire repository, but to save you time, FC was slightly faster (single digit percentage figure.) There’s a nice <a href="https://www.snia.org/sites/default/files/ESF/FC_vs_iSCSI_Jan2018_Final.pdf">presentation</a> with (only) protocol comparison over at SNIA, but it’s vendor- and hardware-neutral, so you won’t find specific examples for servers and storage you can buy today.</p>
+
+<p>If you have an environment that supports or can support both FC and iSCSI protocols and have no strong opinion about going either way, you probably wonder about trade-offs in terms of cost and performance. Sometimes the cost is roughly the same and you just want more IOPS or throughput for the buck. Other times the cost is not a concern but you’d like to know if the array can deliver more than bare minimum required for your workload.</p>
+
+<h3 id="nva-1152-design">NVA-1152-DESIGN</h3>
+
+<p>I sometimes work with NetApp E/EF-Series arrays and for a while now I’ve been waiting to find out how well it works with 25 GigE iSCSI, especially since NetApp has added Mellanox Ethernet switches to its solutions. That has finally happened in NetApp NVA-1152-DESIGN. In this document a NetApp HCI server and the EF280 all-flash array were tested to provide an idea of how these building blocks perform and for comparison purposes (NetApp HCI servers don’t come with FC HBAs) FC was tested with the same server and array as iSCSI.</p>
+
+<p><a href="https://www.netapp.com/pdf.html?item=/media/21016-nva-1152-design.pdf">NVA-1152-DESIGN</a> isn’t long (just the way I like it!), so give it a quick look. It answers precisely that question.</p>
+
+<p>In summary, iSCSI is <strong>not</strong> slower. iSCSI did well in both sequential and random performance. And depending on the way you calculate, some folks might say it’s faster. How so? If you already have NetApp HCI for your VI and need to add a 5 GB/s workload to your environment, with iSCSI you don’t have to buy FC switches and can use that money to buy a EF300 or two additional H615C servers, which would get you <em>more performance per dollar spent</em>. (In my opinion you’d also get better DevOps and automation integrations and one less protocol to deal with, which represents additional savings and/or value.)</p>
+
+<p><img src="/assets/images/netapp-hci-ef-e-series-iscsi-vs-fc-nva-1152-design.png" alt="iSCSI vs FC Performance with NetApp HCI H615C and EF280" /></p>
+
+<p>In these tests iSCSI was slower in sequential read performance but that’s not unexpected - 2 x 25 GigE has less bandwidth than 4 x 16 Gbps used in the FC test (or 2 x 32 Gbps, if FC used 32 Gbps common these days.) If you need more performance per server with iSCSI, read on!</p>
+
+<p>In the case you’re not familiar with NetApp HCI compute node models (“H Series servers”) all H615C models come with 2 x 25G and H410C has twice as many 25G NICs (4 x 25G; also 2 x 1/10G but those are usually used for Management), so if a higher sequential performance is desired it is possible to get it with one of the H-Series H410C models.</p>
+
+<p>If we use one of the H410C models, even if we team (or “bond”) only the 25G interfaces and use the remainder (2 x 1/10G) for management, that’s still 100G of aggregate bandwidth for application &amp; iSCSI workloads. And you can still use those systems in a NetApp HCI environment (you’d need VMware Distributed Switch to aggregate 4 x 25G) and avoid creating management islands, which you’d likely end up with if you were to have a HCI system for VI and another cluster for a “high throughput” application. Note that H410C models have several CPU configurations and - generally speaking - Xeon Gold CPUs with more cores tend to deliver better performance than Xeon Silver CPUs with fewer cores.</p>
+
+<p>When I say “for application &amp; iSCSI workload” I mean your application could consume up 50% of that network bandwidth (when data comes in from other applications and is written to storage at the same time), but it could also use 1% (when data is queried, a 10 byte JSON search query can result in 100 Gbps of iSCSI throughput with H410C &amp; the EF300, for example.)</p>
+
+<p>Which reminds me: if you need even more performance from your iSCSI array consider the latest mid-range EF (all-flash) model, EF300 (or the E5760, if you want HDDs or hybrid HDD/SSD storage). You can find more about E- and EF-Series ararys at their respective product pages:</p>
+
+<ul>
+  <li><a href="https://netapp.com/data-storage/ef-series">EF-Series (all-flash, SSD or NVMe)</a> is about the all-flash (SSD, NVMe) models.</li>
+  <li><a href="https://www.netapp.com/data-storage/e-series/">E-Series</a> - HDD and Hybrid models (datasheets are at the bottom of the page)</li>
+</ul>
+
+<p>The second approach to getting more performance out of your iSCSI storage is to scale out, by adding additional arrays (with additional network ports, storage controllers, and disks - which generally improve the performance) to your applications server(s).</p>
+
+<h3 id="scaling-out">Scaling out</h3>
+
+<p>Another thing to note is many apps are <strong>not</strong> limited to the performance of a single H-Series server or E/EF Series array. If the application itself is scalable, you can consider using its native scale-out features (example: Splunk). If it’s not, you can consider using <a href="https://www.google.com/search?hl=en&amp;q=netapp%20beegfs">BeeGFS</a> with multiple servers or disk arrays to get a high performance to/from a single namespace.</p>
+
+<p>Among other things, BeeGFS allows you to get to your data in a scale-out manner. An example for an HCI environment: say we have a small NetApp HCI cluster with three H615C compute nodes and we need to ingest IoT data at 5 GB/s. If data is coming from different sources, we don’t need to buy a pair of servers each of which (for High Availability) can do 5 GB/s, or even worse (for many other HCI environments) - three such servers. Enterprise users would be much better off with a BeeGFS support contract and a fast enough E/EF array (or two slower arrays, as those too can scale out with BeeGFS.)</p>
+
+<ul>
+  <li>3 x (existing) H615C servers; only 2 x H615C are necessary for 5 GB/s, we can tolerate the loss of one node (N+1)</li>
+  <li>1 x BeeGFS support contract; to let VMs running on HCI compute write to shared file system</li>
+  <li>1 x E/EF array (E5760 or EF570, for example) to share data to BeeGFS VMs</li>
+</ul>
+
+<p>This approach also makes it easier to scale your workloads. If you need 8 GB/s, just add another server. If you need 20 GB/s, add several servers and one or two additional array(s).</p>
+
+<p>Some applications scale out without a shared file system because they can parallelize their workload and do not require shared data. To scale HCI performance with such apps you’d just add servers or storage, as necessary.</p>
+
+<h3 id="networking">Networking</h3>
+
+<p>Don’t forget to use proper Ethernet switches such as NVIDIA Networking (Mellanox) SN-2010, SN-2100, and SN-2700, to get a network setup that can handle high throughput and low latency workloads, whether it’s <a href="https://www.youtube.com/watch?v=SCzk3ZpfT-Y">backup</a>, analytics, video streaming or any other non-HPC workload that can work with iSCSI.</p>
+
+<p>All currently available NetApp HCI servers use Mellanox 25 GigE NICs which means less time wasted on reading compatibility and interoperability documentation.</p>
+
+<h3 id="hpc">HPC</h3>
+
+<p>What about HPC?</p>
+
+<p>Many HPC workloads can work with iSCSI, but HPC users will always be better off with custom-configured or even custom-built servers and networks that talk Infiniband or NVMe, but scale-out workloads that consume millions of IOPS or tens of GB/s in sequential throughput appear within reach to NetApp HCI users with externally attached E/EF arrays.</p>
+
+<p>Many enterprises have migrated or want to migrate their workloads to HCI, but high performance workloads can still be e challenge, or - when the scale isn’t enough to justify it - cost more to run in dedicated HCI environments. NetApp HCI’s disaggregated design makes it possible to easily and economically handle such workloads by adding E/EF-Series arrays to your NetApp HCI, while retaining the agility and convenience of HCI.</p>
+
+<p>It’s rarely justifiable to introduce novel or complex protocols or create management islands. Even if your high-throughput applications run in containers, you can still make use of E/EF-Series (NetApp Trident used by NetApp HCI and ONTAP can also <a href="https://netapp-trident.readthedocs.io/en/latest/support/requirements.html#supported-backends-storage">provision iSCSI container storage on E/EF arrays</a>.)</p>
+
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

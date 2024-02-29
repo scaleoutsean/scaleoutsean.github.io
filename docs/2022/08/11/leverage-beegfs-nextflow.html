@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Leverage BeeGFS in Nextflow to avoid unnecessary data movement | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Leverage fast parallel filesystem (BeeGFS) for data-intensive Nextflow container jobs
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Leverage BeeGFS in Nextflow to avoid unnecessary data movement | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Leverage BeeGFS in Nextflow to avoid unnecessary data movement" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Leverage fast parallel filesystem (BeeGFS) for data-intensive Nextflow container jobs" />
+<meta property="og:description" content="Leverage fast parallel filesystem (BeeGFS) for data-intensive Nextflow container jobs" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/08/11/leverage-beegfs-nextflow.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/08/11/leverage-beegfs-nextflow.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-11T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Leverage BeeGFS in Nextflow to avoid unnecessary data movement","dateModified":"2022-08-11T00:00:00+08:00","datePublished":"2022-08-11T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/08/11/leverage-beegfs-nextflow.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/08/11/leverage-beegfs-nextflow.html","description":"Leverage fast parallel filesystem (BeeGFS) for data-intensive Nextflow container jobs","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Leverage BeeGFS in Nextflow to avoid unnecessary data movement</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>11 Aug 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    4 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>Nextflow configuration and environment variables allow us to make use of BeeGFS with E-Series for most demanding IO tasks.</p>
+
+<p>For an example, I may want to keep shared assets in one directory (or on one BeeGFS filesystem) and use another directory as working directory:</p>
+
+<ul>
+  <li>assets: /mnt/beegfs/assets</li>
+  <li>working directory: /mnt/beegfs/apptainer</li>
+</ul>
+
+<p>If data is available in netflow-io repository, it will be pulled to assets directory. If you’re using Docker engine (rather than Apptainer, or Singularity), you’d use <code class="language-plaintext highlighter-rouge">--with-docker</code>. With Apptainer/Singularity use <code class="language-plaintext highlighter-rouge">--with-singularity</code> (you may need to specify BeeGFS bind options to let the container get to BeeGFS).</p>
+
+<p>Pick a BeeGFS client (here it’s <code class="language-plaintext highlighter-rouge">b5</code>) and run a sample script. The first time it is executed, we should see “Pulling” and “downloaded”:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@b5: ~<span class="nv">$ </span><span class="nb">time</span> ./nextflow run nextflow-io/rnatoy <span class="nt">-with-docker</span> <span class="nt">-w</span> /mnt/beegfs/apptainer/
+N E X T F L O W  ~  version 22.04.5
+Pulling nextflow-io/rnatoy ...
+ downloaded from https://github.com/nextflow-io/rnatoy.git
+Launching <span class="sb">`</span>https://github.com/nextflow-io/rnatoy<span class="sb">`</span> <span class="o">[</span>wise_pare] DSL1 - revision: 5ec6d657cc <span class="o">[</span>master]
+R N A T O Y   P I P E L I N E    
+<span class="o">=============================</span>
+genome: /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/ggal_1_48850000_49020000.Ggal71.500bpflank.fa
+annot : /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/ggal_1_48850000_49020000.bed.gff
+reads : /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/<span class="k">*</span>_<span class="o">{</span>1,2<span class="o">}</span>.fq
+outdir: results
+
+executor <span class="o">&gt;</span>  <span class="nb">local</span> <span class="o">(</span>5<span class="o">)</span>
+<span class="o">[</span>c2/e56f29] process <span class="o">&gt;</span> buildIndex <span class="o">(</span>ggal_1_48850000_49020000.Ggal71.500bpflank<span class="o">)</span> <span class="o">[</span>100%] 1 of 1 ✔
+<span class="o">[</span>5c/c40c03] process <span class="o">&gt;</span> mapping <span class="o">(</span>ggal_gut<span class="o">)</span>                                      <span class="o">[</span>100%] 2 of 2 ✔
+<span class="o">[</span>c4/1e1ec4] process <span class="o">&gt;</span> makeTranscript <span class="o">(</span>ggal_gut<span class="o">)</span>                               <span class="o">[</span>100%] 2 of 2 ✔
+Done!
+
+
+real	0m21.608s
+user	0m11.262s
+sys	0m0.658s
+</code></pre></div></div>
+
+<p>Notice that the results go to <code class="language-plaintext highlighter-rouge">outdir</code> (<code class="language-plaintext highlighter-rouge">results</code>, relative to where I’m running from), while assets contain all the input files. We could modify this but the point is now our assets have been downloaded and next time I can run a job that uses the same assets using another BeeGFS client (<code class="language-plaintext highlighter-rouge">b6</code>).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@b6:~<span class="nv">$ </span><span class="nb">time</span> ./nextflow run nextflow-io/rnatoy <span class="nt">-with-docker</span> <span class="nt">-w</span> /mnt/beegfs/apptainer/
+N E X T F L O W  ~  version 22.04.5
+Launching <span class="sb">`</span>https://github.com/nextflow-io/rnatoy<span class="sb">`</span> <span class="o">[</span>spontaneous_goldstine] DSL1 - revision: 5ec6d657cc <span class="o">[</span>master]
+R N A T O Y   P I P E L I N E    
+<span class="o">=============================</span>
+genome: /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/ggal_1_48850000_49020000.Ggal71.500bpflank.fa
+annot : /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/ggal_1_48850000_49020000.bed.gff
+reads : /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/<span class="k">*</span>_<span class="o">{</span>1,2<span class="o">}</span>.fq
+outdir: results
+
+executor <span class="o">&gt;</span>  <span class="nb">local</span> <span class="o">(</span>5<span class="o">)</span>
+<span class="o">[</span>b5/053f8a] process <span class="o">&gt;</span> buildIndex <span class="o">(</span>ggal_1_48850000_49020000.Ggal71.500bpflank<span class="o">)</span> <span class="o">[</span>100%] 1 of 1 ✔
+<span class="o">[</span>02/9b8890] process <span class="o">&gt;</span> mapping <span class="o">(</span>ggal_liver<span class="o">)</span>                                    <span class="o">[</span>100%] 2 of 2 ✔
+<span class="o">[</span>da/beba85] process <span class="o">&gt;</span> makeTranscript <span class="o">(</span>ggal_liver<span class="o">)</span>                             <span class="o">[</span>100%] 2 of 2 ✔
+Done!
+
+
+real	0m18.244s
+user	0m10.727s
+sys	0m0.663s
+</code></pre></div></div>
+
+<p>This time there’s no “Pulling” and “downloading” because the data is already there. We’ve just saved 3 seconds and few megabytes in downloads.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@b6:~<span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/assets/nextflow-io/rnatoy/
+total 11
+drwxrwxr-x 4 sean sean   11 Aug 11 07:51 <span class="nb">.</span>
+<span class="nt">-rw-rw-r--</span> 1 sean sean   35 Aug 11 07:51 .dockerignore
+drwxrwxr-x 7 sean sean   10 Aug 11 07:51 .git
+<span class="nt">-rw-rw-r--</span> 1 sean sean   17 Aug 11 07:51 .gitignore
+<span class="nt">-rw-rw-r--</span> 1 sean sean  288 Aug 11 07:51 .travis.yml
+<span class="nt">-rw-rw-r--</span> 1 sean sean  925 Aug 11 07:51 Dockerfile
+<span class="nt">-rw-rw-r--</span> 1 sean sean  773 Aug 11 07:51 README.md
+<span class="nt">-rw-rw-r--</span> 1 sean sean   48 Aug 11 07:51 Singularity
+<span class="nt">-rw-rw-r--</span> 1 sean sean  215 Aug 11 07:51 circle.yml
+drwxrwxr-x 3 sean sean    1 Aug 11 07:51 data
+<span class="nt">-rw-rw-r--</span> 1 sean sean 3238 Aug 11 07:51 main.nf
+<span class="nt">-rw-rw-r--</span> 1 sean sean  487 Aug 11 07:51 nextflow.config
+drwxrwxr-x 3 sean sean    1 Aug 11 07:51 ..
+
+sean@b6:~<span class="nv">$ </span><span class="nb">du</span> <span class="nt">-sh</span> /mnt/beegfs/assets/nextflow-io/rnatoy/
+3.7M	/mnt/beegfs/assets/nextflow-io/rnatoy/
+</code></pre></div></div>
+
+<p>Bulk of this data consists of input files required for computation.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@b6:~<span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/assets/nextflow-io/rnatoy/data/ggal/
+total 2901
+drwxrwxr-x 2 sean sean      6 Aug 11 07:51 <span class="nb">.</span>
+drwxrwxr-x 3 sean sean      1 Aug 11 07:51 ..
+<span class="nt">-rw-rw-r--</span> 1 sean sean 173911 Aug 11 07:51 ggal_1_48850000_49020000.Ggal71.500bpflank.fa
+<span class="nt">-rw-rw-r--</span> 1 sean sean  26287 Aug 11 07:51 ggal_1_48850000_49020000.bed.gff
+<span class="nt">-rw-rw-r--</span> 1 sean sean 691873 Aug 11 07:51 ggal_gut_1.fq
+<span class="nt">-rw-rw-r--</span> 1 sean sean 691995 Aug 11 07:51 ggal_gut_2.fq
+<span class="nt">-rw-rw-r--</span> 1 sean sean 691873 Aug 11 07:51 ggal_liver_1.fq
+<span class="nt">-rw-rw-r--</span> 1 sean sean 691995 Aug 11 07:51 ggal_liver_2.fq
+</code></pre></div></div>
+
+<p>Results are local to each client. For example, on <code class="language-plaintext highlighter-rouge">b5</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@b5:~<span class="nv">$ </span>ll results/
+total 40
+drwxrwxr-x  2 sean sean  4096 Aug 11 07:51 ./
+drwxr-xr-x 28 sean sean  4096 Aug 11 08:07 ../
+<span class="nt">-rw-r--r--</span>  1 sean sean 12950 Aug 11 07:51 transcript_ggal_gut.gtf
+<span class="nt">-rw-r--r--</span>  1 sean sean 12950 Aug 11 07:51 transcript_ggal_liver.gtf
+</code></pre></div></div>
+
+<p>With Apptainer or Singularity, data will be packaged as one (container image) file, which is one of the advantages of Singularity-style containers.  Singularity cache directory is set to /mnt/beegfs/apptainer/singularity:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/apptainer/singularity
+total 216597
+drwxr-xr-x 47 sean sean        46 Aug 11 09:29 ..
+drwxrwxr-x  2 sean sean         1 Aug 11 09:28 <span class="nb">.</span>
+<span class="nt">-rwxrwxr-x</span>  1 sean sean 221794304 Aug 11 09:28 nextflow-rnatoy@sha256-9ac0345b5851b2b20913cb4e6d469df77cf1232bafcadf8fd929535614a85c75.img
+</code></pre></div></div>
+
+<h2 id="summary">Summary</h2>
+
+<p>We can leverage BeeGFS to avoid unnecessary data movement and save compute and network resources. See the Nextflow documentation for details about configuration files and environment variables and adjust them to suit your needs.</p>
+
+<p>BeeGFS on E-Series EF600 gives compute nodes the ability to read and write shared data at tens of gigabytes per second.</p>
+
+<p>BeeGFS “classic” can be deployed manually - just download the software and follow the official documentation.</p>
+
+<p>NetApp’s approach uses shared disks (E-Series arrays) which eliminates the need to use BeeGFS mirroring (replication with RF=2): each server in a BeeGFS server node pair attached to an E-Series array acts as a backup server for the other node, and HA clustering is used for monitoring and fail-over. Ansible can be used to <a href="https://galaxy.ansible.com/netapp_eseries/beegfs">create BeeGFS HA server clusters</a> attached to E-Series storage.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#containers">containers</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire" />
+<meta property="og:description" content="Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-04-29T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes","dateModified":"2022-04-29T00:00:00+08:00","datePublished":"2022-04-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html","description":"Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>29 Apr 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    3 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>One of more obvious characteristics of Persistent Volumes is they persist, i.e. survive pod(s) that use them until the claim for the PV itself is deleted, assuming reclaim policy is set to Delete.</p>
+
+<p>This isn’t ideal for workloads where pods need a PVC only as long as they run, because sooner or later every PVC they use still has to be be deleted.</p>
+
+<p>Maybe you run hundreds of batch jobs which don’t need persistent volumes, but you want to use BeeGFS backed by E-Series or even SolidFire, for example, and have those “EVCs” wiped out as soon as there’s no pod that uses them.</p>
+
+<p>Assuming a BeeGFS CSI with a Storage Class <code class="language-plaintext highlighter-rouge">csi-beegfs-dyn-sc</code> in place, users of Kubernetes 1.23 can create ephemeral volume claims like so:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:alpine</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/data</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">eph</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">ephemeral</span><span class="pi">:</span>
+      <span class="na">volumeClaimTemplate</span><span class="pi">:</span>
+        <span class="na">spec</span><span class="pi">:</span>
+          <span class="na">accessModes</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+          <span class="na">resources</span><span class="pi">:</span>
+            <span class="na">requests</span><span class="pi">:</span>
+              <span class="na">storage</span><span class="pi">:</span> <span class="s">2Gi</span>
+          <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">csi-beegfs-dyn-sc</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">eph</span>
+</code></pre></div></div>
+
+<p>That fires up a pod and creates an ephermeral PVC $POD_NAME-eph (here: test-eph):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc 
+NAME                  STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+csi-beegfs-dyn-kvol   Bound    pvc-c6a814cf   2Gi        RWO            csi-beegfs-dyn-sc   14d
+csi-beegfs-dyn-pvc    Bound    pvc-f5bc5dfe   1Gi        RWX            csi-beegfs-dyn-sc   17d
+test-eph              Bound    pvc-f0830157   2Gi        RWO            csi-beegfs-dyn-sc   87s
+</code></pre></div></div>
+
+<p>The pod is using test-eph volume:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pod <span class="nb">test
+</span>Name:         <span class="nb">test
+</span>Namespace:    default
+Priority:     0
+Node:         k8s-n-1/192.168.105.12
+Start Time:   Fri, 29 Apr 2022 06:26:33 +0000
+Labels:       &lt;none&gt;
+Annotations:  cni.projectcalico.org/podIP: 192.168.122.45/32
+              cni.projectcalico.org/podIPs: 192.168.122.45/32
+Status:       Running
+IP:           192.168.122.45
+IPs:
+  IP:  192.168.122.45
+Containers:
+  <span class="nb">test</span>:
+    Container ID:   containerd://7b826304e2618ce43987d8bd2f00ab2251320a1018684380863f7b052c8c197e
+    Image:          nginx:alpine
+    Image ID:       docker.io/library/nginx@sha256:5a0df7fb7c8c03e4158ae9974bfbd6a15da2bdfdeded4fb694367ec812325d31
+    Port:           &lt;none&gt;
+    Host Port:      &lt;none&gt;
+    State:          Running
+      Started:      Fri, 29 Apr 2022 06:26:40 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    &lt;none&gt;
+    Mounts:
+      /data from eph <span class="o">(</span>rw<span class="o">)</span>
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kqj6r <span class="o">(</span>ro<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Ephemeral volume test-eph:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pvc test-eph
+Name:          test-eph
+Namespace:     default
+StorageClass:  csi-beegfs-dyn-sc
+Status:        Bound
+Volume:        pvc-f0830157
+Labels:        &lt;none&gt;
+Annotations:   pv.kubernetes.io/bind-completed: <span class="nb">yes
+               </span>pv.kubernetes.io/bound-by-controller: <span class="nb">yes
+               </span>volume.beta.kubernetes.io/storage-provisioner: beegfs.csi.netapp.com
+               volume.kubernetes.io/storage-provisioner: beegfs.csi.netapp.com
+Finalizers:    <span class="o">[</span>kubernetes.io/pvc-protection]
+Capacity:      2Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       &lt;none&gt;
+Events:
+  Type    Reason                 Age   From                                                                Message
+  <span class="nt">----</span>    <span class="nt">------</span>                 <span class="nt">----</span>  <span class="nt">----</span>                                                                <span class="nt">-------</span>
+  Normal  ExternalProvisioning   2m5s  persistentvolume-controller                                         waiting <span class="k">for </span>a volume to be created, either by external provisioner <span class="s2">"beegfs.csi.netapp.com"</span> or manually created by system administrator
+  Normal  Provisioning           2m5s  beegfs.csi.netapp.com_k8s-m-1_9b56c472-bd1a-4ca9-823d-4f639c9c1f4d  External provisioner is provisioning volume <span class="k">for </span>claim <span class="s2">"default/test-eph"</span>
+  Normal  ProvisioningSucceeded  2m4s  beegfs.csi.netapp.com_k8s-m-1_9b56c472-bd1a-4ca9-823d-4f639c9c1f4d  Successfully provisioned volume pvc-f0830157
+</code></pre></div></div>
+
+<p>On a worker node that can see that filesystem, filesytem path /mnt/beegfs/k8s/name/dyn/pvc-f0830157 exists:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/k8s/name/dyn
+total 8
+drwxrwxrwx 16 root             root     14 Apr 29 06:26 <span class="nb">.</span>
+drwxrwxrwx  2 root             root      0 Apr 29 06:26 pvc-f0830157
+</code></pre></div></div>
+
+<p>And, as we would expect, here’s what happens after we delete the pod.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete <span class="nt">-f</span> nginx-native.yml 
+pod <span class="s2">"test"</span> deleted
+
+<span class="nv">$ </span>kubectl get pvc
+NAME                  STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+csi-beegfs-dyn-kvol   Bound    pvc-c6a814cf   2Gi        RWO            csi-beegfs-dyn-sc   14d
+csi-beegfs-dyn-pvc    Bound    pvc-f5bc5dfe   1Gi        RWX            csi-beegfs-dyn-sc   17d
+</code></pre></div></div>
+
+<p>Ephemeral volume test-eph has been deleted as well.</p>
+
+<p>Interestingly, BeeGFS CSI v1.2.1 currently does not claim (CSI driver list and features at kubernetes.io) support for Ephemeral PVCs, although that clearly works. I’ll ping the BeeGFS CSI team to verify that.</p>
+
+<p>I tried this with SolidFire iSCSI and Trident CSI and it worked the same way. I assume SolidFire CSI with Cinder CSI would work too, but I don’t have it set up at this time.</p>
+
+<p>What about Kubernetes users with pre-v1.23 releases?</p>
+
+<p>Those can be handled with operators, but I haven’t found one that works well so I’ll stop short of making a recommendation. If you don’t have long-running jobs, it may be simpler to schedule jobs to delete all PVCs in defined namespaces that meet certain conditions such as older than 1 hour and no matching pod name.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

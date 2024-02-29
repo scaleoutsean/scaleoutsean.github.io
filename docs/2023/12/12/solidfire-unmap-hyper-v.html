@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Some notes on rethinning Windows NTFS host filesystems that reside on SolidFire iSCSI storage
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Some notes on rethinning Windows NTFS host filesystems that reside on SolidFire iSCSI storage" />
+<meta property="og:description" content="Some notes on rethinning Windows NTFS host filesystems that reside on SolidFire iSCSI storage" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/12/12/solidfire-unmap-hyper-v.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/12/12/solidfire-unmap-hyper-v.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-12T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire","dateModified":"2023-12-12T00:00:00+08:00","datePublished":"2023-12-12T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/12/12/solidfire-unmap-hyper-v.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/12/12/solidfire-unmap-hyper-v.html","description":"Some notes on rethinning Windows NTFS host filesystems that reside on SolidFire iSCSI storage","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>12 Dec 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    10 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#general-notes-on-ntfs-rehinning-and-solidfire">General notes on NTFS rehinning and SolidFire</a></li>
+  <li><a href="#qos-related-tips">QoS-related tips</a></li>
+  <li><a href="#prepare-windows-host-volume">Prepare Windows host volume</a></li>
+  <li><a href="#sdelete">SDelete</a>
+    <ul>
+      <li><a href="#sdelete-with-windows-guests-on-hyper-v">SDelete with Windows guests on Hyper-V</a></li>
+    </ul>
+  </li>
+  <li><a href="#trimumap-enabled-vs-sdelete">TRIM/UMAP enabled vs SDelete</a>
+    <ul>
+      <li><a href="#normal-behavior-trimumap-enabled">Normal behavior (TRIM/UMAP enabled)</a></li>
+      <li><a href="#trimunmap-disabled">TRIM/UNMAP disabled</a></li>
+      <li><a href="#trimunmap-disabled-and-enabled-mid-way">TRIM/UNMAP disabled and enabled mid-way</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Hyper-V users sometimes wonder about various details of rethinning NTFS volumes backed by SolidFire storage.</p>
+
+<p>From SolidFire side, there’s no difference between OS - if the iSCSI client that sends UNMAP commands, SolidFire releases those blocks.</p>
+
+<p>As Microsoft Hyper-V was never officially supported by NetApp HCI, and there are SolidFire users who run Hyper-V on 3rd party servers, I decided to revisit this topic and create some notes on it.</p>
+
+<h2 id="general-notes-on-ntfs-rehinning-and-solidfire">General notes on NTFS rehinning and SolidFire</h2>
+
+<p>Windows supports UNAMP and we can use <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/fsutil-behavior">fsutil</a> to check: it shows unmap on NTFS filesystems is On (enabled). In other words, <code class="language-plaintext highlighter-rouge">disableDeleteNotify</code> is 0 (not disabled).</p>
+
+<p>On Hyper-V, same as with other hypervisors, there are two general situations:</p>
+
+<ul>
+  <li>Deleted disks or entire guests (VMs) - entire disks are removed, so OS just needs to mark released space deleted and issue UNMAP to iSCSI target</li>
+  <li>Disks in guests (VMs) need unmap - <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/thin-provisioning#unmap-requests-from-the-hyper-v-guest-operating-system">here</a> you can find how that works</li>
+</ul>
+
+<blockquote>
+  <p>When a large file is deleted from the file system of a VM guest operating system, the guest operating system sends a file delete request to the virtual machine’s virtual hard disk (VHD) or VHD file (or VHDX file). The VM’s VHD or VHDX file tunnels the SCSI UNMAP request to the class driver stack of the Windows Hyper-V host</p>
+</blockquote>
+
+<p>If the guest supports UNMAP and has it enabled, nothing needs to be done. It should just work.</p>
+
+<p>There’s also a way to manually allocate empty filesystem space by filling it up with zeros, which SolidFire can deduplicate. From the same Microsoft page above:</p>
+
+<blockquote>
+  <p>End users or system administrators can use the Optimize Drives utility to reclaim space either by creating a manual request or by optimizing the schedule configuration.</p>
+</blockquote>
+
+<p><a href="https://learn.microsoft.com/en-us/powershell/module/hyper-v/optimize-vhd?view=windowsserver2022-ps#example-2">Optimize-VHD</a> can be used to retrim (rethin) VHD files.</p>
+
+<blockquote>
+  <p>The Optimize-VHD cmdlet optimizes the allocation of space in one or more virtual hard disk files, except for fixed virtual hard disks. The Compact operation is used to optimize the files. This operation reclaims unused blocks as well as rearranges the blocks to be more efficiently packed, which reduces the size of a virtual hard disk file.</p>
+</blockquote>
+
+<blockquote>
+  <p>To use Optimize-VHD, the virtual hard disk must not be attached or must be attached in read-only mode.</p>
+</blockquote>
+
+<p>A generic way to zero out free space when OS doesn’t do it is to run Microsoft’s utility <a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sdelete">SDelete</a>.</p>
+
+<p>Why not just run SDelete all the time, regardless of the situation?</p>
+
+<p>Because SDelete set to zero out empty filesystem space will … well - zero out all the empty filesystem space.</p>
+
+<p>That may not be necessary if your filesystem supports rethinning. And when it comes to non-fixed VMs disks that support rethinning and have it enabled, Optimize-VHD can be used to rethin those.</p>
+
+<p>A “workaround” approach to rethinning would be to use Live Migration and “Move only the virtual machine’s virtual hard disks” to move disks to another NTFS filesystem and then back. I haven’t tried this recently and the reason I don’t try it is SolidFire doesn’t support ODX, so Live Migration actually copies entire disks around using host OS, and is therefore quite “expensive”.</p>
+
+<h2 id="qos-related-tips">QoS-related tips</h2>
+
+<p>Running SDelete on host while guests are active on the same filesystem will impact guest performance.</p>
+
+<p>Limiting process or I/O priority of SDelete seems risky, so I’d just let it run as it does.</p>
+
+<p>If you run SDelete on a regular basis, you could <a href="/2020/11/28/powershell-set-sfqosexception.html">set QoS to a higher Max IOPS value</a> before running SDelete, and revert it after you’re done.</p>
+
+<h2 id="prepare-windows-host-volume">Prepare Windows host volume</h2>
+
+<p>I tested this on Windows 11 (guest) connected directly to SolidFire 12.5.</p>
+
+<p>I couldn’t make it run Hyper-V (lack of RAM), so I couldn’t try Optimize-VHD or anything with guest VMs, but I could try to see whether mere deleting of files on NTFS results in UNMAP sent to SolidFire SCSI device.</p>
+
+<p>Prepare IQN:</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-00-prepare-iqn.png" alt="" /></p>
+
+<p>Prepare to initialize new volume:</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-01-prepare-to-initialize.png" alt="" /></p>
+
+<p>Initialize:</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-02-initialize.png" alt="" /></p>
+
+<p>Format using default options:</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-03-format.png" alt="" /></p>
+
+<p>List of volumes:</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-04-volume-list.png" alt="" /></p>
+
+<p>Test run with SDelete (note that “<code class="language-plaintext highlighter-rouge">-c</code>” isn’t what we’d use for rethining - more on that below).</p>
+
+<p>SolidFire garbage collection runs at top of the hour so before I could see what happens with space released by deleting files, I ran SDelete once on a filesystem which did not have any files deleted.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-05-sdelete-test-run.png" alt="" /></p>
+
+<p>I annotated the performance chart to remind that SDelete workload is real. (Actual I/O in the screenshot is tiny because this is a SolidFire demo VM.)</p>
+
+<h2 id="sdelete">SDelete</h2>
+
+<p>Download the latest (the most stable?) version and check available switches/options.</p>
+
+<p>”<code class="language-plaintext highlighter-rouge">-c</code>” cleans free space, and “<code class="language-plaintext highlighter-rouge">-z</code>” zeros it out. We should use “<code class="language-plaintext highlighter-rouge">-z</code>”, as “<code class="language-plaintext highlighter-rouge">-c</code>” seems to cryptographically overwrite empty space with crap, which can’t be deduplicated.</p>
+
+<p>I’m not sure what happens when “<code class="language-plaintext highlighter-rouge">-c -z</code>” are used together. We could find out experimentally but I wasn’t curious enough to wait another hour until next SolidFire Garbage Collection.</p>
+
+<p>Unfortunately, SDelete doesn’t report how much capacity was released, if any, which is why I rely on the SolidFire volume fullness indicator, although it’s time consuming to use that approach - every time I need to wait until the top of the hour, and only then I can do the next step.</p>
+
+<p>Understand that if your NTFS disk is 1 TB large and only 30% full, <code class="language-plaintext highlighter-rouge">SDelete64.exe -z</code> will actually write 700 GB of zeros to it. So comparatively speaking it’s not an inexpensive operation.</p>
+
+<p>If your Hyper-V has 4 NTFS disks of 8 TB, running SDelete sequentially (one filesystem at a time) once every weekend could be uneventful. But I wouldn’t run it inside of all VMs at once.</p>
+
+<h3 id="sdelete-with-windows-guests-on-hyper-v">SDelete with Windows guests on Hyper-V</h3>
+
+<p>In VMs (guests), volumes may be thin-provisioned, so running SDelete will fill thin-provisioned disks to their full size, but since <code class="language-plaintext highlighter-rouge">-z</code> fills them with zeros rather than garbage, modern Hyper-V should recognize this and grow this virtual disk only slightly - it should not grow it to make underlying SolidFire-backed NTFS volume full.</p>
+
+<p>Still, if you plan to run SDelete in older OS (Windows 2012 or whatnot), better create a small test volume and try this out.</p>
+
+<p>Recent Windows OS should just work as rethinning is enabled by default, so no SDelete would be required. We could use Hyper-V tools when possible and necessary.</p>
+
+<p>Recent Linux OS can work with supported filesystems, but the OS must have a fstrim schedule or mount disks with “<code class="language-plaintext highlighter-rouge">-o discard</code>”.</p>
+
+<h2 id="trimumap-enabled-vs-sdelete">TRIM/UMAP enabled vs SDelete</h2>
+
+<h3 id="normal-behavior-trimumap-enabled">Normal behavior (TRIM/UMAP enabled)</h3>
+
+<p>I started with TRIM/UMMAP enabled (OS default on Windows 11).</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-06-trim-unmap-status.png" alt="" /></p>
+
+<p>I unzipped SDelete files to NTFS (633 KB), ran SDelete (which wasn’t supposed to free any space, as nothing was deleted since I created it), then copied a 2 GiB ISO to it, deleted the ISO and emptied Recycle Bin for all volumes.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-07-filesystem-space-allocation.png" alt="" /></p>
+
+<p>Then I waited until next top of the hour to see if used capacity remained low. Here we can see API calls to create a volume and a VAG were followed by a GC run later on.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-08-first-gc-run-after-filesystem-created.png" alt="" /></p>
+
+<p>It appears this worked as expected. SolidFire claimed FS fullness was only 0.21% (5 GiB * 0.21% or some 1 MB) - which roughly corresponds to the size of SDelete files plus the size of a basic NTFS data structure.</p>
+
+<p>“<code class="language-plaintext highlighter-rouge">fsutil volume diskfree g:</code>” shown earlier indicated Used Bytes was 18.5 MB and Total Reserved was 4 MB, but if those were merely reserved they wouldn’t take any physical capacity, so it’s not surprising that SolidFire reported just 1 MB was really used.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-09-rethinned-unmapped-ntfs.png" alt="" /></p>
+
+<p>Additionally, account storage efficiency showed 6.53x indicating that filesystem structures and SDelete executables were very compressible, and there wasn’t as much duplicate 0’s (in filesystem structures) as I expected (deduplication was 1x, indicating very little duplicate data).</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-10-rethinned-unmapped-ntfs-storage-efficiency.png" alt="" /></p>
+
+<p>So, in this scenario TRIM/UMAP works on host (as it would on Windows 11 guests in Hyper-V) and SDelete is not necessary.</p>
+
+<h3 id="trimunmap-disabled">TRIM/UNMAP disabled</h3>
+
+<p>To see what we’re supposed to see when TRIM/UNMAP does not work, I disabled it.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fsutil behavior <span class="nb">set </span>disabledeletenotify 1
+</code></pre></div></div>
+
+<p>Then I copied the same big ISO back to G:. At this time TRIM/UNMAP was already disabled.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-11-copy-and-delete-big-file.png" alt="" /></p>
+
+<p>I waited until next GC. Boom - SolidFire shows volume fullness of 39.92% with just 633 KB in Windows Explorer!</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-12-rethin-unmap-disabled.png" alt="" /></p>
+
+<p>And the big, compressed ISO - deleted but with data still on disk - ruined compression by dragging the compression factor down to 1x.</p>
+
+<p><img src="/assets/images/windows-unmap-hyper-v-13-rethin-unmap-disabled-efficiency-destroyed.png" alt="" /></p>
+
+<p>So, this worked as expected:</p>
+
+<ul>
+  <li>after next GC SolidFire showed disk fullness 39.92% although NTFS displayed the same 633 KB utilization as before - disk space was NOT freed</li>
+  <li>deduplication &amp; compression ratios dropped to 1x, as the compressed ISO file completely destroyed storage efficiency (even though we already deleted it in Windows Explorer)</li>
+</ul>
+
+<h3 id="trimunmap-disabled-and-enabled-mid-way">TRIM/UNMAP disabled and enabled mid-way</h3>
+
+<p>Then I re-enabled TRIM/UNMAP and waited:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fsutil behavior <span class="nb">set </span>disabledeletenotify 0
+</code></pre></div></div>
+
+<p>After the next GC, the disk was <strong>NOT</strong> thin again. This surprised me.</p>
+
+<p>After re-reading TFM, I found this:</p>
+
+<ul>
+  <li>Trim (setting) is effective when the next unmap command is issued</li>
+  <li>Existing inflight IO are not impacted by the registry change</li>
+</ul>
+
+<p>So the behavior is correct: I deleted the 2 GiB ISO while UNMAP commands weren’t being sent to device. Since then I’ve enabled TRIM/UMAP, but I haven’t deleted anything, so no UNMAP commands have been issued. Deallocated blocks from the ISO file had remained on the disk.</p>
+
+<p>Consequently, my next test was to run “<code class="language-plaintext highlighter-rouge">SDelete -z G:</code>” to see if SDelete is a good way to fix this for “pre-existing” deallocated blocks.</p>
+
+<p>I expected space to be reclaimed: I suppose using SDelete to zero out empty space on G: would not just zero the space out, but also UNMAP it, since SDelete actually writes data (zeros) to disk and then deletes it, triggering UNMAP.</p>
+
+<p>This did work and NTFS on disk G: was rethinned to 0.21% fullness.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>On modern Hyper-V hosts, default behavior should work fine both on host and guest level, as Hyper-V passes through UNMAP commands from enabled guests to disks.</p>
+
+<p>If TRIM/UNMAP is for some reason disabled on the host, enabling it will not rethin previously deallocated space on filesystems. In that case you may run SDelete on the filesystem to recover capacity deallocated when UNMAP was disabled.</p>
+
+<p>In modern guests such as Windows Server 2019, SDelete should not be required if UNMAP is enabled (which it is). Modern Linux (Ubuntu 22.04, Rocky Linux 9, etc.) needs to mount filesystems with the discard option, or periodically run fstrim .</p>
+
+<p>SDelete creates real I/O, so best do not run it in parallel when performance-sensitive guests are active.</p>
+
+<p>You may take a snapshot before you try SDelete, and consider trying it out on a test filesystems (host) or test VM (guest) before you use it on production volumes/VMs.</p>
+
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

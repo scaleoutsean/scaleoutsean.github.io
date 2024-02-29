@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Backup and restore Rancher cluster configuration to NetApp StorageGRID | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Backup and restore Kubernetes cluster configuration of Rancher on NetApp HCI
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Backup and restore Rancher cluster configuration to NetApp StorageGRID | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Backup and restore Rancher cluster configuration to NetApp StorageGRID" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Backup and restore Kubernetes cluster configuration of Rancher on NetApp HCI" />
+<meta property="og:description" content="Backup and restore Kubernetes cluster configuration of Rancher on NetApp HCI" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-02-01T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Backup and restore Rancher cluster configuration to NetApp StorageGRID","dateModified":"2021-02-01T00:00:00+08:00","datePublished":"2021-02-01T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html","description":"Backup and restore Kubernetes cluster configuration of Rancher on NetApp HCI","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Backup and restore Rancher cluster configuration to NetApp StorageGRID</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>01 Feb 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    5 minute read
+  
+
+    </span>
+  </div>
+  
+        <p><strong>NOTICE</strong>: any and all credentials and tokens on this page are samples, not leaked.</p>
+
+<ul>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#backup-and-restore-etcd-configuration-in-rancher-on-netapp-hci">Backup and restore etcd configuration in Rancher on NetApp HCI</a>
+    <ul>
+      <li><a href="#prepare-a-bucket">Prepare a bucket</a></li>
+      <li><a href="#use-it-when-deploying-a-cluster">Use it when deploying a cluster</a></li>
+      <li><a href="#view-your-backups-with-an-s3-browser">View your backups with an S3 browser</a></li>
+      <li><a href="#restore-a-cluster-configuration-backup">Restore a cluster configuration backup</a></li>
+    </ul>
+  </li>
+  <li><a href="#object-storage-organization">Object storage organization</a></li>
+  <li><a href="#what-about-apps-and-pvs">What about apps and PVs</a>
+    <ul>
+      <li><a href="#can-we-just-automate-everything">Can we just automate everything</a></li>
+    </ul>
+  </li>
+  <li><a href="#video-demo">Video demo</a></li>
+</ul>
+
+<h2 id="summary">Summary</h2>
+
+<ul>
+  <li>Protect etcd and cluster configuration with scheduled and on-demand Rancher snapshots</li>
+  <li>Store snapshots outside, on S3-compatible storage such as NetApp StorageGRID</li>
+  <li>To backup apps and persistent data, consider one of enterprise solutions that support Trident CSI, such as CommVault or Kasten K10 by Veeam (see that post <a href="/2020/12/21/kasten-rancher-netapp-hci-solidfire-k8s-backup">here</a> if interested)
+    <ul>
+      <li>NOTE: NetApp Trident v21.01 (just released) uses a newer CRD so the post I wrote before is slightly outdated; but because I knew the Snapshot API was outdated I didn’t focus on the details as I knew very soon that would be out of date. I have not yet tried the new K8s Snapshot API in Trident v21.01.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="/assets/images/rancher-backup-restore-storagegrid-05.png" alt="Tenant prepares S3 bucket and ACLs" /></p>
+
+<h2 id="backup-and-restore-etcd-configuration-in-rancher-on-netapp-hci">Backup and restore etcd configuration in Rancher on NetApp HCI</h2>
+
+<p>Rancher actually calls those “snapshots”, not backups, but a copy is made outside of the cluster - if you choose S3 instead of “local” - so they are in effect backups.</p>
+
+<p>But you still need a cluster to restore one. I assume that by following the exact same deployment from scratch, you could restore a cluster backup this way, but this assumes you don’t make random choices when deploying clusters.</p>
+
+<h3 id="prepare-a-bucket">Prepare a bucket</h3>
+
+<p>I created a dedicated bucket <code class="language-plaintext highlighter-rouge">rancher-backup</code>, and for my cluster(s) I prefix them with <code class="language-plaintext highlighter-rouge">scaleoutsean</code>, meaning <em>assuming</em> ACLs let me LIST/PUT/GET the content of <code class="language-plaintext highlighter-rouge">${S3-API-ENDPOINT}/rancher-backup/scaleoutsean/*</code>, only I would be able to create, view and download my backups, while other users may be able to access backups from other prefixes in this bucket.</p>
+
+<p><img src="/assets/images/rancher-backup-restore-storagegrid-01.png" alt="Tenant prepares S3 bucket and ACLs" /></p>
+
+<h3 id="use-it-when-deploying-a-cluster">Use it when deploying a cluster</h3>
+
+<p>There are settings you can fiddle with, such as the frequency and retention.</p>
+
+<p><img src="/assets/images/rancher-backup-restore-storagegrid-02.png" alt="Rancher admin uses StorageGRID configuration" /></p>
+
+<h3 id="view-your-backups-with-an-s3-browser">View your backups with an S3 browser</h3>
+
+<p><img src="/assets/images/rancher-backup-restore-storagegrid-03.png" alt="Rancher backups in StorageGRID bucket" /></p>
+
+<p>Makes you wonder what happens with passwords (secrets). Check the Rancher docs and options.</p>
+
+<h3 id="restore-a-cluster-configuration-backup">Restore a cluster configuration backup</h3>
+
+<p>As you can see from this screenshot you can restore both etcd and cluster configuration. If you use something else to restore application configuration, you’d have to decide how you want to protect your configs - maybe do everything from here, or just etcd + cluster version here and the rest there, etc.</p>
+
+<p><img src="/assets/images/rancher-backup-restore-storagegrid-04.png" alt="Rancher backups in Rancher Web UI" /></p>
+
+<h2 id="object-storage-organization">Object storage organization</h2>
+
+<p>Whatever works for you:</p>
+
+<ul>
+  <li>If you’re the only guy running the show (managing Rancher on NetApp HCI), you can create one S3 bucket and store all Rancher cluster backups to it. This would be less secure as all clusters would be able to access all backups.</li>
+  <li>You can spend a bit more effort to create “subdirectories” (“by cluster”, or “by team”), and apply appropriate ACLs, so that each cluster owner can access only their backups.</li>
+  <li>You can also let users create their own buckets and do it on their own - a hands-off approach (which kind of assumes they know what they’re doing).</li>
+</ul>
+
+<p>There’s no “best way”, there are just trade-offs.</p>
+
+<h2 id="what-about-apps-and-pvs">What about apps and PVs</h2>
+
+<p>If you don’t have a shedload of PVs you may be able to get away with SolidFire snapshots and the volume import feature from NetApp Trident. That works. You schedule snapshots with SolidFire, and you either restore them (stop your workload first) or clone them to create a new volume.</p>
+
+<p>If you don’t want to do an in-place restore, make a clone from a SolidFire snapshot and use the Trident volume import feature to bring it under the control of K8s.</p>
+
+<p>If your data is valuable and you also want to protect application configuration, I would recommend to use a non-free backup and restore application that supports Trident CSI. At this time I know of two: CommVault and Kasten K10 by Veeam.</p>
+
+<p>If your cluster is small but you prefer convenience, consider the free Kasten K10 edition. You may (or may not, as Trident v21.01 released couple of hours ago could make that easier compared to older versions) need to break a sweat to get them K8s snapshot CRDs deployed and configured to Kasten’s liking. See <a href="/2020/12/21/kasten-rancher-netapp-hci-solidfire-k8s-backup">this</a> for a Persistent Volume snapshot &amp; restore demo with Kasten.</p>
+
+<h3 id="can-we-just-automate-everything">Can we just automate everything</h3>
+
+<p>Yes, you can, but I wouldn’t recommend it. In the StorageGRID screenshot at the top you can see one of the non-pixelated buckets is named <code class="language-plaintext highlighter-rouge">solidbackup</code>, which is a poor man’s backup for Trident I scripted in Python.</p>
+
+<ul>
+  <li>Stand up a Linux VM and make it connect to SolidFire iSCSI</li>
+  <li>Create a schedule to clone selected Trident VMs and present them to this VM</li>
+  <li>Run S3 backup software (any you like) to backup volumes to StorageGRID</li>
+  <li>Restore individual files from K8s containers by copying them from this VM, or restore data from S3 to this VM, and then clone it into the container/PV that you want to restore</li>
+</ul>
+
+<p>As far as free DIY backups go this isn’t too bad (and doesn’t have require any fiddling with K8s), but if you can get Kasten K10 to work, there’s no need to write your own. If you’re interested in the process, there’s a <a href="https://youtu.be/bvI7pgXKh6w">23 minute video</a> of the process done manually, and a prototype made the whole process take seconds (I have recorded just some of the steps):</p>
+
+<p><img src="/assets/images/solid-backup-prototype.gif" alt="solid-backup prototype" /></p>
+
+<p>If you use stand-alone Docker, or have a small and static Kubernetes environment, a DIY approach like this may be useful (and can always work independently of whatever you use, whether it’s Kasten or CommVault), otherwise keep it simple - just create a rotating snapshot schedule on SolidFire, and use Kasten or CommVault to backup apps and PVs. In the case your backup software fails, you can still clone the PV(s) in SolidFire and import them to Kubernetes with the Trident import feature.</p>
+
+<h2 id="video-demo">Video demo</h2>
+
+<ul>
+  <li>Take a snapshot of a Kubernetes cluster configuration and restore it to the same cluster: <a href="https://youtu.be/H9TXXexb7Sk">https://youtu.be/H9TXXexb7Sk</a></li>
+  <li>Key components:
+    <ul>
+      <li>Rancher 2.5.5</li>
+      <li>VMware vSphere 7.0U1</li>
+      <li>NetApp SolidFire 12.2 (NetApp HCI storage cluster)</li>
+      <li>NetApp StorageGRID 11.4</li>
+    </ul>
+  </li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">• Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/08/beegfs-csi-driver-lives-on.html">• ThinkParQ takes over NetApp-created BeeGFS CSI driver</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">• Block volume mode in Kubernetes with SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/21/trident-new-stateful-set-delete-feature.html">• StatefulSet PVC Retention with Trident and SolidFire</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

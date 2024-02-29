@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Red Hat Quay with NetApp StorageGRID S3 Back End | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     How to configure StorageGRID as Red Hat Quay Amazon S3-compatible backend
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Red Hat Quay with NetApp StorageGRID S3 Back End | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Red Hat Quay with NetApp StorageGRID S3 Back End" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How to configure StorageGRID as Red Hat Quay Amazon S3-compatible backend" />
+<meta property="og:description" content="How to configure StorageGRID as Red Hat Quay Amazon S3-compatible backend" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/10/14/storagegrid-s3-with-red-hat-quay.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/10/14/storagegrid-s3-with-red-hat-quay.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-10-14T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Red Hat Quay with NetApp StorageGRID S3 Back End","dateModified":"2021-10-14T00:00:00+08:00","datePublished":"2021-10-14T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/10/14/storagegrid-s3-with-red-hat-quay.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2021/10/14/storagegrid-s3-with-red-hat-quay.html","description":"How to configure StorageGRID as Red Hat Quay Amazon S3-compatible backend","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Red Hat Quay with NetApp StorageGRID S3 Back End</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>14 Oct 2021</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    1 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>Create a bucket, say <code class="language-plaintext highlighter-rouge">quay</code>, and a set of S3 keys for one of your S3 users to use with this bucket.</p>
+
+<p>Pick Amazon S3-compatible storage, enter the required info, validate.</p>
+
+<p><img src="/assets/images/red-hat-quay-netapp-storagegrid-11.png" alt="StorageGRID 11.5 passes S3-compatible validation" /></p>
+
+<p>Then download your config file, and save it for use with “real” Red Hat Quay service.</p>
+
+<p>Here’s an example of a simplest configuration (my “site” is called <code class="language-plaintext highlighter-rouge">sg3</code>) in <code class="language-plaintext highlighter-rouge">config.yaml</code>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">DISTRIBUTED_STORAGE_CONFIG</span><span class="pi">:</span>
+    <span class="na">sg3</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">S3Storage</span>
+        <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">sg3.netapp.com</span>
+          <span class="na">port</span><span class="pi">:</span> <span class="s2">"</span><span class="s">8082"</span>
+          <span class="na">s3_access_key</span><span class="pi">:</span> <span class="s">3SHxxxxxxxxxxx4U0</span>
+          <span class="na">s3_bucket</span><span class="pi">:</span> <span class="s">quay</span>
+          <span class="na">s3_secret_key</span><span class="pi">:</span> <span class="s">eZxxxxxxxxxxxxxxxxxxxxxxxxxxxcD4</span>
+          <span class="na">storage_path</span><span class="pi">:</span> <span class="s">/</span>
+<span class="na">DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS</span><span class="pi">:</span> <span class="pi">[]</span>
+<span class="na">DISTRIBUTED_STORAGE_PREFERENCE</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">sg3</span>
+</code></pre></div></div>
+
+<p>Note that you can use arbitrary HTTPS ports (like 18082). That works fine, but you must either have proper TLS certificates on S3 gateway, or else load your own snake-oil certificates at the top of the configuration page (from which I took the screenshot above). HTTP won’t work.</p>
+
+<p>Also note I didn’t actually try to run Quay (3.5) after I passed validation. I’ve spent too much time and run out of patience by the time I got around various issues.</p>
+
+<p>Software used:</p>
+
+<ul>
+  <li>Ubuntu 20.04
+    <ul>
+      <li>Docker 20.10.9</li>
+      <li>Red Hat Quay configuration tool (not versioned; I used <a href="https://quay.io/repository/projectquay/config-tool/manifest/sha256:0e5a3e05a534910a3629a0a9e65cdbbd9d1270a4bc35b74319bbdec76caaf013">this one</a>)</li>
+    </ul>
+  </li>
+  <li>NetApp StorageGRID 11.5
+    <ul>
+      <li>Self-signed CA &amp; TLS certificate</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="update-20211025">Update (2021/10/25)</h3>
+
+<p>I also performed configuration validation using the official Red Hat stack:</p>
+
+<ul>
+  <li>Red Hat Enterprise Linux 8.4
+    <ul>
+      <li>Podman</li>
+    </ul>
+  </li>
+  <li>Red Hat Quay 3.6.0</li>
+  <li>NetApp StorageGRID 11.5</li>
+</ul>
+
+<p>It worked the same.</p>
+
+<p>A demo video can be found <a href="https://youtu.be/44XJPG98os0">here</a> (1m43s).</p>
+
+<h3 id="update-20230802">Update (2023/08/02)</h3>
+
+<p>See <a href="/2023/07/26/ontap-s3-as-velero-object-store.html">this</a> for Velero with ONTAP S3 Object Store.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#containers">containers</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">• Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/08/beegfs-csi-driver-lives-on.html">• ThinkParQ takes over NetApp-created BeeGFS CSI driver</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">• Block volume mode in Kubernetes with SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/21/trident-new-stateful-set-delete-feature.html">• StatefulSet PVC Retention with Trident and SolidFire</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

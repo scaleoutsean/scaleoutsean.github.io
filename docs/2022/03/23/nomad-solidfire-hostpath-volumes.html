@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            HashiCorp Nomad with NetApp SolidFire-backed iSCSI volumes | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     HashiCorp Nomad with SolidFire iSCSI storage
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>HashiCorp Nomad with NetApp SolidFire-backed iSCSI volumes | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="HashiCorp Nomad with NetApp SolidFire-backed iSCSI volumes" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="HashiCorp Nomad with SolidFire iSCSI storage" />
+<meta property="og:description" content="HashiCorp Nomad with SolidFire iSCSI storage" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/03/23/nomad-solidfire-hostpath-volumes.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/03/23/nomad-solidfire-hostpath-volumes.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-03-23T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"HashiCorp Nomad with NetApp SolidFire-backed iSCSI volumes","dateModified":"2022-03-23T00:00:00+08:00","datePublished":"2022-03-23T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/03/23/nomad-solidfire-hostpath-volumes.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/03/23/nomad-solidfire-hostpath-volumes.html","description":"HashiCorp Nomad with SolidFire iSCSI storage","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">HashiCorp Nomad with NetApp SolidFire-backed iSCSI volumes</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>23 Mar 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    15 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#deploy-nomad-with-solidfire-host-volumes">Deploy Nomad with SolidFire Host Volumes</a></li>
+  <li><a href="#backup-and-restore">Backup and restore</a>
+    <ul>
+      <li><a href="#backup-data-from-vm-with-solidfire-based-as-host-volumes">Backup data from VM with SolidFire-based as Host Volumes</a></li>
+      <li><a href="#backup-data-from-vm-running-docker-with-dynamically-provisioned-solidfire-volumes">Backup data from VM running Docker with dynamically-provisioned SolidFire volumes</a>
+        <ul>
+          <li><a href="#backup-to-s3-and-anti-ransomware-measures">Backup to S3 and anti-ransomware measures</a></li>
+        </ul>
+      </li>
+      <li><a href="#backup-and-restore-test">Backup and restore test</a></li>
+    </ul>
+  </li>
+  <li><a href="#host-volumes-vs-dynamic-provisioning-with-and-without-csi-plugin">Host Volumes vs. dynamic provisioning (with and without CSI plugin)</a>
+    <ul>
+      <li><a href="#dynamically-provisioned-docker-volumes">Dynamically provisioned Docker volumes</a></li>
+      <li><a href="#csi-plugins">CSI Plugins</a></li>
+    </ul>
+  </li>
+  <li><a href="#is-the-approach-with-host-volumes-good-enough-for-production">Is the approach with Host Volumes good enough for production</a></li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>HashiCorp Nomad doesn’t yet support CSI drivers (CSI support is still in “beta”), so for now one supported way to use NetApp SolidFire iSCSI storage is to mount volumes on “worker” nodes (aka “clients”).</p>
+
+<p>That approach is called host volumes because host paths are usually host specific.</p>
+
+<p>Can we simply mount SolidFire iSCSI volumes to hosts and use this driver? Yes.</p>
+
+<h2 id="deploy-nomad-with-solidfire-host-volumes">Deploy Nomad with SolidFire Host Volumes</h2>
+
+<p>Step 1 is to create and mount a SolidFire volume on a client. Format it, mount it, and change ownership to the user running Nomad client. (In this specific case for MySQL I also had to create a subdirectory called “data”.)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">df
+</span>Filesystem     1K-blocks     Used Available Use% Mounted on
+/dev/sdb         1998672   187120   1690312  10% /opt/mysql
+</code></pre></div></div>
+
+<p>Step 2 is to configure this Nomad client to be aware this volume may be used by workloads i.e. Nomad jobs.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nomad node status <span class="nt">-short</span> <span class="nt">-self</span>
+ID              <span class="o">=</span> 3f725369-2657-78ae-cd36-90346983c4dd
+Name            <span class="o">=</span> es1
+Host Volumes    <span class="o">=</span> mysql
+</code></pre></div></div>
+
+<p>Step 3 is to restart the client and then you can define a Nomad job that uses this <a href="https://www.nomadproject.io/docs/job-specification/volume">host volume</a>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="s">volume "mysql" {</span>
+      <span class="s">type      = "host"</span>
+      <span class="s">read_only = </span><span class="no">false</span>
+      <span class="s">source    = "mysql"</span>
+    <span class="s">}</span>
+</code></pre></div></div>
+
+<p>When this job starts Nomad will schedule it to a client where volume required by this job is available. (This could resolve to multiple clients, but you can further narrow down eligible nodes by location or other attributes.)</p>
+
+<p>In my cluster topology, I have two Nomad clients, scaleoutSean (which is also a server; I dispatch jobs on this system) and es1 (which is where I intend to run jobs).</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-01.png" alt="Nomad cluster with two clients" /></p>
+
+<p>es1 has a SolidFire-based host volume.</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-02.png" alt="Nomad client with host volume" /></p>
+
+<p>A Nomad job that requires this host volume will land on es1.</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-03.png" alt="Nomad job on SolidFire volume" /></p>
+
+<p>mysql-server job details indicate it’s running on es1:</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-04.png" alt="Nomad job running on es1" /></p>
+
+<p>There is nothing SolidFire-specific in this process. Of course, you must ensure these host volumes are mounted and available, so iSCSI client must be configured to login automatically and OS to mount the volumes. That provisioning and mounting can be done from Terraform, Ansible, or with your own scripts.</p>
+
+<p>MySQL job started and created some data on Host Volume path.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll /opt/mysql/data/
+total 166956
+drwxr-x--- 2     999  999     4096 Mar 23 09:52 <span class="s1">'#innodb_temp'</span>/
+drwxrwxr-x 7     999  999     4096 Mar 23 09:52  ./
+drwxr-xr-x 4 vagrant root     4096 Mar 23 08:38  ../
+<span class="nt">-rw-r-----</span> 1     999  999       56 Mar 23 08:42  auto.cnf
+<span class="nt">-rw-r-----</span> 1     999  999  3092393 Mar 23 08:42  binlog.000001
+<span class="nt">-rw-r-----</span> 1     999  999      178 Mar 23 08:43  binlog.000002
+<span class="nt">-rw-r-----</span> 1     999  999      178 Mar 23 08:47  binlog.000003
+<span class="nt">-rw-r-----</span> 1     999  999      155 Mar 23 08:49  binlog.000004
+<span class="nt">-rw-r-----</span> 1     999  999      178 Mar 23 08:51  binlog.000005
+<span class="nt">-rw-r-----</span> 1     999  999      178 Mar 23 09:52  binlog.000006
+<span class="nt">-rw-r-----</span> 1     999  999       96 Mar 23 09:18  binlog.index
+<span class="nt">-rw-------</span> 1     999  999     1680 Mar 23 08:42  ca-key.pem
+<span class="nt">-rw-r--r--</span> 1     999  999     1112 Mar 23 08:42  ca.pem
+<span class="nt">-rw-r--r--</span> 1     999  999     1112 Mar 23 08:42  client-cert.pem
+<span class="nt">-rw-------</span> 1     999  999     1680 Mar 23 08:42  client-key.pem
+<span class="nt">-rw-r-----</span> 1     999  999     3407 Mar 23 09:52  ib_buffer_pool
+<span class="nt">-rw-r-----</span> 1     999  999 50331648 Mar 23 09:52  ib_logfile0
+<span class="nt">-rw-r-----</span> 1     999  999 50331648 Mar 23 08:42  ib_logfile1
+<span class="nt">-rw-r-----</span> 1     999  999 12582912 Mar 23 09:52  ibdata1
+drwxr-x--- 2     999  999     4096 Mar 23 08:42  itemcollection/
+drwxr-x--- 2     999  999     4096 Mar 23 08:42  mysql/
+<span class="nt">-rw-r-----</span> 1     999  999 31457280 Mar 23 09:18  mysql.ibd
+drwxr-x--- 2     999  999     4096 Mar 23 08:42  performance_schema/
+<span class="nt">-rw-------</span> 1     999  999     1680 Mar 23 08:42  private_key.pem
+<span class="nt">-rw-r--r--</span> 1     999  999      452 Mar 23 08:42  public_key.pem
+<span class="nt">-rw-r--r--</span> 1     999  999     1112 Mar 23 08:42  server-cert.pem
+<span class="nt">-rw-------</span> 1     999  999     1676 Mar 23 08:42  server-key.pem
+drwxr-x--- 2     999  999     4096 Mar 23 08:42  sys/
+<span class="nt">-rw-r-----</span> 1     999  999 12582912 Mar 23 09:52  undo_001
+<span class="nt">-rw-r-----</span> 1     999  999 10485760 Mar 23 09:52  undo_002
+</code></pre></div></div>
+
+<p>Much easier and simpler than Kubernetes!</p>
+
+<h2 id="backup-and-restore">Backup and restore</h2>
+
+<p>You may think “all right, containers, snapshots, scheduling - that’s all good, but how do I manage backup and restore”?</p>
+
+<p>This is surprisingly easy compared to Kubernetes! Whether we use Host Volumes or Docker Volumes, we can create volume snapshots and from snapshots - clones or backups.</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-05.png" alt="Snapshot of SolidFire volume on es1" /></p>
+
+<h3 id="backup-data-from-vm-with-solidfire-based-as-host-volumes">Backup data from VM with SolidFire-based as Host Volumes</h3>
+
+<ul>
+  <li>stop Nomad job that uses the volume and run backup job as you normally would (which you can do from Nomad, as another job), or</li>
+  <li>take a snapshot and use a backup utility and script to create a temporary clone, or</li>
+  <li>take a snapshot and use SolidFire <a href="/2022/01/19/solidfire-backup-restore-wasabi-s3.html">Backup-to-S3</a> utility which can <a href="/2021/04/21/solidfire-backup-to-s3.html#what-it-is-and-isnt-and-when-to-use-it">backup that volume snapshot to S3</a></li>
+  <li>if you have application-specific backup software, perform logical backup without stopping Nomad job (MySQL service job)</li>
+</ul>
+
+<p>Restore is done in reverse - stop Nomad job, restore from backup or snapshot.</p>
+
+<h3 id="backup-data-from-vm-running-docker-with-dynamically-provisioned-solidfire-volumes">Backup data from VM running Docker with dynamically-provisioned SolidFire volumes</h3>
+
+<p>This is very similar as far as SolidFire is concerned, but - because when job is stopped, dynamically provisioned Docker volume won’t be mounted, so you’d access it from a Docker container or (temporarily for the purpose of backup) host.</p>
+
+<ul>
+  <li>Cold backup:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="c"># on Nomad server</span>
+<span class="nv">$ </span>nomad job stop mysql-server
+
+<span class="nv">$ </span><span class="c"># on Nomad client</span>
+<span class="nv">$ </span>docker volume <span class="nb">ls</span> | <span class="nb">grep </span>sql
+trident:latest   mysql-sf
+
+<span class="nv">$ </span><span class="c"># this can be executed as a Nomad batch job, or remotely (Ansible, etc.)</span>
+<span class="nv">$ </span>docker run <span class="nt">-v</span> mysql-sf:/volume ... <span class="c"># tar -cvf mysql-sf.tar /volume | pipe-to-your-backup-to-S3-utility</span>
+
+<span class="nv">$ </span><span class="c"># once done, on Nomad server</span>
+<span class="nv">$ </span>nomad job run mysql-server
+</code></pre></div></div>
+
+<ul>
+  <li>Crash-consistent backup:
+    <ul>
+      <li>Just like MySQL Docker image mounts SolidFire volumes, so can your backup container</li>
+      <li>Take a snapshot (if you want to run a script to quiesce application, you can do it) of MySQL volume</li>
+      <li>Create a temporary clone from that snapshot</li>
+      <li>Mount and backup clone volume from host</li>
+      <li>Delete the temporary clone (or you can leave it in place, and next time just copy from latest snapshot to this clone - this approach I took in solidbackup)</li>
+      <li>If your needs are basic, you can use <a href="/2021/04/21/solidfire-backup-to-s3.html#what-it-is-and-isnt-and-when-to-use-it">SolidFire Backup to S3</a></li>
+    </ul>
+  </li>
+  <li>Logical backup:
+    <ul>
+      <li>use MySQL API or MySQL client to backup your database</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Docker Volume Plugin can “see” and use SolidFire volumes that were created directly on SolidFire (i.e. not with Docker using <code class="language-plaintext highlighter-rouge">docker volume create</code>) as long as the volume is presented to the tenant account used by Docker Volume Plugin. So a <em>clone</em> volume created from a SolidFire snapshot of our MySQL Host Volume could be used for a quick restore (just change job description to use its name, and restart the job). This is unlikely to be necessary - normally you’d have a snapshot and restoring from a snapshot would be easier and faster - but in the case you mistakenly delete a volume or have a clone and not a snapshot, that would be an option.</p>
+
+<h4 id="backup-to-s3-and-anti-ransomware-measures">Backup to S3 and anti-ransomware measures</h4>
+
+<ul>
+  <li>Most modern backup software, including freeware, can backup data to S3 and some (Veeam, Commvault) can also enable Object Locks to prevent deletion of backup data on S3-compatible storage. NetApp StorageGRID supports Object Locks. Object Locks may be able to help SolidFire’s own backup-to-S3 feature, but I haven’t investigated that yet</li>
+  <li>Some object storage supports “append-only” writes, which SolidFire’s backup-to-S3 feature should support without issues. We’d configure two things on StorageGRID: one is to allow append-only writes on backup bucket, and another is to expire (delete) objects older than x days (e.g. 90). It would probably be wise to configure multiple buckets and give each team exclusive control over it to make that a self-service. If you need that to work well, I’d suggest to get a commercial backup product with Object Lock support</li>
+</ul>
+
+<h3 id="backup-and-restore-test">Backup and restore test</h3>
+
+<p>I created a simple backup and restore workflow that uses the Docker volume mount approach to backup both the MySQL Host Volume and dynamically provisioned volume used by Apache. To backup a Host Volume we wouldn’t need to mount an already mounted volume inside of Docker (we could back it up <em>from</em> Docker, with sufficient access to MySQL data path), but it can be done and because Apache data was on a Docker volume, I did the both backups the same way by mounting them from Docker as explained above.</p>
+
+<p>A Nomad job mounts named Docker volumes (Host Volume and also the Web volume that was created by Trident; volume names were hard-coded, but could be parametric) and copies data to S3. Before I executed it I stopped services using these volumes (MySQL and Apache).</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-06.png" alt="Nomad backup job dispatched to es1" /></p>
+
+<p>Minutes later I had my backup in S3 (additional details in archive file name, such as date and time, would have been helpful):</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-07.png" alt="Backup data in S3 bucket" /></p>
+
+<p>After that backup job finished I simply started the stopped MySQL and Web jobs. If I wanted to shorten planned downtime required to run backup I could have taken a snapshot of two volumes first, restart service jobs seconds later, and then run a backup job off temporary clone volumes created from those snapshots. Or just do the same without even stopping two services (crash-consistent backup).</p>
+
+<p>To test restore, I destroyed data of one service (MySQL) by deleting MySQL data on Host Volume, and successfully restored MySQL data directory from S3 backup archive. MySQL started without any issues (you can see that in the longer video below).</p>
+
+<p>This can work equally well with SolidFire clones created from SolidFire volume snapshots. It takes seconds of downtime to stop services, take a snapshot, and start them again. Then a backup job can run on snapshot-originated clone volumes. I didn’t try this or built-in Backup to S3 because we know that works and I’ve blogged about it before.</p>
+
+<h2 id="host-volumes-vs-dynamic-provisioning-with-and-without-csi-plugin">Host Volumes vs. dynamic provisioning (with and without CSI plugin)</h2>
+
+<h3 id="dynamically-provisioned-docker-volumes">Dynamically provisioned Docker volumes</h3>
+
+<p>In addition to Host Volumes, Nomad can use Trident Docker Volume Plugin to have jobs create (or use available) SolidFire/Trident volumes on the fly. This lets us do everything from Nomad (without having to run “<code class="language-plaintext highlighter-rouge">docker volume create ${NAME} -d trident</code>”), but Trident volume <em>deletion</em> has to be done separately (which is the same how it works with Host Volumes, only easier).</p>
+
+<p>We don’t want to automatically delete a Docker volume just because a job using it was stopped (e.g. for cold backup) or purged (e.g. on-demand reporting that refreshes data every time), and this storage behavior is similar to “reclaimPolicy: Retain” in a Kubernetes Storage Class. Both Host and Docker Volumes that are no longer needed can be periodically deleted based on job specification, volume name (temp*), job tags and similar.</p>
+
+<p>Note that Trident Docker Volume Plugin exists only for x86_64, but it’s OSS and you can build and use it from ARM64-based Nomad clients as well.</p>
+
+<p>Before I move on, here’s a graphical summary of what I found to work: Host Volumes &amp; Trident Docker Volume Plugin.</p>
+
+<p><img src="/assets/images/nomad-solidfire-host-volumes-08.png" alt="Nomad jobs with data on Host Volume and Docker Plugin" /></p>
+
+<p>The reason high availability can’t work without risk or without help of VM-level HA is we mustn’t restart a job on another server if we aren’t sure the node where it failed has been successfully drained and ensure it isn’t still accessing block device(s) we intend to use when the job is scheduled on another client.</p>
+
+<h3 id="csi-plugins">CSI Plugins</h3>
+
+<p>I didn’t have a Kubernetes cluster available at the time of writing this post, so I can’t tell if Trident CSI could or couldn’t work for “CSI-style” Nomad storage plugin. I tried once last year, but couldn’t get it to work.</p>
+
+<p>Another CSI plugin that should be checked in the context of Nomad and SolidFire is Cinder CSI (recently evaluated with SolidFire <a href="/2022/03/02/openstack-solidfire-part-2.html">here</a>). Cinder CSI is a community driver supported by OpenStack and if Nomad ends up supporting it we’ll have an end-to-end solution for Nomad on OpenStack with SolidFire. (OpenStack ships with in-tree SolidFire Cinder driver - we’d just need to add Cinder CSI in Kubernetes.)</p>
+
+<p>The third CSI plugin I’d like to evaluate is <a href="https://github.com/NetApp/beegfs-csi-driver/blob/316c1cdac57365ab39c56aabad4354c153eb8579/deploy/nomad/README.md">BeeGFS CSI</a>, a CSI driver for BeeGFS created and maintained by NetApp.</p>
+
+<h2 id="is-the-approach-with-host-volumes-good-enough-for-production">Is the approach with Host Volumes good enough for production</h2>
+
+<p>I think it is, if it does what you need it to do.</p>
+
+<p>There’s a lot to like about Nomad and SolidFire, whether it’s used with Host Volumes or Docker Trident Plugin.</p>
+
+<p>Technically there’s little difference between running a Nomad-scheduled MySQL service with a SolidFire-backed host volume and running a non-orchestrated MySQL database “manually” in a VM-based Docker container (without Docker Swarm, for example).</p>
+
+<p>We don’t get full benefits of dynamic storage provisioning across Nomad clients (such as volume fail-over to another client), but we can get VM (and with it container) failover from VMware HA or similar feature in OpenStack where, if a VM or host is rebooted, Nomad will dispatch the job once Nomad client reconnects which will happen after the VM is again up and running, possibly on another host. The main downside is there’s no dynamic provisioning (in the scenario without using Docker Volume Plugin).</p>
+
+<p>Many administrators I know dislike dynamic provisioning because they think users might mess up the storage (over-provision, waste, etc.), so for them this “old school” approach may be preferred over dynamic provisioning with Docker Volume Plugin or Nomad CSI.</p>
+
+<p>Another advantage (or disadvantage, if you see it that way) may be that data protection and business continuity would be done the old fashioned way:</p>
+
+<ul>
+  <li>snapshots: snapshot the volume on SolidFire and restore it the same way</li>
+  <li>backup: hot, warm, cold - any way you want it</li>
+  <li>DR/BC: replicate Nomad volumes on SolidFire to another SolidFire cluster using SolidFire replication, without any of the complexity that surrounds Kubernetes (currently with SolidFire and Trident CSI we <a href="/2021/03/28/manage-netapp-trident-with-powershell.html">must re-install Trident CSI to fail back to cluster on Site A</a>, for example). Here, all you need to configure is SolidFire replication and that takes <a href="https://www.youtube.com/watch?v=LdKBYJhvwrU">less than 1 minute</a>, either for fail over or fail back.</li>
+</ul>
+
+<p>One area that needs additional investigation is vertical workload scaling for Nomad jobs, which could be done indirectly with VMware or OpenStack. Because without CSI volume Nomad can’t move the container to another, larger or smaller VM, we’d need to run larger VMs or rely on hypervisor to help us with VM resizing. Or we could schedule such workloads as QEMU/KVM VMs with Host Volumes. Fortunately, SolidFire is easy to automate and you can create and automate new provisioning workflows in hours.</p>
+
+<p>As far as Nomad storage is concerned, having a CSI-compatible driver would be nice, but considering that CSI support is still in beta and there are 62 open CSI-related Nomad issues, it’s not something we could consider for production use in any case. Besides, probably 90% of what most folks need for on-prem Nomad can work with Host Volumes and Docker Volumes.</p>
+
+<p>Nomad deployment is similar to Kubernetes (just a single binary), but Nomad is faster and <em>much</em> simpler. And you can schedule not just containers, but also VMs (QEMU/KVM) and more. Kubernetes is still catching up in the area of VM workloads, but Kubernetes is already too complicated and complex and it’ll get even more complicated.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>SolidFire has a CSI driver that works with Kubernetes, but most aspects of data management in a Nomad/SolidFire environment can be addressed with features built into Nomad, Docker and SolidFire and with much less complexity, cost and hassle than in a Kubernetes environment - especially if you can run Nomad workloads on VMware or OpenStack.</p>
+
+<p>If you’re a SolidFire admin whose team hasn’t adopted Kubernetes yet, or struggling to get Kubernetes right, <em>I recommend to try Nomad</em>.</p>
+
+<p>If you’re a Nomad admin whose team is looking for iSCSI <em>storage that doesn’t fight you</em>, consider SolidFire. SolidFire Demo VM (<a href="https://www.youtube.com/watch?v=6SXa-0Amhx0">used in these demos</a>) that doesn’t expire can be <a href="https://github.com/scaleoutsean/awesome-solidfire#demo-vm-tools-and-utilities">downloaded for free</a>.</p>
+
+<p>I plan to continue exploring Nomad and once Nomad CSI support is out of beta I’d like to publish another post with driver configuration details for both Docker Volume and CSI plugins (one or more of the drivers mentioned earlier).</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li>Everything from this blog post in less than 10 minutes: <a href="https://rumble.com/vyjpdh-hashicorp-nomad-with-netapp-solidfire-iscsi-storage.html">HashiCorp Nomad &amp; NetApp SolidFire iSCSI with Host Volumes, Dynamic Volumes, and backup-and-restore workflow</a> - 9m24s</li>
+  <li>Nomad and SolidFire in 80 seconds: <a href="https://rumble.com/vych5f-hashicorp-nomad-with-dynamically-provisioned-solidfire-iscsi.html">Run HashiCorp Nomad service job which uses dynamically provisioned Docker Volume on NetApp SolidFire iSCSI storage</a> - 1m20s</li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#automation">automation</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#containers">containers</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

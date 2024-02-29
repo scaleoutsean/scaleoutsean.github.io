@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Per-site erasure-coded copies of data with NetApp StorageGRID | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Per-site erasure-coded copies of data with NetApp StorageGRID | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Per-site erasure-coded copies of data with NetApp StorageGRID" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data" />
+<meta property="og:description" content="This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-08-22T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Per-site erasure-coded copies of data with NetApp StorageGRID","dateModified":"2023-08-22T00:00:00+08:00","datePublished":"2023-08-22T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html","description":"This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Per-site erasure-coded copies of data with NetApp StorageGRID</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>22 Aug 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    6 minute read
+  
+
+    </span>
+  </div>
+  
+        <h2 id="introduction">Introduction</h2>
+
+<p>By default NetApp StorageGRID uses “2 Copy” ILM policy: make 2 copies anywhere, as long as it’s on different nodes.</p>
+
+<p>Because StorageGRID storage nodes use protected storage (RAID-like, not JBOD), storage node’s data is already protected from disk drive loss.</p>
+
+<p>As always, there are situations where people want, need or must customize.</p>
+
+<h2 id="grid-with-custom-requirements">Grid with custom requirements</h2>
+
+<p>Say we have a grid with 9 storage nodes total, deployed in three data centers (San Diego, Dublin, Bangalore).</p>
+
+<p>Because 3 storage nodes is the minimum “pool” size, we know a 9-node grid deployed at three sites has 3 nodes per site.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-01.png" alt="Three-site StorageGRID" /></p>
+
+<p>By default, StorageGRID will make 2 copies of each object, sometimes even at the same site. There are no other considerations.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-02-2-copy.png" alt="Three-site StorageGRID with 2 copy policy" /></p>
+
+<p>Both media files (film roll icon) and smaller files (red circle) are replicated on different storage nodes, regardless of object size.</p>
+
+<p>If we look at StorageGRID settings we’ll see a default storage pool (all 9 storage nodes belong to it).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-04-default-storage-pool.png" alt="Default storage pool" /></p>
+
+<p>There’s a default rule that says “save 2 copies on different nodes”.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-05-default-ilm-rule.png" alt="Default ILM rule" /></p>
+
+<p>This grid’s administrator has received the instructions to implement a new ILM policy:</p>
+<ul>
+  <li>Two copies is enough, but each should be in a different DC, preferably San Diego and Dublin</li>
+  <li>For large objects, Erasure Coding can save capacity (and cost), so it should be applied on objects larger than or equal to 1MB</li>
+</ul>
+
+<p>The third site (Bangalore) is not yet in production. It will be used by R&amp;D in Bangalore, and ILM rules for it will be added later.</p>
+
+<p>What we want is:</p>
+<ul>
+  <li>For any and all objects, make two copies - one at DC1, another at DC2</li>
+  <li>For objects that are 1MB or larger, apply EC 2+1</li>
+</ul>
+
+<p>The first rule eliminates the possibility that both copies get saved at the same site.</p>
+
+<p>The second rule means non-small objects will be cut in two data and one parity chunks. Objects smaller than 1 MB will not be erasure-coded.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-03-ec.png" alt="Three-site StorageGRID with copy-per-site and EC policy" /></p>
+
+<h2 id="what-needs-to-be-done">What needs to be done</h2>
+
+<ul>
+  <li>We need to tell StorageGRID which storage nodes’ data belongs to “DC1” and “DC2”, respectively</li>
+  <li>We need to define an Erasure Coding profile, if possible</li>
+  <li>With these details available, we build a rule set for our new ILM policy</li>
+  <li>The new (proposed) ILM policy changes “2 Copy” approach to what we mentioned earlier</li>
+  <li>If simulation works as expected, we activate the policy</li>
+</ul>
+
+<p>Let’s look at some (not all) of these items and discuss some noteworthy details.</p>
+
+<h3 id="storage-pools">Storage pools</h3>
+
+<p>Since we tagged each site’s nodes, we can use those tags to define storage pools. We need only two pools at this time (for DC1 and DC2).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-06-storage-pool-by-dc.png" alt="Define a pool by using DC tags" /></p>
+
+<h3 id="erasure-coding-profile">Erasure Coding profile</h3>
+
+<p>As mentioned earlier, with 3 storage nodes per site we can’t do EC 6+3: StorageGRID uses 1 chunk per storage node.</p>
+
+<p>In this situation we can do EC 2+1 and should a node fail, grid would by default temporarily use 2 Copy policy because at least 3 nodes are required to write 2+1 chunks (reads of EC 2+1 data will work with 2 nodes).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-07-ec-pool-2-1.png" alt="EC 2+1" /></p>
+
+<p>This is why we’d choose (or not change) Balanced, and not pick Strict, ILM consistency - to avoid having to deal with failures if a node goes down. (See that further below, in ILM screenshots.)</p>
+
+<p>EC profiles “one” and “two” have been created. Each uses storage pool at its own site (DC1, DC2).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-08-ec-pool-2-1-with-redundancy.png" alt="EC profiles for DC1 and DC2" /></p>
+
+<p>Note: do not get confused by “Storage Node Redundancy: one” in this screenshot!</p>
+
+<p>That’s data redundancy: EC 2+1 is 2D1P, so a StorageGRID pool can lose a node without <em>losing data</em> - i.e. that’s for resilience only. But one can’t save an object in 2D1P fashion if you have only 1 or 2 nodes up &amp; running (we need at least 3 nodes in the pool)! That’s why we use Balanced ILM policy (see below) to achieve better service uptime during temporary storage node downtime.</p>
+
+<p>In other words, EC 2+1 needs at least 3 storage nodes to be even considered (we could choose to give up on it and choose 2 Copy policy). We could not “force” EC 4+1 in this pool because we don’t have 5 storage nodes in it.</p>
+
+<h3 id="propose-ilm-policy">Propose ILM policy</h3>
+
+<p>When proposing a new ILM policy, we “lead” with the new requirements, but we need a default ILM rule to catch whatever objects that failed to match any of those fancy rules we configured.</p>
+
+<p>In demo video linked below, I use a strict interpretation of where to save what, and configure two sets of rules:</p>
+<ul>
+  <li>Replication: make 1 copy in DC1, 1 copy in DC2</li>
+  <li>EC: <em>if</em> object is &gt;=1MB, use EC 2+1</li>
+</ul>
+
+<p><img src="/assets/images/storagegrid-3-dc-10-ilm-rules-replica-and-ec-for-1mb-plus.png" alt="Rules for replication and EC for 1MB+ objects" /></p>
+
+<p>Because some objects may be smaller than 1MB and EC isn’t recommended for tiny objects, our default rule doesn’t do EC.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-11-ilm-rules-replica-and-ec-for-1mb-plus-default.png" alt="Default is just two copies in DC1 and DC2" /></p>
+
+<p>Closer look at default rule:</p>
+<ul>
+  <li>Replication: make 1 copy in DC1, 1 copy in DC2</li>
+</ul>
+
+<p><img src="/assets/images/storagegrid-3-dc-12-ilm-rules-replica-as-default.png" alt="Default ILM rule saves a copy in both DC1 and DC2" /></p>
+
+<p>In this imaginary scenario, &lt; 1MB objects will match the default rule and be saved a copy per each of DC1 and DC2. This means DC3 will remain empty, as per the new requirement.</p>
+
+<p>But once DC3 site is live, grid admin would likely be asked to add another rule that makes use of DC3 capacity. These could use DC3 locally, or even globally. Examples:</p>
+<ul>
+  <li>Use DC3 (Bangalore) capacity only for local R&amp;D: the rule to add could be something like “if client IP is one of internal Bangalore IPs, make 2 copies in DC3”</li>
+  <li>Use DC3 by all users: add another rule, whether by user (Active Directory group “Engineering”), bucket name (“engineering”) or something else, so that matching objects are always saved 1 copy in DC3 and another not in DC2 (i.e. elsewhere)</li>
+</ul>
+
+<p>As mentioned earlier, if it’s not critical that rules be immediately applied, we can use Balanced (default) rather than Strict.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-09-balanced-ilm.png" alt="Balanced vs. Strict ILM rules" /></p>
+
+<h3 id="simulate-and-activate">Simulate and activate</h3>
+
+<p>In the demo I simulate rule matching by picking a small object. To have the policy completely simulated I would only need to pick one more (&gt;1 MB large) object. It’s trivial because my conditions are simple.</p>
+
+<p>But in real life rules are usually more complex - people want them per bucket, per user, per IP range, etc - and because there’s no “Undo” it’s very important to get simulation right. I strongly recommend to use VM-based StorageGRID nodes and try there before activating a  new ILM policy. In the worst case you can even delete your own data (by selecting a wrong rule that’s used to delete old data from a temporary bucket, for example)!</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v3aavn5-example-of-using-per-site-and-erasure-coding-rules-and-ilm-policies.html">Example of using per-site and Erasure Coding rules and ILM policies”</a> - 7m28s</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Some object storage is fairly rigid and data protection policy (EC, etc.) picked at the start remains the only, or maybe default (the rest must be dealt with by setting very narrow exceptions), policy.</p>
+
+<p>A StorageGRID cluster may span multiple sites, but that still allows us to create custom ILM policies that deal with just one or two sites.</p>
+
+<p>In this post we saw how easy it is to apply new rules and achieve our objectives.</p>
+
+<p>Most users want to customize further, so it’s highly recommended to build a VM-based StorageGRID cluster and execute detailed simulations before applying a new policy on TBs of data. For very complex grids, maybe even write ILM tests that use the S3 and StorageGRID API to run and validate rules on a sandbox grid.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

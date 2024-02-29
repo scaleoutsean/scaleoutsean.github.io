@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Use F5 NGINX+ Layer-7 with TLS Termination as NLB for Rancher on NetApp HCI
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let’s Encrypt | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let’s Encrypt" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use F5 NGINX+ Layer-7 with TLS Termination as NLB for Rancher on NetApp HCI" />
+<meta property="og:description" content="Use F5 NGINX+ Layer-7 with TLS Termination as NLB for Rancher on NetApp HCI" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-14T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let’s Encrypt","dateModified":"2020-12-14T00:00:00+08:00","datePublished":"2020-12-14T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2020/12/14/netapp-hci-rancher-ingress-nginx-plus-lets-encrypt.html","description":"Use F5 NGINX+ Layer-7 with TLS Termination as NLB for Rancher on NetApp HCI","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Rancher Kubernetes Layer-7 NLB/Ingress with NGINX Plus and Let's Encrypt</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>14 Dec 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    19 minute read
+  
+
+    </span>
+  </div>
+  
+        <p><strong>NOTICE</strong>: any and all credentials and tokens on this page are samples, not leaked.</p>
+
+<ul>
+  <li><a href="#tldr">tl;dr</a></li>
+  <li><a href="#introduction-and-requirements">Introduction and requirements</a></li>
+  <li><a href="#resources">Resources</a></li>
+  <li><a href="#deploy-linux-vm-and-n">Deploy Linux VM and N+</a></li>
+  <li><a href="#create-dns-entries-get-tls-certificates-configure-nginx">Create DNS entries, get TLS certificates, configure NGINX</a>
+    <ul>
+      <li><a href="#prepare-dns-and-open-public-firewall-port-tcp443">Prepare DNS and open public firewall (port TCP/443)</a></li>
+      <li><a href="#tls-with-lets-encrypt">TLS with Let’s Encrypt</a></li>
+    </ul>
+  </li>
+  <li><a href="#install-rancher-servers">Install Rancher Servers</a>
+    <ul>
+      <li><a href="#configure-n">Configure N+</a>
+        <ul>
+          <li><a href="#upstream-rancher-servers-on-different-network">Upstream (Rancher) servers on different network</a></li>
+        </ul>
+      </li>
+      <li><a href="#kubectl-x509-certificate-signed-by-unknown-authority-error">kubectl X.509 ‘certificate signed by unknown authority’ error</a></li>
+    </ul>
+  </li>
+  <li><a href="#use-n-to-reverse-proxy-multiple-rancher-clusters-or-services">Use N+ to reverse-proxy multiple Rancher clusters or services</a></li>
+  <li><a href="#use-n-to-reverse-proxy-other-api-or-service-endpoints">Use N+ to reverse-proxy other API or service endpoints</a></li>
+  <li><a href="#next-steps">Next steps</a></li>
+</ul>
+
+<h2 id="tldr">tl;dr</h2>
+
+<p>Start with the instructions and config file samples from <a href="https://rancher.com/docs/rancher/v2.x/en/installation/resources/advanced/single-node-install-external-lb/">this</a> page.</p>
+
+<p>Read the below or search the Internet if you can’t get it to work.</p>
+
+<h2 id="introduction-and-requirements">Introduction and requirements</h2>
+
+<p>NetApp HCI users who run Rancher may need to expose K8s service or even their management plane to the Internet.</p>
+
+<p>The Rancher infrastructure setup page for Ingress Load Balancer can be found <a href="https://rancher.com/docs/rancher/v2.x/en/installation/other-installation-methods/behind-proxy/prepare-nodes/">here</a>. There are many ways to do this and multiple reasons why someone chooses one way over another, but that’s out of scope for this article (search the Internet, talk to a Kubernetes or NGINX expert, RTFM…)</p>
+
+<p>This post outlines one specific approach based on the following assumptions:</p>
+
+<ul>
+  <li>Our Rancher Kubernetes cluster should be securely and reliable exposed to the Internet (business requirement)</li>
+  <li>Load Balancer mustn’t run on the Rancher Servers (Rancher requirement)</li>
+</ul>
+
+<p>Use case considerations (yours may be different):</p>
+
+<ul>
+  <li>Because this is a publicly available service, we want enhanced security and enterprise support so we use <a href="https://www.nginx.com/products/nginx/">F5 NGINX Plus</a> (aka “N+”) and <a href="https://www.nginx.com/products/nginx-app-protect/">NGINX AppProtect</a></li>
+  <li>N+ terminates TLS on port 443 (example: <code class="language-plaintext highlighter-rouge">rancher.doma.in:443</code>) and proxies requsts to Rancher servers’s port 443. External incoming HTTP requests to N+ are simply forwarded to port 443 to have external traffic encrypted. Internally, N+ to Rancher still uses self-signed TLS certificates based on default Rancher setup (and self-signed CA), so while not ideal (something for another blog post), that will have to suffice for now.</li>
+  <li>VMware HA is chosen to provide High Availability for N+. We could set up a pair of VMs and use <a href="https://www.nginx.com/products/nginx/high-availability">NGINX High Availability</a> with <a href="https://docs.nginx.com/nginx/admin-guide/high-availability/ha-keepalived/">keepalived</a>, but considering our bandwidth and uptime requirements that is not necessary and can be done at a later time should our uptime or performance requirements change. (A single mid-sized VM instance (8 vCPUs) can foward-proxy HTTPS at a rate way higher than Internet-facing bandwidth most small and medium enterprises have at their disposal and estimated availability of VMware HA meets our current requirements)</li>
+  <li>We have the option to use a wildcard certificate (<code class="language-plaintext highlighter-rouge">*.rancher.doma.in</code>) or create several subdomains (<code class="language-plaintext highlighter-rouge">rancher.doma.in</code>, <code class="language-plaintext highlighter-rouge">cluster[01-05].doma.in</code>). Note that this is where things can get complicated, depending on your situation with regards to DNS service you use, number of External IP addresses, CA issuance and so on. When we plan for this we should also consider how many Internet-facing services from user clusters we plan to deploy and what kind of degree of isolation (i.e. how many clusters, IPs, domain names) will be required.</li>
+</ul>
+
+<h2 id="resources">Resources</h2>
+
+<ul>
+  <li>We stand up a Rancher management cluster on NetApp HCI with VMware Standard or Enterprise Edition, using <code class="language-plaintext highlighter-rouge">ez-rancher</code>(<a href="https://github.com/NetApp/ez-rancher/">download here</a>) (or NetApp HCI’s Hybrid Cloud Control, once it becomes available)</li>
+  <li><a href="https://rancher.com/docs/rancher/v2.x/en/installation/resources/advanced/single-node-install-external-lb/">This document</a> has a basic configuration file for NGINX L7 load balancer with TLS termination - start with this config file</li>
+  <li>NGINX
+    <ul>
+      <li>If you want to use N+, apply for a <a href="https://www.nginx.com/free-trial-request/">free trial</a>. Register, download the keys and install N+ according to <a href="https://cs.nginx.com/repo_setup">repo setup</a> instructions. NGINX AppProtect is “out of band”, so to speak, so its features may be a topic of another post.</li>
+      <li>If you want to use the free (community) version of NGINX, install it according to your distribution’s instructions or see the official documentation (<a href="https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#prebuilt_ubuntu">example for Ubuntu</a> and other distros can be found at this link.)</li>
+    </ul>
+  </li>
+  <li>If using Ubuntu 18.04 LTS, deploy a VM with <code class="language-plaintext highlighter-rouge">socat</code> and <code class="language-plaintext highlighter-rouge">open-vm-tools</code> packages and make sure its NTP and DNS clients work without problems
+    <ul>
+      <li>Your N+ VM can have a single NIC on the same or different network as your Rancher servers. In this case your External traffic would arrive via eth1 (for example) and leave (towards Rancher) via eth2. Other combinations are possible as well.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="deploy-linux-vm-and-n">Deploy Linux VM and N+</h2>
+
+<p>Maybe you’ll need these (in N+ VM):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get <span class="nb">install</span> <span class="nt">-y</span> socat curl wget bc open-vm-tools jq git
+</code></pre></div></div>
+
+<p>This is my starting configuration:</p>
+
+<pre><code class="language-raw"># cat /etc/lsb-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=18.04
+DISTRIB_CODENAME=bionic
+DISTRIB_DESCRIPTION="Ubuntu 18.04.5 LTS"
+
+# nginx -v
+nginx version: nginx/1.19.5 (nginx-plus-r23)
+
+# cat /etc/netplan/50-cloud-init.yaml
+network:
+    ethernets:
+        ens192:
+          addresses:
+            - 192.168.1.172/24
+          gateway4: 192.168.1.1
+          nameservers:
+            search: [datafabric.lab]
+            addresses: [192.168.1.4, 192.168.1.5]
+        ens224:
+          addresses:
+            - 192.168.105.172/24
+...
+</code></pre>
+
+<p><code class="language-plaintext highlighter-rouge">datafabric.lab</code> is a made up <strong>internal</strong> domain, we can ignore it for time being.</p>
+
+<p>The VM above has two NICs, but both N+ and Rancher servers are on the same network (<code class="language-plaintext highlighter-rouge">ens192</code>). As noted earlier, you could go with Rancher VMs on another network but then N+ configuration may need to be made slightly more complex (to make use of <code class="language-plaintext highlighter-rouge">ens224</code>).</p>
+
+<p>My back-end (Rancher) servers:</p>
+
+<ul>
+  <li>192.168.1.80 (s80)</li>
+  <li>192.168.1.81 (s81)</li>
+  <li>192.168.1.82 (s82)</li>
+</ul>
+
+<p>There’s no need to pay special attention to my network configuration. One or 11 NICs may be more suitable for your situation.</p>
+
+<p>In fact we’ll use only one NIC in this post. But if my upstream (back-end Rancher servers) was on another network to which we would get via <code class="language-plaintext highlighter-rouge">ens224</code>, then I would make use of that interface. More on that later.</p>
+
+<p>Before you start experimenting, test your DNS, NTP clients and consider if you want to enable firewall on Ubuntu OS (to disable or limit inbound HTTP(S) access to N+ until you’re sure it works as intended.)</p>
+
+<p>NGINX can use unprivileged installation and can also be deployed in Docker. See <a href="https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/#unpriv_install">the docs</a> if you’re interested in these options.</p>
+
+<h2 id="create-dns-entries-get-tls-certificates-configure-nginx">Create DNS entries, get TLS certificates, configure NGINX</h2>
+
+<p>The three internal Rancher servers (VMs) should ideally have internal FQDNs, especially if we want to use trusted TLS encryption between N+ and Rancher servers. Here we skip that part.</p>
+
+<p>At minimum, we need one external FQDN and one TLS certificate for the IPv4 (or IPv6, or both) traffic that’s incoming from public Firewall to N+ VM.</p>
+
+<h3 id="prepare-dns-and-open-public-firewall-port-tcp443">Prepare DNS and open public firewall (port TCP/443)</h3>
+
+<p>You can do this step after N+ is confirmed to be properly configured, if you’re concerned that typos or other issues may end up forwarding traffic elsewhere, or wrong kind of traffic to the right IPs.</p>
+
+<p>Assuming we wanted to use the FQDN <code class="language-plaintext highlighter-rouge">rancher.doma.in</code>, we’d create appropriate external DNS entries (see Let’s Encrypt or the Rancher document for NGINX linked above) and verify them with something like <code class="language-plaintext highlighter-rouge">nslookup rancher.doma.in</code>.</p>
+
+<p>If we use Let’s Encrypt we need to remember that some Let’s Encrypt utilities require TCP/80 of the requesting client (e.g. N+ VM) to be accessible to the Internet (to Let’s Encrypt’s servers - see their FAQs). If you can’t do this, consider using the DNS or manual approach. You don’t necessarily need NGINX for this - certificates can be copied to NGINX configuration later and any CA can be used.</p>
+
+<p>In our environment we did the following:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">rancher.doma.in</code> resolves to Firewall’s Internet-facing IPv4 address</li>
+  <li>Firewall redirects incoming traffic to ports TCP/80 and TCP/443 to internal IP address 192.168.1.172 (<code class="language-plaintext highlighter-rouge">ens192</code> on N+ VM)
+    <ul>
+      <li>Port TCP/80 is not required to be open (we used the manual setup method for Let’s Encrypt). But it is enabled anyway simply so that we don’t have to type <code class="language-plaintext highlighter-rouge">https://</code> before <code class="language-plaintext highlighter-rouge">rancher.doma.in</code></li>
+    </ul>
+  </li>
+  <li>N+ VM listens for requests to <code class="language-plaintext highlighter-rouge">rancher.doma.in</code> on incoming ports 80 (redirected to port 443) and 443 and forwards that traffic to “upstream” servers (that is, Rancher server VMs). I don’t have any filtering (by IP), authentication or authorization (yet) on N+ at this time</li>
+</ul>
+
+<h3 id="tls-with-lets-encrypt">TLS with Let’s Encrypt</h3>
+
+<p>There are many guides and <a href="https://letsencrypt.org/docs/client-options/">tools</a> for this - pick the one you like. It’s impossible to recommend one because everyone’s circumstances differ.</p>
+
+<p>As mentioned above, if you can’t open firewall to forward incoming TCP/80 to N+ VM, you may not be able to use one set of tools, and if you can’t use ACME DNS challenge, another won’t work for you. Personally I ended up using a manual approach (with DNS) which downloaded a bunch of TLS certificates and one private key.</p>
+
+<ul>
+  <li>Server certificate set: server certificate that we want to use on NGINX, and the matching private key (as two separate files)</li>
+  <li>Certificate chain: server certificate (no private key) + intermediate certificates that signed the server certificate, spread around in three files</li>
+  <li>Full chain: as the same says, all certificates together as one file starting with server certificate at the top. If private key isn’t included here it has to be specified separately (<code class="language-plaintext highlighter-rouge">ssl_certificate_key</code> parameter.)</li>
+</ul>
+
+<p>Depending on your CA, tools and processes you may end up with a slightly different set of files or formats (NGINX uses the PEM format), but you’ll always need one server cert (and its private key) and one or more intermediate CA certs. Again, there’s nothing NGINX- or Rancher-specific here.</p>
+
+<h2 id="install-rancher-servers">Install Rancher Servers</h2>
+
+<p>See README.md (or HCC online help, once it’s released) and examine <code class="language-plaintext highlighter-rouge">rancher.tfvars.example</code> in the <code class="language-plaintext highlighter-rouge">ez-rancher</code> repository. I’ll only highlight these three:</p>
+
+<pre><code class="language-raw"># Three Rancher VMs - happen to be on the same network as N+ VM's ens192 NIC,
+#                     but could be on another network
+static_ip_addresses = ["192.168.1.80/24", "192.168.1.81/24", "192.168.1.82/24"]
+
+# N+ L7 LB FQDN
+rancher_server_url = "rancher.doma.in"
+
+# Do not let ez-rancher use URLs of nip.io URLs
+use_auto_dns_url = false
+</code></pre>
+
+<p>Run <code class="language-plaintext highlighter-rouge">terraform apply</code> and at the end of a long log file you should see something like this:</p>
+
+<pre><code class="language-raw">cluster_nodes = [
+  {
+    "ip" = "192.168.1.80"
+    "name" = "rancher-node01"
+  },
+  {
+    "ip" = "192.168.1.81"
+    "name" = "rancher-node02"
+  },
+  {
+    "ip" = "192.168.1.82"
+    "name" = "rancher-node03"
+  },
+]
+rancher_server_url = https://rancher.doma.in
+</code></pre>
+
+<p>Now may be a good time to set a complex password for Rancher if you haven’t done that in <code class="language-plaintext highlighter-rouge">rancher.tfvars</code>. Once N+ comes up, your Rancher servers may be exposed to the world.</p>
+
+<h3 id="configure-n">Configure N+</h3>
+
+<p>NGINX configuration defaults have the directives <code class="language-plaintext highlighter-rouge">worker_processes</code> set to <code class="language-plaintext highlighter-rouge">auto</code> and <code class="language-plaintext highlighter-rouge">worker_connections</code> to <code class="language-plaintext highlighter-rouge">1024</code>, while the Rancher documentation (link provided above) suggests higher values. I would suggest to not change these to Rancher-recommended values at first.</p>
+
+<p>If you do need non-default values, values from the Rancher example probably won’t be suitable for you. If you don’t, then there’s no reason to change them. If you don’t know whether you need them or not, there’s also no reason to change them. Start with the defaults, monitor and adjust as necessary.</p>
+
+<p>We used IPv4 addresses in the <code class="language-plaintext highlighter-rouge">upstream</code> block of the <code class="language-plaintext highlighter-rouge">http</code> <a href="https://docs.nginx.com/nginx/admin-guide/basic-functionality/managing-configuration-files/#contexts">context</a>. We could use <em>internal</em> DNS names, such as <code class="language-plaintext highlighter-rouge">s8[0-2].datafabric.lab</code>, but that would make N+ depend on internal DNS servers which in this particular instance we wanted to avoid.</p>
+
+<pre><code class="language-raw">worker_processes auto;
+worker_rlimit_nofile 40000;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream rancher_cluster_https {
+        server 192.168.1.80:443 max_fails=3 fail_timeout=5s;
+        server 192.168.1.81:443 max_fails=3 fail_timeout=5s;
+        server 192.168.1.82:443 max_fails=3 fail_timeout=5s;
+    }
+
+    map $http_upgrade $connection_upgrade {
+        default Upgrade;
+        ''      close;
+    }
+
+    server {
+        listen 443 ssl http2;
+        server_name rancher.doma.in;
+        # SSL CONFIG
+        location / {
+        # PROXY CONFIG
+        }
+    }
+
+    server {
+        listen 80;
+        server_name rancher.doma.in;
+        return 301 https://$server_name$request_uri;
+    }
+}
+</code></pre>
+
+<p>I deliberately left out the details of SSL and Reverse Proxy (from N+ VM to Rancher servers)  directives. The reason is directives and parameters may change between different versions of N+ and OpenSSL while optimal configuration depends on the environment (including HTTPS clients). There are already too many useless or outdated <code class="language-plaintext highlighter-rouge">nginx.conf</code> examples on the Web and we don’t want to contribute to that mess.</p>
+
+<p>Instead, we should start with the examples provided by Rancher (link at the top) and then look at the N+ documentation for the version of N+/NGINX we have to check whether they apply and what values can be used.</p>
+
+<p>The official N+ documentation can be found <a href="https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/">here</a>. If you have problems setting things up check in the Rancher 2.x or NGINX community (or contact NGINX support, if you use N+.)</p>
+
+<p>Copy Let’s Encrypt (or other) certificate to your NGINX VM using a self-documenting location such as <code class="language-plaintext highlighter-rouge">/etc/ssl/certs/rancher.doma.in/</code>, tighten the permissions (NGINX service user must be able to read them), and edit NGINX configuration file so that virtual HTTP(S) servers used to proxy requests to Rancher servers make use of that Let’s Encrypt certificate. Other virtual servers may use other certificates (such as internal CA certificates, for example.)</p>
+
+<pre><code class="language-raw">ssl_trusted_certificate /etc/ssl/certs/rancher.doma.in/fullchain.crt;
+ssl_certificate         /etc/ssl/certs/rancher.doma.in/server.crt;
+ssl_certificate_key     /etc/ssl/certs/rancher.doma.in/server.key;
+ssl_password_file       /etc/ssl/certs/rancher.doma.in/pass;
+</code></pre>
+
+<p>You can skip the below if you use an ACME (Let’s Encrypt) client which does everything for you (and especially if it integrates with NGINX). Mine didn’t, so I had to figure it out:</p>
+
+<p>My <code class="language-plaintext highlighter-rouge">server.crt</code>:</p>
+
+<ul>
+  <li>Server certificate (for <code class="language-plaintext highlighter-rouge">rancher.doma.in</code>)</li>
+</ul>
+
+<p>My <code class="language-plaintext highlighter-rouge">fullchain.crt</code>:</p>
+
+<ul>
+  <li>Server certificate (for <code class="language-plaintext highlighter-rouge">rancher.doma.in</code>), followed by</li>
+  <li>Public key for IdenTrust (cross-signer for the R3 certificate), followed by</li>
+  <li>Let’s Encrypt R3 (RSA Intermediate Certificate)</li>
+</ul>
+
+<p>I suppose having two intermediate certificates increases compatibility of clients (that is, a server TLS certificate should validate even on HTTPS clients who don’t have one of the CA root certificates in their OS or browser).</p>
+
+<p>Separately, I imported IdenTrust and Let’s Encrypt Root CA certificates to Ubuntu CA Certificate Store (although they should be there by default if your Ubuntu is up-to-date - if you’re curious you can check before vs after - look what you already have under <code class="language-plaintext highlighter-rouge">/etc/ssl/certs/</code>.)</p>
+
+<p>My <code class="language-plaintext highlighter-rouge">server.key</code>:</p>
+
+<ul>
+  <li>Private key of my server certificate</li>
+</ul>
+
+<p>My password file <code class="language-plaintext highlighter-rouge">pass</code> (you can name it any way you want):</p>
+
+<ul>
+  <li>Text file with one line and one word (password to my server certificate)</li>
+</ul>
+
+<p>As you can imagine, you’d want to secure this VM <em>real</em> good.</p>
+
+<p>While Let’s Encrypt client (ACME) is easy to use, trying to understand what the hell is going on under the hood, where each certificate comes from and how they’re related to each other turned out to be less easy. Let’s Encrypt users can find some of these answers here (also read their FAQs):</p>
+
+<ul>
+  <li><a href="https://letsencrypt.org/certificates/">https://letsencrypt.org/certificates/</a></li>
+</ul>
+
+<p>With that in place, reload N+ configuration. If N+ is not running, start it. If it fails it will tell you why - make a backup, edit <code class="language-plaintext highlighter-rouge">nginx.conf</code>, and try again - you know the drill.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nginx <span class="nt">-s</span> reload
+<span class="c"># or</span>
+<span class="nb">sudo </span>systemctl start nginx
+</code></pre></div></div>
+
+<p>Test by visiting https://$DOMAIN:443. You can also use <a href="https://www.ssllabs.com/ssltest/index.html">external sites</a> to test the reachability and quality of your setup. Or try using OpenSSL client:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl s_client <span class="nt">-connect</span> rancher.doma.in:443
+</code></pre></div></div>
+
+<p>Eventually you should see something like this.</p>
+
+<p><img src="/assets/images/nginx-lets-encrypt-certificate.png" alt="Rancher behind NGINX Plus L7 TLS-Terminating Proxy" /></p>
+
+<p>Let’s Encrypt certificates are valid for only 12 weeks. Many users use <code class="language-plaintext highlighter-rouge">cron</code> or other scheduler to automate TLS certificate renewal (actually it’s re-issuance). If that’s permissible and possible in your environment, there’s even more value in using an automated or semi-automated approach.</p>
+
+<p>If you want to send N+ access and error logs elsewhere, read the NGINX documentation on how to do that, do it and reload N+ configuration again.</p>
+
+<h4 id="upstream-rancher-servers-on-different-network">Upstream (Rancher) servers on different network</h4>
+
+<p>Earlier I mentioned how I would make use of the second interface in my N+ VM, if upstream servers were on another network.</p>
+
+<p>Take a look at the following options if you need to make NGINX listen on, and bind the proxy service to, some particular network:</p>
+
+<pre><code class="language-raw">server {
+    listen ;
+    proxy_pass ;
+    proxy_bind ;
+}
+</code></pre>
+
+<p>Read about these options in the the NGINX documentation if you need to do this.</p>
+
+<h3 id="kubectl-x509-certificate-signed-by-unknown-authority-error">kubectl X.509 ‘certificate signed by unknown authority’ error</h3>
+
+<p>As you use <code class="language-plaintext highlighter-rouge">kubectl</code> to access your cluster via N+, your client needs to use the new Let’s Encrypt TLS certificate against <code class="language-plaintext highlighter-rouge">rancher.doma.in</code>.</p>
+
+<ul>
+  <li>Default TLS cert is issued by self-signed CA): <code class="language-plaintext highlighter-rouge">O = Acme Co, CN = Kubernetes Ingress Controller Fake Certificate</code></li>
+  <li>N+ L7 Proxy TLS cert is issued by Let’s Encrypt CA): <code class="language-plaintext highlighter-rouge">C = US, O = Internet Security Research Group, CN = ISRG Root X1</code></li>
+</ul>
+
+<p>If you continue using the default certificate included in K8s config file obtained from the Rancher cluster, <code class="language-plaintext highlighter-rouge">kubectl</code> will try to match validate the fake cert against <code class="language-plaintext highlighter-rouge">rancher.doma.in</code> TLS, which won’t work.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get nodes
+Unable to connect to the server: x509: certificate signed by unknown authority
+</code></pre></div></div>
+
+<p>Remember that in this post we didn’t touch our Rancher cluster, so now the only way to get around the mismatch between the fake self-signed cert and what <code class="language-plaintext highlighter-rouge">rancher.doma.in</code> has is this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--insecure-skip-tls-verify</span><span class="o">=</span><span class="nb">true </span>get nodes
+NAME             STATUS   ROLES                      AGE     VERSION
+rancher-node01   Ready    controlplane,etcd,worker   3d22h   v1.19.4
+rancher-node02   Ready    controlplane,etcd,worker   3d22h   v1.19.4
+rancher-node03   Ready    controlplane,etcd,worker   3d22h   v1.19.4
+</code></pre></div></div>
+
+<p>That’s not ideal, to say the least. What you can do to properly validate the cert is to replace the fake CA-issued cert from kubeconfig with the Let’s Encrypt-issued TLS used by N+.</p>
+
+<ul>
+  <li>Go to your N+ server. Get the server cert with <code class="language-plaintext highlighter-rouge">cat /etc/ssl/certs/rancher.doma.in/server.crt | base64 |  tr -d "\n"</code></li>
+  <li>Replace <code class="language-plaintext highlighter-rouge">certificate-authority-data</code> in the kubeconfig file from the Rancher cluster</li>
+</ul>
+
+<p>After that <code class="language-plaintext highlighter-rouge">kubectl</code>, <code class="language-plaintext highlighter-rouge">helm</code> and other commands will work without workarounds.</p>
+
+<p>Ideally we should deploy Kubernetes so that these workarounds aren’t necessary, but this post is limited to dealing with TLS termination on a L7 LB VM with NGINX or NGINX Plus. I may explore internal CA and certs for Rancher and K8s in general in a future post.</p>
+
+<h2 id="use-n-to-reverse-proxy-multiple-rancher-clusters-or-services">Use N+ to reverse-proxy multiple Rancher clusters or services</h2>
+
+<p>If you want to expose multiple clusters using the same port and IP address, read <a href="https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/#an-ssl-certificate-with-several-names">this</a>.</p>
+
+<p>Ideally you’d have multiple addresses and different TLS certificates, but workarounds may be possible too: use a different IP address for each cluster, use the same IPv4 address but a different port for each cluster, or run N+ on a nearby Public Cloud and forward requests to your on-premises Rancher through VPN.)</p>
+
+<p>Of course, get familiar with K8s networking and security before doing this.</p>
+
+<h2 id="use-n-to-reverse-proxy-other-api-or-service-endpoints">Use N+ to reverse-proxy other API or service endpoints</h2>
+
+<p>This isn’t related to external access to Rancher cluster(s), but just something you may want to consider since you already set up that highly available NGINX reverse proxy. (As mentioned earlier, <code class="language-plaintext highlighter-rouge">datafabric.lab</code> is my <strong>internal</strong> domain, completely unrelated to Let’s Encrypt, Ingress or External FQDN.)</p>
+
+<p>In our case there are internal Web-based services such as HCI Collector which use Basic Authentication and would benefit from the security NGINX reverse proxy can provide. While it is possible to create TLS certificates HCI Collector containers, it is also not very convenient and if we did that at most we’d only create yet another NGINX proxy on the HCI Collector VM.</p>
+
+<p>What we can do is add a new “section” to our new N+ configuration and perform authentication for HCI Collector service with a vetted and supported N+ and so eliminate the unnecessary reverse proxy sprawl.</p>
+
+<p>Another example is the NGINX dashboard (if you have N+, visit <code class="language-plaintext highlighter-rouge">http://nginx-server:8080/dashboard.html</code>), which doesn’t need external access but requires authorization for <em>write</em> access to NGINX API.</p>
+
+<p>We can use internal DNS and CA to create additional FQDNs such as <code class="language-plaintext highlighter-rouge">perf.datafabric.lab</code> and <code class="language-plaintext highlighter-rouge">ap-gw.datafabric.lab</code>, deploy internal TLS certificates to N+ and expose such services to users on different internal networks.</p>
+
+<p>While we can (and should) use HTTPS where possible, here’s an example of using N+ to serve as API proxy to a read-only API endpoint and dashboard - its own API dashboard (available in N+) - for which I didn’t have time to issue internal TLS certificate:</p>
+
+<p><img src="/assets/images/nginx-api-gateway-dashboard-internal.png" alt="Internal API endpoint exposed via HTTP behind NGINX Plus" /></p>
+
+<pre><code class="language-raw">  server {
+    listen 8080;
+    location /api {
+      api write=off;
+    }
+    location = /dashboard.html {
+      root   /usr/share/nginx/html;
+    }
+    location = /status.html {
+      return 301 /dashboard.html;
+    }
+  }
+</code></pre>
+
+<p>Additional details can be found <a href="https://docs.nginx.com/nginx/admin-guide/monitoring/live-activity-monitoring/#">here</a>.</p>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>There’s a lot more to be done here, for example:</p>
+
+<ul>
+  <li>Centralize logging for auditing, security and performance <a href="https://docs.nginx.com/nginx/admin-guide/monitoring/live-activity-monitoring/#configuring-the-api">monitoring</a> purposes</li>
+  <li>Automate certificate re-issuance</li>
+  <li>Break down <code class="language-plaintext highlighter-rouge">nginx.conf</code> into sections to make it easier to understand and maintain</li>
+  <li>Make N+ part of your CI/CD operations so that proxy configuration is added, changed and removed automatically</li>
+  <li>Implement proper CA and TLS certificates for K8s servers</li>
+  <li>Implement modern authentication and authorization for services that may have outdated configuration (TLSv1 or SSLv3) or use old ciphers</li>
+  <li>Implement fine-grained access to on-premises clusters and services based on IP address and other criteria</li>
+  <li>Implement rate reservations and limits for services proxied by N+ and beyond the granularity you get from your firewall</li>
+  <li>Implement Hybrid Cloud integrations so that you can run and manage your services on- and off-premises, burst to cloud, and more (if you’re using containers in Public Cloud but don’t know about <a href="Spot">spot.io</a>: Spot can help you observe and optimize cloud costs - register for free and see estimated savings in no time!)</li>
+</ul>
+
+<p>These integrations can easily take months or even quarters, depending on the size of your team and the length of your to-do list, which is why I believe it makes sense to pay for, rather than build by yourself, important components (such as NGINX Plus or Rancher, for example).</p>
+
+<p>Users can save time by getting professional advice and implementation help, as well as increase the quality and security of these integrations, without introducing integrations that can be extremely difficult-to-untangle.</p>
+
+<p>The benefits of this approach are not limited to K8s but extend across your K8s, VI and bare metal services and into hybrid or multi-cloud environments - just like NetApp Data Fabric.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">• Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/08/beegfs-csi-driver-lives-on.html">• ThinkParQ takes over NetApp-created BeeGFS CSI driver</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">• Block volume mode in Kubernetes with SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/21/trident-new-stateful-set-delete-feature.html">• StatefulSet PVC Retention with Trident and SolidFire</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

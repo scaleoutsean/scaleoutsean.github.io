@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Configure SNMP on SolidFire cluster using Ansible | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Configure SNMP on SolidFire cluster using Ansible | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Configure SNMP on SolidFire cluster using Ansible" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible" />
+<meta property="og:description" content="How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-01-31T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Configure SNMP on SolidFire cluster using Ansible","dateModified":"2022-01-31T00:00:00+08:00","datePublished":"2022-01-31T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html","description":"How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Configure SNMP on SolidFire cluster using Ansible</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>31 Jan 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    5 minute read
+  
+
+    </span>
+  </div>
+  
+        <p><strong>NOTICE:</strong> all credentials and tokens on this page are samples, not leaked.</p>
+
+<p>I mentioned Ansible in my <a href="/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html">last post</a> and that reminded me that I haven’t written about it for a while. And even in that post I mentioned it only as an example how its use could be <em>avoided</em> with the NetApp Data Ops Toolkit.</p>
+
+<p>In the context of my favorite topic, SolidFire, I think I haven’t mentioned it for months. Why? Because I rarely need it for SolidFire.</p>
+
+<p>This isn’t to say that it’s not useful - if you have more than one cluster or if you make frequent or complex changes to SolidFire cluster configuration, it is very useful.</p>
+
+<p>But despite that, I rarely - in fact almost never - get any questions about it.</p>
+
+<p>Why is that? I think it’s very simple:</p>
+
+<ul>
+  <li>SolidFire easily and nicely scales out to dozens of nodes, so very few users have multiple clusters. Normally that could mean 30 arrays and 60 volume groups to manage, but with SolidFire you have one cluster and no volume groups to manage</li>
+  <li>Users who do have multiple SolidFire clusters and use Ansible are likely to have a lot of other infra (if you have 50 SolidFire nodes, you probably have hundreds of servers), and therefore the staff and expertise that eliminates SolidFire-specific challenges</li>
+</ul>
+
+<p>People who have just one or two clusters can manage them just fine with PowerShell or Python SDK - there’s very little to manage on SolidFire (accounts, volumes, QoS policies) so even with thousands of VMs or containers, it’s easy to manage with DIY PowerShell scripts. Some anecdotal examples:</p>
+
+<ul>
+  <li>Reasonably reliable SolidFire cluster failover script in less than 200 lines of PowerShell (video demo on YouTube)</li>
+  <li>SolidFire cluster and Trident back-end failover script in less than 300 lines (video demo on YouTube; I haven’t published)</li>
+  <li>Parallel SolidFire volume backup to S3 (210 lines of PowerShell in my awesome-solidfire repo on Github)</li>
+</ul>
+
+<p>To do the same with Ansible you may need fewer lines, but you also need to:</p>
+
+<ul>
+  <li>Install, understand and maintain Ansible</li>
+  <li>The same for SolidFire collection for Ansible</li>
+  <li>Write own modules or scripts for things that haven’t been implemented (curl and JSON-RPC seems much better than doing the same in Python, but then one has to wonder why use Ansible at all)</li>
+</ul>
+
+<p>Again, all of that is easily justified when you have multiple clusters or use Ansible to automate other stuff.</p>
+
+<p>All right, enough ranting - let’s do this thing. SolidFire has many Ansible modules but I picked SNMP because I’ve done a lot of <a href="/2021/07/19/solidfire-mib-snmp-monitoring.html">SNMP</a> and <a href="/2021/08/13/solidfire-snmp-v3-grafana.html">monitoring</a>-related work (see blog archive) so with this post I’ll complete that work.</p>
+
+<p>My sf_snmp.yml:</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Configure SolidFire SNMPv2</span>
+  <span class="na">hosts</span><span class="pi">:</span> <span class="s">localhost</span> 
+  <span class="na">gather_facts</span><span class="pi">:</span> <span class="s">no</span>
+  <span class="na">connection</span><span class="pi">:</span> <span class="s">local</span>
+
+  <span class="na">vars</span><span class="pi">:</span>
+    <span class="na">elementsw_hostname</span><span class="pi">:</span> <span class="s">192.168.1.34</span>
+    <span class="na">elementsw_username</span><span class="pi">:</span> <span class="s">admin</span>
+    <span class="na">elementsw_password</span><span class="pi">:</span> <span class="s">wink-wink</span>
+
+  <span class="na">tasks</span><span class="pi">:</span>  
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Configure SNMP on SolidFire</span>
+      <span class="na">na_elementsw_cluster_snmp</span><span class="pi">:</span>
+        <span class="na">hostname</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_hostname</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">username</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_username</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_password</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">state</span><span class="pi">:</span> <span class="s">present</span>
+        <span class="na">snmp_v3_enabled</span><span class="pi">:</span> <span class="s">False</span>
+        <span class="na">networks</span><span class="pi">:</span>
+          <span class="na">access</span><span class="pi">:</span> <span class="s">ro</span>
+          <span class="na">cidr</span><span class="pi">:</span> <span class="m">24</span>
+          <span class="na">community</span><span class="pi">:</span> <span class="s">MgmtNetwork</span>
+          <span class="na">network</span><span class="pi">:</span> <span class="s">192.168.1.0</span>
+</code></pre></div></div>
+
+<p>Some comments:</p>
+
+<ul>
+  <li>we use SolidFire Python SDK and because of that we operate against localhost</li>
+  <li>we don’t need to gather_facts</li>
+</ul>
+
+<p>Result:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin"
+
+PLAY [SolidFire SNMPv2 Config] *****************************************************************************************
+
+TASK [Configure SNMP on SolidFire] *************************************************************************************
+ok: [localhost]
+
+PLAY RECAP *************************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+</code></pre></div></div>
+
+<p>Let’s compare that with SoliFire PowerShell Tools:</p>
+
+<ul>
+  <li>For SNMPv2 we need a list Networks (with at least one member hashtable) which you can build or Get</li>
+  <li>PowerShell will save you 1-2 seconds, but if you do this once in five years that won’t matter</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$snmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-SFSnmpInfo</span><span class="w">
+
+</span><span class="n">Networks</span><span class="w">                                                                                 </span><span class="nx">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w"> </span><span class="nx">UsmUsers</span><span class="w">
+</span><span class="o">--------</span><span class="w">                                                                                 </span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w"> </span><span class="o">--------</span><span class="w">
+</span><span class="p">{{</span><span class="s2">"Access"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ro"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cidr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="s2">"Community"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MgmtNetwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Network"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"192.168.1.0"</span><span class="p">}}</span><span class="w">    </span><span class="n">True</span><span class="w">         </span><span class="nx">False</span><span class="w"> 
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w">
+
+</span><span class="n">Access</span><span class="w"> </span><span class="nx">Cidr</span><span class="w"> </span><span class="nx">Community</span><span class="w">   </span><span class="nx">Network</span><span class="w">
+</span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w"> </span><span class="o">---------</span><span class="w">   </span><span class="o">-------</span><span class="w">
+</span><span class="n">ro</span><span class="w">       </span><span class="nx">24</span><span class="w"> </span><span class="nx">MgmtNetwork</span><span class="w"> </span><span class="nx">192.168.1.0</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Set-SFSnmpInfo</span><span class="w"> </span><span class="nt">-Network</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w"> </span><span class="nt">-Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-SnmpV3Enabled</span><span class="p">:</span><span class="nv">$False</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
+
+</span><span class="n">Networks</span><span class="w">                                                                                 </span><span class="nx">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w"> </span><span class="nx">UsmUsers</span><span class="w">
+</span><span class="o">--------</span><span class="w">                                                                                 </span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w"> </span><span class="o">--------</span><span class="w">
+</span><span class="p">{{</span><span class="s2">"Access"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ro"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cidr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="s2">"Community"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MgmtNetwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Network"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"192.168.1.0"</span><span class="p">}}</span><span class="w">    </span><span class="n">True</span><span class="w">         </span><span class="nx">False</span><span class="w"> 
+
+</span></code></pre></div></div>
+
+<p>To do the same for SNMPv3 you’d need to add a USM user before you Set:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Add-SFSnmpUsmUser</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">admin</span><span class="w"> </span><span class="nt">-Access</span><span class="w"> </span><span class="nx">rouser</span><span class="w"> </span><span class="nt">-Password</span><span class="w"> </span><span class="nx">password</span><span class="w"> </span><span class="nt">-Passphrase</span><span class="w"> </span><span class="nx">passphrase</span><span class="w"> </span><span class="nt">-SecLevel</span><span class="w"> </span><span class="nx">auth</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Set-SFSnmpInfo</span><span class="w"> </span><span class="nt">-Networks</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w"> </span><span class="nt">-Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-SnmpV3Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-UsmUsers</span><span class="w"> </span><span class="nv">$user</span><span class="o">.</span><span class="nf">UsmUsers</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
+</span></code></pre></div></div>
+
+<p>To disable SNMP with PowerShell:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Disable-SFSnmp</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="nv">$False</span><span class="w">
+
+</span><span class="n">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w">
+</span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w">
+  </span><span class="n">False</span><span class="w">         </span><span class="nx">False</span><span class="w">
+</span></code></pre></div></div>
+
+<p>SNMPv3 can also be configured via Ansible - just change snmp_v3_enabled to True and add a block with USM configuration:</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="na">snmp_v3_enabled</span><span class="pi">:</span> <span class="s">True</span>
+    <span class="na">usm_users</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">admin</span>
+      <span class="na">access</span><span class="pi">:</span> <span class="s">rouser</span>
+      <span class="na">password</span><span class="pi">:</span> <span class="s">passphrase</span>
+      <span class="na">passphrase</span><span class="pi">:</span> <span class="s">passphrase</span>
+      <span class="na">secLevel</span><span class="pi">:</span> <span class="s">auth</span>
+</code></pre></div></div>
+
+<p>You can have just one YAML file with SNMPv3 in it, and disable it when configuring SNMPv2:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin;state=present;snmp_v3_enabled=false" 
+</code></pre></div></div>
+
+<p>To disable SNMP server with Ansible, set state to false (absent):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin;state=false"
+
+PLAY [SolidFire SNMPv2 Config] *****************************************************************************************
+
+TASK [Configure SNMP on SolidFire] *************************************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************
+localhost                  : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+</code></pre></div></div>
+
+<h2 id="summary">Summary</h2>
+
+<p>Both approaches are valid and work better than manual operations through the Web UI or Hybrid Cloud Control.</p>
+
+<p>If you already use Ansible for other infrastructure than SolidFire, or have more than one SolidFire cluster, you’ll probably find more suitable for SolidFire management than PowerShell.</p>
+
+<p>If you don’t like Python you can still use SolidFire PowerShell Tools in place of missing SolidFire modules or even instead of NetApp Element Software modules you don’t like (maybe they don’t do something you can do with PowerShell, or aren’t available yet).</p>
+
+<p>Use ansible.windows.win_powershell or other (shell) module to execute your PowerShell scripts from within Ansible. Could we run Ansible from PowerShell rather than PowerShell from Ansible? Yes, that works too - that’s the approach I use in solidbackup: I use PowerShell for all the SolidFire-related stuff because it’s much better and faster than Ansible, but I don’t want to use PowerShell to deal with the rest - namely Linux devices and mounts - because Ansible is much better for that.</p>
+
+<p>All these scripts aren’t very long and take mere hours to develop, so you can find what’s best for you by doing just two-three simple PoCs.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">• Add NetApp SolidFire iSCSI storage to KVM</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/12/12/solidfire-unmap-hyper-v.html">• UNMAP/TRIM Hyper-V volumes backed by NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/12/10/solidfire-backup-to-minio-compression.html">• NetApp SolidFire backup to S3 and MinIO compression savings</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/12/07/solidfire-rbac-for-json-rpc-api.html">• RBAC and delegation for SolidFire JSON-RPC API with Lua</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/11/22/genai-with-netapp-solidfire.html">• NetApp SolidFire with GenAI and inferencing workloads</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Backup and replicate Kubernetes PVs with SolidFire using VolSync | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Snapshot, backup, and replicate Kubernetes volumes with NetApp Trident and SolidFire using VolSync
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Backup and replicate Kubernetes PVs with SolidFire using VolSync | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Backup and replicate Kubernetes PVs with SolidFire using VolSync" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="Snapshot, backup, and replicate Kubernetes volumes with NetApp Trident and SolidFire using VolSync" />
+<meta property="og:description" content="Snapshot, backup, and replicate Kubernetes volumes with NetApp Trident and SolidFire using VolSync" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/02/13/volume-replication-solidfire-kubernetes-volsync.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/02/13/volume-replication-solidfire-kubernetes-volsync.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-02-13T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Backup and replicate Kubernetes PVs with SolidFire using VolSync","dateModified":"2023-02-13T00:00:00+08:00","datePublished":"2023-02-13T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/02/13/volume-replication-solidfire-kubernetes-volsync.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/02/13/volume-replication-solidfire-kubernetes-volsync.html","description":"Snapshot, backup, and replicate Kubernetes volumes with NetApp Trident and SolidFire using VolSync","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Backup and replicate Kubernetes PVs with SolidFire using VolSync</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>13 Feb 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    10 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#volsync">VolSync</a></li>
+  <li><a href="#use-cases">Use cases</a></li>
+  <li><a href="#walk-through">Walk-through</a></li>
+  <li><a href="#volsync-as-generic-backup-and-dr-application">VolSync as generic backup and DR application</a></li>
+  <li><a href="#closing-thoughts">Closing thoughts</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>There are literally hundreds of applications and workflows for data replication and synchronization.</p>
+
+<p>NetApp alone has several (CloudSync, XCP, plus array-based replication). I’ve blogged about them here and you can find those posts using the search function.</p>
+
+<p>Do we need to talk about yet another one? Of course!</p>
+
+<p><a href="https://volsync.readthedocs.io/en/stable/index.html">VolSync</a> is not old, but it uses data movers that have been around for a while. And in fact I’ve blogged about all of them before I became aware about VolSync.</p>
+
+<p>Two years ago I released “poor man’s VolSync for Linux VMs and Docker” which I called <a href="/2021/05/08/revisiting-solidbackup.html">SolidBackup</a>, and I used one of the movers used by VolSync (Restic).</p>
+
+<p>I wasn’t aware of VolSync but I had started playing with that approach before VolSync appeared. This is one of animated GIFs from a prototype from 2020, which used Duplicacy for backup and data movement.</p>
+
+<p><img src="/assets/images/solid-backup-prototype.gif" alt="SolidBackup prototype with Duplicacy" /></p>
+
+<p>While SolidBackup is very basic compared to VolSync, my point is its approach made sense to me years ago, even before VolSync came out.</p>
+
+<h2 id="volsync">VolSync</h2>
+
+<p>So, what does VolSync do?</p>
+
+<p>The same thing SolidBackup does: it takes a snapshot of a volume (Persistent Volume (PV), in this case) and uploads it elsewhere (say, S3) using one of several supported data movers. It can also run that workflow in reverse which makes it a backup/restore utility as well as a volume/file synchronization utility.</p>
+
+<p>Rsync over SSH is one of the supported data movers. (I’ve also <a href="/2021/11/30/digital-ocean-volume-to-solidfire-volume-and-back.html">experimented with that</a>).</p>
+
+<p>If your Kubernetes environment has a CSI provisioner such as Trident (which can be used with SolidFire) or DirectPV (which we can <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">use with E-Series</a>), VolSync lets you snapshot data at the source, back it up to S3, and restore it to the same or new location.</p>
+
+<p><img src="/assets/images/solidfire-eseries-volsync-volume-backup-and-data-replication.png" alt="Cluster-to-Cluster data replication" /></p>
+
+<p>This diagram shows a SolidFire-attached database at the source. Remote backups (in S3) can be restored to the same or different site, and to any CSI-managed storage that can create snapshots.</p>
+
+<p>So, VolSync is hardware-independent. The image depicts different storage arrays to highlight that point.</p>
+
+<p>Technically we don’t need snapshot to restore a VolSync backup, but if we want to fail over, write to a recovered data volume and then fail back, we may need the snapshot feature to backup the updated data at the destination before failing back.</p>
+
+<h2 id="use-cases">Use cases</h2>
+
+<ul>
+  <li>Database backup from many production arrays to a slower, but economical E-Series with HDD</li>
+  <li>Database backup for DR (any-to-any array) - for example Cloud-to-Office or between sites</li>
+  <li>Faster or cheaper copy of production data for Dev/Test/Analytics - for example Private-Cloud-to-Spot.io or back</li>
+</ul>
+
+<p>Although the name VolSync implies synchronization, its use cases cover backup <em>and</em> data replication.</p>
+
+<p>While it’s not a problem to take a Trident snapshot of a SolidFire volume every few minutes and upload it to S3 or another Kubernetes cluster, this approach can also satisfy the 3-2-1 rule and give you automated backups with a low (&lt; 1 hour) RPO, works between same or heterogeneous storage, and it costs nothing.</p>
+
+<p>The thing about replication and synchronization utilities is that there are so many use cases and details that you can never have too many tools at your disposal, so VolSync is a welcome addition to our tool chest.</p>
+
+<p>I think VolSync can be especially interesting to E-Series users because unlike SolidFire (which supports ONTAP SnapMirror and has Trident), E-Series cannot replicate to or from ONTAP and isn’t supported by Trident.</p>
+
+<p>To set this up for backup to S3, at the source we deploy VolSync as source pod, pick a synchronization interval, bucket details, and two storage class options (for the clone, and snapshot, respectively).</p>
+
+<h2 id="walk-through">Walk-through</h2>
+
+<p>I don’t want to provide all configuration steps and details because the official documentation has them, so instead I will highlight high level steps.</p>
+
+<p>We create a configuration file for our chosen data mover (Restic or something else).</p>
+
+<p>Then we define our replication source (in my case, it’s InfluxDB from E-Series Performance Analyzer running in the <code class="language-plaintext highlighter-rouge">epa</code> namespace).</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">volsync.backube/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ReplicationSource</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">epa-influxdb-pvc</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">epa</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">sourcePVC</span><span class="pi">:</span> <span class="s">influxdb-pvc</span>
+  <span class="na">trigger</span><span class="pi">:</span>
+    <span class="na">schedule</span><span class="pi">:</span> <span class="s2">"</span><span class="s">*/30</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*"</span>
+  <span class="na">restic</span><span class="pi">:</span>
+    <span class="na">pruneIntervalDays</span><span class="pi">:</span> <span class="m">2</span>
+    <span class="na">repository</span><span class="pi">:</span> <span class="s">restic-config</span>
+    <span class="na">retain</span><span class="pi">:</span>
+      <span class="na">hourly</span><span class="pi">:</span> <span class="m">3</span>
+      <span class="na">daily</span><span class="pi">:</span> <span class="m">1</span>
+      <span class="na">weekly</span><span class="pi">:</span> <span class="m">0</span>
+      <span class="na">monthly</span><span class="pi">:</span> <span class="m">0</span>
+      <span class="na">yearly</span><span class="pi">:</span> <span class="m">0</span>
+    <span class="na">copyMethod</span><span class="pi">:</span> <span class="s">Clone</span>
+    <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">bronze</span>
+    <span class="na">volumeSnapshotClassName</span><span class="pi">:</span> <span class="s">trident-snapshotclass</span> 
+</code></pre></div></div>
+
+<p>This possibility of using a different storage class for snapshot/clone () is also similar to what I did in SolidBackup, have a higher QoS for the clone volume which makes backup run fast (e.g. Maximum IOPS: 15000) while the source volume can remain as is (e.g. Maximum IOPS: 3000).</p>
+
+<p>To perform synchronization from S3 to PVC at the destination, we configure a restore job with a delay sufficient for backup schedule to clone, backup and upload data to S3. For example:</p>
+
+<ul>
+  <li>Src: runs snapshot and backup (to S3) at 5 and 35 minute mark every hour (takes ~5-7 minutes)</li>
+  <li>Dst: restores from S3 at 15 and 45 minute mark</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">spec</span><span class="pi">:</span>
+  <span class="na">restic</span><span class="pi">:</span>
+    <span class="na">copyMethod</span><span class="pi">:</span> <span class="s">Clone</span>
+    <span class="na">pruneIntervalDays</span><span class="pi">:</span> <span class="m">2</span>
+    <span class="na">repository</span><span class="pi">:</span> <span class="s">restic-config</span>
+    <span class="na">retain</span><span class="pi">:</span>
+      <span class="na">daily</span><span class="pi">:</span> <span class="m">1</span>
+      <span class="na">hourly</span><span class="pi">:</span> <span class="m">3</span>
+      <span class="na">monthly</span><span class="pi">:</span> <span class="m">0</span>
+      <span class="na">weekly</span><span class="pi">:</span> <span class="m">0</span>
+      <span class="na">yearly</span><span class="pi">:</span> <span class="m">0</span>
+    <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">bronze</span>
+    <span class="na">volumeSnapshotClassName</span><span class="pi">:</span> <span class="s">trident-snapshotclass</span>
+  <span class="na">sourcePVC</span><span class="pi">:</span> <span class="s">influxdb-pvc</span>
+  <span class="na">trigger</span><span class="pi">:</span>
+    <span class="na">schedule</span><span class="pi">:</span> <span class="s1">'</span><span class="s">*/30</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*'</span>
+<span class="na">status</span><span class="pi">:</span>
+  <span class="na">conditions</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">lastTransitionTime</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2023-02-16T11:02:01Z"</span>
+    <span class="na">message</span><span class="pi">:</span> <span class="s">Synchronization in-progress</span>
+    <span class="na">reason</span><span class="pi">:</span> <span class="s">SyncInProgress</span>
+    <span class="na">status</span><span class="pi">:</span> <span class="s2">"</span><span class="s">True"</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">Synchronizing</span>
+  <span class="na">lastSyncStartTime</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2023-02-16T10:59:34Z"</span>
+  <span class="na">restic</span><span class="pi">:</span> <span class="pi">{}</span>
+
+</code></pre></div></div>
+
+<p>With volume copy method set to <code class="language-plaintext highlighter-rouge">Clone</code>, we may see a temporary clone PVC gets created (and deleted once backup is done):</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">Events</span><span class="pi">:</span>
+  <span class="s">Type    Reason                        Age   From                Message</span>
+  <span class="s">----    ------                        ----  ----                -------</span>
+  <span class="s">Normal  PersistentVolumeClaimCreated  73s   volsync-controller  created PersistentVolumeClaim/volsync-epa-influxdb-src as a clone of PersistentVolumeClaim/influxdb-pvc</span>
+</code></pre></div></div>
+
+<p>At the destination - which in my case is the <code class="language-plaintext highlighter-rouge">epa-restore</code> namespace (in the same cluster), we configure the same S3 repository, a target PVC (same or larger size), and set up a VolSync replication destination.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">volsync.backube/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ReplicationDestination</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">epa-influxdb-replica</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">trigger</span><span class="pi">:</span>
+    <span class="na">manual</span><span class="pi">:</span> <span class="s">restore-once</span>
+  <span class="na">restic</span><span class="pi">:</span>
+    <span class="na">repository</span><span class="pi">:</span> <span class="s">restic-config</span>
+    <span class="c1"># Use an existing PVC, don't provision a new one</span>
+    <span class="na">destinationPVC</span><span class="pi">:</span> <span class="s">influxdb-pvc</span>
+    <span class="na">copyMethod</span><span class="pi">:</span> <span class="s">Direct</span>
+
+</code></pre></div></div>
+
+<p>To restore on-demand VolSync has a manual trigger which is done by simply naming a trigger schedule <code class="language-plaintext highlighter-rouge">manual</code> and giving it a string value, instead of <code class="language-plaintext highlighter-rouge">schedule</code> (which requires crontab-like schedule configuration).</p>
+
+<p>Whatever the trigger setting, once the job kicks in, a pod will appear in the source namespace. (Here I’m using Rclone.)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> epa
+NAME                                    READY   STATUS    RESTARTS   AGE
+volsync-rclone-src-epa-influxdb-2q6kd   1/1     Running   0          24s
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">Last Sync Time</code> indicates that synchronization completed.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">Status</span><span class="pi">:</span>
+  <span class="na">Conditions</span><span class="pi">:</span>
+    <span class="na">Last Transition Time</span><span class="pi">:</span>  <span class="s">2023-02-16T14:44:09Z</span>
+    <span class="na">Message</span><span class="pi">:</span>               <span class="s">Waiting for next scheduled synchronization</span>
+    <span class="na">Reason</span><span class="pi">:</span>                <span class="s">WaitingForSchedule</span>
+    <span class="na">Status</span><span class="pi">:</span>                <span class="s">False</span>
+    <span class="na">Type</span><span class="pi">:</span>                  <span class="s">Synchronizing</span>
+  <span class="na">Last Sync Duration</span><span class="pi">:</span>      <span class="s">52.600550935s</span>
+  <span class="na">Last Sync Time</span><span class="pi">:</span>          <span class="s">2023-02-16T14:44:09Z</span>
+  <span class="na">Next Sync Time</span><span class="pi">:</span>          <span class="s">2023-02-16T14:50:00Z</span>
+<span class="na">Events</span><span class="pi">:</span>
+  <span class="s">Type    Reason                        Age    From                Message</span>
+  <span class="s">----    ------                        ----   ----                -------</span>
+  <span class="s">Normal  PersistentVolumeClaimCreated  3m51s  volsync-controller  created PersistentVolumeClaim/volsync-epa-influxdb-src as a clone of PersistentVolumeClaim/influxdb-pvc</span>
+</code></pre></div></div>
+
+<p>VolSync’s Rclone was configured to use <code class="language-plaintext highlighter-rouge">volsync/epa</code> on S3 (based on the <code class="language-plaintext highlighter-rouge">BUCKET/NAMESPACE</code> pattern, which is fine if there’s just one PVC in the namespace). Normally it’s better to use three PVCs for EPA’s InfluxDB, but I simplified InfluxDB PVC configuration to use just one. All three data directories (data, meta, WAL) are visible in this output:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/00/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/01/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/02/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/03/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/04/0000
+<span class="o">[</span>2023-02-16 22:43:57 CST] 4.0MiB STANDARD data/_internal/_series/05/0000
+<span class="o">[</span>2023-02-16 22:43:57 CST] 4.0MiB STANDARD data/_internal/_series/06/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 4.0MiB STANDARD data/_internal/_series/07/0000
+<span class="o">[</span>2023-02-16 22:43:41 CST] 2.4KiB STANDARD data/_internal/monitor/1/fields.idx
+<span class="o">[</span>2023-02-16 22:43:41 CST]   146B STANDARD meta/meta.db
+<span class="o">[</span>2023-02-16 22:43:41 CST] 2.9KiB STANDARD permissons.facl
+<span class="o">[</span>2023-02-16 22:43:42 CST] 2.8MiB STANDARD wal/_internal/monitor/1/_00001.wal
+</code></pre></div></div>
+
+<p>The same in S3 explorer:</p>
+
+<p><img src="/assets/images/volsync-replication-kubernetes-solidfire-01.png" alt="VolSync bucket" /></p>
+
+<p>Our destination should indicate that synchronization has completed:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">Status</span><span class="pi">:</span>
+  <span class="na">Conditions</span><span class="pi">:</span>
+    <span class="na">Last Transition Time</span><span class="pi">:</span>  <span class="s">2023-02-16T14:45:24Z</span>
+    <span class="na">Message</span><span class="pi">:</span>               <span class="s">Waiting for next scheduled synchronization</span>
+    <span class="na">Reason</span><span class="pi">:</span>                <span class="s">WaitingForSchedule</span>
+    <span class="na">Status</span><span class="pi">:</span>                <span class="s">False</span>
+    <span class="na">Type</span><span class="pi">:</span>                  <span class="s">Synchronizing</span>
+  <span class="na">Last Sync Duration</span><span class="pi">:</span>      <span class="s">24.59596989s</span>
+  <span class="na">Last Sync Time</span><span class="pi">:</span>          <span class="s">2023-02-16T14:45:24Z</span>
+  <span class="na">Latest Image</span><span class="pi">:</span>
+    <span class="na">API Group</span><span class="pi">:</span>     
+    <span class="na">Kind</span><span class="pi">:</span>          <span class="s">PersistentVolumeClaim</span>
+    <span class="na">Name</span><span class="pi">:</span>          <span class="s">volsync-influxdb-restore-dest</span>
+  <span class="na">Next Sync Time</span><span class="pi">:</span>  <span class="s">2023-02-16T15:00:00Z</span>
+<span class="na">Events</span><span class="pi">:</span>
+  <span class="s">Type    Reason                        Age   From                Message</span>
+  <span class="s">----    ------                        ----  ----                -------</span>
+  <span class="s">Normal  PersistentVolumeClaimCreated  5m7s  volsync-controller  created PersistentVolumeClaim/volsync-influxdb-restore-dest to receive incoming data</span>
+</code></pre></div></div>
+
+<p>We’ve completed the following:</p>
+
+<ul>
+  <li>Source: snapshot and clone a PVC, back it up to S3</li>
+  <li>Destination: restore from S3</li>
+</ul>
+
+<p>Our InfluxDB volumes (source and destination, they’re in the same cluster):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> epa
+NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+influxdb-pvc   Bound    pvc-5ee00ac8-21fd-428b-885e-8ff36a568bd5   1Gi        RWO            bronze         4h19m
+
+<span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> epa-restore
+NAME                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+volsync-influxdb-restore-dest   Bound    pvc-076b9589-0396-4708-9c69-e1ebb0ec2173   1Gi        RWO            bronze         12m
+</code></pre></div></div>
+
+<p>The same in the SolidFire UI (VolSync’s clone operation didn’t leave undesired snapshots behind).</p>
+
+<p><img src="/assets/images/volsync-replication-kubernetes-solidfire-02.png" alt="VolSync source and destination volumes on SolidFire" /></p>
+
+<p>It took around two minutes to complete backup &amp; restore with a very small amount of data.</p>
+
+<p>My environment (everything is running in VMs, including SolidFire) isn’t suitable for benchmarking, but from many similar (backup to S3, SolidBackup, etc.) tests on physical hardware, we know that several pods could backup at over 1 GB/s on SolidFire and maybe 5-10 GB/s on E-Series.</p>
+
+<h2 id="volsync-as-generic-backup-and-dr-application">VolSync as generic backup and DR application</h2>
+
+<p>One of the use cases I had in mind for SolidBackup was using SolidBackup as general backup for non-Docker (Linux) volumes.</p>
+
+<p>I blogged about that in detail but the bottom line is that wouldn’t work well for non-Linux volumes and multi-partition volumes.</p>
+
+<p>The latter shouldn’t be a problem for anyone who follows this blog and does what I do (create filesystems on non-partitioned LUNs).</p>
+
+<p>For regular Linux volumes (KVM, bare metal servers, even Docker), we can use that idea with VolSync:</p>
+<ul>
+  <li>Maintain a YAML or JSON file with list of volumes to backup</li>
+  <li>Take snapshots the way you normally do</li>
+  <li>Run a Kubernetes job that uses the SolidFire API to find the latest (or specially named) snapshot for each of the volumes, clone it and import to Kubernetes using the Trident import feature</li>
+  <li>Trigger VolSync backup jobs to copy data to S3</li>
+</ul>
+
+<p>Maybe it’d be easier to use Velero for that, but VolSync would work as well and there’s also a <a href="https://github.com/backube/snapscheduler">scheduler</a>.</p>
+
+<p>If SolidFire wasn’t going End-of-Sale, I think adding SolidFire’s <a href="http://scaleoutsean.github.io/2021/04/21/solidfire-backup-to-s3.html">Backup/Restore to/from S3 API calls</a> to the list of supported movers would be a great addition to VolSync. By that I don’t mean adding SolidFire’s APIs, but adding a generic transport plugin to VolSync, and then using it to wrap SolidFire’s API calls in it. That backup/restore mover would be slower than several parallel Restic or Rclone backups, but it wouldn’t require any clients to run.</p>
+
+<h2 id="closing-thoughts">Closing thoughts</h2>
+
+<p>It’d be time-consuming to compare VolSync with other utilities so I won’t do it.</p>
+
+<p>I wanted to use Restic but I couldn’t backup to work in VolSync, although I had it working perfectly fine on the worker node VM… Rclone worked, so that’s what I ended up using.</p>
+
+<p>VolSync can be hard to set up the first time one does it because there are options and moving components (unlike in Velero, for example, where data mover is well integrated and almost hidden from the user).</p>
+
+<p>Those who automate a lot may find it easy to use because typos will be less of a problem and if you do it once, every consecutive time it’s only easier because it’s after the first time, it’s all automated and there’s almost nothing to do.</p>
+
+<p>VolSync feels “familiar” and I feel comfortable with all its data movers, so I wouldn’t hesitate to consider using it with SolidFire or E-Series as either source or destination.</p>
+
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">• Kubernetes KEDA with NetApp SolidFire and E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">• Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/08/beegfs-csi-driver-lives-on.html">• ThinkParQ takes over NetApp-created BeeGFS CSI driver</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">• Block volume mode in Kubernetes with SolidFire</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/08/21/trident-new-stateful-set-delete-feature.html">• StatefulSet PVC Retention with Trident and SolidFire</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            TensorStore with BeeGFS | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Use BeeGFS in file:// KvStore URL scheme for TensorStore
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>TensorStore with BeeGFS | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="TensorStore with BeeGFS" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use BeeGFS in file:// KvStore URL scheme for TensorStore" />
+<meta property="og:description" content="Use BeeGFS in file:// KvStore URL scheme for TensorStore" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/09/23/tensorstore-with-beegfs.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/09/23/tensorstore-with-beegfs.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-09-23T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"TensorStore with BeeGFS","dateModified":"2022-09-23T00:00:00+08:00","datePublished":"2022-09-23T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/09/23/tensorstore-with-beegfs.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/09/23/tensorstore-with-beegfs.html","description":"Use BeeGFS in file:// KvStore URL scheme for TensorStore","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">TensorStore with BeeGFS</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>23 Sep 2022</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    3 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>TensorStore is a new C++ and Python library that provides a uniform API for reading and writing <em>n</em>-dimensional data.</p>
+
+<p>Among its Kv store drivers of interest to BeeGFS users is the file driver which uses the filesystem as a key-value store. The key is filesystem path (directory) and the value(s) files themselves.</p>
+
+<p>Using a BeeGFS 7.3 client, create a destination directory to store data (this example needs just around ~20 MB).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> /mnt/beegfs/tf/zarr
+</code></pre></div></div>
+
+<p>Install the stuff that needs to be imported, and use one of the official examples to try it out:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">import</span> <span class="nn">tensorstore</span> <span class="k">as</span> <span class="n">ts</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">ts</span><span class="p">.</span><span class="nb">open</span><span class="p">({</span>
+    <span class="s">'driver'</span><span class="p">:</span> <span class="s">'zarr'</span><span class="p">,</span>
+    <span class="s">'kvstore'</span><span class="p">:</span> <span class="s">'file:///mnt/beegfs/tf/zarr'</span><span class="p">},</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="n">ts</span><span class="p">.</span><span class="n">uint32</span><span class="p">,</span>
+    <span class="n">chunk_layout</span><span class="o">=</span><span class="n">ts</span><span class="p">.</span><span class="n">ChunkLayout</span><span class="p">(</span><span class="n">chunk_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+    <span class="n">create</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">,</span> <span class="mi">7000</span><span class="p">]).</span><span class="n">result</span><span class="p">()</span>
+
+<span class="c1"># two numpy arrays with example data
+</span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="mi">200</span><span class="o">*</span><span class="mi">300</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">uint32</span><span class="p">).</span><span class="n">reshape</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">200</span><span class="o">*</span><span class="mi">300</span><span class="o">*</span><span class="mi">400</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">uint32</span><span class="p">).</span><span class="n">reshape</span><span class="p">((</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">))</span>
+
+<span class="c1"># asynchronous write
+</span><span class="n">future_a</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">1000</span><span class="p">:</span><span class="mi">1100</span><span class="p">,</span> <span class="mi">2000</span><span class="p">:</span><span class="mi">2200</span><span class="p">,</span> <span class="mi">3000</span><span class="p">:</span><span class="mi">3300</span><span class="p">].</span><span class="n">write</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="n">future_b</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">3000</span><span class="p">:</span><span class="mi">3200</span><span class="p">,</span> <span class="mi">4000</span><span class="p">:</span><span class="mi">4300</span><span class="p">,</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5400</span><span class="p">].</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+<span class="c1"># wait for completion
+</span><span class="n">future_a</span><span class="p">.</span><span class="n">result</span><span class="p">()</span>
+<span class="n">future_b</span><span class="p">.</span><span class="n">result</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>As TensorStore starts writing we notice network activity on the BeeGFS client, as it’s contacting BeeGFS Metadata server to create files, and sends data content to BeeGFS Data servers to store file data.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">----system----</span> <span class="nt">--total-cpu-usage--</span> <span class="nt">-net</span>/total-
+     <span class="nb">time</span>     |usr sys idl wai stl| recv  send
+23-09 05:13:14|  1   0  99   0   0| 186B  254B
+23-09 05:13:15|  1   0  98   0   0|1453B 1926B
+23-09 05:13:16| 21  22  57   0   0| 500k 1157k
+23-09 05:13:17| 16  18  66   0   0|1301k 3733k
+23-09 05:13:18| 20  18  62   0   0|1340k 4699k
+23-09 05:13:19| 16  21  63   0   0|1373k 5411k
+23-09 05:13:20| 10  10  81   0   0|1641k 7735k
+23-09 05:13:21|  6   7  86   1   0| 765k 4186k
+23-09 05:13:22|  0   1  99   0   0| 126B  254B
+23-09 05:13:23|  1   1  98   0   0| 130B  254B
+23-09 05:13:24|  3   2  95   0   0| 946B 1117B
+</code></pre></div></div>
+
+<p>The result is 2,800 files:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll /mnt/beegfs/tf/zarr
+total 18806
+drwxrwxr-x 2 sean sean  2801 Sep 23 05:03 ./
+drwxrwxr-x 3 sean sean     1 Sep 23 05:01 ../
+<span class="nt">-rw-rw-r--</span> 1 sean sean   228 Sep 23 05:02 .zarray
+<span class="nt">-rw-rw-r--</span> 1 sean sean  5873 Sep 23 05:02 11.15.5000
+<span class="nt">-rw-rw-r--</span> 1 sean sean  6536 Sep 23 05:02 11.15.5001
+<span class="nt">-rw-rw-r--</span> 1 sean sean  6536 Sep 23 05:02 11.15.5002
+<span class="nt">-rw-rw-r--</span> 1 sean sean  6536 Sep 23 05:02 11.15.5003
+<span class="nt">-rw-rw-r--</span> 1 sean sean  6536 Sep 23 05:02 11.15.5004
+<span class="nt">-rw-rw-r--</span> 1 sean sean  6536 Sep 23 05:02 11.15.5005
+...
+</code></pre></div></div>
+
+<p>If you’re interested in performance with files small-ish like these, take a look at this <a href="https://docs.netapp.com/us-en/beegfs/beegfs-design-solution-verification.html#metadata-performance-test">Metadata performance test</a>.</p>
+
+<p>Note that there’s also a KV memory driver. For large data sets of tiny files we could keep results in RAM and later write it out to BeeGFS or S3 if we need it.</p>
+
+<p>On my mini BeeGFS cluster the script took 6 seconds (this includes loading the modules, spitting out warnings about the lack of CUDA, computing and writing to BeeGFS) whereas on the same system using RAM driver it took around 2 seconds.</p>
+
+<p>Data that needs repeated access (re-read pattern) by clients would benefit from system cache or BeeGFS cache, so we shouldn’t take this write test to mean “memory KV store should be 300% faster”. In some cases it may be very similar.</p>
+
+<p>I don’t know enough about Tensorflow to be able to say how viable it is to change driver options to create larger files.</p>
+
+<p>TenstorStore uses locking provided by the BeeGFS filesystem, so it should work fine with native application-aware access from many containers with BeeGFS CSI or general BeeGFS clients.</p>
+
+<blockquote>
+  <p>Locking provided by the filesystem is used to safely allow concurrent access from multiple processes. (The locking protocol used does not block readers.) Provided that shared locking is supported, concurrent access from multiple machines to a network filesystem is also safe.</p>
+</blockquote>
+
+<p>TensorStore’s File KV store driver is documented <a href="https://google.github.io/tensorstore/kvstore/file/index.html">here</a>.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#storage">storage</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Adapter, network and VLAN isolation on NetApp HCI | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     About network configuration planning for NetApp HCI compute nodes
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Adapter, network and VLAN isolation on NetApp HCI | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Adapter, network and VLAN isolation on NetApp HCI" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About network configuration planning for NetApp HCI compute nodes" />
+<meta property="og:description" content="About network configuration planning for NetApp HCI compute nodes" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2020/12/24/netapp-hci-network-segregation.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2020/12/24/netapp-hci-network-segregation.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-24T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Adapter, network and VLAN isolation on NetApp HCI","dateModified":"2020-12-24T00:00:00+08:00","datePublished":"2020-12-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2020/12/24/netapp-hci-network-segregation.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2020/12/24/netapp-hci-network-segregation.html","description":"About network configuration planning for NetApp HCI compute nodes","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Adapter, network and VLAN isolation on NetApp HCI</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>24 Dec 2020</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    7 minute read
+  
+
+    </span>
+  </div>
+  
+        <p>This comes up every so often:</p>
+
+<ul>
+  <li>Somebody out there (such and such team or person isn’t comfy with virtual switches or VLANs, etc.) wants to physically or virtually segregate networks</li>
+  <li>People take the easy way out and isolate less than they think they should, and need to reconfigure after the implementation</li>
+</ul>
+
+<p>NetApp HCI with VMware supports both Virtual Standard Switch and Virtual Distributed Switch.</p>
+
+<p>Excluding the less frequently used H610C compute node:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>NIC Ports</th>
+      <th style="text-align: center">VSS</th>
+      <th style="text-align: center">VDS</th>
+      <th style="text-align: center">Compute Platform</th>
+      <th style="text-align: left">Connectivity</th>
+      <th style="text-align: left">Speed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td style="text-align: center">x</td>
+      <td style="text-align: center">OK</td>
+      <td style="text-align: center">H410C, H615C</td>
+      <td style="text-align: left">2xSFP28</td>
+      <td style="text-align: left">2x10/25 G</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td style="text-align: center">OK</td>
+      <td style="text-align: center">OK</td>
+      <td style="text-align: center">H410C</td>
+      <td style="text-align: left">2xRJ45, 4xSFP28</td>
+      <td style="text-align: left">2x1/10, 4x10/25G</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If you mix VDS and VSS (assuming your vSphere license supports both), your compute nodes (H410C and H615C, for example) need to have the same number of network ports. The H410C Series has 6 by default, but you can use only 2 x 10/25G of them and leave the rest unused.</p>
+
+<p>Or you can use asymmetric network configuration, but then you need to have different clusters (with uniform network configuration in the same cluster).</p>
+
+<p>Two remarks on NetApp HCI storage nodes and IPMI ports:</p>
+
+<ul>
+  <li>NetApp HCI (SolidFire) storage nodes run Linux, so we can ignore them (they do need to be configured properly, of course.)</li>
+  <li>Each NetApp HCI Compute Node (also Storage Node) has an IPMI port. These are also ignored in this post, but if you want to perform automated firmware upgrades from NetApp Hybrid Cloud Control, your NetApp HCI Management Node needs to be able to communicate with the compute nodes via IPMI, so Management Node should be connected to the network where IPMI is. Or you can ignore this, and perform compute node firmware upgrades manually. You may keep IPMI ports configured but disconnected and bring them up only during scheduled firmware upgrades.</li>
+</ul>
+
+<h3 id="physical-port-segregation-with-vss">Physical port segregation with VSS</h3>
+
+<p>With VSS (and H410C which has 6 NIC ports) NDE creates three virtual switches:</p>
+
+<ul>
+  <li>vSwitch0: 2 x 1/10 G - Management Network(s) (if one, it can use Access Mode, if many, Trunk Mode is required). Note that these are RJ45</li>
+  <li>vSwitch1: 2 x 10/25 G - VM Networks and vMotion (separated by VLANs, so usually Trunk Mode); SFP28</li>
+  <li>vSwitch2: 2 x 10/25 G - iSCSI (separated by VLANs, while Access Mode can be used, usually you want to use Trunk Mode so that you can have multiple VLANs for different clusters or hypervisors); SFP28</li>
+</ul>
+
+<p>VDS can make use of six network interfaces as well, but needs careful management. With VSS, once you set it up, the rest is just “don’t touch vSwitch0 configuration”.</p>
+
+<p>VDS provides more features and is more efficient in how it uses uplinks, but also has better overall manageability. But if you want to easily separate all Management traffic and don’t need VDS features, VDS and 6 port configuration provide physical and logical traffic segregation for Management networks.</p>
+
+<h3 id="what-else-is-the-6-cable-vss-config-good-for">What else is the 6-cable VSS config good for</h3>
+
+<p>As you can see above, VSS vSwitch0 uses 2 x 1/10 G NICs, which means you can connect them to a 10 GigE switch and get up to 2 GB/s of backup performance from them, while still leaving few hundred MB/s for the rest. Assuming you can use vSwitch0 for Backup (usually it’s used only for Management traffic), that is. A similar use case would be SolidFire SnapMirror replication to ONTAP, if you don’t want to, or cannot, use other networks for that. The third in this category could be Fabric Pool tiering from ONTAP Select 9 on NetApp HCI (that VLAN would connect to Public Cloud VPN Gateway, or on-premises StorageGRID load balancers which could serve FabricPool users on dedicated VLAN).</p>
+
+<p>You can also use VSS for Kubernetes on VMware-based NetApp HCI; Rancher on NetApp HCI supports vSphere Standard Edition (and VSS), you just need to make sure all ESXi hosts you deploy Rancher VMs to have symmetric network configuration (which is why VDS is good, as it makes that happen for you.) The other two Kubernetes-on-VMware solutions (Google Athos and Red Hat OpenShift) are designed for VDS as most enterprise users do not use VDS.</p>
+
+<h3 id="vlans">VLANs</h3>
+
+<p>NetApp Deployment Engine offers the ability to set a unique VLAN ID for several management networks.</p>
+
+<p><img src="/assets/images/nde-network-isolation-with-netapp-hci.png" alt="NetApp NDE Network Configuration Wizard" /></p>
+
+<p>What I’ve seen a lot of people do is use one VLAN ID for all Management Networks. And that’s okay, but what happens later is someone figures out that anyone who can access the vCenter IP can also access Management Node and HCC IPs (they still need to authenticate, but let’s ignore that for now.)</p>
+
+<p>Nothing prevents you from using multiple Management VLANs like in that screenshot above. As you can see in the NetApp HCI PCI DSS white paper, some users put Management Node (“mNode”) and NetApp HCI / SolidFire Management IPs on their own networks, separate from vCenter.</p>
+
+<p>That makes it possible to expose mNode to only vCenter, and SolidFire MVIP only to mNode and vCenter, and possibly few selected apps that needs access to SolidFire management IP(s) (meaning, storage node management IPs (MIPs) and cluster management virtual IP (MVIP)).</p>
+
+<p>Here’s a screenshot of a H410C-based cluster configured with VDS and six network ports. As you can see on the right, there are three compute nodes in the cluster.</p>
+
+<p><img src="/assets/images/netapp-hci-network-isolation-with-netapp-hci-and-vds.png" alt="NetApp HCI with VMware Distributed Switch in Six Cable Configuration" /></p>
+
+<h4 id="some-random-thoughts">Some random thoughts</h4>
+
+<p>NetApp HCI mNode lets you <a href="https://docs.netapp.com/us-en/hci/docs/task_mnode_install_add_storage_NIC.html">add vNICs</a> to its VM. It’s meant to let mNode be able to store HCC data directly on SolidFire iSCSI devices, but I wonder if it can be used to connect to other networks. I haven’t had time to try (it’s not supported anyway).</p>
+
+<p>If you purchased NetApp HCI or SolidFire with NVIDIA Networking (a.k.a. Mellanox) Ethernet switches, you probably want to be able to connect to their Management IP from somewhere (mNode network, for example) to be able to deploy a <a href="https://www.mellanox.com/products/management-software/mellanox-neo">Mellanox NEO</a> VM, which is an easy way to get visibility into your L2 network gear.</p>
+
+<h3 id="who-else-needs-access-to-solidfire-mvip-and-why">Who else needs access to SolidFire MVIP and why</h3>
+
+<p>Random examples (I’ve blogged about some of them before, see in Archive or Categories):</p>
+
+<ul>
+  <li>Backup management app needs to use the SolidFire API to orchestrate hardware snapshots</li>
+  <li>NetApp Trident (CSI Provisioner) needs to use the SolidFire API for storage provisioning to Kubernetes and other container orchestrators</li>
+  <li>Operations Team needs to use the SolidFire API to monitor storage performance and events</li>
+  <li>Operations Team has a jump/bastion VM or physical node which runs signed Microsoft PowerShell, Ansible Tower, HashiCorp Terraform and other automation</li>
+  <li>Operations Team needs to gather logs from SolidFire and mNode, so these need to be able to send logs to syslog servers (which those can cleanse, aggregate and forward upstream)</li>
+  <li>Cross-Availability Zone communication between SolidFire clusters, or SolidFire and ONTAP (with SnapMirror) for storage replication - the APIs need to talk to each other (data traffic goes via other links)</li>
+  <li>mNode needs access to SolidFire MVIP to manage SolidFire storage, perform storage node and storage OS updates, gather system and hardware logs and performance data and send it to NetApp ActiveIQ (if enabled; it’s optional to enable unless you use Term Capacity Licensing - that’s a new NetApp HCI and SolidFire storage licensing model, similar to old SolidFire Software Capacity Licensing, by the way)</li>
+</ul>
+
+<p>There’s probably more but this, I think, illustrates the point: sooner or later someone out there will ask for something that can’t be done because your network configuration is too open or too closed, and you or they will have to reconfigure. It’s probably better to consider these scenarios and accommodate them before they happen - don’t use whatever is easiest to get by just to save 10 minutes of planning time.</p>
+
+<p>What if you need to change your configuration in a major way? Well, at least your data is outside of your compute nodes. If you have four or more compute nodes in one vCenter cluster, you may be able to take 2 out, stand up a new cluster and move the workloads by re-assigning SolidFire volumes to the new cluster (set up a new vCenter storage account and VAG, (re)move the evacuated nodes’ IQNs from old cluster’s VAG, etc.) A partial workaround might be to configure ACLs on network switch ports to limit access to certain IPs.</p>
+
+<p>As always, if you make important decisions regarding NetApp HCI networking, feel free to check with your trusted NetApp advisor or contact NetApp Support. NetApp partners can play with NDE in Lab on Demand.</p>
+
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#virtualization">virtualization</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/18/netapp-hci-broadcom-vmware-new-license-calculator.html">• VMware license calculator for VVF and VCF</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/15/storagegrid-on-vmware.html">• NetApp StorageGRID on VMware</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">• Add NetApp SolidFire iSCSI storage to KVM</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/07/migrate-netapp-hci-from-vmware.html">• How to change NetApp HCI from VMware to alternatives</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2023/03/29/zeroout-with-storage-vmotion-rethin.html">• Zero-out and rethin VMDKs on NFS</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

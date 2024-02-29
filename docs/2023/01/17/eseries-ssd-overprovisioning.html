@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Flash media overprovisioning on NetApp E-Series | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Why and how E-Series uses overprovisioning aka capacity reservation with flash media (SAS and NVMe)
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Flash media overprovisioning on NetApp E-Series | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Flash media overprovisioning on NetApp E-Series" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Why and how E-Series uses overprovisioning aka capacity reservation with flash media (SAS and NVMe)" />
+<meta property="og:description" content="Why and how E-Series uses overprovisioning aka capacity reservation with flash media (SAS and NVMe)" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/01/17/eseries-ssd-overprovisioning.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/01/17/eseries-ssd-overprovisioning.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-01-17T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Flash media overprovisioning on NetApp E-Series","dateModified":"2023-01-17T00:00:00+08:00","datePublished":"2023-01-17T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/01/17/eseries-ssd-overprovisioning.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/01/17/eseries-ssd-overprovisioning.html","description":"Why and how E-Series uses overprovisioning aka capacity reservation with flash media (SAS and NVMe)","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Flash media overprovisioning on NetApp E-Series</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>17 Jan 2023</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    3 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#why-overprovisioning-exists">Why overprovisioning exists</a></li>
+  <li><a href="#who-needs-this">Who needs this</a>
+    <ul>
+      <li><a href="#beegfs-example">BeeGFS example</a></li>
+    </ul>
+  </li>
+  <li><a href="#who-doesnt-need-this">Who doesn’t need this</a></li>
+  <li><a href="#impact-on-capacity-sizing">Impact on capacity sizing</a></li>
+  <li><a href="#impact-on-deployment">Impact on deployment</a></li>
+  <li><a href="#resources">Resources</a></li>
+</ul>
+
+<h2 id="why-overprovisioning-exists">Why overprovisioning exists</h2>
+
+<p>“Dude, where’s my capacity?”</p>
+
+<p>People sometimes get confused by “overprovisioning” that E-Series by default does when it uses flash media. I was no exception.</p>
+
+<p>This stuff is not that easy to find - even today I spent 15 minutes to re-find it in order to share with someobody - so I’ll put it here.</p>
+
+<p>First, this [1] Samsung white paper explains how it’s done:</p>
+
+<ul>
+  <li>Manufacturers of flash drive media reserve (by not exposing it to the user) sane amount of capacity to ensure smooth functioning of the drive</li>
+</ul>
+
+<p><img src="/assets/images/eseries-ssd-overprovisioning-01-samsung.png" alt="Overprovisioning explained by Samsung" /></p>
+
+<ul>
+  <li>Storage vendors and users may want to reserve (“overprovision”, although from my perspective “underprovision” makes more sense) additional capacity in edge cases</li>
+</ul>
+
+<p><img src="/assets/images/eseries-ssd-overprovisioning-02-eseries.png" alt="Overprovisioning example by NetApp" /></p>
+
+<p>“Effective OP” here is (the prevailing) “Factory OP” by the flash media vendors.</p>
+
+<p>In the case of E-Series arrays, they work just fine without any extra OP. Extra OP capacity (“Holdback”) can be 0% and that’s fine - drives include around 7% of factory-fixed OP and that’s good enough for most users.</p>
+
+<p>But, as TR-4800 explains, very write-heavy workloads (and E-Series has plenty of those) can result in a disk drive being fully overwritten once per day (1 DWPD). In that case additional holdback capacity can help ensure no impact on write performance.</p>
+
+<p>The TR suggests an additional 4% for 1 DWPD and more for users who write even more every day on a sustained basis. See [2] for the details.</p>
+
+<h2 id="who-needs-this">Who needs this</h2>
+
+<p>Most users don’t need extra holdback and can lower it to 0% in the E-Series Web UI.</p>
+
+<p>But let’s say you use E-Series with SSDs to store CCTV (camera) recordings. This workload runs 24 x 7 and is almost 100% write.</p>
+
+<p>Furthemore, storage performance is usually sized fairly precisely and required 24 x 7 - we can’t lower feed resolution by 20% to acommodate temporary slowness in maximum write performance.</p>
+
+<p>If this workload does 1 DWPD (7.68 TB of writes per 7.68 TB disk), then in order to consistently deliver that level of performance we should hold back another 4% from the user and overprovision disk capacity by the total of 11% (or underprovision storage, as I like to think of it).</p>
+
+<h3 id="beegfs-example">BeeGFS example</h3>
+
+<p>One concrete example out there is metadata volumes used by BeeGFS on NetApp E-Series; you can see <a href="https://docs.netapp.com/us-en/beegfs/beegfs-deploy-recommended-volume-percentages.html">here</a> that we recommend very high Effective OP for those volumes (22.5%). For data volumes we would use filesystem IO metrics (<a href="https://github.com/NetApp/eseries-perf-analyzer-plugin-beegfs">see this</a>) to determine how many DWPDs are involved.</p>
+
+<h2 id="who-doesnt-need-this">Who doesn’t need this</h2>
+
+<p>Let’s say an environment has a heavy and sustained write workload, but it doesn’t matter if writes on a bad hour do 12 instead of 15 GB/s.</p>
+
+<p>If it does matter, provision storage with holdback that’s right for your environment.</p>
+
+<h2 id="impact-on-capacity-sizing">Impact on capacity sizing</h2>
+
+<p>If you have 24 x 7 (not 1- or 10 hour-sustained) write workloads that approach 1 DWPD, deduct 11.5% of usable capacity (the second row deducts 286.16 GB from a 7.68TB drive). The TR (see References, below) has examples for other DWPD figures.</p>
+
+<p>Then deduct another 2-3% for filesystem overheads.</p>
+
+<p>Most (my guess would be 90%) users can use 0% holdback, but those with constant heavy write workloads may want to consider this <em>before</em> buying flash capacity.</p>
+
+<h2 id="impact-on-deployment">Impact on deployment</h2>
+
+<p>Most environments cannot “shrink” filesystems. That’s why it’s important to think about this beforehand.</p>
+
+<p>Before you buy E-Series, check your workload if you suspect it’s consistently write-heavy.</p>
+
+<p>Existing E-Series users moving from HDD to flash can check their array metrics.</p>
+
+<p>NetApp Cloud Insights (subscription-based; subscription can be as short as necessary) and E-Series Performance Analyzer (free, but not as good) can provide good insights into write workload over weeks and months.</p>
+
+<p>E-Series users with flash media can check wear level and amount of data written in the SANtricity Web UI.</p>
+
+<p>If a drive is 5 months old an has 648 TB written to it, that’s ~50 MB/s or 4.3TB/day, or 0.56 DWPD. <strong>If</strong> you cannot tolerate uneven write performance, a 4% holdback should be more than enough to handle up to 1 DWPD without any deterioration due to media garbage collection in flash media.</p>
+
+<h2 id="resources">Resources</h2>
+
+<ul>
+  <li><a href="https://semiconductor.samsung.com/resources/white-paper/S190311-SAMSUNG-Memory-Over-Provisioning-White-paper.pdf">Over-Provisioning Benefits for Samsung Data Center SSDs</a></li>
+  <li><a href="https://www.netapp.com/media/17009-tr4800.pdf">TR4800 - Introduction to NetApp EF600 array</a></li>
+</ul>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#containers">containers</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/28/incus-zfs-netapp-eseries.html">• ZFS with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">• ZFS deduplication with NetApp E-Series</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/23/storagegrid-notifications-kafka.html">• Kafka notifications in NetApp StorageGRID 11.8</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/02/22/storagegrid-delete-old-object-versions.html">• Delete old object versions on NetApp StorageGRID</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-02-29 13:17 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>
