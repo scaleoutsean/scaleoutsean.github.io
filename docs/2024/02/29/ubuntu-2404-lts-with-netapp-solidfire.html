@@ -19,7 +19,7 @@
       
     </title>
     <meta name="description" content="
-     Ubuntu 24.04 with NetApp SolidFire 12
+     Ubuntu 22.04 LTS with NetApp SolidFire 12
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -52,16 +52,16 @@
 <meta property="og:title" content="Ubuntu 24.04 LTS with NetApp SolidFire" />
 <meta name="author" content="scaleoutSean" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Ubuntu 24.04 with NetApp SolidFire 12" />
-<meta property="og:description" content="Ubuntu 24.04 with NetApp SolidFire 12" />
+<meta name="description" content="Ubuntu 22.04 LTS with NetApp SolidFire 12" />
+<meta property="og:description" content="Ubuntu 22.04 LTS with NetApp SolidFire 12" />
 <link rel="canonical" href="https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html" />
 <meta property="og:url" content="https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html" />
 <meta property="og:site_name" content="Acting Technologist" />
-<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/ubuntu-2404-lts-with-netapp-solidfire.png" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/ubuntu-2404-lts-with-solidfire.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-02-29T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Ubuntu 24.04 LTS with NetApp SolidFire","dateModified":"2024-02-29T00:00:00+08:00","datePublished":"2024-02-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html"},"image":"https://scaleoutsean.github.io/assets/images/ubuntu-2404-lts-with-netapp-solidfire.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html","description":"Ubuntu 24.04 with NetApp SolidFire 12","@context":"https://schema.org"}</script>
+{"headline":"Ubuntu 24.04 LTS with NetApp SolidFire","dateModified":"2024-02-29T00:00:00+08:00","datePublished":"2024-02-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html"},"image":"https://scaleoutsean.github.io/assets/images/ubuntu-2404-lts-with-solidfire.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html","description":"Ubuntu 22.04 LTS with NetApp SolidFire 12","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    3 minute read
+    9 minute read
   
 
     </span>
@@ -138,7 +138,16 @@
         <ul>
   <li><a href="#introduction">Introduction</a></li>
   <li><a href="#create-discover-login">Create, discover, login</a></li>
-  <li><a href="#efficiency---zfs-on-solifire-vs-solidfire">Efficiency - ZFS on SoliFire vs SolidFire</a></li>
+  <li><a href="#efficiency---zpools-on-solifire-vs-global-solidfire-efficiencies">Efficiency - zpools on SoliFire vs global SolidFire efficiencies</a>
+    <ul>
+      <li><a href="#comparison-with-xfs-and-btrfs">Comparison with XFS and BTRFS</a></li>
+    </ul>
+  </li>
+  <li><a href="#operational-and-data-governance-differences-between-zfs-and-classic-linux-filesystems-xfs-ext4">Operational and data governance differences between ZFS and “classic” Linux filesystems (XFS, EXT4)</a>
+    <ul>
+      <li><a href="#zfs-in-containers">ZFS in containers</a></li>
+    </ul>
+  </li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
@@ -184,32 +193,169 @@ discovery.sendtargets.auth.password = testtesttest
 <span class="nb">sudo </span>iscsiadm <span class="nt">--mode</span> node <span class="nt">--loginall</span><span class="o">=</span>all
 </code></pre></div></div>
 
-<h2 id="efficiency---zfs-on-solifire-vs-solidfire">Efficiency - ZFS on SoliFire vs SolidFire</h2>
+<h2 id="efficiency---zpools-on-solifire-vs-global-solidfire-efficiencies">Efficiency - zpools on SoliFire vs global SolidFire efficiencies</h2>
 
-<p>For shits &amp; giggles I created two zpools, one on each volume.</p>
+<p>For shits &amp; giggles I created three zpools, each on a 4 GB SolidFire volume.</p>
 
 <p><img src="/assets/images/ubuntu-2404-lts-with-netapp-solidfire-pools.png" alt="zpools on SolidFire" /></p>
 
-<p>I disabled compression on the first volume and enabled zstd compression on the second volume (which isn’t something I’d recommend - see the <a href="/2022/04/05/proxmox-solidfire.html">Proxmox post</a>) just to see how it fares against SolidFire’s built-in LZ4.</p>
+<p>I disabled compression on the first volume, enabled ZSTD compression on the second volume (which isn’t something I’d recommend doing by default - see the <a href="/2022/04/05/proxmox-solidfire.html">Proxmox post</a>) and LZ4 on the third, just to see how they fares against SolidFire’s built-in LZ4 compression which cannot be disabled.</p>
 
-<p>The way SolidFire works is it first compresses 4kB chunks using LZ4 and then deduplicates them. Deduplication wasn’t enabled here (see my post on the improved <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">ZFS deduplication</a> here), and I wouldn’t enable it on SolidFire anyway (see the Proxmox post). But if you do, I’d stick to default LZ4 compression.</p>
+<p>The way SolidFire works is it first compresses 4kB chunks using LZ4 and then deduplicates them. Deduplication wasn’t enabled here (see my post on the improved <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">ZFS deduplication</a> here), and I probably wouldn’t enable it on SolidFire-based ZFS anyway (see the Proxmox post).</p>
 
-<p>ZFS also first compresses, so there’s some chance that using LZ4 on ZFS may result in some dedupe between ZFS and non-ZFS filesystems. Using other compression algorithms, probably not. Result with a highly compressible log file:</p>
+<p>But if you do, my intuition tells me LZ4 compression could work better when there are other filesystems on SolidFire. ZFS also first compresses and then deduplicates (in my case deduplication was off), so there’s some chance that using LZ4 on ZFS may result in some dedupe between ZFS and non-ZFS filesystems.</p>
 
+<p>Using other compression algorithms, probably not.</p>
+
+<p>ZSTD is often better than LZ4 but it uses more CPU. ZSTD-compressed syslog got me 7.16x vs. , for example.</p>
+
+<p>I added two larger files:</p>
 <ul>
-  <li>syslog file on non-compressed ZFS wasn’t compressed; on SolidFire this volume’s efficiency was</li>
-  <li>syslog file on ZSTD-compressed ZFS was compressed 7.16x; on SolidFire this volume’s efficiency was</li>
+  <li>570 MB, a CSV file with lines like <code class="language-plaintext highlighter-rouge">Nicolette,Ward,440 Drivehaven,1967-12-08,R,6iJard,863</code></li>
+  <li>524 MB, a reasonably compressable (should be around 50%) and moderately (20-30%) dedupable file</li>
 </ul>
 
-<p>As highlighted in the Proxmox post, the same (or similar) syslog file on multiple volumes would still be compressed and deduplicated by SolidFire, but blocks from zpools would not be deduplicated across multiple zpools which I suspect would mean in the end SolidFire would still get a better efficiency ratio. On the other hand, you may gain 2x-4x performance on those volumes, if you’re willing to trade global storage efficiency for lower iSCSI IOPS and/or bandwidth utilization as data coming in is already compressed.</p>
+<p>I copied these three on each of filesystem (OFF, ZSTD, LZ4). Each filesystem was on a separate 4 GB zpool.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /first/first01/
+total 1078259
+<span class="nt">-rw-r--r--</span> 1 sean sean 524288000 Feb 29 13:39 data
+drwxr-xr-x 2 sean sean         5 Feb 29 13:38 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 sean sean 576847227 Feb 29 13:38 output.csv
+drwxr-xr-x 3 sean sean         3 Feb 29 03:26 ..
+<span class="nt">-rw-r-----</span> 1 sean sean   2161348 Feb 26 03:22 syslog
+
+<span class="nv">$ </span><span class="nb">sudo </span>zpool list
+NAME     SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+first   3.50G  1.03G  2.47G        -         -     0%    29%  1.00x    ONLINE  -
+second  3.50G   542M  2.97G        -         -     0%    15%  1.00x    ONLINE  -
+third   3.50G   680M  2.84G        -         -     0%    18%  1.00x    ONLINE  -
+
+<span class="nv">$ </span><span class="nb">df
+</span>first/first01                      3.7G  1.2G  2.6G  31% /first/first01
+second/second02                    3.7G  569M  3.1G  16% /second/second02
+third/third03                      3.7G  713M  3.0G  20% /third/third03
+</code></pre></div></div>
+
+<p>Let’s see how each approach worked out:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Setting</th>
+      <th style="text-align: center">ZFS vol ALLOC (GB)</th>
+      <th style="text-align: center">SolidFire vol used %</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">OFF</td>
+      <td style="text-align: center">1.03</td>
+      <td style="text-align: center">18.25</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ZSTD</td>
+      <td style="text-align: center">0.54</td>
+      <td style="text-align: center">14.88</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">LZ4</td>
+      <td style="text-align: center">0.68</td>
+      <td style="text-align: center">28.21</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="/assets/images/ubuntu-2404-lts-with-netapp-solidfire-volumes-compression.png" alt="" /></p>
+
+<p>Compression-wise ZSTD got 1.94x vs. LZ4’s 1.55, 21% better. But the ZSTD-compressed ZFS volume seems to work better on SolidFire. The first volume with uncompressed data was almost as good az ZSTD using only slightly less than ZSTD-compressed volume.</p>
+
+<p>Below we can see that account deduplication rate is 1.05x. I mentioned I used some small deduplication in the file “data”, around 25% or so, but even on the first uncompressed volume that doesn’t seem to have had much effect. I attribute that to the fact that I didn’t create them “correctly” - that is to say, duplication must have ocurred within parts of 4kB blocks, but to SolidFire they still looked different as entire 4kB blocks are checksum-ed and compared.</p>
+
+<p><img src="/assets/images/ubuntu-2404-lts-with-netapp-solidfire-account-efficiency.png" alt="" /></p>
+
+<p>As I highlighted in the Proxmox post, the same (or similar) files on different non-compressed ZFS volumes would be compressed and deduplicated by SolidFire, but with zpools, all deduplication is “local” to a zpool, which we can see in this example as well - compression on ZSTD and LZ4 compression almost brought deduplication to 1x.</p>
+
+<p>After deleting the two compressed volumes, account efficiency increased to 1.64 (1.46 x 1.10) which is in between what we got with ZSTD and lzr (1.94x, 1.55x, respectively), assuming those other two had SolidFire deduplication of 1x (possible, given that it went up by 4% after those two volumes were removed).</p>
+
+<p><img src="/assets/images/ubuntu-2404-lts-with-netapp-solidfire-account-efficiency-uncompressed-zfs.png" alt="" /></p>
+
+<p>Overall and depending on data, in some cases it’s probably better to leave compression to SolidFire and then also realize some deduplication globally across all iSCSI clients regardless of filesystem.</p>
+
+<p>On the other hand, 2x-4x compression may gain us 2x-4x performance on a volume, so if you’re willing to trade global storage efficiency for lower iSCSI IOPS and/or bandwidth utilization as data coming in is already compressed it may still be wise to use compression.</p>
+
+<p>It seems that if we also used deduplication on ZFS then it would become even harder to predict what would happen. A lot of depends on the data, similarity between volumes/pools, etc.</p>
+
+<p>OS, applications and containers dedupe well, so if you have lots of those compared to data and more than 2-3 zpools, I suspect SolidFire efficiency would be better than ZFS even with compression and deduplication enabled. While ZFS users may create few large zpools to compensate for that, that means granularity of failover and the ability to apply different settings to different zpools goes away.</p>
+
+<h3 id="comparison-with-xfs-and-btrfs">Comparison with XFS and BTRFS</h3>
+
+<p>The same 3-file data set above, after 2 hours “at rest” on single volume per tenant:</p>
+<ul>
+  <li>BTRFS: single 4GB filesystem with LZO compression
+    <ul>
+      <li>1.45x compression (BTRFS LZO defaults to compression level 3 (1-9))</li>
+      <li>SolidFire volume 20.50% used</li>
+      <li>Tenant’s storage efficiency: 1.09x compression and 1.00x deduplication on SolidFire - probably higher-lever post-process LZ4 manages to squeeze out a bit extra from BTRFS’ pre-compressed blocks</li>
+      <li>On iSCSI volume BTRFS uses 777 MB which is a lower efficiency than ZFS with compression enabled
+        <pre><code class="language-raw">Data,single: Size:1.13GiB, Used:777.67MiB (67.04%)
+ /dev/sdc	   1.13GiB
+</code></pre>
+      </li>
+    </ul>
+  </li>
+  <li>XFS: single 4GB filesystem without compression
+    <ul>
+      <li>no compression</li>
+      <li>SolidFire volume 27.64% used</li>
+      <li>Tenant’s storage efficiency: 1.46x compression and 1.09x deduplication</li>
+      <li>On iSCSI volume XFS uses 1200 MB which is a lot more, but after SolidFire efficiency (1.45 x 1.09 = 1.59x) it occupies 60% less on post-RF2 SolidFire storage
+        <pre><code class="language-raw">$ df -H
+Filesystem Size  Used Avail Use% Mounted on
+/dev/sdc   4.0G  1.2G  2.8G  30% /home/sean/xfs
+</code></pre>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>XFS used 27.64% of SolidFire’s 4 GB volume, while BTRFS with LZO compression used 20.50%. While BRTFS saved 27% percent on Linux volume, SolidFire saved 50% more after that. Additionally, cross-filesystem deduplication on SolidFire would likely drop considerably with compressed BRTFS which is a tradeoff similar to what we observed with compression-enabled ZFS.</p>
+
+<p><strong>Notes</strong></p>
+
+<p>The compression options on ZFS are many and with some algorithms each version works differently to another, and sometimes the same version may produce a different result depending on several factors.</p>
+
+<p>On SolidFire, I got a different % used and efficiency every time I ran a test. Hours later, Solidfire’s volume % used figures settled. It seems ZFS and/or SolidFire run some operations (maybe unmap on ZFS, and advanced LZ4 compression on SolidFire) up to hours later. Data in the the above table was taken 9 hours after running tests. In the first version of this post I did not wait that long and when I discovered that I tested again.</p>
+
+<h2 id="operational-and-data-governance-differences-between-zfs-and-classic-linux-filesystems-xfs-ext4">Operational and data governance differences between ZFS and “classic” Linux filesystems (XFS, EXT4)</h2>
+
+<p>ZFS enables different operational approaches to SolidFire.</p>
+
+<p>Users can manage own storage including volume creation, volume snapshots, volume migration, volume replication, backup - all without access to the SolidFire API.</p>
+
+<p>In some environments that may be a big plus, even if used by only a subset of users.</p>
+
+<p>At the same time zpools - which I’d recommend to create from single SolidFire volume (as SolidFire applies RF2 by default) - can still be protected and replicated with SolidFire snapshots and replication, so from storage administrator perspective zpool volume can be snapshot and replicated the same way as other SolidFire volumes, and the same data governance processes can work.</p>
+
+<p>For a comparison, SolidFire doesn’t have a great RBAC and although <a href="/2023/12/07/solidfire-rbac-for-json-rpc-api.html">it’s possible</a> to solve that in various not very complicated ways, the ability to get access to all those ZFS features eliminates the need for most if not all RBAC workarounds on SolidFire.</p>
+
+<h3 id="zfs-in-containers">ZFS in containers</h3>
+
+<p>In container environments, NetApp Trident may be used with “classic” filesystems, and CSI snapshots are available.</p>
+
+<p>Interestingly, Trident CSI allows <a href="https://docs.netapp.com/us-en/trident-2307/trident-use/element.html">only XFS, EXT3, EXT4</a> at this time. Anyone could patch it to allow ZFS as well, but it’s not just a matter of adding a string, but also ZFS create, snapshot commands and possibly other options (compression, deduplication, etc.) so Trident CSI support for ZFS is probably unlikely to happen soon.</p>
+
+<p>Those interested in ZFS in containers with SolidFire may want to look at some other approaches such as <a href="/2022/03/02/openstack-solidfire-part-2.html">Cinder CSI</a> or static provisioning with replication (the latter would be wasteful for single SolidFire clusters, but may be interesting in environments where ZFS mirroring could be used in place of SolidFire synchronous replication).</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>There’s nothing special to note about this, everything works the same way as with 22.04 LTS and 20.04 LTS.</p>
-
-<p>In some cases opportunistically enabling ZFS compression may help you get extra performance and/or lower latency on non-precompressed data, especially if you are willing to trade global SolidFire efficiency for that.</p>
+<p>There’s nothing special to note about Ubuntu 24.04 LTS - everything works the same way as with 22.04 LTS and 20.04 LTS.</p>
 
 <p><img src="/assets/images/ubuntu-2404-lts-with-netapp-solidfire.png" alt="" /></p>
+
+<p>In some cases enabling ZFS compression may help you get extra performance and/or lower latency on non-precompressed data, especially if you are willing to trade global SolidFire efficiency for that. Because compressing data on hosts may reduce deduplication on SolidFire, perform testing and observe SolidFire deduplication rate before you commit to doing this for a large fraction of your SolidFire data.</p>
+
+<p>Assuming you trust ZFS, you may realize considerable performance gains without losing a lot of SolidFire capacity by applying both compression and the improved deduplication (once the latter becomes available) on selected volumes.</p>
 
       </article>
     </div>
@@ -334,7 +480,7 @@ discovery.sendtargets.auth.password = testtesttest
 
     
   </div><footer class= "footer">
-    <p>2024-02-29 15:05 </p>
+    <p>2024-03-01 15:41 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
