@@ -129,7 +129,7 @@
 
   
   
-    6 minute read
+    9 minute read
   
 
     </span>
@@ -139,6 +139,8 @@
   <li><a href="#introduction">Introduction</a></li>
   <li><a href="#wtf-is-media-scan">WTF is Media Scan?</a></li>
   <li><a href="#santricity-api-methods-related-to-scrubbing-scanning-fixing-data-issues">SANtricity API methods related to scrubbing, scanning, fixing data issues</a></li>
+  <li><a href="#media-scan-in-web-ui">Media scan in Web UI</a></li>
+  <li><a href="#relevant-api-methods">Relevant API methods</a></li>
   <li><a href="#implementation">Implementation</a></li>
   <li><a href="#example">Example</a></li>
   <li><a href="#polling-frequency">Polling frequency</a></li>
@@ -186,6 +188,118 @@
   <li>Use seconds elapsed and seconds left indicators to figure out the correct % completed indicator</li>
   <li>Check out other related API calls (e.g. error reporting) if you want a bit more detail on errors detected (if any)</li>
 </ul>
+
+<h2 id="media-scan-in-web-ui">Media scan in Web UI</h2>
+
+<p>To give you an idea, here are some screenshots.</p>
+
+<p>These are media drive scan settings. You can completely disable them. The default (11.80) is 30d.</p>
+
+<p>In this screenshot I set it to 1 day (don’t do this in production) in the hope of spotting some scans through the API, but none were initiated during the few hours (maybe due to the fact that I was also running manually initiated scans).</p>
+
+<p><img src="/assets/images/eseries-santricity-media-scan-00.png" alt="E-Series drive media scan settings" /></p>
+
+<p>This is <strong>not</strong> it! This is Media Redundancy Check (I think - it’s very confusing) that can be found in Pools &amp; Volume Groups.</p>
+
+<p><img src="/assets/images/eseries-santricity-media-scan-01.png" alt="E-Series media redundancy check" /></p>
+
+<p>If you run this media redundancy check (again, this is <em>not</em> media scan), it won’t appear in <code class="language-plaintext highlighter-rouge">check-volume-parity</code> jobs queried through the API.</p>
+
+<p><img src="/assets/images/eseries-santricity-media-scan-02.png" alt="SANtricity media redundancy check progress" /></p>
+
+<p>(If you’re wondering WTF are those three volumes with the prefix <code class="language-plaintext highlighter-rouge">repos_</code>, see the <a href="/2023/10/12/snapshot-clone-repository-monitoring-in-eseries.html">post on snapshots</a>.)</p>
+
+<h2 id="relevant-api-methods">Relevant API methods</h2>
+
+<p>This one initiates a media scan. SANtricity does this based on automated settings (maybe I should say it uses AI, but this is a technical blog) and you won’t need to use this except in development if you want to initiate on-demand media scans so that you can monitor them.</p>
+
+<pre><code class="language-raw">POST /storage-systems/{system-id}/volumes/{volume-id}/check-volume-parity
+</code></pre>
+
+<p>The above takes 2 params (SANtricity System ID and volume ID) as well as these settings. I had to shave off a few K bytes from <code class="language-plaintext highlighter-rouge">endLba</code> as I’d get an error when calculating that my way.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"startLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"endLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3145727000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"scanPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"repairParityErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"repairMediaErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If successful, that returns a job ID.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"jobId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cc7992c-a8f6-440c-ac2e-bda43987487a"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000F637140000284763A83F44"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volumeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fifteen"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>For mere monitoring, you just need this one call below.</p>
+
+<pre><code class="language-raw">GET /storage-systems/{system-id}/volumes/check-volume-parity/jobs
+</code></pre>
+
+<p>Typical response with one of the jobs in progress:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"jobId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6bf07c1b-fad7-4be0-b475-dee812a0aee0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"jobStartedTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-03-16T09:34:11.780558Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000F637140000284763A83F44"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fifteen"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"jobStatus"</span><span class="p">:</span><span class="w"> </span><span class="s2">"inProgress"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"startLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"endLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3145727000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"scanPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"repairParityErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"repairMediaErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lastScannedLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"105902079"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"percentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"runtimeInSec"</span><span class="p">:</span><span class="w"> </span><span class="s2">"24"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"estimatedTimeRemainingInSec"</span><span class="p">:</span><span class="w"> </span><span class="s2">"672"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"totalParityErrorsDetected"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"jobId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a79fd6d-6735-44d7-8087-3738bc78697f"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"jobStartedTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-03-16T09:14:04.638466Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000F637140000284763A83F44"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fifteen"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"jobStatus"</span><span class="p">:</span><span class="w"> </span><span class="s2">"completed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"startLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"endLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3145727000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"scanPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"repairParityErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"repairMediaErrors"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lastScannedLba"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3145727000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"percentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"runtimeInSec"</span><span class="p">:</span><span class="w"> </span><span class="s2">"720"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"estimatedTimeRemainingInSec"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"totalParityErrorsDetected"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p>There’s a job-specific endpoint where you could poll just the job that you initiated. But as I said we’d normally let SANtricity initiate these, so in my opinion I’d prefer the one above, where I simply look for jobs in progress.</p>
+
+<pre><code class="language-raw">GET /storage-systems/{system-id}/volumes/check-volume-parity/jobs/{job-id}
+</code></pre>
+
+<p>In theory, I suppose some users very familiar with their workloads could disable automated periodic media scans by SANtricity and kick off their own media scan jobs during low workload periods, so in some extreme cases you may actually want to use this API method.</p>
+
+<p>Likewise, in some extreme cases you may want to cancel a job that’s bothering your workload. I didn’t use this either.</p>
+
+<pre><code class="language-raw">DELETE /storage-systems/{system-id}/volumes/check-volume-parity/jobs/{job-id}
+</code></pre>
+
+<p>To my earlier point, SANtricity constantly tells you media scan is 0% complete. That doesn’t look correct at all, but you need to notice it first.</p>
+
+<p><img src="/assets/images/eseries-santricity-media-scan-03.png" alt="SANtricity media scan progress indicator" /></p>
+
+<p>Until you realize that, you may wonder what the heck is wrong with your script. Or maybe not even notice that anything is wrong and needlessly debug it like I did.</p>
+
+<p><img src="/assets/images/eseries-santricity-media-scan-05.png" alt="PowerShell misled by API response" /></p>
 
 <h2 id="implementation">Implementation</h2>
 
@@ -236,7 +350,11 @@
 
 <p>On my small and idle SSD-based volumes, scans took mere minutes. But on huge and/or busy NL-SAS volumes (500 TB, for example) media scans could take days since they self-throttle when user workload is high.</p>
 
-<p>The API seems to update every 30-60 seconds, so there’s no point in polling every 10 seconds. For HDD-based volumes or large SSD volumes, consider 600 seconds or even longer. There’s no need to constantly update this status, especially if you already use the API for pulling tons of other metrics every 60 seconds.</p>
+<p>The API seems to update media scan progress every 30-60 seconds, so there’s no point in polling it every 10 seconds.</p>
+
+<p>For HDD-based volumes or large SSD volumes, consider 600 seconds or even longer.</p>
+
+<p>There’s no need to constantly update this status, especially if you already use the API for pulling tons of other metrics every 60 seconds.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -363,7 +481,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-03-17 13:18 </p>
+    <p>2024-03-17 14:02 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
