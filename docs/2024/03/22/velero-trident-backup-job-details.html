@@ -15,7 +15,7 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Velero v1.13, backup job metadata and NetApp Trident v24.02 | Acting Technologist
+            Velero v1.13 job metadata and hooks with NetApp Trident v24.02 | Acting Technologist
       
     </title>
     <meta name="description" content="
@@ -47,9 +47,9 @@
     </script>
 
     <!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Velero v1.13, backup job metadata and NetApp Trident v24.02 | Acting Technologist</title>
+<title>Velero v1.13 job metadata and hooks with NetApp Trident v24.02 | Acting Technologist</title>
 <meta name="generator" content="Jekyll v4.1.1" />
-<meta property="og:title" content="Velero v1.13, backup job metadata and NetApp Trident v24.02" />
+<meta property="og:title" content="Velero v1.13 job metadata and hooks with NetApp Trident v24.02" />
 <meta name="author" content="scaleoutSean" />
 <meta property="og:locale" content="en" />
 <meta name="description" content="A look at the backup job details with Velero v1.13 CSI and NetApp Trident with SolidFire" />
@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-03-22T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Velero v1.13, backup job metadata and NetApp Trident v24.02","dateModified":"2024-03-22T00:00:00+08:00","datePublished":"2024-03-22T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/velero-trident-solidfire-description-00.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/22/velero-trident-backup-job-details.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/22/velero-trident-backup-job-details.html","description":"A look at the backup job details with Velero v1.13 CSI and NetApp Trident with SolidFire","@context":"https://schema.org"}</script>
+{"headline":"Velero v1.13 job metadata and hooks with NetApp Trident v24.02","dateModified":"2024-03-22T00:00:00+08:00","datePublished":"2024-03-22T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/22/velero-trident-backup-job-details.html"},"image":"https://scaleoutsean.github.io/assets/images/velero-trident-solidfire-description-00.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/22/velero-trident-backup-job-details.html","description":"A look at the backup job details with Velero v1.13 CSI and NetApp Trident with SolidFire","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -119,7 +119,7 @@
 
     <div class="post-container">
       <article id = "post">
-        <h1 id = "post-title">Velero v1.13, backup job metadata and NetApp Trident v24.02</h1>
+        <h1 id = "post-title">Velero v1.13 job metadata and hooks with NetApp Trident v24.02</h1>
 
   
   <div class = "post-info">
@@ -129,7 +129,7 @@
 
   
   
-    19 minute read
+    22 minute read
   
 
     </span>
@@ -713,6 +713,189 @@ The backup will be fully deleted after all associated data <span class="o">(</sp
 
 <p>This would only offer information about the array on which a backup failed. We’d also want to know which backup failed, but I don’t see a way to pass that information to a hook. It probably can be hard-coded in each job, but that’s inconvenient at scale.</p>
 
+<p>Finally, I decided to bite the bullet and do it…  I used and modified the example from the Velero repository, with hooks configured in annotations.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Copyright 2024 @scaleoutsean (Github).</span>
+<span class="c1"># Copyright 2017 the Velero contributors.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Namespace</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-example</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+
+<span class="nn">---</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-logs</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">nginx-example</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="c1"># Optional: change SC name or remove the line with storageClassName to use default</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">silver</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">1Gi</span>
+
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-deployment</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">nginx-example</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+      <span class="na">annotations</span><span class="pi">:</span>
+        <span class="s">pre.hook.backup.velero.io/container</span><span class="pi">:</span> <span class="s">fsfreeze</span>
+        <span class="s">pre.hook.backup.velero.io/command</span><span class="pi">:</span> <span class="s1">'</span><span class="s">["/usr/sbin/fsfreeze",</span><span class="nv"> </span><span class="s">"--freeze",</span><span class="nv"> </span><span class="s">"/var/log/nginx"]'</span>
+        <span class="s">post.hook.backup.velero.io/container</span><span class="pi">:</span> <span class="s">fsfreeze</span>
+        <span class="s">post.hook.backup.velero.io/command</span><span class="pi">:</span> <span class="s1">'</span><span class="s">["/usr/sbin/fsfreeze",</span><span class="nv"> </span><span class="s">"--unfreeze",</span><span class="nv"> </span><span class="s">"/var/log/nginx"]'</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-logs</span>
+          <span class="na">persistentVolumeClaim</span><span class="pi">:</span>
+           <span class="na">claimName</span><span class="pi">:</span> <span class="s">nginx-logs</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:1.25.4-bookworm</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">nginx</span>
+        <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="m">80</span>
+        <span class="na">volumeMounts</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/log/nginx"</span>
+            <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-logs</span>
+            <span class="na">readOnly</span><span class="pi">:</span> <span class="no">false</span>
+      <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">ubuntu:noble</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">fsfreeze</span>
+        <span class="na">securityContext</span><span class="pi">:</span>
+          <span class="na">privileged</span><span class="pi">:</span> <span class="no">true</span>
+        <span class="na">volumeMounts</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/var/log/nginx"</span>
+            <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-logs</span>
+            <span class="na">readOnly</span><span class="pi">:</span> <span class="no">false</span>
+        <span class="na">command</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="s2">"</span><span class="s">/usr/bin/bash"</span>
+          <span class="pi">-</span> <span class="s2">"</span><span class="s">-c"</span>
+          <span class="pi">-</span> <span class="s2">"</span><span class="s">sleep</span><span class="nv"> </span><span class="s">infinity"</span>
+
+  
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">my-nginx</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">nginx-example</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="m">80</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">nginx</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">LoadBalancer</span>
+
+</code></pre></div></div>
+
+<p>Apply and make sure it works.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> nginx-example
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-f7bb8bd94-lpnvg   2/2     Running   0          25m
+
+<span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> nginx-example
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+nginx-logs   Bound    pvc-a9531e89-7900-4265-9910-030142b4646a   1Gi        RWO            silver         25m
+
+</code></pre></div></div>
+
+<p>Now we can backup:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup create nginx-frozen <span class="nt">--include-namespaces</span> nginx-example
+Backup request <span class="s2">"nginx-frozen"</span> submitted successfully.
+Run <span class="sb">`</span>velero backup describe nginx-frozen<span class="sb">`</span> or <span class="sb">`</span>velero backup logs nginx-frozen<span class="sb">`</span> <span class="k">for </span>more details.
+
+<span class="nv">$ </span>velero backup describe nginx-frozen <span class="nt">--details</span> 
+Name:         nginx-frozen
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.28.7+k3s1
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>28
+
+Phase:  Completed
+...
+Backup Volumes:
+  Velero-Native Snapshots: &lt;none included&gt;
+
+  CSI Snapshots:
+    nginx-example/nginx-logs:
+      Snapshot:
+        Operation ID: nginx-example/velero-nginx-logs-ssf6z/2024-03-23T07:14:11Z
+        Snapshot Content Name: snapcontent-17afb278-f1e9-4929-8077-7a697e56c97d
+        Storage Snapshot ID: pvc-a9531e89-7900-4265-9910-030142b4646a/snapshot-17afb278-f1e9-4929-8077-7a697e56c97d
+        Snapshot Size <span class="o">(</span>bytes<span class="o">)</span>: 1073741824
+        CSI Driver: csi.trident.netapp.io
+
+  Pod Volume Backups: &lt;none included&gt;
+
+HooksAttempted:  2
+HooksFailed:     0
+</code></pre></div></div>
+
+<p>We had two hooks, freeze before and unfreeze after. No hooks failed, which is good. Check the log and inspect hook-related lines.</p>
+
+<p>Example for post-hook that runs unfreeze:</p>
+
+<pre><code class="language-raw">time="2024-03-23T07:14:11Z" level=info msg="stderr: 
+  " backup=velero/nginx-frozen hookCommand="[/usr/sbin/fsfreeze --unfreeze /var/log/nginx]" hookContainer=fsfreeze hookName="&lt;from-annotation&gt;" 
+  hookOnError=Fail hookPhase=post hookSource=annotation hookTimeout="{30s}" hookType=exec logSource="pkg/podexec/pod_command_executor.go:180" 
+  name=nginx-deployment-f7bb8bd94-lpnvg namespace=nginx-example resource=pods
+
+time="2024-03-23T07:14:11Z" level=info 
+  msg="hookTracker: map[{podNamespace:nginx-example podName:nginx-deployment-f7bb8bd94-lpnvg hookPhase:post hookName: hookSource:annotation container:fsfreeze}:
+  {hookFailed:false hookExecuted:true} {podNamespace:nginx-example podName:nginx-deployment-f7bb8bd94-lpnvg hookPhase:pre hookName: hookSource:annotation 
+  container:fsfreeze}:{hookFailed:false hookExecuted:true}], hookAttempted: 2, hookFailed: 0" backup=velero/nginx-frozen logSource="pkg/backup/backup.go:436"
+
+</code></pre>
+
+<p>Our volume name is pvc-a9531e89. Let’s do another backup and check if we can see its IO.</p>
+
+<p><img src="/assets/images/velero-trident-solidfire-description-05.png" alt="Backup with pre hook fsfreeze" /></p>
+
+<p>SolidFire registers a small IO burst on fsfreeze (with no throughput asssociated IO, since IOs were likely very few). When Velero mover kicks in to copy data to S3, a small throughput burst is registered as well.</p>
+
+<p><img src="/assets/images/velero-trident-solidfire-description-06.png" alt="Backup with pre hook fsfreeze" /></p>
+
+<p>For applications that shouldn’t or can’t use fsfreeze, create own scripts or use community resources.</p>
+
+<p>Many apps don’t need any hooks and for those I’d use hooks only for notification purposes.</p>
+
       </article>
     </div>
     
@@ -831,7 +1014,7 @@ The backup will be fully deleted after all associated data <span class="o">(</sp
 
     
   </div><footer class= "footer">
-    <p>2024-03-23 13:22 </p>
+    <p>2024-03-23 15:59 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
