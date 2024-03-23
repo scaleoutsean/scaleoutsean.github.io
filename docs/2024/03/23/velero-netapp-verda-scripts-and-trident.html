@@ -135,13 +135,24 @@
     </span>
   </div>
   
-        <p>What is Verda?</p>
+        <ul>
+  <li><a href="#what-is-verda">What is Verda</a></li>
+  <li><a href="#example-with-redis">Example with Redis</a></li>
+</ul>
+
+<h2 id="what-is-verda">What is Verda</h2>
 
 <blockquote>
   <p>This project aims to help users protect popular Kubernetes applications with NetApp Astra Control by taking app-consistent snapshots, backups, and other techniques.</p>
 </blockquote>
 
-<p>Scripts from the <a href="https://github.com/NetApp/Verda/blob/main/LICENSE">permissively licensed Verda</a> repository can be used according to the license, which means you’re free to use them as stand-alone scripts.</p>
+<p>Verda has hook scripts for several popular applications and it works best with <a href="https://docs.netapp.com/us-en/astra-control-center/">NetApp Astra Control</a>.</p>
+
+<p>The scripts from the <a href="https://github.com/NetApp/Verda/blob/main/LICENSE">permissively licensed Verda</a> repository can be used according to the repository license which means NetApp Trident users who have SolidFire arrays can take advantage of Verda scripts to enhance their backup integrations.</p>
+
+<p>That way, even as Astra Control doesn’t support SolidFire backend, SolidFire users can benefit from Verda.</p>
+
+<h2 id="example-with-redis">Example with Redis</h2>
 
 <p>Appendix D of my <a href="/2024/03/22/velero-trident-backup-job-details.html">previous post</a> gives an example of using Velero v1.13 with pre and post-hoooks based on a sidecar container with fsfreeze.</p>
 
@@ -159,7 +170,7 @@
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">pre</code>: For persistence mode RDB, run BGSAVE command creating dump.rdb in Redis data directory. For persistence mode AOF, turn off automatic rewrites (set auto-aof-rewrite-percentage 0)</li>
-  <li><code class="language-plaintext highlighter-rouge">post</code>: For persistence mode RDB, delete dump.rdb in Redis data directory. For persistence mode AOF,turn on automatic rewrites again (set auto-aof-rewrite-percentage to original value)</li>
+  <li><code class="language-plaintext highlighter-rouge">post</code>: For persistence mode RDB, delete dump.rdb in Redis data directory. For persistence mode AOF, turn on automatic rewrites again (set auto-aof-rewrite-percentage to original value)</li>
 </ul>
 
 <p>In Velero we create pre and post hooks as explained in the post linked at the top (and in the Velero documentation).</p>
@@ -195,7 +206,7 @@ root@keydb-deployment-64b88d5575-d742g:/data# <span class="nb">cat </span>redish
 100
 </code></pre></div></div>
 
-<p>redishook_rewritepct.txt indicates our pre-hook completed.</p>
+<p>redishook_rewritepct.txt indicates our pre-hook completed - current rewrite value was saved to this file, while Redis is set to 0%.</p>
 
 <p>Then Velero continues with Trident CSI snapshot and after backup the same script is executed with <code class="language-plaintext highlighter-rouge">post</code>:</p>
 
@@ -211,6 +222,8 @@ drwxr-xr-x 2 root root      66 Mar 23 09:13 <span class="nb">.</span>
 <span class="nt">-rwxr-xr-x</span> 1 root root    5397 Mar 23 09:07 redis-hooks.sh
 drwxr-xr-x 1 root root    4096 Mar 23 09:05 ..
 </code></pre></div></div>
+
+<p>Posthook sets rewrite back to the saved value (100%).</p>
 
 <p>To use this approach you need to get the script into the container. By default Redis uses /data and if that’s your PVC you can put it there. The script has no hard-coded secrets, so I think it’s safe to keep it there. Alternatively, assign another PVC just for this script or do something you think is even better.</p>
 
@@ -240,16 +253,13 @@ drwxr-xr-x 1 root root    4096 Mar 23 09:05 ..
 
 <p>I haven’t <em>actually</em> tried running these from Velero (Why? Because I just spent 8 hours testing and writing that other post and half of my weekend is gone).</p>
 
-<p>I only tested the script itself.</p>
+<p>I only tested the script itself, using KeyDB (a Redis fork) which worked seamlessly.</p>
 
 <p><img src="/assets/images/velero-verda-trident-solidfire-redis-00.png" alt="Redis or KeyDB pre and post hooks" /></p>
 
-<p>To get this hook to work from Velero we’d need to deploy Redis pod with ENV variables (REDIS_PORT, REDIS_PASSWORD) that the script requires.</p>
+<p>To get this hook to work from Velero we’d need to deploy Redis pod with ENV variables (REDIS_PORT, REDIS_PASSWORD) that the script requires. For testing purposes in a closed environment you could run Redis server without authentication, or even hard-code the variables into the script.</p>
 
-<p>Verda has hook scripts for several other popular applications and it works well with <a href="https://docs.netapp.com/us-en/astra-control-center/">NetApp Astra Control</a>.</p>
-
-<p>Astra Control doesn’t support SolidFire, but SolidFire users can use Verda scripts from Velero, for example.</p>
-
+<p>If you encounter a problem, make sure it’s Verda-related (that is, execute a Verda script in stand-alone mode) and create a Github issue or post your problem to General Discussion (for non-product questions) on NetApp Community forums.</p>
 
       </article>
     </div>
@@ -369,7 +379,7 @@ drwxr-xr-x 1 root root    4096 Mar 23 09:05 ..
 
     
   </div><footer class= "footer">
-    <p>2024-03-23 18:07 </p>
+    <p>2024-03-23 18:53 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
