@@ -129,7 +129,7 @@
 
   
   
-    17 minute read
+    19 minute read
   
 
     </span>
@@ -147,6 +147,7 @@
   <li><a href="#appendix-a---configuration-details">Appendix A - configuration details</a></li>
   <li><a href="#appendix-b---backup-and-details">Appendix B - backup and details</a></li>
   <li><a href="#appendix-c---restore-and-delete">Appendix C - restore and delete</a></li>
+  <li><a href="#appendix-d---using-velero-hooks">Appendix D - using Velero hooks</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -682,6 +683,36 @@ The backup will be fully deleted after all associated data <span class="o">(</sp
 
 <p>Early on (Velero v1.5.3), I saw odd behavior which included bugs but also “odd by design” and in possibly harmful ways.</p>
 
+<h2 id="appendix-d---using-velero-hooks">Appendix D - using Velero hooks</h2>
+
+<p><a href="https://velero.io/docs/main/backup-hooks/">Hooks</a> are executed in a container in a pod that’s being backed up. We can decide which container to use.</p>
+
+<p>Pre-hooks run before a backup, and post-hooks after.</p>
+
+<p>A pre-hook could for example freeze/suspend the app similar to the functionality available in Kasten’s <a href="/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html">Kanister</a> integrations.</p>
+
+<p>For NGINX (which I used in this testing), there’s an interesting example <a href="https://github.com/vmware-tanzu/velero/blob/v1.13.1/examples/nginx-app/with-pv.yaml">here</a>: although normally we wouldn’t expect NGINX to write, if logs are stored locally and not forwarded, that would be something we may want to freeze while performing a backup - <em>especially</em> if we’re doing doing a CSI-enabled backup (which would take a snapshot in an instant).</p>
+
+<p>A post-hook could unfreeze the app and even send some details to Elasticsearch or other database.</p>
+
+<p>Environmental variables available to a pod are also available to Velero hooks executing in it.</p>
+
+<p>As an example, a user running <a href="https://github.com/scaleoutsean/eseries-perf-analyzer/">E-Series Performance Analyzer (EPA)</a> could run a post hook <code class="language-plaintext highlighter-rouge">post.hook.backup.velero.io/on-error</code> that would use ENV variables from EPA collector to create a Grafana notification (or a record in DB used by EPA that is surfaced in Grafana) about the failed job on that particular array, along with other details.</p>
+
+<p>Now I’m making stuff up, so don’t try this verbatim, but to run a post hook in an EPA collector pod we could use Python to leverage ENV vars from the container. <code class="language-plaintext highlighter-rouge">/bin/sh</code> is required to “pick up” ENV variables, even if the notifier script may be written in another language.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">post</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">exec</span><span class="pi">:</span>
+    <span class="na">container</span><span class="pi">:</span> <span class="s">collector-r24u04-e2824</span>
+    <span class="na">command</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">/bin/sh</span>
+      <span class="pi">-</span> <span class="s">-c</span>
+      <span class="pi">-</span> <span class="s">influxwrite.py --password=${PASSWORD} --system=${SYSNAME} --endpoint=${API} --db=${DB_ADDRESS} --token=${TOKEN}</span>
+    <span class="na">onError</span><span class="pi">:</span> <span class="s">Fail</span>
+</code></pre></div></div>
+
+<p>This would only offer information about the array on which a backup failed. We’d also want to know which backup failed, but I don’t see a way to pass that information to a hook. It probably can be hard-coded in each job, but that’s inconvenient at scale.</p>
+
       </article>
     </div>
     
@@ -800,7 +831,7 @@ The backup will be fully deleted after all associated data <span class="o">(</sp
 
     
   </div><footer class= "footer">
-    <p>2024-03-23 12:14 </p>
+    <p>2024-03-23 13:22 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
