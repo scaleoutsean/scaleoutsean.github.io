@@ -129,7 +129,7 @@
 
   
   
-    9 minute read
+    10 minute read
   
 
     </span>
@@ -148,6 +148,7 @@
   <li><a href="#sql-server-t-sql-snapshots-and-solidfire-volume-snapshots">SQL Server T-SQL snapshots and SolidFire volume snapshots</a></li>
   <li><a href="#windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---cmdlets">Appendix A - cmdlets</a></li>
 </ul>
 
 <h2 id="connect-to-solidfire-iscsi-targets">Connect to SolidFire iSCSI targets</h2>
@@ -356,6 +357,41 @@
 
 <p>Drive-to-storage mapping is still not as good in VMware where it’s easy to figure that out by comparing ESXi and the SolidFire volume’s ScsiNAADeviceID. For that reason, I’d just focus on volume labels and SolidFire volume names when managing SolidFire in Windows environments.</p>
 
+<h2 id="appendix-a---cmdlets">Appendix A - cmdlets</h2>
+
+<p>Here are some examples to get you started.</p>
+
+<p>Windows volume information can be gathered for the labels (and SolidFire volume names) to exclude OS boot disk, for example.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$win_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Volume</span><span class="w"> </span><span class="nt">-FileSystemLabel</span><span class="w"> </span><span class="nx">sqldb</span><span class="p">,</span><span class="nx">win1</span><span class="p">,</span><span class="nx">win2</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Windows iSCSI sessions that connect to SolidFire. Note that <code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:wcwb.sqldb.136</code> contains a cluster UUID (<code class="language-plaintext highlighter-rouge">wcwb</code>), so you could add that if connected to multiple SolidFire clusters from the same Windows iSCSI client.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PS C:\&gt; $iscsi_session = Get-IscsiSession  | Where-Object -Property TargetNodeAddress -CMatch "iqn.2010-01.com.solidfire"
+
+</code></pre></div></div>
+
+<p>To get SolidFire volumes used by a storage tenant account, specify their account ID.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$sf_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-SFVolume</span><span class="w"> </span><span class="nt">-AccountID</span><span class="w"> </span><span class="nx">13</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="nx">Iqn</span><span class="p">,</span><span class="nx">VolumeID</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>When looking for filesystem type, drive letter or filesystem label, you may need to get it from CIM Object Properties (returned by Get-Volume, if you store the object in a variable).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-Volume</span><span class="w"> </span><span class="nt">-DriveLetter</span><span class="w"> </span><span class="nx">F</span><span class="w">
+
+</span><span class="n">DriveLetter</span><span class="w"> </span><span class="nx">FriendlyName</span><span class="w"> </span><span class="nx">FileSystemType</span><span class="w"> </span><span class="nx">DriveType</span><span class="w"> </span><span class="nx">HealthStatus</span><span class="w"> </span><span class="nx">OperationalStatus</span><span class="w"> </span><span class="nx">SizeRemaining</span><span class="w">    </span><span class="nx">Size</span><span class="w">
+</span><span class="o">-----------</span><span class="w"> </span><span class="o">------------</span><span class="w"> </span><span class="o">--------------</span><span class="w"> </span><span class="o">---------</span><span class="w"> </span><span class="o">------------</span><span class="w"> </span><span class="o">-----------------</span><span class="w"> </span><span class="o">-------------</span><span class="w">    </span><span class="o">----</span><span class="w">
+</span><span class="n">F</span><span class="w">           </span><span class="nx">win1</span><span class="w">         </span><span class="nx">NTFS</span><span class="w">           </span><span class="nx">Fixed</span><span class="w">     </span><span class="nx">Healthy</span><span class="w">      </span><span class="nx">OK</span><span class="w">                      </span><span class="nx">1.83</span><span class="w"> </span><span class="nx">GB</span><span class="w"> </span><span class="nx">1.85</span><span class="w"> </span><span class="nx">GB</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$win_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Volume</span><span class="w"> </span><span class="nt">-DriveLetter</span><span class="w"> </span><span class="nx">F</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>Then loop through the volumes and inspect the properties “FileSystem”, “DriveLetter”, “FileSystemLabel”.</p>
+
       </article>
     </div>
     
@@ -478,7 +514,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-03-31 18:21 </p>
+    <p>2024-03-31 18:34 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
