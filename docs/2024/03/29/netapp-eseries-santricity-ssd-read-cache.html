@@ -15,11 +15,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            NetApp SANtricity E-Series SSD read-only cache | Acting Technologist
+            SSD Cache feature on NetApp SANtricity E-Series | Acting Technologist
       
     </title>
     <meta name="description" content="
-     
+     How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -47,13 +47,13 @@
     </script>
 
     <!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>NetApp SANtricity E-Series SSD read-only cache | Acting Technologist</title>
+<title>SSD Cache feature on NetApp SANtricity E-Series | Acting Technologist</title>
 <meta name="generator" content="Jekyll v4.1.1" />
-<meta property="og:title" content="NetApp SANtricity E-Series SSD read-only cache" />
+<meta property="og:title" content="SSD Cache feature on NetApp SANtricity E-Series" />
 <meta name="author" content="scaleoutSean" />
 <meta property="og:locale" content="en" />
-<meta name="description" content="a blog on enterprise apps and storage" />
-<meta property="og:description" content="a blog on enterprise apps and storage" />
+<meta name="description" content="How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance" />
+<meta property="og:description" content="How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance" />
 <link rel="canonical" href="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html" />
 <meta property="og:url" content="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html" />
 <meta property="og:site_name" content="Acting Technologist" />
@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-03-29T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"NetApp SANtricity E-Series SSD read-only cache","dateModified":"2024-03-29T00:00:00+08:00","datePublished":"2024-03-29T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/santricity_ssd_cache_eseries_03_ssd_cache_performance_stats.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html","description":"a blog on enterprise apps and storage","@context":"https://schema.org"}</script>
+{"headline":"SSD Cache feature on NetApp SANtricity E-Series","dateModified":"2024-03-29T00:00:00+08:00","datePublished":"2024-03-29T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html"},"image":"https://scaleoutsean.github.io/assets/images/santricity_ssd_cache_eseries_03_ssd_cache_performance_stats.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html","description":"How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -119,7 +119,7 @@
 
     <div class="post-container">
       <article id = "post">
-        <h1 id = "post-title">NetApp SANtricity E-Series SSD read-only cache</h1>
+        <h1 id = "post-title">SSD Cache feature on NetApp SANtricity E-Series</h1>
 
   
   <div class = "post-info">
@@ -129,27 +129,27 @@
 
   
   
-    7 minute read
+    8 minute read
   
 
     </span>
   </div>
   
         <ul>
-  <li><a href="#wth-is-ssd-cache">WTH is “SSD cache”</a></li>
-  <li><a href="#get-it">Get it</a></li>
-  <li><a href="#configure-volumes-to-use-ssd-cache">Configure volumes to use SSD Cache</a></li>
+  <li><a href="#wth-is-ssd-cache">WTH is “SSD Cache”</a></li>
+  <li><a href="#create-ssd-cache">Create SSD cache</a></li>
+  <li><a href="#configure-hdd-based-volumes-to-use-ssd-cache">Configure HDD-based volumes to use SSD Cache</a></li>
   <li><a href="#summary">Summary</a></li>
   <li><a href="#api-for-monitoring">API for monitoring</a></li>
 </ul>
 
-<h2 id="wth-is-ssd-cache">WTH is “SSD cache”</h2>
+<h2 id="wth-is-ssd-cache">WTH is “SSD Cache”</h2>
 
 <p>It’s a feature that makes E-Series arrays store frequently accessed data from HDDs on faster flash disk drives.</p>
 
 <p>The documentation isn’t very clear so I’m putting this post together.</p>
 
-<p>Use cases for SSD cache are read-intensive workloads such as reporting or analytics. SSD cache is read-only (from client perspective), so constant invalidation or eviction would render it useless. Generally you’d want to use this</p>
+<p>The use cases for SSD Cache are read-intensive workloads such as reporting or analytics. SSD cache is read-only (from client perspective), so constant invalidation or eviction would render it useless. Generally we want to use SSD Cache with working sets of up to few TB (per array) when we have constant or at least long-lasting read-dominant activity on volumes enabled to use SSD Cache.</p>
 
 <p>To use this feature on an E-Series array, you’ll need:</p>
 <ul>
@@ -160,13 +160,13 @@
 
 <p>SSD cache - even when comprised of multiple SSDs - is not protected because it has no unique data.</p>
 
-<p>Even if you used 4 drives, they’d be like RAID0 - if a drive fails, SSD cache capacity drops, and nothing else happens. If the drive is replaced, SSD cache will recover to its original size.</p>
+<p>Even if you used 4 drives, they’d be like RAID0 - if a drive fails, SSD cache capacity drops, and nothing else happens. If the drive is replaced, SSD Cache will recover to its original size.</p>
 
 <p><img src="/assets/images/santricity_ssd_cache_eseries_04_ssd_cache_suspend_resume.png" alt="" /></p>
 
 <p>There can be only one SSD cache. If you decide to add more disks, select SSD Cache and “Add Capacity” to add additional SSDs. Just remember (before buying additional SSDs) that each array has a maximum and currently no array can use more than 8TB.</p>
 
-<h2 id="get-it">Get it</h2>
+<h2 id="create-ssd-cache">Create SSD cache</h2>
 
 <p>In the same place where we create RAID groups, pick “Create SSD cache” and pick up to the maximum your array supports.</p>
 
@@ -176,7 +176,7 @@
 
 <p><img src="/assets/images/santricity_ssd_cache_eseries_01_ssd_cache.png" alt="" /></p>
 
-<h2 id="configure-volumes-to-use-ssd-cache">Configure volumes to use SSD Cache</h2>
+<h2 id="configure-hdd-based-volumes-to-use-ssd-cache">Configure HDD-based volumes to use SSD Cache</h2>
 
 <p>I didn’t want SSD Cache to be enabled across the board, so I had to enable my volume manually.</p>
 
@@ -690,6 +690,21 @@ Retrieve the FlashCache, if it exists.
         
     
         
+          <div class = "related-posts">
+          <h5><a href="/2024/03/31/windows-server-2025-with-solidfire-part-one.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
     
       
     
@@ -749,21 +764,6 @@ Retrieve the FlashCache, if it exists.
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/03/18/storagegrid-storage-node-filesystem-block-size.html">• Filesystem block size used by NetApp StorageGRID</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -772,7 +772,7 @@ Retrieve the FlashCache, if it exists.
 
     
   </div><footer class= "footer">
-    <p>2024-03-29 18:31 </p>
+    <p>2024-03-31 18:21 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
