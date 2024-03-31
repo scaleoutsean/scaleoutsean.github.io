@@ -129,7 +129,7 @@
 
   
   
-    10 minute read
+    12 minute read
   
 
     </span>
@@ -145,7 +145,11 @@
 
 <ul>
   <li><a href="#connect-to-solidfire-iscsi-targets">Connect to SolidFire iSCSI targets</a></li>
-  <li><a href="#sql-server-t-sql-snapshots-and-solidfire-volume-snapshots">SQL Server T-SQL snapshots and SolidFire volume snapshots</a></li>
+  <li><a href="#sql-server-t-sql-snapshots-and-solidfire-volume-snapshots">SQL Server T-SQL snapshots and SolidFire volume snapshots</a>
+    <ul>
+      <li><a href="#sql-backup-and-solidfire">SQL Backup and SolidFire</a></li>
+    </ul>
+  </li>
   <li><a href="#windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---cmdlets">Appendix A - cmdlets</a></li>
@@ -220,13 +224,13 @@
 
 <p>Point 1 shows it takes 0.2 seconds to snapshot a volume.</p>
 
-<p>Admittedly this was on an idle volume, but SQL is idled in pre-snapshot part with <code class="language-plaintext highlighter-rouge">SUSPEND_FOR_SNAPSHOT_BACKP</code> and after that we need to take it quickly on SolidFire. 0.2 seconds should be quick enough. Why should we care? See at the link:</p>
+<p>Admittedly this was on an idle volume, but SQL is idled in the pre-snapshot action with <code class="language-plaintext highlighter-rouge">SUSPEND_FOR_SNAPSHOT_BACKP</code> executed by SQL Server, and after that we need to take a snapshot quickly on SolidFire. 0.2 seconds ought to be enough for everyone. Why should we care about this niche stuff? See at the link:</p>
 
 <blockquote>
   <p>In the past, users have relied on third-party solutions that were built on top of the SQL Writer service to complete snapshot backups. The SQL Writer service depends on Windows VSS (Volume Shadow Service) along with SQL Server VDI (Virtual Device Interface) to perform the orchestration between SQL Server and the disk-level snapshot. Backup clients based on the SQL Writer service tend to be complex, and they only work on Windows. With T-SQL snapshot backups, the SQL Server side of the orchestration can be handled with a series of T-SQL commands.</p>
 </blockquote>
 
-<p>This means you <em>no longer need</em> SolidFire VSS Hardware Provider.</p>
+<p>This means you <em>no longer need</em> SolidFire VSS Hardware Provider to take application-consistent SQL Server backups (as long as this approach works).</p>
 
 <p>Point 2 shows snapshot retention. Notice there’s the parameter <code class="language-plaintext highlighter-rouge">Retention</code> in the SolidFire snapshot cmdlet in the screenshot above. I set that to <code class="language-plaintext highlighter-rouge">"00:01:00"</code> meaning 1 minute, because I wanted to see how SolidFire clears snapshots with a very short retention.</p>
 
@@ -241,6 +245,14 @@
 <p>That shouldn’t matter to you unless you take extremely frequent T-SQL snapshots - given the SolidFire limit of 32 snapshots per volume, if you were to take them once a minute and expire in 2 minutes, you may hit the limit. Every five minutes with 5 minute retention could be practical.</p>
 
 <p>On the SolidFire itself, the (storage) snapshot doesn’t have to be retained for a very short time. It can be cloned for backup, replicated to another site, or cloned for testing by another tenant. You may want to retain every Nth snapshot for 24 hours, which could be done in various ways, but the simplest is two T-SQL snapshot schedules - for example one every 15 min with 30 min retention (this would use half a dozen) and one every 24 hours with 24 hour retention.</p>
+
+<h3 id="sql-backup-and-solidfire">SQL Backup and SolidFire</h3>
+
+<p>Because SolidFire’s VSS hardware provider hasn’t been developed for a while, that was a problem for some SQL Servers, from what I’ve heard second-hand. I didn’t understand in what business or technical circumstances the lack of a VSS hardware provider present problems when SolidFire is so easy to automate.</p>
+
+<p>One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are <a href="https://scaleoutsean.github.io/2023/12/07/solidfire-rbac-for-json-rpc-api.html">ways to mitigate the lack of rich RBAC</a> which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).</p>
+
+<p>Another “recent” (not really) SQL Server feature is the ability to backup SQL Server to <a href="https://scaleoutsean.github.io/2023/08/28/sql-server-polybase-s3.html#backup-use-case">an object store</a>. It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.</p>
 
 <h2 id="windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</h2>
 
@@ -294,12 +306,14 @@
 <ul>
   <li>SolidFire Volume 134 was created first and 135 immediately after that (before Windows storage scan)</li>
   <li>Windows iSCSI Report says SolidFire volume ID 135 is Target #0 (yay!)</li>
-  <li>Windows iSCSI Report also says Target #0 is Disk 2, which is in fact iSCSI Target 1 in Disk Manager(huh?)</li>
+  <li>Windows iSCSI Report also says Target #0 is Disk 2, which is in fact iSCSI Target 1 in Disk Manager (huh?)</li>
 </ul>
 
-<p>Where’s Target 0, then? It’s SolidFire volume ID 135 which is listed further below (green rectangles), as Target #1 (iSCSI Target 0 to Disk Manager).</p>
+<p>Where’s Target 0, then? It’s SolidFire volume ID 135 which is shown in iSCSI report (green rectangles), as Target #1 (iSCSI Target 0 to Disk Manager).</p>
 
-<p>Because this seems hard to control, I figure the best one can do is create some sort of a report that relies on unique SolidFire names (this volume naming policy administrator must be responsible for) and the consistent application of those names to Windows volume labels.</p>
+<p>Imagine having to deal with that for 12 or 16 volumes!!! “iSCSI Target #7 is Target 4 which is Disk 11”.</p>
+
+<p>This seems hard to control as well, so I figure the best one can do is create some sort of a report that relies on unique SolidFire volume names (this volume naming policy administrator must be responsible for) and the consistent consistency of those names with Windows volume labels.</p>
 
 <p>With that - however you get this done - you can reasonably easily confirm this alignment and potentially automate storage replication and BC/DR.</p>
 
@@ -353,6 +367,8 @@
 
 <p>Another way to do a (WindowsA) cluster-wide or (SolidFire) storage-wide view would be to include server names and key SolidFire volumes on $v.Iqn, and send reports to Elasticsearch or other database. Then it would be easy to get a big picture.</p>
 
+<p><strong>NOTE:</strong> I noticed that the original (first) Windows volume label remains buried in deep in volume properties. That seems fine, as changing the label does work as expected (the label does get changed), but you need to be careful not to use some obscure parameter values and the easy fix for that is to stick one one volume label for the lifetime of a volume.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Both 512b and 4kB sectors worked, and iSCSI-wise it seems not much has changed.</p>
@@ -360,6 +376,8 @@
 <p>The ability to do easy remoting with SSH is a big improvement.</p>
 
 <p>Drive-to-storage mapping is still not as good in VMware where it’s easy to figure that out by comparing ESXi and the SolidFire volume’s ScsiNAADeviceID. For that reason, I’d just focus on volume labels and SolidFire volume names when managing SolidFire in Windows environments.</p>
+
+<p>The rest of Windows-related configuration details, considerations and best practices can be found in my Github repo.</p>
 
 <h2 id="appendix-a---cmdlets">Appendix A - cmdlets</h2>
 
@@ -518,7 +536,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-03-31 21:44 </p>
+    <p>2024-03-31 22:25 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
