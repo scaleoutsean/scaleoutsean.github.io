@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-03-31T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -135,10 +135,10 @@
     </span>
   </div>
   
-        <p>This is the first of possibly several on Microsoft Windows Server 2025 and NetApp SolidFire.</p>
+        <p>This is the first of possibly several posts on Microsoft Windows Server 2025 and NetApp SolidFire.</p>
 
 <ul>
-  <li>(you’re here) Part One: Windows Server 2025 with NetApp SolidFire - getting started</li>
+  <li>(you’re here) <strong>Part One: Windows Server 2025 with NetApp SolidFire</strong> - getting started</li>
 </ul>
 
 <p>In this post you can find the following:</p>
@@ -193,7 +193,7 @@
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-05-powershell-solidfire.png" alt="" /></p>
 
 <ul>
-  <li>Step 1 - start PowerShell 7 from CMD</li>
+  <li>Step 1 - start PowerShell 7 from CMD (in SSH session)</li>
   <li>Step 2 - Install SolidFire Core</li>
   <li>Step 3 - Import SolidFire Core module</li>
   <li>Step 4 - create credential for SolidFire</li>
@@ -218,6 +218,8 @@
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-07-powershell-solidfire-snapshot-duration-retention.png" alt="" /></p>
 
+<p>Point 1 shows it takes 0.2 seconds to snapshot a volume.</p>
+
 <p>Admittedly this was on an idle volume, but SQL is idled in pre-snapshot part with <code class="language-plaintext highlighter-rouge">SUSPEND_FOR_SNAPSHOT_BACKP</code> and after that we need to take it quickly on SolidFire. 0.2 seconds should be quick enough. Why should we care? See at the link:</p>
 
 <blockquote>
@@ -226,17 +228,19 @@
 
 <p>This means you <em>no longer need</em> SolidFire VSS Hardware Provider.</p>
 
-<p>Notice there’s the parameter <code class="language-plaintext highlighter-rouge">Retention</code> in the SolidFire snapshot cmdlet in the screenshot above. I set that to <code class="language-plaintext highlighter-rouge">"00:01:00"</code> meaning 1 minute, because I wanted to see how SolidFire clears snapshots with a very short retention.</p>
+<p>Point 2 shows snapshot retention. Notice there’s the parameter <code class="language-plaintext highlighter-rouge">Retention</code> in the SolidFire snapshot cmdlet in the screenshot above. I set that to <code class="language-plaintext highlighter-rouge">"00:01:00"</code> meaning 1 minute, because I wanted to see how SolidFire clears snapshots with a very short retention.</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-08-solidfire-snapshot-retention.png" alt="" /></p>
 
 <p>It turned out it works fine, but garbage collection doesn’t seem to run <em>that</em> often.</p>
 
-<p>Such snapshots get deleted in minutes, but beyond the 1 minute specified (1). Five minutes seems reasonable and gets deleted on time (2).</p>
+<p>Such snapshots get deleted in minutes, but beyond the 1 minute specified (marked with 1). Five minutes seems reasonable and gets deleted on time (marked with 2).</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-09-solidfire-snapshot-retention-5m.png" alt="" /></p>
 
 <p>That shouldn’t matter to you unless you take extremely frequent T-SQL snapshots - given the SolidFire limit of 32 snapshots per volume, if you were to take them once a minute and expire in 2 minutes, you may hit the limit. Every five minutes with 5 minute retention could be practical.</p>
+
+<p>On the SolidFire itself, the (storage) snapshot doesn’t have to be retained for a very short time. It can be cloned for backup, replicated to another site, or cloned for testing by another tenant. You may want to retain every Nth snapshot for 24 hours, which could be done in various ways, but the simplest is two T-SQL snapshot schedules - for example one every 15 min with 30 min retention (this would use half a dozen) and one every 24 hours with 24 hour retention.</p>
 
 <h2 id="windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</h2>
 
@@ -514,7 +518,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-03-31 18:34 </p>
+    <p>2024-03-31 21:44 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
