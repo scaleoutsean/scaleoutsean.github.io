@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-03-31T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    12 minute read
+    15 minute read
   
 
     </span>
@@ -151,6 +151,7 @@
       <li><a href="#sql-backup-and-solidfire">SQL Backup and SolidFire</a></li>
     </ul>
   </li>
+  <li><a href="#single-and-multi-site-solidfire-clusters-and-disaster-recovery">Single and multi-site SolidFire clusters and Disaster Recovery</a></li>
   <li><a href="#windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---cmdlets">Appendix A - cmdlets</a></li>
@@ -258,6 +259,38 @@
 <p>One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are <a href="https://scaleoutsean.github.io/2023/12/07/solidfire-rbac-for-json-rpc-api.html">ways to mitigate the lack of rich RBAC</a> which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).</p>
 
 <p>Another “recent” (not really) SQL Server feature is the ability to backup SQL Server to <a href="https://scaleoutsean.github.io/2023/08/28/sql-server-polybase-s3.html#backup-use-case">an object store</a>. It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.</p>
+
+<h2 id="single-and-multi-site-solidfire-clusters-and-disaster-recovery">Single and multi-site SolidFire clusters and Disaster Recovery</h2>
+
+<p>A SolidFire cluster can be deployed on one site or across (low latency) sites. For Disaster Recovery, replication (sync and async) are available and is purely storage based.</p>
+
+<ul>
+  <li>Single site, single SolidFire cluster: this worked fine before, including with Hyper-V,</li>
+  <li>Multi-site, single SolidFire cluster: technically one can stretch a SolidFire cluster across 3 racks or low-latency sites. See about <a href="/2021/06/08/solidfire-availability-zones.html">protection domains</a>, but I doubt there will be any official work done on this. Technically there’s no difference between 9 1U chassis, 3 2U chassis, 3 racks or 3 data centers - it always works the same way, on a stretched Layer 2 network with properly configured MTU so that packets don’t get fragmented or sent out of order.</li>
+  <li>Disaster recovery (two SolidFire clusters): just use volume replication which can be setup in 5 minutes. Snapshots can be replicated as well - but need to be tagged on creation to make them available for replication - and snapshot retention on the remote site may be configured differently from the source site.</li>
+</ul>
+
+<p>One note about snapshots replication: <a href="/2021/04/20/solidfire-12.3.html">make sure</a> they don’t expire before they can get replicated.</p>
+
+<p>To restore data from a remote site, just reverse the direction of replication. You can see <a href="/2021/03/20/kubernetes-solidfire-failover-failback.html#video-demo">here</a> how a site can be failed over <em>and back</em> in less than 10 minutes. Failover and failback work symmetrically and it’s trivial to execute.</p>
+
+<p>As I mentioned elsewhere, the difference in IQN targets is the cluster Unique ID, which can be obtained like so:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">Get-SFClusterInfo</span><span class="p">)</span><span class="o">.</span><span class="nf">UniqueID</span><span class="w">
+</span><span class="n">wcwb</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>The difference between <em>two</em> clusters:</p>
+
+<ul>
+  <li>Management and Storage virtual IP (as well as nodes’ IP’s)</li>
+  <li>Cluster Name (<code class="language-plaintext highlighter-rouge">DC1</code>, <code class="language-plaintext highlighter-rouge">DC2</code>) and UniqueID (used in SolidFire IQN)</li>
+  <li>Volume names may be different or consistent; in practice I found it hard to ensure consistency because each site may need to do various things like cloning and so on, especially when containers are used</li>
+  <li>Volume IDs are unique and not controllable, so there’s no way to “guess” them</li>
+</ul>
+
+<p>If you keep track of your configuration or automate it like I did in that demo, it’s easy to swap configuration details and reconfigure iSCSI initiators: swap <code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:wcwb.sqldb.136</code> for <code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:aaaa.sqldata.49</code>, change iSCSI Target Portal to new Storage Virtual IP, re-scan, and that should let you see the replicated volumes. You would have to stop replication from DC1 to DC2, flip DC2 volumes to read-write mode, and then reverse the direction of replication so that DC2 starts replicating to DC1.</p>
 
 <h2 id="windows-to-storage-mapping-approaches">Windows-to-Storage mapping approaches</h2>
 
@@ -393,7 +426,7 @@
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$win_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Volume</span><span class="w"> </span><span class="nt">-FileSystemLabel</span><span class="w"> </span><span class="nx">sqldb</span><span class="p">,</span><span class="nx">win1</span><span class="p">,</span><span class="nx">win2</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Windows iSCSI sessions that connect to SolidFire. Note that <code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:wcwb.sqldb.136</code> contains a cluster UUID (<code class="language-plaintext highlighter-rouge">wcwb</code>), so you could add that if connected to multiple SolidFire clusters from the same Windows iSCSI client.</p>
+<p>Windows iSCSI sessions that connect to SolidFire. Note that <code class="language-plaintext highlighter-rouge">iqn.2010-01.com.solidfire:wcwb.sqldb.136</code> contains a cluster Unique ID (<code class="language-plaintext highlighter-rouge">wcwb</code>), so you could add that if connected to multiple SolidFire clusters from the same Windows iSCSI client.</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PS C:\&gt; $iscsi_session = Get-IscsiSession  | Where-Object -Property TargetNodeAddress -CMatch "iqn.2010-01.com.solidfire"
 
@@ -541,7 +574,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-01 16:08 </p>
+    <p>2024-04-01 17:45 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
