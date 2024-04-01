@@ -129,7 +129,7 @@
 
   
   
-    8 minute read
+    9 minute read
   
 
     </span>
@@ -212,6 +212,27 @@
 <p>SolidFire has had volume attributes for close to a decade now, by the way. If you automate a lot, you may want to take advantage of that feature to store a bit more KV pairs to make workflows faster.</p>
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-07-powershell-snapshot-attribute-customize.png" alt="" /></p>
+
+<p>If some snapshots are local-only while others need to be replicated, we can use that in snapshot attributes.</p>
+
+<pre><code class="language-pwsh">PS C:\&gt; New-SFGroupSnapshot -VolumeID 136,134 `n
+        -Retention "00:48:00" -Name "02testSnap" `n
+        -Attributes @{Database='wwi'; Type='meta'; Site='local'}  
+
+PS C:\&gt; New-SFGroupSnapshot -VolumeID 136,134 `n 
+        -Retention "00:08:00" -Name "03testSnap" `n
+        -Attributes @{Database='wwi'; Type='full'; Site='replicated'}
+
+PS C:\&gt; Get-SFGroupSnapshot | Select-Object -Property GroupSnapshotID,Attributes
+
+GroupSnapshotID Attributes
+--------------- ----------
+             70 {[Site, replicated], [Database, wwi], [Type, full]}
+             69 {[Site, local], [Database, wwi], [Type, meta]}
+
+</code></pre>
+
+<p>I may have a bunch of these, but if only full backups need to be replicated, it’s easy to find out which ones to set up for replication.</p>
 
 <h2 id="transact-sql-snapshot-backup-with-solidfire">Transact-SQL snapshot backup with SolidFire</h2>
 
@@ -325,9 +346,13 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-13-solidfire-qos-exception.png" alt="" /></p>
 
-<p>You can find this module in my Github repo “awesome-solidfire”.</p>
+<p>To use the module you just need to have at least two QoS policies defined so that you can switch between QosPolicyIDs. In my environment, I had three, with 2 being the one used during backup.</p>
 
-<p>Hyper-V (at least as of <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/virtualization/back-up-hyper-v-vm-from-parent-partition">Windows Server 2019</a>) uses VSS writer, so there’s no integration with SolidFire. Protecting Hyper-V data maybe a subject of another post.</p>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-14-solidfire-qos-policies.png" alt="" /></p>
+
+<p>You can find Set-SFQosException module in my Github repo “awesome-solidfire”.</p>
+
+<p>Hyper-V (at least as of <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/virtualization/back-up-hyper-v-vm-from-parent-partition">Windows Server 2019</a>) uses VSS writer, so there’s no integration with SolidFire. Protecting Hyper-V data may become a topic for a future post.</p>
 
 <p>SolidFire snapshots are also used by Velero and other backup software for Kubernetes supports CSI.</p>
 
@@ -413,6 +438,21 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
     
         
           <div class = "related-posts">
+          <h5><a href="/2024/04/01/windows-server-2025-with-solidfire-part-three-hyper-v.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Three</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
           <h5><a href="/2024/03/31/windows-server-2025-with-solidfire-part-one.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI</a></h5>
           </div>
           
@@ -462,21 +502,6 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/03/22/velero-trident-backup-job-details.html">• Velero v1.13 metadata, hooks with NetApp Trident v24.02</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -485,7 +510,7 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 
     
   </div><footer class= "footer">
-    <p>2024-04-01 17:45 </p>
+    <p>2024-04-01 20:48 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
