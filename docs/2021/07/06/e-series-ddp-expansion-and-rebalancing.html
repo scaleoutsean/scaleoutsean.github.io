@@ -128,13 +128,22 @@
 
   
   
-    3 minute read
+    4 minute read
   
 
     </span>
   </div>
   
-        <p><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">Here</a> I explained how Dynamic Disk Pools (DDP) work and how they differ from traditional RAID6 (or RAID5) data protection.</p>
+        <ul>
+  <li><a href="#raid-6-vs-ddp">RAID 6 vs DDP</a></li>
+  <li><a href="#ddp-expansion">DDP expansion</a></li>
+  <li><a href="#disk-media-refresh-with-ddp-pools">Disk media refresh with DDP pools</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="raid-6-vs-ddp">RAID 6 vs DDP</h2>
+
+<p><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html#elasticsearch-data-protection-with-ef-series">Here</a> I explained how Dynamic Disk Pools (DDP) work and how they differ from traditional RAID6 (or RAID5) data protection.</p>
 
 <p>Recently I had a query about the need for DDP for which I revisited some details from that post and the TR mentioned in it. The next question was “But then why do people still use RAID6?”</p>
 
@@ -142,7 +151,9 @@
 
 <p>In that case, DDP may indeed be more suitable. Check the TR I mentioned above for the details (you may have some important requirement that conflicts with DDP, say you have a bunch of sites with 10 disks per E-2812 - you can’t do DDP that way).</p>
 
-<p>Let’s say DDP is exactly what you need. Let’s see how long it takes to these operations that the person I talked to has to do once a month (enlarge a DDP, create a new volume, etc.).</p>
+<h2 id="ddp-expansion">DDP expansion</h2>
+
+<p>Let’s say DDP is exactly what you need. Let’s see how long it takes to perform that operation.</p>
 
 <p><img src="/assets/images/e-series-ddp-expansion-01.png" alt="E-Series DDP" /></p>
 
@@ -174,7 +185,23 @@
 
 <p>Don’t forget that you can use a resized volume <em>as soon as you’ve kicked-off the UI resize operation</em>. You don’t need to wait until rebalancing completes: once you’ve resized a volume, go back to your host(s), rescan the storage and you’ll see the new volume size. As the SANtricity UI reminds, you may still need to resize the partition and filesystem. Maybe take a snapshot before you do that if you’re afraid you might screw up.</p>
 
-<h3 id="demo">Demo</h3>
+<h2 id="disk-media-refresh-with-ddp-pools">Disk media refresh with DDP pools</h2>
+
+<p>Scenario with the current SANtricity v11.80:</p>
+
+<ul>
+  <li>You have a DDP with 5 years old 4 TB NL-SAS disks which need a refresh. But alas, those may no longer be available. How can we migrate?</li>
+  <li>According to the (poorly worded) documentation, you shouldn’t use different disk sizes in a DDP. But you may.</li>
+  <li>Add new 12 TB disks to the pool. DDP will use only 2 TB per disk. Relax.</li>
+  <li>Once rebalancing is complete, select all old disks (4 TB, in this case), and kick them out of the pool</li>
+  <li>Once the last old disk is gone from the pool, DDP should recognize the new lowest common denominator - 12 TB - and up its capacity threefold (4-&gt;12 TB per disk)</li>
+</ul>
+
+<p>This can be done online and there’s no need to migrate anything.</p>
+
+<p>On a busy system you may want to start removal of old disks on a Friday night, as that may be more performance-intensive than adding disks.</p>
+
+<h2 id="demo">Demo</h2>
 
 <ul>
   <li><a href="https://youtu.be/O5umRL4dlfo">Initialize and grow a volume on DDP made of 30 HDDs</a> - 2m17s</li>
@@ -285,7 +312,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-03 01:39 </p>
+    <p>2024-04-05 12:47 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

@@ -128,7 +128,7 @@
 
   
   
-    13 minute read
+    14 minute read
   
 
     </span>
@@ -174,13 +174,13 @@
 
 <h2 id="cold-multi-volume-backup-without-snapshots">Cold multi-volume backup without snapshots</h2>
 
-<p>This isn’t specific to SolidFire - it should work the same way with other CSI - but one basic approach is to scale our deployment down to 0, i.e. stop the application, and then mount and backup the volumes.</p>
+<p>This isn’t specific to SolidFire - it should work the same way with other CSI storage when snapshots are taken without CSI - but one basic approach is to scale our deployment down to 0, i.e. stop the application, and then backup a single set of volumes.</p>
 
-<p>That means downtime, of course.</p>
+<p>That means a short downtime, of course.</p>
 
-<p>To make downtime shorter, we could <a href="/2020/11/28/powershell-set-sfqosexception.html">temporarily adjust</a> the volumes’ QoS setting to a high value such as 50,000 IOPS, and restore the original QoS setting or policy after backup is complete.</p>
+<p>To make that downtime shorter, we could <a href="/2020/11/28/powershell-set-sfqosexception.html">temporarily adjust</a> the volumes’ QoS setting to a high value such as 50,000 IOPS, and restore the original QoS setting or policy after backup is complete. A higher QoS limit would allow backup to work faster, making backup time shorter.</p>
 
-<p>As far as backup utilities and applications are concerned, most support custom before/after actions.</p>
+<p>As far as backup utilities and applications are concerned, most of them support custom before/after actions.</p>
 
 <p>Kanister - I’ve blogged about it before - has <a href="https://docs.kanister.io/functions.html#preparedata">functions</a> that can create such simple workflows.</p>
 
@@ -242,7 +242,7 @@
 
 <h2 id="group-snapshot-assisted-multi-volume-backup">Group Snapshot-assisted multi-volume backup</h2>
 
-<p>Now that we know how to use that function, we can sneak into it anything we want. Such as taking a volume group snapshot.</p>
+<p>Now that we know how to use that function, we can sneak into it anything we want. Such as taking a snapshot of the entire volume group.</p>
 
 <p>We could build an image with SolidFire CLI (or PowerShell, etc.) to do that. A spartan version could use curl. To use SolidFire CLI (sfcli), we’d need a Python container with <code class="language-plaintext highlighter-rouge">solidfire-cli</code> module and its dependencies.</p>
 
@@ -266,7 +266,7 @@
 
 <p>We can scale a deployment down to zero (or just enter a hot backup mode in the application), take a snapshot of the volumes, and scale back to the original value. Now our downtime is very short - probably less than 30 seconds.</p>
 
-<p>Downsides? The first is Kasten or Velero don’t know anything about SolidFire snapshots taken without Kubernetes’ CSI snapshotter. We’d have to make use of that storage snapshot on our own.</p>
+<p>Downsides? The first is Kasten or Velero don’t know anything about SolidFire snapshots taken without Kubernetes’ <strong>CSI</strong> snapshotter. We’d have to make use of that storage snapshot on our own.</p>
 
 <h3 id="backup-multi-volume-snapshot-to-s3-with-built-in-backup-to-s3">Backup multi-volume snapshot to S3 with built-in backup-to-S3</h3>
 
@@ -296,7 +296,7 @@
 
 <p><img src="/assets/images/solidfire-group-snapshots-03.png" alt="List group group member snapshots" /></p>
 
-<p>I mean, I did click on the link below <code class="language-plaintext highlighter-rouge"># of volumes</code> on that page, but didn’t notice that snapshot volume IDs were there. So, we can use the usual method to Backup to S3, after all!</p>
+<p>I mean, I did click on the link below <code class="language-plaintext highlighter-rouge">"# of volumes"</code> on that page, but didn’t notice that snapshot volume IDs were there. So, we can use the usual method to Backup to S3, after all!</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">solidfire.factory</span> <span class="kn">import</span> <span class="n">ElementFactory</span>
 <span class="n">sfe</span> <span class="o">=</span> <span class="n">ElementFactory</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="s">'192.168.105.32'</span><span class="p">,</span> <span class="s">'admin'</span><span class="p">,</span> <span class="s">'*****************'</span><span class="p">,</span> <span class="n">verify_ssl</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">print_ascii_art</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -308,7 +308,7 @@
 
 <p>I tried to back-up these to S3 <a href="/2021/04/21/solidfire-backup-to-s3.html#backup-using-the-api-powershell-or-python">using the SolidFire API</a>, and it worked as one would expect from a “stand-alone” volume snapshot being backed up to S3.</p>
 
-<p>If executed from a script, <code class="language-plaintext highlighter-rouge">start_bulk_volume_read</code> returns an async handle, key, and th management IP of the SolidFire <em>node</em> (not cluster’s virtual IP) running this backup job, like this:</p>
+<p>If executed from a script, <code class="language-plaintext highlighter-rouge">"start_bulk_volume_read"</code> returns an async handle, key, and management IP of the SolidFire <em>node</em> (not cluster’s virtual management IP) running this backup job, like so:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">StartBulkVolumeReadResult</span><span class="p">(</span><span class="n">async_handle</span><span class="o">=</span><span class="mi">134</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">'b26292dc52425ac93c7f5d84a7c6fae3'</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s">'https://192.168.1.31:8443/'</span><span class="p">)</span>
 </code></pre></div></div>
@@ -317,7 +317,7 @@
 
 <p>Each group snapshot can be deleted if backup completes, so that snapshots don’t linger longer than necessary. Although - if there are no other snapshots for short term-retention - it’s a good idea to keep the most recent one or two, just in case.</p>
 
-<p>The second major downside of doing ad-hoc backups is that some backups are in Velero, Kasten or whatever else you use, and some elsewhere. That’s usually a bad idea.</p>
+<p>The second major downside of doing ad-hoc backups is that some backups are in Velero, Kasten or whatever else you use, and some elsewhere. That’s usually a bad idea from a governance and management perspective.</p>
 
 <h3 id="using-other-methods-to-backup-data-from-storage-snapshots">Using other methods to backup data from storage snapshots</h3>
 
@@ -330,7 +330,7 @@
 <ul>
   <li>Use SolidFire CLI or API to clone those snapshots</li>
   <li>Use <code class="language-plaintext highlighter-rouge">tridentctl</code> to import cloned volumes and access them from a dummy pod, and</li>
-  <li>Use Kasten or Velero to make a backup (which would be consistent, considering there’s no application that’s using any of the data)</li>
+  <li>Use Kasten or containerized <a href="/2023/09/03/solidbackup-with-kopia.html">Kopia</a> or Velero to make a backup (which would be consistent, considering there’s no application that’s using any of the data). You’d just backup one resource, the PV(C) itself. Since all of them can restore data to a different name space, any restore action could work directly to your application namespace.</li>
 </ul>
 
 <p>Because PVC backups <em>can</em> be restored to another namespace, this would still work reasonably well for many use cases. And all your snapshots and backups would be managed by the same application.</p>
@@ -341,13 +341,15 @@
 
 <p>An example of this can be found in <a href="/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html">this post about logical backups in Kasten</a>. These are storage-independent and although they can be less efficient and consume more resources, they have their advantages.</p>
 
-<p>In this case there’s no multi-volume storage snapshot, though.</p>
+<p>In this case there’s no multi-volume storage snapshot, though. You’d simply backup your application to S3, for example. (You could also take a storage-assisted CSI snapshot, but wouldn’t backup data from snapshots - such snapshots could be rotated daily and serve as a quick way to recover data without restoring from S3, for example.)</p>
 
 <h2 id="application-consistent-snapshots-vs-multi-volume-storage-snapshots">Application-consistent snapshots vs. multi-volume storage snapshots</h2>
 
 <p>Application-side snapshots (MS SQL has them, for example) don’t employ storage snapshots. Such snapshots can often be accessed on “hot” database and used to perform a backup (see logical backups just above).</p>
 
 <p>Scripts that put an application in a crash-consistent state (there’s a bunch of examples on the Internet, including Kanister, <a href="https://github.com/NetApp/Verda">Verda</a>, etc.) don’t deliver application backups, but prepare applications for a storage snapshot - in that sense they are more similar to <code class="language-plaintext highlighter-rouge">fsfreeze</code> (which freezes a filesystem), only - unlike <code class="language-plaintext highlighter-rouge">fsfreeze</code> - works on the application layer. Kasten/Kanister users can see the details <a href="https://docs.kasten.io/5.5.6/kanister/testing.html#application-consistent-backups">here</a>.</p>
+
+<p><a href="/2024/03/23/velero-netapp-verda-scripts-and-trident.html">Here</a> you can see how NetApp Verda can be used with Velero to create application-consistent snapshots and backups.</p>
 
 <h3 id="injecting-storage-snapshot-into-application-aware-workflows">Injecting storage snapshot into application-aware workflows</h3>
 
@@ -357,16 +359,16 @@
 
 <p>As <code class="language-plaintext highlighter-rouge">fsfreeze</code> requires privileged containers, it’s less likely that <code class="language-plaintext highlighter-rouge">fsfreeze</code> will grow in popularity. It may be possible to coordinate this from the worker - freeze from the worker, take a snapshot in Kubernetes - but this is complex and every time we’d need to find out which worker is hosting the pod(s), ensure the workers’ OS clocks are very precise, and potentially run jobs on multiple workers. I doubt that would work well!</p>
 
-<p>Using Kanister and Kasten snapshot hooks we can take a multi-volume storage snapshot that’s independent of logical backup to S3, NFS or elsewhere. <a href="https://docs.kasten.io/5.5.6/kanister/postgresql/install_app_cons.html#application-consistent-postgresql-backup">This example</a> shows how to perform application-specific backup (with PostgreSQL, in this case). We could add a hook for storage snapshot that runs in addition to classic logical backup.</p>
+<p>Using Kanister, Kasten or <a href="/2024/03/22/velero-trident-backup-job-details.html">Velero snapshot hooks</a> we can take a multi-volume storage snapshot that’s independent of logical backup to S3, NFS or elsewhere. <a href="https://docs.kasten.io/5.5.6/kanister/postgresql/install_app_cons.html#application-consistent-postgresql-backup">This example</a> shows how to perform application-specific backup (with PostgreSQL, in this case). We could add a hook for storage snapshot that runs in addition to classic logical backup.</p>
 
 <p>What that would do is create backups externally as it normally does, but also SolidFire group snapshots that Kanister/Kasten aren’t aware of. But they would still be very useful. Why? We’d know that each such backup has an application-aware backup, but also a hardware-based multi-volume snapshot (with retention of say 24 hours). To restore data, we could use whichever is available and better:</p>
 
 <ul>
-  <li>If our application was deleted by mistake, and with it the snapshot, we’d restore from S3/NFS/etc.</li>
-  <li>If we mistakenly deleted a table, we’d scale our deployment to zero, use the SolidFire API or CLI or Web UI to revert the group snapshot, and scale up to one.</li>
+  <li>If our application was deleted by mistake (and with it our storage snapshots as well), we’d restore data from S3/NFS/etc.</li>
+  <li>If we mistakenly deleted a table, we’d scale our deployment to zero, use the SolidFire API or CLI or Web UI to revert the group snapshot.</li>
 </ul>
 
-<p>This isn’t perfect - we still need to use a separate interface to restore a snapshot, but this step could be <a href="https://docs.kasten.io/5.5.6/kanister/hooks.html">included in pre-restore hooks</a> - that would make it easier to execute it, but it wouldn’t make it easier to switch between approaches (restore from exported backup, or from storage multi-volume snapshot).</p>
+<p>This isn’t perfect - we still need to use a separate interface to restore a snapshot, but this step could be <a href="https://docs.kasten.io/5.5.6/kanister/hooks.html">included in pre-restore hooks</a> - that would make it easier to execute it, but it wouldn’t make it easier to switch between approaches (restore from an exported backup, or from a storage multi-volume snapshot).</p>
 
 <h2 id="sub-volume-partitioning-and-other-tricks">Sub-volume partitioning and other tricks</h2>
 
@@ -526,7 +528,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-03 01:39 </p>
+    <p>2024-04-05 12:47 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
