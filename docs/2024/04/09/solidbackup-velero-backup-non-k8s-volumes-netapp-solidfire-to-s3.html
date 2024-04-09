@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Backup NetApp SolidFire's non-Kubernetes volumes with Velero | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     SolidBackup with Velero - modern backup of SolidFire non-K8s volumes to S3
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Backup NetApp SolidFire’s non-Kubernetes volumes with Velero | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Backup NetApp SolidFire’s non-Kubernetes volumes with Velero" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en" />
+<meta name="description" content="SolidBackup with Velero - modern backup of SolidFire non-K8s volumes to S3" />
+<meta property="og:description" content="SolidBackup with Velero - modern backup of SolidFire non-K8s volumes to S3" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-04-09T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Backup NetApp SolidFire’s non-Kubernetes volumes with Velero","dateModified":"2024-04-09T00:00:00+08:00","datePublished":"2024-04-09T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html","description":"SolidBackup with Velero - modern backup of SolidFire non-K8s volumes to S3","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Backup NetApp SolidFire's non-Kubernetes volumes with Velero</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>09 Apr 2024</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    17 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#intro">Intro</a></li>
+  <li><a href="#using-kubernetes-to-backup-non-kubernetes-volumes">Using Kubernetes to backup non-Kubernetes volumes</a></li>
+  <li><a href="#dealing-with-alien-filesystems">Dealing with alien filesystems</a></li>
+  <li><a href="#workflow-for-backup-of-non-k8s-volumes-on-solidfire-using-velero">Workflow for backup of non-K8s volumes on SolidFire using Velero</a></li>
+  <li><a href="#original-to-clone-volume-mapping">Original-to-clone volume mapping</a></li>
+  <li><a href="#workflow">Workflow</a></li>
+  <li><a href="#clone-refresh">Clone refresh</a></li>
+  <li><a href="#kubernetes-related-tasks">Kubernetes-related tasks</a>
+    <ul>
+      <li><a href="#restores">Restores</a></li>
+    </ul>
+  </li>
+  <li><a href="#automation-and-auto-scaling">Automation and auto-scaling</a></li>
+  <li><a href="#summary">Summary</a></li>
+</ul>
+
+<h2 id="intro">Intro</h2>
+
+<p>Over the years I’ve been kind of obsessed with DIY backup. Maybe that’s because SolidFire includes free “volume to S3” backup functionality, which was a gateway drug, so to speak.</p>
+
+<p>I blogged about this many times (search this blog for SolidFire backup or skim through the archive), but very briefly, here’s my current status:</p>
+
+<p>First, I created PowerShell scripts for parallel (native) SolidFire backup of a list of volumes (by volume ID) from SolidFire. This uses native SolidFire backup-to-S3 functionality which is limited (why, read in the archive posts). This works fine - it automatically maxes out backup job slots and keeps them busy until all volumes have been backed up. This seems trivial - in hindsight - but I had to struggle with SolidFire API bugs in this area, MinIO bug (fixed since; other major S3 worked well), etc.</p>
+
+<p>The second idea was to come up with an approach that solves some shortcomings of built-in backup-to-S3. Of course, I inevitably added new shortcomings at the same time. This approach consists of two steps: create (and maintain) a list of volume pairs (production, clone) and use a container or physical host to periodically backup the clones to S3.</p>
+
+<p>The <a href="https://github.com/scaleoutsean/solidbackup">second approach</a> fixes several shortcomings:</p>
+
+<ul>
+  <li>Backup utility can be anything (rsync, rclone, Kopia, etc.)</li>
+  <li>Backup utility runs on iSCSI clients, and can run on several clients at once (much faster performance, basically as any SolidFire client workload) while the built-in backup-to-S3 runs on SolidFire nodes, uses Management Network (sometimes 1GigE)</li>
+  <li>Backup efficiency can be better than SolidFire’s (Restic, Kopia, etc.)</li>
+  <li>Incremental backup is available</li>
+  <li>Much better manageability and monitoring (because we can rely on any backup utility, including commercial backup software)</li>
+  <li>Encrypted backup is supported by most of these utilities</li>
+</ul>
+
+<p>The main new shortcomings compared to built-in backup-to-S3 is that because this approach is a client workload, data from volumes is now accessible to backup operator and iSCSI clients running backup jobs. On SolidFire, backup to S3 runs on SolidFire nodes and data is therefore better protected - only SolidFire administrator has access to it at the source. But the second approach can encrypt data at source whereas SolidFire’s backup-to-S3 does not. Therefore, this new shortcoming may or may not be seen as a problem:</p>
+
+<ul>
+  <li>SolidFire backup-to-S3 does not involve the role of backup operator, but backups are not encrypted on S3</li>
+  <li>My second approach involves a backup operator (“trusted” iSCSI client VM), but backups can be easily encrypted before they’re uploaded to S3</li>
+</ul>
+
+<p>One to-do item was making my second approach - to which I sometimes refer to as “SolidBackup” - more manageable and easier to scale out and in (meaning, make several iSCSI clients capable of running jobs without manually determining how to distribute volume backup workload among them, which SolidFire’s backup-to-S3 does on its own based on the proper distribution of volumes around the cluster).</p>
+
+<h2 id="using-kubernetes-to-backup-non-kubernetes-volumes">Using Kubernetes to backup non-Kubernetes volumes</h2>
+
+<p>In one of those older posts I used Velero as “data mover” for SolidBackup:</p>
+
+<ul>
+  <li>Copy (clone) source volume (or its snapshot) to clone volume works the same as with Restic, etc.</li>
+  <li>Backup to S3 works the same way as well. The lacking part that remained on my to-do list was to import the clone to Kubernetes</li>
+</ul>
+
+<p>Trident CSI can <a href="https://docs.netapp.com/us-en/trident/trident-use/vol-import.html">import</a> a non-Kubernetes volume to Kubernetes. That’s easy, but it has to be automated.</p>
+
+<p>The last step is to enable autoscaling so that Kubernetes can spin up multiple backup jobs. This is still work-in-progress.</p>
+
+<h2 id="dealing-with-alien-filesystems">Dealing with alien filesystems</h2>
+
+<p>I mentioned this in SolidBackup README - if your volume has a filesystem that’s not supported by Trident, you can’t back it up with SolidBackup.</p>
+
+<p>A workaround - widely used by most data movers - is to simply do a binary (“raw device”) backup. That’s what I used, because the only other alternative I could think of was making sure there are Windows, ESXi (how?) and other “backup workers” that could perform native filesystem level backup.</p>
+
+<p>Trident CSI only supports ext[3,4] and XFS, but <a href="https://docs.netapp.com/us-en/trident/trident-use/element.html">raw block device support is available</a>.</p>
+
+<p>Velero didn’t support “raw device backup” until late last year, which is one of the reason why I hadn’t made progress with this idea between 2021 and now.</p>
+
+<p>To backup an NTFS volume from Kubernetes, I think we <em>may</em> need to use <code class="language-plaintext highlighter-rouge">volumeMode=block</code> (see <a href="/2023/09/01/kubernetes-solidfire-block-volumemode.html">this</a>) on the SolidFire PVC, and Velero <em>must</em> be installed with a privileged node agent (“<code class="language-plaintext highlighter-rouge">velero install --use-node-agent --privileged-node-agent</code>”).</p>
+
+<h2 id="workflow-for-backup-of-non-k8s-volumes-on-solidfire-using-velero">Workflow for backup of non-K8s volumes on SolidFire using Velero</h2>
+
+<p>Assuming we have clones ready (this part is done with the SolidFire API), the new steps related to Velero would be:</p>
+
+<ul>
+  <li>Perform <em>unmanaged</em> import of a clone volume using Trident (<code class="language-plaintext highlighter-rouge">tridentctl import volume &lt;backendName&gt; &lt;volumeName&gt; -f &lt;path-to-pvc-file&gt; --no-manage</code>) - this can be pre-backup hook on Velero</li>
+  <li>Let Velero backup schedule take care of backup</li>
+  <li>Make sure the PVC policy is <code class="language-plaintext highlighter-rouge">Retain</code>, and delete volume from Kubernetes - can use post-backup hook</li>
+</ul>
+
+<h2 id="original-to-clone-volume-mapping">Original-to-clone volume mapping</h2>
+
+<p>I have one or more non-Kubernetes tenants on SolidFire - maybe one SolidFire account for vSphere, two for various Windows, one for KVM HA cluster pair. Account IDs: 1, 2, 3.</p>
+
+<p>These own volumes, say 2 each, with Volume IDs 10, 11, 20, 21, 30, 31.</p>
+
+<p>I create clones using SolidBackup, and now I have:</p>
+
+<ul>
+  <li>Account 1: volumes (10, 40), (11, 41)</li>
+  <li>Account 2: volumes (20, 42), (21, 43)</li>
+  <li>Account 3: volumes (30, 44), (31, 44)</li>
+</ul>
+
+<p>All clones (40-44) should be assigned to a new tenant, let’s call him “velero”. I want to run Velero backup in a small, dedicated Kubernetes cluster, so this account will have access to all clones.</p>
+
+<h2 id="workflow">Workflow</h2>
+
+<p>My Windows account on SolidFire is account ID 136:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w">
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">13</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>The first step is to create a tenant account for “backup operator” (velero), since I want a dedicated cluster just for backup. This cluster should be managed by a trusted user such as SolidFire admin, an actual backup operator or backup-as-a-service team in control of the Kubernetes cluster.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFAccount</span><span class="w"> </span><span class="nt">-Username</span><span class="w"> </span><span class="nx">velero</span><span class="w">
+
+</span><span class="n">AccountID</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">14</span><span class="w">
+</span><span class="n">Username</span><span class="w">           </span><span class="p">:</span><span class="w"> </span><span class="nx">velero</span><span class="w">
+</span><span class="n">Status</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Volumes</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">InitiatorSecret</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">XXXXXXXXXXXXX</span><span class="w">
+</span><span class="n">TargetSecret</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">YYYYYYYYYYYYY</span><span class="w">
+</span><span class="n">StorageContainerID</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">00000000-0000-0000-0000-000000000000</span><span class="w">
+</span><span class="n">Attributes</span><span class="w">         </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">EnableChap</span><span class="w">         </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span></code></pre></div></div>
+
+<p>I “masked” the secrets, but that’s what we’d use for Trident CSI.</p>
+
+<p>Next, let’s consider how that would work for a Windows-based SQL Server (volume ID is 136, as shown above).</p>
+
+<p>I can clone this volume to a new volume (<code class="language-plaintext highlighter-rouge">New-SFClone</code>) and assign the clone to the user “velero”, and that clone would be crash consistent. That is usually fine, but I can also create an application-consistent snapshot (by coordinating SQL freeze and SolidFire hardware snapshot, for example.)</p>
+
+<p>On Windows, every day at 3am I freeze or stop or detach SQL, and take a snapshot which I name <code class="language-plaintext highlighter-rouge">velero-vol-${VOLMEID}-${UTCTIME}"</code> and retain 1 day.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090622Z"</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"01:00:00"</span><span class="w">
+
+</span><span class="n">SnapshotID</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">443</span><span class="w">
+</span><span class="n">VolumeID</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
+</span><span class="n">Name</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">velero-vol-136-202404090622Z</span><span class="w">
+</span><span class="n">Checksum</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">0xdb24f1ab640959c4</span><span class="w">
+</span><span class="n">EnableRemoteReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">ExpirationReason</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">None</span><span class="w">
+</span><span class="n">ExpirationTime</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T07:22:33Z</span><span class="w">
+</span><span class="n">RemoteStatuses</span><span class="w">          </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Status</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">done</span><span class="w">
+</span><span class="n">SnapshotUUID</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">db0b6b09-7498-4ac8-9d28-2f825ec73f83</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">               </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+</span><span class="n">GroupID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">0</span><span class="w">
+</span><span class="n">GroupSnapshotUUID</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">00000000-0000-0000-0000-000000000000</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T06:22:33Z</span><span class="w">
+</span><span class="n">InstanceCreateTime</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T06:22:33Z</span><span class="w">
+</span><span class="n">VolumeName</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
+</span><span class="n">InstanceSnapshotUUID</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">db0b6b09-7498-4ac8-9d28-2f825ec73f83</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">SnapMirrorLabel</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+
+</span></code></pre></div></div>
+
+<p>Now I can clone from that snapshot (snapshot ID: 443) to a new volume assigned to Velero (account ID: 14).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-SnapshotID</span><span class="w"> </span><span class="nx">443</span><span class="w"> </span><span class="nt">-NewAccountID</span><span class="w"> </span><span class="nx">14</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090625Z"</span><span class="w"> 
+
+</span><span class="n">Volume</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"VolumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">138</span><span class="p">,</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090625Z"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AccountID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="s2">"CreateTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2024-04-09T06:25:56Z"</span><span class="p">,</span><span class="w"> 
+              </span><span class="s2">"EnableSnapMirrorReplication"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">False</span><span class="p">,</span><span class="w"> </span><span class="s2">"Status"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"init"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Access"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"readWrite"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Enable512e"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">True</span><span class="p">,</span><span class="w"> </span><span class="s2">"Iqn"</span><span class="w"> </span><span class="o">=</span><span class="w"> 
+              </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090625z.138"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ScsiEUIDeviceID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"776377620000008af47acc0100000000"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ScsiNAADeviceID"</span><span class="w"> 
+              </span><span class="o">=</span><span class="w"> </span><span class="s2">"6f47acc100000000776377620000008a"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Qos"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">"MinIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">"MaxIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">},</span><span class="w"> </span><span class="s2">"DeleteTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w"> 
+              </span><span class="s2">"PurgeTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w"> </span><span class="s2">"SliceCount"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s2">"TotalSize"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5000658944</span><span class="p">,</span><span class="w"> </span><span class="s2">"BlockSize"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w"> </span><span class="s2">"CurrentProtectionScheme"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"singleHelix"</span><span class="p">}</span><span class="w">
+</span><span class="n">CloneID</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="nx">53</span><span class="w">
+</span><span class="n">VolumeID</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">138</span><span class="w">
+</span><span class="n">Curve</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="p">{[</span><span class="mi">1048576</span><span class="p">,</span><span class="w"> </span><span class="mi">15000</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">131072</span><span class="p">,</span><span class="w"> </span><span class="mi">1950</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">16384</span><span class="p">,</span><span class="w"> </span><span class="mi">270</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">262144</span><span class="p">,</span><span class="w"> </span><span class="mi">3900</span><span class="p">]</span><span class="err">…</span><span class="p">}</span><span class="w">
+</span><span class="n">AsyncHandle</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">147</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>This returns volume ID 138, which is what I will later import from Trident CSI.</p>
+
+<p>In the case of this SQL volume, my mapping would look like:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">@{</span><span class="w">
+    </span><span class="s2">"accountid"</span><span class="err">:</span><span class="w"> </span><span class="s2">"13"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"sourcevolumeid"</span><span class="err">:</span><span class="w"> </span><span class="s2">"136"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"destinationvolumeid"</span><span class="err">:</span><span class="w"> </span><span class="s2">"139"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"filesystem"</span><span class="err">:</span><span class="w"> </span><span class="s2">"NTFS"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"application"</span><span class="err">:</span><span class="w"> </span><span class="s2">"windows2025-sqldb-01"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Clone volume ID can remain fixed so that we don’t have to clone and import every day. We could determine it from the snapshot name (template) - on the one hand that would mean less work, but on the other it could potentially be open to abuse if someone were to misname unrelated snapshots and mess up our clone refresh jobs.</p>
+
+<h2 id="clone-refresh">Clone refresh</h2>
+
+<p>With that mapping in place, I no longer need to create clones every day, I just refresh the clone with <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code> using the latest “for Velero” snapshot available.</p>
+
+<p>The next snapshot (ID will be incremented, here to 445):</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090637Z"</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"01:00:00"</span><span class="w">        
+
+</span><span class="n">SnapshotID</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">445</span><span class="w">
+</span><span class="n">VolumeID</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
+</span><span class="n">Name</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">velero-vol-136-202404090637Z</span><span class="w">
+</span><span class="n">Checksum</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">0xdb24f1ab640959c4</span><span class="w">
+</span><span class="n">EnableRemoteReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">ExpirationReason</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">None</span><span class="w">
+</span><span class="n">ExpirationTime</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T07:37:27Z</span><span class="w">
+</span><span class="n">RemoteStatuses</span><span class="w">          </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Status</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">done</span><span class="w">
+</span><span class="n">SnapshotUUID</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">0b75cf85-3eb8-4043-8325-0b4f1baba408</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">               </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+</span><span class="n">GroupID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">0</span><span class="w">
+</span><span class="n">GroupSnapshotUUID</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">00000000-0000-0000-0000-000000000000</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T06:37:27Z</span><span class="w">
+</span><span class="n">InstanceCreateTime</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T06:37:27Z</span><span class="w">
+</span><span class="n">VolumeName</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
+</span><span class="n">InstanceSnapshotUUID</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">0b75cf85-3eb8-4043-8325-0b4f1baba408</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">SnapMirrorLabel</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Copy-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-SnapshotID</span><span class="w"> </span><span class="nx">445</span><span class="w"> </span><span class="nt">-DstVolumeID</span><span class="w"> </span><span class="nx">137</span><span class="w"> 
+
+</span><span class="n">CloneID</span><span class="w"> </span><span class="nx">AsyncHandle</span><span class="w">
+</span><span class="o">-------</span><span class="w"> </span><span class="o">-----------</span><span class="w">
+     </span><span class="mi">54</span><span class="w">         </span><span class="mi">148</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">148</span><span class="w">
+
+</span><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">lastUpdateTime</span><span class="w">                 </span><span class="nx">4/9/2024</span><span class="w"> </span><span class="nx">6:38:05</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">status</span><span class="w">                         </span><span class="nx">complete</span><span class="w">
+</span><span class="n">createTime</span><span class="w">                     </span><span class="nx">4/9/2024</span><span class="w"> </span><span class="nx">6:38:04</span><span class="w"> </span><span class="nx">AM</span><span class="w">
+</span><span class="n">resultType</span><span class="w">                     </span><span class="nx">Clone</span><span class="w">
+</span><span class="n">result</span><span class="w">                         </span><span class="p">{[</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">Clone</span><span class="w"> </span><span class="n">complete.</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">cloneID</span><span class="p">,</span><span class="w"> </span><span class="mi">54</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">volumeID</span><span class="p">,</span><span class="w"> </span><span class="mi">136</span><span class="p">]}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>How do I know which of potentially several snapshots to use? Based on snapshot <code class="language-plaintext highlighter-rouge">Name</code> or <code class="language-plaintext highlighter-rouge">CreateTime</code>. The name would also tell me the source (volume ID 136), which comes from the mapping table and can be dynamically assigned based on a naming template for snapshots and clones.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="nx">CreateTime</span><span class="w">
+
+</span><span class="n">Name</span><span class="w">                         </span><span class="nx">CreateTime</span><span class="w">
+</span><span class="o">----</span><span class="w">                         </span><span class="o">----------</span><span class="w">
+</span><span class="n">velero-vol-136-202404090609Z</span><span class="w"> </span><span class="nx">2024-04-09T06:09:41Z</span><span class="w">
+</span><span class="n">velero-vol-136-202404090619Z</span><span class="w"> </span><span class="nx">2024-04-09T06:19:47Z</span><span class="w">
+</span><span class="n">velero-vol-136-202404090619Z</span><span class="w"> </span><span class="nx">2024-04-09T06:22:24Z</span><span class="w">
+</span><span class="n">velero-vol-136-202404090622Z</span><span class="w"> </span><span class="nx">2024-04-09T06:22:33Z</span><span class="w">
+</span><span class="n">velero-vol-136-202404090637Z</span><span class="w"> </span><span class="nx">2024-04-09T06:37:27Z</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>As you can see I have a mistake (wrong minute value in time string) in the name of the fourth snapshot Name because I named them manually. Normally those names would be automated</p>
+
+<p>With that I copied that snapshot into my existing “for velero” clone. As these jobs are asynchronous, it make take seconds to tens of minutes (for TB-sized volumes), so you need to leave up to an hour between these daily “refreshes” and Velero backup schedule.</p>
+
+<h2 id="kubernetes-related-tasks">Kubernetes-related tasks</h2>
+
+<p>Setup a small cluster (say, 3 VM nodes) and deploy Trident CSI and Velero CSI. As long as the distribution can deploy CSI plugins for iSCSI, it should work fine.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> 
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">my_namespace</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">my_storage_class</span>
+</code></pre></div></div>
+
+<p>As mentioned earlier, I need to import this clone (volume ID 137) to Kubernetes.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">137</span><span class="w">          
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">137</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">velero-vol-136-202404090620Z</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">14</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-09T06:20:48Z</span><span class="w">
+</span><span class="n">VolumeConsistencyGroupUUID</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="nx">8e441a08-a19a-4a4d-88bd-7a77d7225a08</span><span class="w">
+</span><span class="n">VolumeUUID</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">8eae128b-1360-4f2d-a8de-4c9ae1a6ca66</span><span class="w">
+</span><span class="n">EnableSnapMirrorReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">readWrite</span><span class="w">
+</span><span class="n">Enable512e</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">True</span><span class="w">
+</span><span class="n">Iqn</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090620z.137</span><span class="w">
+</span><span class="n">ScsiEUIDeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">7763776200000089f47acc0100000000</span><span class="w">
+</span><span class="n">ScsiNAADeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">6f47acc1000000007763776200000089</span><span class="w">
+</span><span class="n">Qos</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"MinIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">"MaxIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">}</span><span class="w">
+</span><span class="n">QosPolicyID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">VolumeAccessGroups</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">VolumePairs</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">DeleteTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> 
+</span><span class="n">PurgeTime</span><span class="w">                   </span><span class="p">:</span><span class="w"> 
+</span><span class="n">LastAccessTime</span><span class="w">              </span><span class="p">:</span><span class="w"> 
+</span><span class="n">LastAccessTimeIO</span><span class="w">            </span><span class="p">:</span><span class="w"> 
+</span><span class="n">SliceCount</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+</span><span class="n">BlockSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">4096</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">             </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Attributes</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">CurrentProtectionScheme</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="nx">singleHelix</span><span class="w">
+</span><span class="n">PreviousProtectionScheme</span><span class="w">    </span><span class="p">:</span><span class="w"> 
+</span><span class="n">FifoSize</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">5</span><span class="w">
+</span><span class="n">MinFifoSize</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">0</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>I can create a backup storage class - say, “velero-backup” - with a QoS Policy (Min 500, Max 20000, Burst 50000) to not inconvenience other workloads, but to allow ample bandwidth for backup jobs. Use <code class="language-plaintext highlighter-rouge">reclaimPolicy: Retain</code> to retain SolidFire volume when it’s “deleted” from Kubernetes - that way we can refresh with <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code> and simply import again.</p>
+
+<p>Then I loop through the mapping table to create a bunch of PVC claims, one per each clone. For volume ID 137:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">volume-137-src-136</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">src136</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">velero-backup</span>
+</code></pre></div></div>
+
+<p>Volume name can be anything, of course, but in my mind it’s helpful if we can</p>
+
+<p>The namespace is arbitrarily made up. We could just use <code class="language-plaintext highlighter-rouge">default</code>, but there may be reasons why we would use something related to the original source of the clone volume ID (here, 136 is the source, 137 is the clone).</p>
+
+<ul>
+  <li>With Kubernetes RBAC for per-namespace access, this would make it easier to provide self-service for Backup-as-a-Service access to application owners</li>
+  <li>We could customize namespace names to match organizations, teams or something else</li>
+</ul>
+
+<p>Then all PVCs would be imported</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tridentctl import volume velero-vol-136-202404090637Z <span class="se">\</span>
+  velero-vol-136-202404090637Z-k8s <span class="se">\</span>
+  <span class="nt">-f</span> pvc-vol-136-velero-backup.yaml <span class="se">\</span>
+  <span class="nt">--no-manage</span> <span class="nt">-n</span> trident
+
+</code></pre></div></div>
+
+<p>Of course, I hit a bug.</p>
+
+<pre><code class="language-raw">Error: could not import volume: 
+error occurred during PVC creation: PersistentVolumeClaim "velero-vol-136-202404090625Z" is invalid: 
+metadata.name: Invalid value: "velero-vol-136-202404090625Z": a lowercase RFC 1123 subdomain must 
+consist of lower case alphanumeric characters, '-' or '.', and must start and end with an 
+alphanumeric character (e.g. 'example.com', regex used for validation is
+'[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*') (400 Bad Request)
+</code></pre>
+
+<p>This is garbage. Note that the regex eliminates uppercase and claims</p>
+
+<p>DOD INTERNET HOST TABLE SPECIFICATION (<a href="https://datatracker.ietf.org/doc/html/rfc952">RFC 952</a>) says:</p>
+
+<blockquote>
+  <p>No distinction is made between upper and lower case.</p>
+</blockquote>
+
+<p>You can read about this circus here: <a href="https://github.com/kubernetes/kubernetes/issues/94088">https://github.com/kubernetes/kubernetes/issues/94088</a>.</p>
+
+<p><a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/">The Kubernetes Web site</a> still claims lowercase names are an RFC 1123 requirement. RFC my ass!</p>
+
+<p>Anyway, because of that nonsense I had to change “Z” at the end of my volume names (velero-vol-136-202404090609<strong>Z</strong>).</p>
+
+<p>The <a href="https://docs.netapp.com/us-en/trident/trident-use/vol-import.html">trident import</a> documentation says:</p>
+
+<blockquote>
+  <p>The reclaim policy is initially set to retain in the PV. After Kubernetes successfully binds the PVC and PV, the reclaim policy is updated to match the reclaim policy of the Storage Class.
+If the reclaim policy of the Storage Class is delete, the storage volume will be deleted when the PV is deleted.</p>
+</blockquote>
+
+<p>If our Storage Class has <code class="language-plaintext highlighter-rouge">reclaimPolicy: Retain</code>, we’ll be able to delete it with <code class="language-plaintext highlighter-rouge">trident volume delete</code>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">$ cat pvc-vol-136-velero-backup.yaml</span> 
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">velero-vol-136-202404090816z-rfc-1123-my-ass</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">ns136</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">silver</span>
+</code></pre></div></div>
+
+<p>Import the sucker:</p>
+
+<ul>
+  <li>Backend name</li>
+  <li>Volume Name on SolidFire (of the clone)</li>
+  <li>PVC file (above)</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>trident-installer/tridentctl import volume <span class="se">\</span>
+  solidfire_192.168.105.30 <span class="se">\</span>
+  velero-vol-136-202404090816z <span class="se">\</span>
+  <span class="nt">-f</span> pvc-vol-136-velero-backup.yaml <span class="se">\</span>
+  <span class="nt">-n</span> trident <span class="nt">--no-manage</span>
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE  | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+| pvc-fec78b61-a216-4825-a709-a24069cfadc7 | 4.7 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e | online | <span class="nb">false</span>   |
++------------------------------------------+---------+---------------+----------+--------------------------------------+--------+---------+
+
+</code></pre></div></div>
+
+<p>Check it out:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM
+pvc-fec78b61-a216-4825-a709-a24069cfadc7   4769Mi     RWO            Retain           Bound      ns136/velero-vol-136-202404090816z-rfc-1123-my-ass
+
+
+</code></pre></div></div>
+
+<p>Create a backup with schedule in Velero. If our cloning process starts at 2am, it’s likely safe to schedule backup for 3am. Mind the potential difference between UTC (SolidFire schedule) and Velero’s own (which maybe uses time in local TZ, I haven’t looked).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero schedule create velero-schedule <span class="nt">--schedule</span><span class="o">=</span><span class="s2">"0 3 * * *"</span>
+<span class="nv">$ </span>velero backup create ns136 <span class="nt">--include-resources</span> pvc,pv <span class="nt">--include-namespaces</span> ns136 <span class="nt">--from-schedule</span> velero-schedule
+
+</code></pre></div></div>
+
+<p>Alternatively, we could kick off volume copy (the SolidFire API method behind <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code>) from Velero pre-hoooks. This would make snapshot-to-Velero-volume refresh painless, but I haven’t thought about this yet.</p>
+
+<p><strong>NOTES:</strong></p>
+
+<ul>
+  <li>as mentioned earlier, you can’t backup an unsupported filesystem from a generic Linux container that cannot read the filesystem. Use Velero’s block volume backup to backup raw devices and/or “non-native” filesystems
+    <ul>
+      <li>One workaround for <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#operational-and-data-governance-differences-between-zfs-and-classic-linux-filesystems-xfs-ext4">ZFS</a> would be to not use Trident CSI. This sounds interesting because it’s just for backup (it wouldn’t impact users who use Trident CSI) and I will explore it in the future. A CSI provider that can import volumes and works with ZFS would be ideal for this.</li>
+    </ul>
+  </li>
+  <li>Velero must use <a href="https://velero.io/docs/main/csi-snapshot-data-movement/#limitations">CSI or CSI Snapshot</a> to backup block volumes. This unfortunately creates a temporary clone (done by Velero) of a clone (done when we created for Velero), so it effectively results in 3x as many SolidFire volumes as one uses for production. Last I checked SolidFire limit was 400 per node, so with 3 nodes alive, this would still be fine for a few hundred volumes. But, if you run Kubernetes <em>and</em> non-Kubernetes, and want to use Velero for non-Kubernetes, you may have 300-400 Kubernetes volumes to begin with, so be careful if you use this approach. I think I added SolidFire volume count per node to SolidFire Collector, but if it’s not there, you can create your own monitor and alert for Grafana and such.
+    <ul>
+      <li>Example: 100 volumes for VMs and BM nodes, 200 volumes for K8s. SolidBackup results in 300 volumes (due to 3x) and 300 + 200 = 500. Still fine even for 3 node clusters</li>
+      <li>Example: watch metadata utilization as well; when SolidFire volumes are cloned, data utilization will be only slightly impacted, but metadata will grow. If - after cloning - cluster metadata capacity utilization on 4 nodes is below 30%, even losing one storage node would result it in going to 40% or so.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Finally, we <em>could</em> delete this PVC/PV from a post-backup hook. But, we need to consider how that impacts Velero. Once the PVC and PV are deleted - even if retained on SolidFire - we need to make sure this doesn’t impact Velero. I haven’t evaluated this yet.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pv pvc-fec78b61-a216-4825-a709-a24069cfadc7
+persistentvolume <span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</span> deleted
+</code></pre></div></div>
+
+<h3 id="restores">Restores</h3>
+
+<p>Velero backups can be restored to a different namespace, so we could restore them to the original production volume. But it’s safer to restore them to a new PV in the Kubernetes namespace where we backed them up - that’s better for self-service, enables BaaS, and it’s less risky to production data. Then a backup administrator or SolidFire administrator can make a clone from it and assign it to the user of the production application.</p>
+
+<p>Remember that all production volumes are supposed to have snapshots that last 24 hours, so in 99% of situations one would restore from the most recent snapshot created for this Velero workflow (or even other, even more recent), and restoring from an S3 backup would be very rare.</p>
+
+<h2 id="automation-and-auto-scaling">Automation and auto-scaling</h2>
+
+<p>SolidBackup automates volume cloning and subsequent “refresh” (copying). It also creates volume mount templates (for VMs). For a Kubernetes based SolidBackup we’d want to automate the creation of Kubernetes namespaces and volume PVC files for Trident import.</p>
+
+<p>Velero has schedules, so that’s already taken care of.</p>
+
+<p>Assuming all that works as expected, I’d want to add progress monitoring of (SolidFire) volume copy and (Velero) backup jobs.</p>
+
+<p>I’m not sure what needs to be done with regard to auto-scaling. I played with ArgoCD but couldn’t determine if I’d need something like that, or not.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>The addition of block volume mode in Velero and this post moves me a bit closer to my goal of having a SolidBackup that works with filesystems supported by Trident CSI as well as those often seen in non-Kubernetes environments such as Windows and VMware.</p>
+
+<p>I plan to make updates to this post as time permits.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#automation">automation</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/02/storagegrid-networking.html">• NetApp StorageGRID networks</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/01/windows-server-2025-with-solidfire-part-three-hyper-v.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Three</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/03/31/windows-server-2025-with-solidfire-part-one.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html">• SSD Cache feature on NetApp SANtricity E-Series</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-04-09 18:43 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>

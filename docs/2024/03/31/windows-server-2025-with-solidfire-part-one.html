@@ -237,21 +237,21 @@
   <p>In the past, users have relied on third-party solutions that were built on top of the SQL Writer service to complete snapshot backups. The SQL Writer service depends on Windows VSS (Volume Shadow Service) along with SQL Server VDI (Virtual Device Interface) to perform the orchestration between SQL Server and the disk-level snapshot. Backup clients based on the SQL Writer service tend to be complex, and they only work on Windows. With T-SQL snapshot backups, the SQL Server side of the orchestration can be handled with a series of T-SQL commands.</p>
 </blockquote>
 
-<p>This means you <em>no longer need</em> SolidFire VSS Hardware Provider to take application-consistent SQL Server backups (as long as this approach works).</p>
+<p>This means you <em>no longer need</em> SolidFire VSS Hardware Provider to take application-consistent SQL Server 2022 backups (as long as this approach works).</p>
 
 <p>Point 2 shows snapshot retention. Notice there’s the parameter <code class="language-plaintext highlighter-rouge">Retention</code> in the SolidFire snapshot cmdlet in the screenshot above. I set that to <code class="language-plaintext highlighter-rouge">"00:01:00"</code> meaning 1 minute, because I wanted to see how SolidFire clears snapshots with a very short retention.</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-08-solidfire-snapshot-retention.png" alt="" /></p>
 
-<p>It turned out it works fine, but garbage collection doesn’t seem to run <em>that</em> often.</p>
+<p>It turned out it works fine, but garbage collection doesn’t seem to run <em>that</em> frequently, so snapshots with such short retention usually get deleted a bit later than specified.</p>
 
-<p>Such snapshots get deleted in minutes, but beyond the 1 minute specified (marked with 1). Five minutes seems reasonable and gets deleted on time (marked with 2).</p>
+<p>They do get deleted within minutes, but beyond the 1 minute we specified (marked with 1). Five minute retention time seems reasonable and those deleted on time (marked with 2).</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-09-solidfire-snapshot-retention-5m.png" alt="" /></p>
 
-<p>That shouldn’t matter to you unless you take extremely frequent T-SQL snapshots - given the SolidFire limit of 32 snapshots per volume, if you were to take them once a minute and expire in 2 minutes, you may hit the limit. Every five minutes with 5 minute retention could be practical.</p>
+<p>That shouldn’t matter to you unless you take extremely frequent T-SQL snapshots - given SolidFire snapshot limit of 32 snapshots per volume, if you were to take them once a minute expire in 1 minute, you may hit the limit if the volume already has other snapshots from another schedule. Every five minutes with 5 minute retention could be practical.</p>
 
-<p>On the SolidFire itself, the (storage) snapshot doesn’t have to be retained for a very short time. It can be cloned for backup, replicated to another site, or cloned for testing by another tenant. You may want to retain every Nth snapshot for 24 hours, which could be done in various ways, but the simplest is two T-SQL snapshot schedules - for example one every 15 min with 30 min retention (this would use half a dozen) and one every 24 hours with 24 hour retention.</p>
+<p>On SolidFire itself, (storage) snapshot doesn’t have to be retained for a very short time and then deleted. It can be cloned for backup, replicated to another site, or cloned for testing by another tenant. You may want to retain every Nth snapshot for 24 hours, which could be done in various ways, but the simplest is two T-SQL snapshot schedules - for example one every 15 min with 30 min retention (this would use half a dozen) and one every 24 hours with 24 hour retention.</p>
 
 <h3 id="sql-backup-and-solidfire">SQL Backup and SolidFire</h3>
 
@@ -338,7 +338,7 @@
 
 <p>It’s just a <em>list</em> of drive letters, not a map of drive-to-disk pairing, so I wonder if device slippage can still happen if (say) device binding E or F disappear. We’d want fixed device names, but I haven’t found a way to do it with Windows Server 2025 Preview.</p>
 
-<p>Another confusing detail is that even iSCSI Report (in Configuration tab). Consider this:</p>
+<p>Another confusing detail is that even iSCSI Report (in Configuration tab) is helpless.</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png" alt="" /></p>
 
@@ -350,7 +350,7 @@
 
 <p>Where’s Target 0, then? It’s SolidFire volume ID 135 which is shown in iSCSI report (green rectangles), as Target #1 (iSCSI Target 0 to Disk Manager).</p>
 
-<p>Imagine having to deal with that for 12 or 16 volumes!!! “iSCSI Target #7 is Target 4 which is Disk 11”.</p>
+<p>Imagine having to deal with that for 8 or 16 volumes!!! “iSCSI Target #7 is Target 4 which is Disk 2”.</p>
 
 <p>This seems hard to control as well, so I figure the best one can do is create some sort of a report that relies on unique SolidFire volume names (this volume naming policy administrator must be responsible for) and the consistent consistency of those names with Windows volume labels.</p>
 
@@ -402,7 +402,7 @@
 
 </span></code></pre></div></div>
 
-<p>It’s not cluster-aware, but it could be modified to gather data from different hosts for a cluster-wide view.</p>
+<p>It’s not cluster-aware (it doesn’t gather host names), but it could be modified to gather data from different hosts for a cluster-wide view.</p>
 
 <p>Another way to create a (Windows) cluster-wide or (SolidFire) storage-wide view would be to include server names and key SolidFire volumes on volume.Iqn, and send reports to Elasticsearch or other database. Then it would be easy to get a big picture from a custom table.</p>
 
@@ -494,6 +494,21 @@
     
         
           <div class = "related-posts">
+          <h5><a href="/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html">• Backup NetApp SolidFire's non-Kubernetes volumes with Velero</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
           <h5><a href="/2024/04/02/storagegrid-networking.html">• NetApp StorageGRID networks</a></h5>
           </div>
           
@@ -552,21 +567,6 @@
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/03/28/netapp-santricity-powershell-module.html">• NetApp SANtricity PowerShell module for E-Series</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -575,7 +575,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-05 12:47 </p>
+    <p>2024-04-09 18:43 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
