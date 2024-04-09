@@ -128,7 +128,7 @@
 
   
   
-    17 minute read
+    18 minute read
   
 
     </span>
@@ -153,13 +153,13 @@
 
 <h2 id="intro">Intro</h2>
 
-<p>Over the years I’ve been kind of obsessed with DIY backup. Maybe that’s because SolidFire includes free “volume to S3” backup functionality, which was a gateway drug, so to speak.</p>
+<p>Over the years I’ve been kind of obsessed with DIY backup. Maybe that’s because SolidFire includes free “volume to S3” backup functionality, which acted as a gateway drug, so to speak.</p>
 
 <p>I blogged about this many times (search this blog for SolidFire backup or skim through the archive), but very briefly, here’s my current status:</p>
 
 <p>First, I created PowerShell scripts for parallel (native) SolidFire backup of a list of volumes (by volume ID) from SolidFire. This uses native SolidFire backup-to-S3 functionality which is limited (why, read in the archive posts). This works fine - it automatically maxes out backup job slots and keeps them busy until all volumes have been backed up. This seems trivial - in hindsight - but I had to struggle with SolidFire API bugs in this area, MinIO bug (fixed since; other major S3 worked well), etc.</p>
 
-<p>The second idea was to come up with an approach that solves some shortcomings of built-in backup-to-S3. Of course, I inevitably added new shortcomings at the same time. This approach consists of two steps: create (and maintain) a list of volume pairs (production, clone) and use a container or physical host to periodically backup the clones to S3.</p>
+<p>The second idea (from 2020 or so) was to come up with an approach that solves some shortcomings of built-in backup-to-S3. Of course, I inevitably added some new shortcomings at the same time. This approach consists of two steps: create (and maintain) a list of volume pairs (production, clone) and use a container or physical host to periodically backup the clones to S3.</p>
 
 <p>The <a href="https://github.com/scaleoutsean/solidbackup">second approach</a> fixes several shortcomings:</p>
 
@@ -546,10 +546,9 @@ If the reclaim policy of the Storage Class is delete, the storage volume will be
 NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS     CLAIM
 pvc-fec78b61-a216-4825-a709-a24069cfadc7   4769Mi     RWO            Retain           Bound      ns136/velero-vol-136-202404090816z-rfc-1123-my-ass
 
-
 </code></pre></div></div>
 
-<p>Create a backup with schedule in Velero. If our cloning process starts at 2am, it’s likely safe to schedule backup for 3am. Mind the potential difference between UTC (SolidFire schedule) and Velero’s own (which maybe uses time in local TZ, I haven’t looked).</p>
+<p>Create a scheduled backup job in Velero. If our cloning process starts at 2am, it’s likely safe to schedule backup for 3am. Mind the potential difference between UTC (SolidFire schedule) and Velero’s own (which maybe uses time in local TZ, I haven’t looked).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero schedule create velero-schedule <span class="nt">--schedule</span><span class="o">=</span><span class="s2">"0 3 * * *"</span>
 <span class="nv">$ </span>velero backup create ns136 <span class="nt">--include-resources</span> pvc,pv <span class="nt">--include-namespaces</span> ns136 <span class="nt">--from-schedule</span> velero-schedule
@@ -561,9 +560,9 @@ pvc-fec78b61-a216-4825-a709-a24069cfadc7   4769Mi     RWO            Retain     
 <p><strong>NOTES:</strong></p>
 
 <ul>
-  <li>as mentioned earlier, you can’t backup an unsupported filesystem from a generic Linux container that cannot read the filesystem. Use Velero’s block volume backup to backup raw devices and/or “non-native” filesystems
+  <li>As mentioned earlier, you can’t backup an unsupported filesystem from a generic Linux container that cannot read the filesystem. Use Velero’s block volume backup to backup raw devices and/or “non-native” filesystems
     <ul>
-      <li>One workaround for <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#operational-and-data-governance-differences-between-zfs-and-classic-linux-filesystems-xfs-ext4">ZFS</a> would be to not use Trident CSI. This sounds interesting because it’s just for backup (it wouldn’t impact users who use Trident CSI) and I will explore it in the future. A CSI provider that can import volumes and works with ZFS would be ideal for this.</li>
+      <li>One workaround for <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#operational-and-data-governance-differences-between-zfs-and-classic-linux-filesystems-xfs-ext4">ZFS</a> and BtrFS would be to not use Trident CSI. This sounds interesting because it’s just for backup (it wouldn’t impact users who use Trident CSI) and I will explore it in the future. A CSI provider that can import volumes and works with ZFS would be ideal for this.</li>
     </ul>
   </li>
   <li>Velero must use <a href="https://velero.io/docs/main/csi-snapshot-data-movement/#limitations">CSI or CSI Snapshot</a> to backup block volumes. This unfortunately creates a temporary clone (done by Velero) of a clone (done when we created for Velero), so it effectively results in 3x as many SolidFire volumes as one uses for production. Last I checked SolidFire limit was 400 per node, so with 3 nodes alive, this would still be fine for a few hundred volumes. But, if you run Kubernetes <em>and</em> non-Kubernetes, and want to use Velero for non-Kubernetes, you may have 300-400 Kubernetes volumes to begin with, so be careful if you use this approach. I think I added SolidFire volume count per node to SolidFire Collector, but if it’s not there, you can create your own monitor and alert for Grafana and such.
@@ -574,7 +573,7 @@ pvc-fec78b61-a216-4825-a709-a24069cfadc7   4769Mi     RWO            Retain     
   </li>
 </ul>
 
-<p>Finally, we <em>could</em> delete this PVC/PV from a post-backup hook. But, we need to consider how that impacts Velero. Once the PVC and PV are deleted - even if retained on SolidFire - we need to make sure this doesn’t impact Velero. I haven’t evaluated this yet.</p>
+<p>Finally, we <em>could</em> delete this PVC/PV using a post-backup hook. But, we need to consider how that impacts Velero. Once the PVC and PV are deleted - even if retained on SolidFire - we need to make sure this doesn’t impact Velero. I haven’t evaluated this yet.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete pv pvc-fec78b61-a216-4825-a709-a24069cfadc7
 persistentvolume <span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</span> deleted
@@ -590,15 +589,17 @@ persistentvolume <span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</sp
 
 <p>SolidBackup automates volume cloning and subsequent “refresh” (copying). It also creates volume mount templates (for VMs). For a Kubernetes based SolidBackup we’d want to automate the creation of Kubernetes namespaces and volume PVC files for Trident import.</p>
 
-<p>Velero has schedules, so that’s already taken care of.</p>
+<p>Velero has schedules, so that’s already taken care of. But we may potential need to automate pre- and post-hook templates.</p>
 
 <p>Assuming all that works as expected, I’d want to add progress monitoring of (SolidFire) volume copy and (Velero) backup jobs.</p>
 
-<p>I’m not sure what needs to be done with regard to auto-scaling. I played with ArgoCD but couldn’t determine if I’d need something like that, or not.</p>
+<p>I’m not sure what needs to be done with regard to auto-scaling. I played with ArgoCD but couldn’t determine if I’d need something like that, or not. SolidBackup with a single VM could backup quickly, so it’s probably unnecessary to complicate things - three workers should be able to backup at &gt; 500 MB/s without a problem.</p>
 
 <h2 id="summary">Summary</h2>
 
-<p>The addition of block volume mode in Velero and this post moves me a bit closer to my goal of having a SolidBackup that works with filesystems supported by Trident CSI as well as those often seen in non-Kubernetes environments such as Windows and VMware.</p>
+<p>The addition of block volume mode in Velero and this post moves me a bit closer to my goal of having a Kubernetes-based SolidBackup that works with filesystems supported by Trident CSI as well as those often seen in non-Kubernetes environments such as Windows and VMware.</p>
+
+<p>SolidBackup from 2021 was potentially useful for small shops with skilled admins. SolidBackup for Kubernetes could be useful for anyone who already uses Velero as well as to skilled admins who liked the idea of a VM-based SolidBackup, but disliked the hackish nature and security compromises it had.</p>
 
 <p>I plan to make updates to this post as time permits.</p>
 
@@ -720,7 +721,7 @@ persistentvolume <span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</sp
 
     
   </div><footer class= "footer">
-    <p>2024-04-09 19:05 </p>
+    <p>2024-04-09 19:13 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
