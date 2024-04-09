@@ -211,9 +211,9 @@
 <p>Assuming we have clones ready (this part is done with the SolidFire API), the new steps related to Velero would be:</p>
 
 <ul>
-  <li>Perform <em>unmanaged</em> import of a clone volume using Trident (<code class="language-plaintext highlighter-rouge">tridentctl import volume &lt;backendName&gt; &lt;volumeName&gt; -f &lt;path-to-pvc-file&gt; --no-manage</code>) - this can be pre-backup hook on Velero</li>
-  <li>Let Velero backup schedule take care of backup</li>
-  <li>Make sure the PVC policy is <code class="language-plaintext highlighter-rouge">Retain</code>, and delete volume from Kubernetes - can use post-backup hook</li>
+  <li>Perform <em>unmanaged</em> import of a clone volume using Trident (<code class="language-plaintext highlighter-rouge">tridentctl import volume &lt;backendName&gt; &lt;volumeName&gt; -f &lt;path-to-pvc-file&gt; --no-manage</code>) - this can be a pre-backup hook on Velero backup job</li>
+  <li>Let Velero backup schedule take care of backup job scheduling</li>
+  <li>Make sure PVC policy on the imported volume is set to <code class="language-plaintext highlighter-rouge">Retain</code>, and (maybe, needs investigation) delete volume from Kubernetes to release it for next refresh (post-backup hook?)</li>
 </ul>
 
 <h2 id="original-to-clone-volume-mapping">Original-to-clone volume mapping</h2>
@@ -265,7 +265,7 @@
 
 <p>I can clone this volume to a new volume (<code class="language-plaintext highlighter-rouge">New-SFClone</code>) and assign the clone to the user “velero”, and that clone would be crash consistent. That is usually fine, but I can also create an application-consistent snapshot (by coordinating SQL freeze and SolidFire hardware snapshot, for example.)</p>
 
-<p>On Windows, every day at 3am I freeze or stop or detach SQL, and take a snapshot which I name <code class="language-plaintext highlighter-rouge">velero-vol-${VOLMEID}-${UTCTIME}"</code> and retain 1 day.</p>
+<p>On Windows, every day at 3am I freeze or stop or detach SQL, and take a snapshot which I name <code class="language-plaintext highlighter-rouge">velero-vol-${VOLUMEID}-${UTCTIME}"</code> and retain 1 day.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090622Z"</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"01:00:00"</span><span class="w">
 
@@ -384,9 +384,9 @@
 
 </span></code></pre></div></div>
 
-<p>As you can see I have a mistake (wrong minute value in time string) in the name of the fourth snapshot Name because I named them manually. Normally those names would be automated</p>
+<p>As you can see I have a mistake (wrong minute value in time string) in the name of the fourth snapshot Name because I named them manually. Normally names should be created automatically, which is something I didn’t do in this PoC.</p>
 
-<p>With that I copied that snapshot into my existing “for velero” clone. As these jobs are asynchronous, it make take seconds to tens of minutes (for TB-sized volumes), so you need to leave up to an hour between these daily “refreshes” and Velero backup schedule.</p>
+<p>With that I copied that snapshot into my existing “for velero” clone. As these jobs are asynchronous, it make take seconds to tens of minutes (for TB-sized volumes on busy SolidFire clusters), so you need to leave up to an hour between these daily “refreshes” and Velero backup schedule.</p>
 
 <h2 id="kubernetes-related-tasks">Kubernetes-related tasks</h2>
 
@@ -466,7 +466,7 @@
 
 <p>Then all PVCs would be imported</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tridentctl import volume velero-vol-136-202404090637Z <span class="se">\</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>tridentctl import volume velero-vol-136-202404090637Z <span class="se">\</span>
   velero-vol-136-202404090637Z-k8s <span class="se">\</span>
   <span class="nt">-f</span> pvc-vol-136-velero-backup.yaml <span class="se">\</span>
   <span class="nt">--no-manage</span> <span class="nt">-n</span> trident
@@ -481,17 +481,18 @@ metadata.name: Invalid value: "velero-vol-136-202404090625Z": a lowercase RFC 11
 consist of lower case alphanumeric characters, '-' or '.', and must start and end with an 
 alphanumeric character (e.g. 'example.com', regex used for validation is
 '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*') (400 Bad Request)
+
 </code></pre>
 
-<p>This is garbage. Note that the regex eliminates uppercase and claims</p>
+<p>This is garbage. Note that the regex eliminates uppercase and claims that’s based on an RFC.</p>
 
-<p>DOD INTERNET HOST TABLE SPECIFICATION (<a href="https://datatracker.ietf.org/doc/html/rfc952">RFC 952</a>) says:</p>
+<p>But there’s nothing about lowercase names in that RFC. Related to DNS names, the DOD INTERNET HOST TABLE SPECIFICATION (<a href="https://datatracker.ietf.org/doc/html/rfc952">RFC 952</a>) says:</p>
 
 <blockquote>
   <p>No distinction is made between upper and lower case.</p>
 </blockquote>
 
-<p>You can read about this circus here: <a href="https://github.com/kubernetes/kubernetes/issues/94088">https://github.com/kubernetes/kubernetes/issues/94088</a>.</p>
+<p>You can read about that circus here: <a href="https://github.com/kubernetes/kubernetes/issues/94088">https://github.com/kubernetes/kubernetes/issues/94088</a>.</p>
 
 <p><a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/">The Kubernetes Web site</a> still claims lowercase names are an RFC 1123 requirement. RFC my ass!</p>
 
@@ -521,8 +522,8 @@ If the reclaim policy of the Storage Class is delete, the storage volume will be
 <p>Import the sucker:</p>
 
 <ul>
-  <li>Backend name</li>
-  <li>Volume Name on SolidFire (of the clone)</li>
+  <li>Backend name obtained with “<code class="language-plaintext highlighter-rouge">tridentctl -n trident get backends</code>”</li>
+  <li>Volume Name on SolidFire (of the clone created for Velero) without uppercase characters</li>
   <li>PVC file (above)</li>
 </ul>
 
@@ -719,7 +720,7 @@ persistentvolume <span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</sp
 
     
   </div><footer class= "footer">
-    <p>2024-04-09 18:43 </p>
+    <p>2024-04-09 19:05 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

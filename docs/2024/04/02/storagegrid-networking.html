@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-02T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"NetApp StorageGRID networks","dateModified":"2024-04-02T00:00:00+08:00","datePublished":"2024-04-02T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/storagegrid-multisite-01-glb.svg","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/02/storagegrid-networking.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/02/storagegrid-networking.html","description":"Notes on NetApp StorageGRID networking","@context":"https://schema.org"}</script>
+{"headline":"NetApp StorageGRID networks","dateModified":"2024-04-02T00:00:00+08:00","datePublished":"2024-04-02T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/02/storagegrid-networking.html"},"image":"https://scaleoutsean.github.io/assets/images/storagegrid-multisite-01-glb.svg","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/02/storagegrid-networking.html","description":"Notes on NetApp StorageGRID networking","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    3 minute read
+    4 minute read
   
 
     </span>
@@ -199,10 +199,14 @@
 
 <p><img src="/assets/images/storagegrid-multisite-04-node-networks.svg" alt="" /></p>
 
+<ul>
+  <li>SG100* hardware in 11.8 does not have “bare metal”-level AutoSupport code; their StorageGRID cluster status is picked by Admin node which indirectly reports on any issues as seen from StorageGRID (for example, a NIC port down event would be detected). That’s why the SG1000s in this diagram can’t get to Secure Proxy <em>except</em> through Cluster Network, which is the same way Admin Node (container) running on a SG1000 would send its AutoSupport payload. Optionally, SG100* hardware can be monitored from BMC &amp; BMC’s SNMP traps, but there’s no need for it, and it’s safer if BMC network is disconnected.</li>
+</ul>
+
 <h2 id="s3-bucket-consistency-and-ilm-on-ingest-policies">S3 bucket consistency and ILM on-ingest policies</h2>
 
 <ul>
-  <li>Users often want to know if they can get multi-site data consistency. Yes, use <a href="https://docs.netapp.com/us-en/storagegrid-118/tenant/manage-bucket-consistency.html">Strong-Global</a> (v11.8). But - <em>as you would want</em> - that means when a site is down, you won’t be able to ``PUT` new objects <em>anywhere</em></li>
+  <li>Users often want to know if they can get multi-site data consistency. Yes, use <a href="https://docs.netapp.com/us-en/storagegrid-118/tenant/manage-bucket-consistency.html">Strong-Global</a> (v11.8). But - <em>as you would want</em> - that means when a site is down, you won’t be able to <code class="language-plaintext highlighter-rouge">PUT</code> new objects <em>anywhere</em> in that bucket</li>
   <li>The other question is <em>when</em> this consistency happens - “shortly”, “soon”, etc. You can enforce <a href="https://docs.netapp.com/us-en/storagegrid-118/ilm/example-5-ilm-rules-and-policy-for-strict-ingest-behavior.html">Strict ILM (policy enforcement) on ingest</a> to achieve immediate consistency on PUT. In this case PUTs are acknowledged only after the rule has been satisfied</li>
   <li>If, on the other hand, you relax settings (use the consistency type Strong-Site to apply ILM rules with the Balanced or Dual Commit setting), you’ll have a slightly higher risk of data loss (or temporary data unavailability) due to a site failure, but a lower risk of <code class="language-plaintext highlighter-rouge">PUT</code>s (and even <code class="language-plaintext highlighter-rouge">GET</code>s following such <code class="language-plaintext highlighter-rouge">PUT</code>s) failing not just when WAN dies, but also when WAN is too busy</li>
 </ul>
@@ -331,7 +335,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-09 18:43 </p>
+    <p>2024-04-09 19:05 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
