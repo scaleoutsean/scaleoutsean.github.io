@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-01T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    9 minute read
+    16 minute read
   
 
     </span>
@@ -151,6 +151,7 @@
       <li><a href="#dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</a></li>
     </ul>
   </li>
+  <li><a href="#data-masking">Data masking</a></li>
   <li><a href="#other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---filesystem-layout">Appendix A - filesystem layout</a></li>
@@ -337,6 +338,228 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 
 <p>With that in place, SQL Server 2022 at the remote site should be able to restore data.</p>
 
+<h2 id="data-masking">Data masking</h2>
+
+<p>Using built-in SQL Server features:</p>
+
+<ul>
+  <li>Determine masking requirements and prepare masking “template” files</li>
+  <li>Backup Prod DB instance</li>
+  <li>Restore Prod DB to DevTest DB (may be on another SQL Server instance)</li>
+  <li>Execute data masking on DevTest DB</li>
+  <li>Allow access to DevTest users to DevTest DB</li>
+</ul>
+
+<p>Some tools perform the masking during restore to DevTest.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-18-data-masking.png" alt="" /></p>
+
+<p>Masking can be performed after restore as well, as long as DevTest users are not immediately capable of accessing data.</p>
+
+<p>While a sensitive column in a production database may look like this…</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-19-table-production.png" alt="" /></p>
+
+<p>A clone DB with masked data could have random data instead of real values. Or it could be non-random, deterministic replacement of production values. While approaches and needs differ, the common point is DevTest database should not contain sensitive data.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-20-prod-vs-devtest.png" alt="" /></p>
+
+<p>Using SQL Server and SolidFire volume clone features, we can eliminate backup-and-restore and rely on storage-side features:</p>
+
+<ul>
+  <li>Create a DB snapshot (group snapshot or single volume snapshot)</li>
+  <li>Create a clone from snapshot</li>
+  <li>Rescan iSCSI targets, mount disk(s), attach DevTest DB</li>
+  <li>Execute data masking on DevTest DB</li>
+  <li>Allow access to DevTest users (or make another clone for actual DevTest user(s))</li>
+</ul>
+
+<p>Assuming CPU and disk resources required to mask data are the same, the main difference between these two approaches is for large databases it is much more efficient to use SolidFire to clone a volume than to restore database from a backup.</p>
+
+<p>Also, remember that SolidFire has two ways of cloning:</p>
+
+<ul>
+  <li>Clone volume or snapshot to existing volume of the same or larger size (this is called “copy”)</li>
+  <li>Clone to new volume (the usual), which will have the same size</li>
+</ul>
+
+<p>To a SQL Server user with larger databases the first approach is usually better, because if you clone volume ID 1 every day, it’s better to clone it once (say, volume ID 14) and the next day just run:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Copy-SFVolume -VolumeID 1 -DstVolume 14
+# If this volume has been accessed before, no need to rescan
+# Set-Disk 4 -ErrorAction Stop -IsOffline $true|$false
+</code></pre></div></div>
+<p>A potential disadvantage of that approach is you aren’t deleting the large volume, so with many databases that aren’t needed every day it may be wasteful in terms of maximum volume count or metadata use (both on Solidfire).</p>
+
+<p>To avoid host confusion and mistakes, it is possible to re-assign storage tenant ownership so that production host doesn’t see any clones. We can also clone a volume outright, or use one of its existing snapshots. The latter may be interesting if you need a clone from some point-in-time, or if you’re taking database-consistent snapshots and want to work with such snapshots rather than create crash-consistent clones (or suspend SQL every time you create a clone).</p>
+
+<p>Example:</p>
+
+<ul>
+  <li>Account 13 - Hyper-V cluster or host used for Prod</li>
+  <li>Account 16 - Hyper-V cluster or host used for Compliance (Masking)</li>
+  <li>Account 17 - Dev-Test</li>
+</ul>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-15-masking-accounts.png" alt="" /></p>
+
+<p>We start with a single volume DB in Prod - volume ID 136:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFAccount</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">Username</span><span class="p">,</span><span class="nx">AccountID</span><span class="w">
+
+</span><span class="n">Username</span><span class="w">          </span><span class="nx">AccountID</span><span class="w">
+</span><span class="o">--------</span><span class="w">          </span><span class="o">---------</span><span class="w">
+</span><span class="n">hyperv2025</span><span class="w">               </span><span class="nx">13</span><span class="w">
+</span><span class="n">hyperv2025-masker</span><span class="w">        </span><span class="nx">16</span><span class="w">
+</span><span class="n">hyperv2025-tester</span><span class="w">        </span><span class="nx">17</span><span class="w">
+
+
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFVolume</span><span class="w"> </span><span class="nt">-AccountID</span><span class="w"> </span><span class="nx">13</span><span class="w">
+
+</span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
+</span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
+</span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">13</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-03-30T15:48:37Z</span><span class="w">
+</span><span class="n">VolumeConsistencyGroupUUID</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="nx">037c2c49-d6cc-4a0b-9b82-4cb287634c33</span><span class="w">
+</span><span class="n">VolumeUUID</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">52707066-3f85-44a6-a2a2-ebb8e7bc0ba0</span><span class="w">
+</span><span class="n">EnableSnapMirrorReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
+</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">readWrite</span><span class="w">
+</span><span class="n">Enable512e</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">True</span><span class="w">
+</span><span class="n">Iqn</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.sqldb.136</span><span class="w">
+</span><span class="n">ScsiEUIDeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">7763776200000088f47acc0100000000</span><span class="w">
+</span><span class="n">ScsiNAADeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">6f47acc1000000007763776200000088</span><span class="w">
+</span><span class="n">Qos</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"MinIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">"MaxIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">}</span><span class="w">
+</span><span class="n">QosPolicyID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">VolumeAccessGroups</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">}</span><span class="w">
+</span><span class="n">VolumePairs</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">DeleteTime</span><span class="w">                  </span><span class="p">:</span><span class="w">
+</span><span class="n">PurgeTime</span><span class="w">                   </span><span class="p">:</span><span class="w">
+</span><span class="n">LastAccessTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T04:50:00Z</span><span class="w">
+</span><span class="n">LastAccessTimeIO</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T04:50:00Z</span><span class="w">
+</span><span class="n">SliceCount</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+</span><span class="n">BlockSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">4096</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">             </span><span class="p">:</span><span class="w">
+</span><span class="n">Attributes</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="n">SfQosId</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>We create a crash-consistent snapshot-on-the-fly to clone volume ID 136 for the compliance guy (account ID 16).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-NewAccountID</span><span class="w"> </span><span class="nx">16</span><span class="w">
+
+</span><span class="n">cmdlet</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">command</span><span class="w"> </span><span class="nx">pipeline</span><span class="w"> </span><span class="nx">position</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">Supply</span><span class="w"> </span><span class="nx">values</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">following</span><span class="w"> </span><span class="nx">parameters:</span><span class="w">
+</span><span class="p">(</span><span class="kr">Type</span><span class="w"> </span><span class="o">!</span><span class="nf">?</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">Help.</span><span class="p">)</span><span class="w">
+</span><span class="n">Name:</span><span class="w"> </span><span class="nx">wwi-4-masking</span><span class="w">
+
+</span><span class="n">Volume</span><span class="w">
+</span><span class="o">------</span><span class="w">
+</span><span class="p">{</span><span class="s2">"VolumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">141</span><span class="p">,</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"wwi-4-masking"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AccountID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="s2">"CreateTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2024-04-12T05:20:02Z"</span><span class="p">,</span><span class="w"> </span><span class="s2">"EnableSnapMir...
+
+</span></code></pre></div></div>
+
+<p>The compliance guy rescans the storage, discovers volume ID 141, onlines it, picks a path, attaches SQL to DB, masks data.</p>
+
+<p>He then clones volume 141 for the DevTest guy, Account ID 17. After he’s done, he deletes his copy (volume ID 141) because he’s a compliance guy.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">141</span><span class="w"> </span><span class="nt">-NewAccountID</span><span class="w"> </span><span class="nx">17</span><span class="w">
+
+</span><span class="n">cmdlet</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">command</span><span class="w"> </span><span class="nx">pipeline</span><span class="w"> </span><span class="nx">position</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">Supply</span><span class="w"> </span><span class="nx">values</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">following</span><span class="w"> </span><span class="nx">parameters:</span><span class="w">
+</span><span class="p">(</span><span class="kr">Type</span><span class="w"> </span><span class="o">!</span><span class="nf">?</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">Help.</span><span class="p">)</span><span class="w">
+</span><span class="n">Name:</span><span class="w"> </span><span class="nx">wwi-4-devtest</span><span class="w">
+
+</span><span class="n">Volume</span><span class="w">
+</span><span class="o">------</span><span class="w">
+</span><span class="p">{</span><span class="s2">"VolumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"wwi-4-devtest"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AccountID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="s2">"CreateTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2024-04-12T05:20:24Z"</span><span class="p">,</span><span class="w"> </span><span class="s2">"EnableSnapMir...
+
+PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false</span><span class="s2">
+</span></code></pre></div></div>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-16-masking-workflow-clones-accounts.png" alt="" /></p>
+
+<p>The DevTest person uses this new volume with masked data (ID 142): rescan, online, attach.</p>
+
+<p>After they’re done testing (before next refresh), they detach and offline the volume.</p>
+
+<p>The next day, Prod admin suspends Prod database (not shown), takes a new, short-lived (5 min) application-consistent snapshot of Prod.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:05:00"</span><span class="w">
+
+
+</span><span class="n">SnapshotID</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">454</span><span class="w">
+</span><span class="n">VolumeID</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
+</span><span class="n">Name</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T05:31:08Z</span><span class="w">
+</span><span class="n">Checksum</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">0x43da1c997e6ce7e5</span><span class="w">
+</span><span class="n">EnableRemoteReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">ExpirationReason</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">None</span><span class="w">
+</span><span class="n">ExpirationTime</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T05:36:08Z</span><span class="w">
+</span><span class="n">RemoteStatuses</span><span class="w">          </span><span class="p">:</span><span class="w">
+</span><span class="n">Status</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">done</span><span class="w">
+</span><span class="n">SnapshotUUID</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">29e17467-546e-4bc4-8c57-1b2f0d100ca6</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">               </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+</span><span class="n">GroupID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">0</span><span class="w">
+</span><span class="n">GroupSnapshotUUID</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">00000000-0000-0000-0000-000000000000</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T05:31:08Z</span><span class="w">
+</span><span class="n">InstanceCreateTime</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T05:31:08Z</span><span class="w">
+</span><span class="n">VolumeName</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
+</span><span class="n">InstanceSnapshotUUID</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">29e17467-546e-4bc4-8c57-1b2f0d100ca6</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">         </span><span class="p">:</span><span class="w">
+</span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">SnapMirrorLabel</span><span class="w">         </span><span class="p">:</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If the compliance person leaves his clone online, this snapshot ID 454 could be copied into it, but we saw he likes to delete volumes he isn’t using, so we have no choice but to make a new clone every day. Now from this latest snapshot ID 454.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-SnapshotID</span><span class="w"> </span><span class="nx">454</span><span class="w"> </span><span class="nt">-NewAccountID</span><span class="w"> </span><span class="nx">16</span><span class="w">
+
+</span><span class="n">cmdlet</span><span class="w"> </span><span class="nx">New-SFClone</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">command</span><span class="w"> </span><span class="nx">pipeline</span><span class="w"> </span><span class="nx">position</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">Supply</span><span class="w"> </span><span class="nx">values</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">following</span><span class="w"> </span><span class="nx">parameters:</span><span class="w">
+</span><span class="p">(</span><span class="kr">Type</span><span class="w"> </span><span class="o">!</span><span class="nf">?</span><span class="w"> </span><span class="nx">for</span><span class="w"> </span><span class="nx">Help.</span><span class="p">)</span><span class="w">
+</span><span class="n">Name:</span><span class="w"> </span><span class="nx">wwi-4-devtest</span><span class="w">
+
+</span><span class="n">Volume</span><span class="w">
+</span><span class="o">------</span><span class="w">
+</span><span class="p">{</span><span class="s2">"VolumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">143</span><span class="p">,</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"wwi-4-devtest"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AccountID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="s2">"CreateTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2024-04-12T05:31:40Z"</span><span class="p">,</span><span class="w"> </span><span class="s2">"EnableSnapMir...
+
+</span></code></pre></div></div>
+
+<p>The compliance guy runs his usual script (rescan, online, attach, mask, detach) and then copies that volume to the DevTest guy’s clone from yesterday (volume ID 142).</p>
+
+<p>Because the DevTest guy only detaches and offlines his volumes, the compliance guy can use Copy-SFVolume here to refresh that volume 142. He waits until that async job is complete (see Get-Async* cmdlets) and then deletes his own copy (Volume ID 143).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Copy-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">143</span><span class="w"> </span><span class="nt">-DstVolumeID</span><span class="w"> </span><span class="nx">142</span><span class="w">
+
+</span><span class="n">CloneID</span><span class="w"> </span><span class="nx">AsyncHandle</span><span class="w">
+</span><span class="o">-------</span><span class="w"> </span><span class="o">-----------</span><span class="w">
+     </span><span class="mi">60</span><span class="w">         </span><span class="mi">154</span><span class="w">
+
+
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Remove-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">143</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>NOTE:</strong></p>
+
+<ul>
+  <li>Volume cloning and deletion would probably not be left to these different users, although we could <a href="/2023/12/07/solidfire-rbac-for-json-rpc-api.html">implement RBAC</a>, by default it doesn’t exist so the DevTest guy could clone for himself whatever volumes he wants. Some “storage admin” would likely execute these steps from a script or manually. Tenants can only view their own volumes and VLANs can also be used to further segregate tenants and environments.</li>
+  <li>Remember we can use use Set-SFQosPolicyID on non-production clones if you want to give clones more or less performance. By default, a clone inherits parent’s QoS Policy ID.</li>
+</ul>
+
+<p>As you can see the exact steps will vary depending on procedures, preferences and such.</p>
+
+<p>Some users may use one account for everything, others may have two or three. The intermediate and DevTest team may not need more than one copy per DB instance, but in some cases they may keep a bunch of them for regression testing, and so on.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-17-low-cost-clones.png" alt="" /></p>
+
+<p>Depending on the amount of masked data, this should be usually cost very little due to data deduplication and SolidFire’s global deduplication. In this screenshot we can see Compliance &amp; DevTest have one volume each as we refresh them daily, plus all identical blocks are deduplicated after being compressed by SolidFire.</p>
+
+<p>Storage workload-wise, Copy-SFVolume is the same thing as New-SFClone; the only difference is if the target host is different usually no rescan is needed after Copy-SFVolume.</p>
+
+<p>For large databases with a small amount of masking (just one or two columns, for example), it may be better to use one of these two commands than backup-mask-restore. 
+For small databases and databases where many columns need to be masked, the benefit of cloning or copying volumes are less pronounced.</p>
+
 <h2 id="other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</h2>
 
 <p>The T-SQL approach above doesn’t use much IO on storage.</p>
@@ -428,6 +651,21 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
     
         
           <div class = "related-posts">
+          <h5><a href="/2024/04/11/netapp-eseries-containerized-beegfs-nfs-s3-all-in-one.html">• NetApp E-Series with containerized BeeGFS, NFS, S3</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
           <h5><a href="/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html">• Backup NetApp SolidFire's non-Kubernetes volumes with Velero</a></h5>
           </div>
           
@@ -486,21 +724,6 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html">• SSD Cache feature on NetApp SANtricity E-Series</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -509,7 +732,7 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 
     
   </div><footer class= "footer">
-    <p>2024-04-09 19:13 </p>
+    <p>2024-04-12 14:41 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
