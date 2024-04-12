@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-01T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    16 minute read
+    20 minute read
   
 
     </span>
@@ -141,9 +141,11 @@
   <li><a href="/2024/03/31/windows-server-2025-with-solidfire-part-one.html">Part One: Windows Server 2025 with NetApp SolidFire</a> - getting started</li>
   <li>(you’re here) <strong>Part Two: SQL Server T-SQL Snapshots</strong> - using SolidFire snapshots with SQL Server 2022</li>
   <li><a href="/2024/04/01/windows-server-2025-with-solidfire-part-three-hyper-v.html">Part Three: Windows Server 2025 with NetApp SolidFire 12 iSCSI</a> - notes related to Hyper-V</li>
-  <li>
-    <p>In this post you can find the following:</p>
-  </li>
+</ul>
+
+<p>In this post you can find the following:</p>
+
+<ul>
   <li><a href="#solidfire-snapshots">SolidFire snapshots</a></li>
   <li><a href="#transact-sql-snapshot-backup-with-solidfire">Transact-SQL snapshot backup with SolidFire</a></li>
   <li><a href="#restore">Restore</a>
@@ -155,6 +157,8 @@
   <li><a href="#other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---filesystem-layout">Appendix A - filesystem layout</a></li>
+  <li><a href="#appendix-c---cloning-workflow-with-cli">Appendix C - cloning workflow with CLI</a></li>
+  <li><a href="#appendix-d---workflow-screenshots-tips-and-workarounds">Appendix D - workflow screenshots, tips and workarounds</a></li>
 </ul>
 
 <p>As explained in Part One, SQL Server 2022 makes it possible to easily use hardware snapshots without VSS.</p>
@@ -389,19 +393,87 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 # If this volume has been accessed before, no need to rescan
 # Set-Disk 4 -ErrorAction Stop -IsOffline $true|$false
 </code></pre></div></div>
+
 <p>A potential disadvantage of that approach is you aren’t deleting the large volume, so with many databases that aren’t needed every day it may be wasteful in terms of maximum volume count or metadata use (both on Solidfire).</p>
 
 <p>To avoid host confusion and mistakes, it is possible to re-assign storage tenant ownership so that production host doesn’t see any clones. We can also clone a volume outright, or use one of its existing snapshots. The latter may be interesting if you need a clone from some point-in-time, or if you’re taking database-consistent snapshots and want to work with such snapshots rather than create crash-consistent clones (or suspend SQL every time you create a clone).</p>
 
-<p>Example:</p>
+<p>As you can see the exact steps will vary depending on procedures, preferences and such.</p>
+
+<p>Some users may use one host and one SolidFire tenant account for everything, others may have two or three. The intermediate and DevTest team may not need more than one copy per DB instance, but in some cases they may keep a bunch of them for regression testing, and so on.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-17-low-cost-clones.png" alt="" /></p>
+
+<p>Depending on the amount of masked data, this should be usually cost very little due to data deduplication and SolidFire’s global deduplication. In this screenshot we can see Compliance &amp; DevTest have one volume each as we refresh them daily, plus all identical blocks are deduplicated after being compressed by SolidFire.</p>
+
+<p>Storage workload-wise, Copy-SFVolume is the same thing as New-SFClone; the only difference is if the target host is different usually no rescan is needed after Copy-SFVolume.</p>
+
+<p>For large databases with a small amount of masking (just one or two columns, for example), it may be better to use one of these two commands than backup-mask-restore. 
+For small databases and databases where many columns need to be masked, the benefit of cloning or copying volumes are less pronounced.</p>
+
+<h2 id="other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</h2>
+
+<p>The T-SQL approach above doesn’t use much IO on storage.</p>
+
+<p>If you have “traditional” backup jobs or data dump operations, then you may need some extra QoS Max/Burst for the duration of such jobs - both on Source (SQL Data/Logs) and destination (Backup) volumes. See <a href="/2020/11/28/powershell-set-sfqosexception.html">this post</a> for more on using volume attributes to handle temporary QoS adjustments. Here’s a simple demo of how that works:</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-13-solidfire-qos-exception.png" alt="" /></p>
+
+<p>To use the module you just need to have at least two QoS policies defined so that you can switch between QosPolicyIDs. In my environment, I had three, with 2 being the one used during backup.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-14-solidfire-qos-policies.png" alt="" /></p>
+
+<p>You can find Set-SFQosException module in my Github repo “awesome-solidfire”.</p>
+
+<p>Hyper-V (at least as of <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/virtualization/back-up-hyper-v-vm-from-parent-partition">Windows Server 2019</a>) uses VSS writer, so there’s no integration with SolidFire. Protecting Hyper-V data may become a topic for a future post.</p>
+
+<p>SolidFire snapshots are also used by Velero and other backup software for Kubernetes supports CSI.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>T-SQL with hardware snapshots works great - they take less than 10 seconds, are robust and trivially easy to use.</p>
+
+<p>Other approaches may involve more work and more careful performance management. The ability to easily set and un-set a QoS policy specific to backup requirements is also extremely easy - it takes just two commands.</p>
+
+<p>Other use cases for Windows Server 2025 with SolidFire need more investigation. That includes Hyper-V and containers.</p>
+
+<h2 id="appendix-a---filesystem-layout">Appendix A - filesystem layout</h2>
+
+<p>My test database was basically empty, but even so - notice how small wwi_snap.bkp is (&lt;40 KB) - it’s just metadata that tells SQL Server about snapshot data and should remain small regardless of database size.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">E:\data\wwi</span><span class="w">
+
+</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
+</span><span class="o">----</span><span class="w">                 </span><span class="o">-------------</span><span class="w">         </span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w">
+</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">1:29</span><span class="w"> </span><span class="nx">PM</span><span class="w">        </span><span class="nx">8388608</span><span class="w"> </span><span class="nx">wwi.mdf</span><span class="w">
+
+    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">F:\log\wwi</span><span class="w">
+
+</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
+</span><span class="o">----</span><span class="w">                 </span><span class="o">-------------</span><span class="w">         </span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w">
+</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">1:29</span><span class="w"> </span><span class="nx">PM</span><span class="w">        </span><span class="nx">8388608</span><span class="w"> </span><span class="nx">wwi_log.ldf</span><span class="w">
+
+    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">G:\</span><span class="w">
+
+</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
+</span><span class="o">----</span><span class="w">                 </span><span class="o">----</span><span class="nt">--New-SFSnapshot</span><span class="w">                   
+</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">2:01</span><span class="w"> </span><span class="nx">PM</span><span class="w">          </span><span class="nx">36864</span><span class="w"> </span><span class="nx">wwi_snap.bkp</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="appendix-c---cloning-workflow-with-cli">Appendix C - cloning workflow with CLI</h2>
+
+<p>This example uses three accounts:</p>
 
 <ul>
-  <li>Account 13 - Hyper-V cluster or host used for Prod</li>
-  <li>Account 16 - Hyper-V cluster or host used for Compliance (Masking)</li>
-  <li>Account 17 - Dev-Test</li>
+  <li>Account 13 - Hyper-V cluster or a host used for Prod</li>
+  <li>Account 16 - Hyper-V cluster or a host used for Compliance (Masking)</li>
+  <li>Account 17 - Hyper-V cluster or a host used for Dev-Test</li>
 </ul>
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-15-masking-accounts.png" alt="" /></p>
+
+<p>The idea is to use SolidFire storage tenant Account 16 as an intermediate step (for masking of cloned volumes) before we assign them to Account 17.</p>
 
 <p>We start with a single volume DB in Prod - volume ID 136:</p>
 
@@ -419,30 +491,7 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 </span><span class="n">VolumeID</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">136</span><span class="w">
 </span><span class="n">Name</span><span class="w">                        </span><span class="p">:</span><span class="w"> </span><span class="nx">sqldb</span><span class="w">
 </span><span class="n">AccountID</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">13</span><span class="w">
-</span><span class="n">CreateTime</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-03-30T15:48:37Z</span><span class="w">
-</span><span class="n">VolumeConsistencyGroupUUID</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="nx">037c2c49-d6cc-4a0b-9b82-4cb287634c33</span><span class="w">
-</span><span class="n">VolumeUUID</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">52707066-3f85-44a6-a2a2-ebb8e7bc0ba0</span><span class="w">
-</span><span class="n">EnableSnapMirrorReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
-</span><span class="n">Status</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">active</span><span class="w">
-</span><span class="n">Access</span><span class="w">                      </span><span class="p">:</span><span class="w"> </span><span class="nx">readWrite</span><span class="w">
-</span><span class="n">Enable512e</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">True</span><span class="w">
-</span><span class="n">Iqn</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.sqldb.136</span><span class="w">
-</span><span class="n">ScsiEUIDeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">7763776200000088f47acc0100000000</span><span class="w">
-</span><span class="n">ScsiNAADeviceID</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">6f47acc1000000007763776200000088</span><span class="w">
-</span><span class="n">Qos</span><span class="w">                         </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"MinIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s2">"MaxIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstIOPS"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s2">"BurstTime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">}</span><span class="w">
-</span><span class="n">QosPolicyID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
-</span><span class="n">VolumeAccessGroups</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">}</span><span class="w">
-</span><span class="n">VolumePairs</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-</span><span class="n">DeleteTime</span><span class="w">                  </span><span class="p">:</span><span class="w">
-</span><span class="n">PurgeTime</span><span class="w">                   </span><span class="p">:</span><span class="w">
-</span><span class="n">LastAccessTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T04:50:00Z</span><span class="w">
-</span><span class="n">LastAccessTimeIO</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">2024-04-12T04:50:00Z</span><span class="w">
-</span><span class="n">SliceCount</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
-</span><span class="n">TotalSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
-</span><span class="n">BlockSize</span><span class="w">                   </span><span class="p">:</span><span class="w"> </span><span class="nx">4096</span><span class="w">
-</span><span class="n">VirtualVolumeID</span><span class="w">             </span><span class="p">:</span><span class="w">
-</span><span class="n">Attributes</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="n">SfQosId</span><span class="p">}</span><span class="w">
-
+</span><span class="o">...</span><span class="w">
 </span></code></pre></div></div>
 
 <p>We create a crash-consistent snapshot-on-the-fly to clone volume ID 136 for the compliance guy (account ID 16).</p>
@@ -547,68 +596,72 @@ PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false
   <li>Remember we can use use Set-SFQosPolicyID on non-production clones if you want to give clones more or less performance. By default, a clone inherits parent’s QoS Policy ID.</li>
 </ul>
 
-<p>As you can see the exact steps will vary depending on procedures, preferences and such.</p>
+<p>You may encounter some unexpected issues - Appendix D shows what I observed.</p>
 
-<p>Some users may use one account for everything, others may have two or three. The intermediate and DevTest team may not need more than one copy per DB instance, but in some cases they may keep a bunch of them for regression testing, and so on.</p>
+<h2 id="appendix-d---workflow-screenshots-tips-and-workarounds">Appendix D - workflow screenshots, tips and workarounds</h2>
 
-<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-17-low-cost-clones.png" alt="" /></p>
+<p>In this appendix I show screenshots from a workflow that uses the <em>same</em> SQL Server 2022 host (Windows Server 2025 Preview) for everything, and there’s just one person in charge of both production and dev-test database.</p>
 
-<p>Depending on the amount of masked data, this should be usually cost very little due to data deduplication and SolidFire’s global deduplication. In this screenshot we can see Compliance &amp; DevTest have one volume each as we refresh them daily, plus all identical blocks are deduplicated after being compressed by SolidFire.</p>
+<p>It also contains some tips and workarounds.</p>
 
-<p>Storage workload-wise, Copy-SFVolume is the same thing as New-SFClone; the only difference is if the target host is different usually no rescan is needed after Copy-SFVolume.</p>
+<p>While trying to rescan iSCSI portal to view a clone, nothing came up. I forgot that I had been using Volume Access Groups (rather than CHAP). That’s common in Hyper-V (and  other HA) environments, but if you want to avoid this step, you can configure iSCSI Initiator to use CHAP. I used Add-SFVolumeToVolumeAccessGroup to <a href="https://github.com/scaleoutsean/solidfire-windows/blob/master/config-sf-account-vag-iqn-for-first-win-host.ps1">add the new volume</a> (clone) to VAG and then rescan worked fine.</p>
 
-<p>For large databases with a small amount of masking (just one or two columns, for example), it may be better to use one of these two commands than backup-mask-restore. 
-For small databases and databases where many columns need to be masked, the benefit of cloning or copying volumes are less pronounced.</p>
+<p>While adding that volume to VAG I remembered that LUN IDs can be specified at the very bottom of that modal. I never tried changing the order, but if you want to further “tune” your approach, you may try playing with those to see if it can help you present volumes in the order you want, rather than in the order of discovery.</p>
 
-<h2 id="other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</h2>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-21-add-clone-to-vag.png" alt="" /></p>
 
-<p>The T-SQL approach above doesn’t use much IO on storage.</p>
+<p>Maybe this has effect only before host-side scan/discovery.</p>
 
-<p>If you have “traditional” backup jobs or data dump operations, then you may need some extra QoS Max/Burst for the duration of such jobs - both on Source (SQL Data/Logs) and destination (Backup) volumes. See <a href="/2020/11/28/powershell-set-sfqosexception.html">this post</a> for more on using volume attributes to handle temporary QoS adjustments. Here’s a simple demo of how that works:</p>
+<p>When you login to a new clone target that you may not need, do not add that target to Favorites (in Connect dialog box).</p>
 
-<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-13-solidfire-qos-exception.png" alt="" /></p>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-22-iscsi-initiator-login-clone.png" alt="" /></p>
 
-<p>To use the module you just need to have at least two QoS policies defined so that you can switch between QosPolicyIDs. In my environment, I had three, with 2 being the one used during backup.</p>
+<p>Next, when you get connected, you need to online the new disk. The first time - because it’s a clone of one of the other disks on this system - it’s flagged as Read Only (even though it’s Read-Write on SolidFire).</p>
 
-<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-14-solidfire-qos-policies.png" alt="" /></p>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-23-online-clone-volume.png" alt="" /></p>
 
-<p>You can find Set-SFQosException module in my Github repo “awesome-solidfire”.</p>
+<p>I used the tip from the Web site of Easeus to clear that read-only flag.</p>
 
-<p>Hyper-V (at least as of <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/virtualization/back-up-hyper-v-vm-from-parent-partition">Windows Server 2019</a>) uses VSS writer, so there’s no integration with SolidFire. Protecting Hyper-V data may become a topic for a future post.</p>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-24-remove-read-only-flag.png" alt="" /></p>
 
-<p>SolidFire snapshots are also used by Velero and other backup software for Kubernetes supports CSI.</p>
+<p>Then I was able to bring the disk online.</p>
 
-<h2 id="conclusion">Conclusion</h2>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-25-issue-with-read-only-flag.png" alt="" /></p>
 
-<p>T-SQL with hardware snapshots works great - they take less than 10 seconds, are robust and trivially easy to use.</p>
+<p>As I assigned it drive letter H, that’s where it was mounted. Note the label “win2clone” on H.</p>
 
-<p>Other approaches may involve more work and more careful performance management. The ability to easily set and un-set a QoS policy specific to backup requirements is also extremely easy - it takes just two commands.</p>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-26-clone-online.png" alt="" /></p>
 
-<p>Other use cases for Windows Server 2025 with SolidFire need more investigation. That includes Hyper-V and containers.</p>
+<p>Since I was about to attach a DB that was a clone of a DB that I was actively using on the same host, I used a new name (vip-devtest) and made sure the paths used H:.</p>
 
-<h2 id="appendix-a---filesystem-layout">Appendix A - filesystem layout</h2>
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-27-attach-db.png" alt="" /></p>
 
-<p>My test database was basically empty, but even so - notice how small wwi_snap.bkp is (&lt;40 KB) - it’s just metadata that tells SQL Server about snapshot data and should remain small regardless of database size.</p>
+<p>I checked the contents to make sure it was populated with the same data. Then I disconnected my client, ran a sp_detach_db procedure, and offlined the disk (second row in the CLI screenshot below). It is very important to offline the disk if it’s going to be copied to by <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code>.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">E:\data\wwi</span><span class="w">
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-28-refresh-clone.png" alt="" /></p>
 
-</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
-</span><span class="o">----</span><span class="w">                 </span><span class="o">-------------</span><span class="w">         </span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w">
-</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">1:29</span><span class="w"> </span><span class="nx">PM</span><span class="w">        </span><span class="nx">8388608</span><span class="w"> </span><span class="nx">wwi.mdf</span><span class="w">
+<p>After that I was ready to update Prod (<code class="language-plaintext highlighter-rouge">[vip]</code>) again, and then I ran <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code> to refresh my clone volume.</p>
 
-    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">F:\log\wwi</span><span class="w">
+<p>As you can see in this screenshot Set-Disk worked fine - no readonly flag was required, and furthermore, earlier disk assignment remained.</p>
 
-</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
-</span><span class="o">----</span><span class="w">                 </span><span class="o">-------------</span><span class="w">         </span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w">
-</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">1:29</span><span class="w"> </span><span class="nx">PM</span><span class="w">        </span><span class="nx">8388608</span><span class="w"> </span><span class="nx">wwi_log.ldf</span><span class="w">
+<p>But I did notice that after one refresh the clone volume lost its label I gave it - “win2clone” - and automatically used the label from the original volume, which made sense as it was indeed its clone. It didn’t bother me so I didn’t try to override or change.</p>
 
-    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">G:\</span><span class="w">
+<p>The only sensitive part is detach, especially if you’re using SQL Server Management Studio where <em>you</em> may be the connection that’s causing detach to fail. Use generic SQL Server procedures to close those connections - it’s not something related to iSCSI or SolidFire.</p>
 
-</span><span class="n">Mode</span><span class="w">                 </span><span class="nx">LastWriteTime</span><span class="w">         </span><span class="nx">Length</span><span class="w"> </span><span class="nx">Name</span><span class="w">
-</span><span class="o">----</span><span class="w">                 </span><span class="o">----</span><span class="nt">--New-SFSnapshot</span><span class="w">                   
-</span><span class="nt">-a</span><span class="o">---</span><span class="w">            </span><span class="mi">4</span><span class="n">/1/2024</span><span class="w">  </span><span class="nx">2:01</span><span class="w"> </span><span class="nx">PM</span><span class="w">          </span><span class="nx">36864</span><span class="w"> </span><span class="nx">wwi_snap.bkp</span><span class="w">
+<p>The way I executed SQL commands was to double-click on them in Explorer, which brought up SMS and then I’d execute them there.</p>
 
+<p>SQL commands can be easily executed from a PowerShell script - you could develop queries in SMS and then load them from PowerShell.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">New-SFSnapshot</span><span class="w"> </span><span class="o">...</span><span class="w">
+</span><span class="nv">$q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Content</span><span class="w"> </span><span class="nx">sp_detach_vip.sql</span><span class="w">
+</span><span class="n">Invoke-Sqlcmd</span><span class="w"> </span><span class="nt">-Query</span><span class="w"> </span><span class="nv">$query</span><span class="o">...</span><span class="w">
+</span><span class="n">New-SFClone</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Copy-SFVolume</span><span class="w">
+</span><span class="o">...</span><span class="w">
 </span></code></pre></div></div>
+
+<p>I haven’t done this because it was just a one-off workflow, but if you do this daily or for more than one database, maybe you could.</p>
+
+<p>The SolidFire API is well behaving so from that side you’d need very little error handling.</p>
 
       </article>
     </div>
@@ -732,7 +785,7 @@ For small databases and databases where many columns need to be masked, the bene
 
     
   </div><footer class= "footer">
-    <p>2024-04-12 18:05 </p>
+    <p>2024-04-12 19:27 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
