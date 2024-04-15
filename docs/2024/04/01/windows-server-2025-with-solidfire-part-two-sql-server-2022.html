@@ -129,7 +129,7 @@
 
   
   
-    20 minute read
+    22 minute read
   
 
     </span>
@@ -155,6 +155,8 @@
   </li>
   <li><a href="#data-masking">Data masking</a></li>
   <li><a href="#other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</a></li>
+  <li><a href="#solidfire-dba-tools">SolidFire DBA Tools</a></li>
+  <li><a href="#security">Security</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---filesystem-layout">Appendix A - filesystem layout</a></li>
   <li><a href="#appendix-c---cloning-workflow-with-cli">Appendix C - cloning workflow with CLI</a></li>
@@ -219,24 +221,24 @@
 
 <p>If some snapshots are local-only while others need to be replicated, we can use that in snapshot attributes.</p>
 
-<pre><code class="language-pwsh">PS C:\&gt; New-SFGroupSnapshot -VolumeID 136,134 `n
-        -Retention "00:48:00" -Name "02testSnap" `n
-        -Attributes @{Database='wwi'; Type='meta'; Site='local'}  
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="se">`n</span><span class="w">
+        </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:48:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"02testSnap"</span><span class="w"> </span><span class="err">`</span><span class="n">n</span><span class="w">
+        </span><span class="nt">-Attributes</span><span class="w"> </span><span class="p">@{</span><span class="nx">Database</span><span class="o">=</span><span class="s1">'wwi'</span><span class="p">;</span><span class="w"> </span><span class="nx">Type</span><span class="o">=</span><span class="s1">'meta'</span><span class="p">;</span><span class="w"> </span><span class="nx">Site</span><span class="o">=</span><span class="s1">'local'</span><span class="p">}</span><span class="w">  
 
-PS C:\&gt; New-SFGroupSnapshot -VolumeID 136,134 `n 
-        -Retention "00:08:00" -Name "03testSnap" `n
-        -Attributes @{Database='wwi'; Type='full'; Site='replicated'}
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="se">`n</span><span class="w"> 
+        </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:08:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"03testSnap"</span><span class="w"> </span><span class="err">`</span><span class="n">n</span><span class="w">
+        </span><span class="nt">-Attributes</span><span class="w"> </span><span class="p">@{</span><span class="nx">Database</span><span class="o">=</span><span class="s1">'wwi'</span><span class="p">;</span><span class="w"> </span><span class="nx">Type</span><span class="o">=</span><span class="s1">'full'</span><span class="p">;</span><span class="w"> </span><span class="nx">Site</span><span class="o">=</span><span class="s1">'replicated'</span><span class="p">}</span><span class="w">
 
-PS C:\&gt; Get-SFGroupSnapshot | Select-Object -Property GroupSnapshotID,Attributes
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFGroupSnapshot</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="nx">GroupSnapshotID</span><span class="p">,</span><span class="w"> </span><span class="nx">Attributes</span><span class="w">
 
-GroupSnapshotID Attributes
---------------- ----------
-             70 {[Site, replicated], [Database, wwi], [Type, full]}
-             69 {[Site, local], [Database, wwi], [Type, meta]}
+</span><span class="n">GroupSnapshotID</span><span class="w"> </span><span class="nx">Attributes</span><span class="w">
+</span><span class="o">---------------</span><span class="w"> </span><span class="o">----------</span><span class="w">
+             </span><span class="mi">70</span><span class="w"> </span><span class="p">{[</span><span class="n">Site</span><span class="p">,</span><span class="w"> </span><span class="n">replicated</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">Database</span><span class="p">,</span><span class="w"> </span><span class="n">wwi</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">Type</span><span class="p">,</span><span class="w"> </span><span class="n">full</span><span class="p">]}</span><span class="w">
+             </span><span class="mi">69</span><span class="w"> </span><span class="p">{[</span><span class="n">Site</span><span class="p">,</span><span class="w"> </span><span class="n">local</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">Database</span><span class="p">,</span><span class="w"> </span><span class="n">wwi</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="n">Type</span><span class="p">,</span><span class="w"> </span><span class="n">meta</span><span class="p">]}</span><span class="w">
 
-</code></pre>
+</span></code></pre></div></div>
 
-<p>I may have a bunch of these, but if only full backups need to be replicated, it’s easy to find out which ones to set up for replication.</p>
+<p>I may have a bunch of these, but if only full backups need to be replicated, it’s easy to find out which ones to set up for replication and add <code class="language-plaintext highlighter-rouge">-EnableRemoteReplication</code> to New-SFSnapshot options.</p>
 
 <h2 id="transact-sql-snapshot-backup-with-solidfire">Transact-SQL snapshot backup with SolidFire</h2>
 
@@ -271,39 +273,19 @@ GroupSnapshotID Attributes
 
 <p>At the very minimum, just five lines will do. We connect to SolidFire MVIP at 192.168.30, freeze the database <code class="language-plaintext highlighter-rouge">wwi</code> , have SolidFire create a snapshot (Volume ID 134, 136), and then we backup database to G:\wwi_snap.bkp.</p>
 
+<p>In <strong>theory</strong>, this would be all that it’d take (plus some exception handling):</p>
+
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Import-Module</span><span class="w"> </span><span class="nx">SolidFire</span><span class="w">
 </span><span class="nv">$cred</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Credential</span><span class="w">
 </span><span class="bp">$null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Connect-SFCluster</span><span class="w"> </span><span class="nx">192.168.1.30</span><span class="w"> </span><span class="nt">-Credential</span><span class="w"> </span><span class="nv">$cred</span><span class="w">
-
-</span><span class="n">Start-Job</span><span class="w"> </span><span class="nt">-ScriptBlock</span><span class="w"> </span><span class="p">{</span><span class="n">sqlcmd</span><span class="w"> </span><span class="nt">-E</span><span class="w"> </span><span class="nt">-Q</span><span class="w"> </span><span class="s2">"ALTER DATABASE wwi SET SUSPEND_FOR_SNAPSHOT_BACKUP=ON; WAITFOR DELAY '00:00:05'; BACKUP DATABASE wwi TO DISK='G:\wwi_snap.bkp' WITH METADATA_ONLY,FORMAT;"</span><span class="p">}</span><span class="w"> 
-
+</span><span class="n">Start-Job</span><span class="w"> </span><span class="nt">-ScriptBlock</span><span class="w"> </span><span class="p">{</span><span class="n">sqlcmd</span><span class="w"> </span><span class="nt">-E</span><span class="w"> </span><span class="nt">-Q</span><span class="w"> </span><span class="s2">"ALTER DATABASE wwi SET SUSPEND_FOR_SNAPSHOT_BACKUP=ON;"</span><span class="p">}</span><span class="w"> 
 </span><span class="nv">$SfSnap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:10:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"wwi-snap-demo"</span><span class="w">
-
+</span><span class="n">Start-Job</span><span class="w"> </span><span class="nt">-ScriptBlock</span><span class="w"> </span><span class="p">{</span><span class="n">sqlcmd</span><span class="w"> </span><span class="nt">-E</span><span class="w"> </span><span class="nt">-Q</span><span class="w"> </span><span class="s2">"ALTER DATABASE wwi SET SUSPEND_FOR_SNAPSHOT_BACKUP=OFF;"</span><span class="p">}</span><span class="w"> 
 </span></code></pre></div></div>
 
 <p>SolidFire credentials could be loaded from environment variables. The example above is for interactive execution.</p>
 
-<p>When <code class="language-plaintext highlighter-rouge">ALTER DATABASE</code> runs, that should suspend IO (which is entirely dependent on SQL Server).</p>
-
-<pre><code class="language-raw">VERBOSE: Database 'wwi' acquired suspend locks in session 69.'
-VERBOSE: I/O is frozen on database wwi. No user action is required. 
-VERBOSE: However, if I/O is not resumed promptly, you could cancel the backup.
-VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69.
-</code></pre>
-
-<p>I don’t know how long can a database stay suspended, but SolidFire snapshots are fast, so as long as SQL Server’s suspend &amp; backup commands are spaced by 2-3 seconds, that should be enough.</p>
-
-<p>In my case I made the DB sleep for 5 seconds before it creates a backup.</p>
-
-<p>Script was executed 2:01:16 PM. SolidFire snapshot is completed in 1 second, at 2:01:17 PM. Even a loaded storage system ought to be fast because snapshots don’t consume much IO and the amount of data these backups create is always small.</p>
-
-<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-13-solidfire-script-execution.png" alt="" /></p>
-
-<p>We can see that backup completed at 2:01:22 PM as expected (given the always-small backup size and a 5 second sleep time), so the backup-to-disk step wasn’t nowhere near to completing before SolidFire group snapshot executed.</p>
-
-<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-05-t-sql-hardware-snapshot-backup.png" alt="" /></p>
-
-<p>We don’t have to rely on luck, though - we could query DB for this event and compare against snapshot’s <code class="language-plaintext highlighter-rouge">CreateTime</code> and fail if snapshot was created before SQL database backup started.</p>
+<p>We could query DB log and compare against snapshot’s <code class="language-plaintext highlighter-rouge">CreateTime</code> to make sure snapshot is taken during suspend.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:05:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Example"</span><span class="w">   
 </span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> 
@@ -316,31 +298,74 @@ VERBOSE: Database 'wwi' successfully suspended for snapshot backup in session 69
 </span><span class="n">EnableRemoteReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
 </span><span class="n">RemoteStatuses</span><span class="w">          </span><span class="p">:</span><span class="w"> 
 </span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-
 </span></code></pre></div></div>
 
-<p>We can also schedule these jobs independently (SQL as one, SolidFire snapshot as another) - as long as NTP is managed properly and database can remain suspended 10-15 seconds, that should work fine.</p>
+<p>We can also schedule these jobs independently (SQL Server stored procedure as one, SolidFire snapshot as another) - as long as NTP is managed properly and database can remain suspended 10-15 seconds, that should work fine.</p>
 
-<p>Ideally it could work with PowerShell SQLServer and SolidFire(.Core) modules, but I had problems getting that work. Interestingly, I haven’t found a single mention of the errors I got on various search engines.</p>
+<p>In <strong>practice</strong> I had problems with DB instance exiting suspend mode on its own before T-SQL backup job executed which meant that backup always failed.</p>
+
+<p>Eventually the only way I got this to work reliably was:</p>
+
+<ul>
+  <li>stored procedure that enters suspend mode, sleeps 15 seconds, takes a backup, and leaves suspend mode</li>
+  <li>Scheduled SolidFire snapshots to occur at the time database is suspended</li>
+</ul>
+
+<p>We know a backup (command in SQL Server) will fail if database isn’t suspended, so I only had to make sure that SolidFire snapshot occurred during the time it was suspended.</p>
+
+<p>I created this stored procedure in <code class="language-plaintext highlighter-rouge">master</code> database.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">USE</span> <span class="p">[</span><span class="n">master</span><span class="p">]</span>
+<span class="k">GO</span>
+<span class="k">SET</span> <span class="n">ANSI_NULLS</span> <span class="k">ON</span>
+<span class="k">GO</span>
+<span class="k">SET</span> <span class="n">QUOTED_IDENTIFIER</span> <span class="k">ON</span>
+<span class="k">GO</span>
+<span class="k">CREATE</span> <span class="k">PROCEDURE</span> <span class="p">[</span><span class="n">dbo</span><span class="p">].[</span><span class="n">backupTSql</span><span class="p">]</span>
+<span class="k">AS</span>
+<span class="k">BEGIN</span>
+	<span class="k">SET</span> <span class="n">NOCOUNT</span> <span class="k">ON</span><span class="p">;</span>
+	<span class="k">ALTER</span> <span class="k">DATABASE</span> <span class="p">[</span><span class="n">vip</span><span class="p">]</span> <span class="k">SET</span> <span class="n">SUSPEND_FOR_SNAPSHOT_BACKUP</span><span class="o">=</span><span class="k">ON</span><span class="p">;</span>
+	<span class="n">WAITFOR</span> <span class="n">DELAY</span> <span class="s1">'00:00:10'</span><span class="p">;</span>
+	<span class="n">BACKUP</span> <span class="k">DATABASE</span> <span class="p">[</span><span class="n">vip</span><span class="p">]</span> <span class="k">TO</span> <span class="n">DISK</span> <span class="o">=</span> <span class="s1">'G:</span><span class="se">\b</span><span class="s1">kp</span><span class="se">\v</span><span class="s1">ip.bkm'</span> <span class="k">WITH</span> <span class="n">METADATA_ONLY</span><span class="p">,</span> <span class="n">FORMAT</span><span class="p">;</span>
+	<span class="k">ALTER</span> <span class="k">DATABASE</span> <span class="p">[</span><span class="n">vip</span><span class="p">]</span> <span class="k">SET</span> <span class="n">SUSPEND_FOR_SNAPSHOT_BACKUP</span><span class="o">=</span><span class="k">OFF</span><span class="p">;</span>
+<span class="k">END</span>
+</code></pre></div></div>
+
+<p>I added some PRINT and SELECT statements to the stored procedure during debugging to show suspended databases at that time and also compared the time of SolidFire snapshot.</p>
+
+<p>Here we can see that <code class="language-plaintext highlighter-rouge">vip</code> was suspended, but in the second query (after we resumed) it was not.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-30-sp-backup-and-ps-snapshot.png" alt="" /></p>
+
+<p>In Messages tab we could see database was suspended and backed up, and that our SolidFire snapshot occurred during the time the DB was frozen.</p>
+
+<ul>
+  <li>Execute stored procedure backupTSql</li>
+  <li>After 2-3 seconds take a SolidFire snapshot of the volume(s)</li>
+  <li>Observe if snapshot was taken during the wait (when DB was suspended)</li>
+</ul>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-31-sp-backup-and-ps-snapshot-complete.png" alt="" /></p>
+
+<p>The snapshot we took contains the time it was taken, which is when the DB was suspended.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-32-sp-backup-and-ps-snapshot-in-solidfire.png" alt="" /></p>
+
+<p>It is possible to run PowerShell scripts from SQL Server (so you’d only have to schedule the SP itself, and take a SolidFire snapshot as one of its steps), but that’s another can of worms.</p>
 
 <h2 id="restore">Restore</h2>
 
 <p>Please refer to Microsoft examples - there’s nothing SolidFire-specific about that part.</p>
 
-<p>You’d need to create a clone from the snapshot (or group snapshots, in which case you may have clones). Then present them to a Windows OS (preferably not the same) and use the SQL-created BKP file to have SQL Server “understand” the new volume and be able to access database.</p>
-
-<p>Another way - but unrelated to this procedure - is to stop (DETACH) corrupted database, take the volume(s) offline and then use Restore Snapshot from SolidFire to bring back point-in-time data. But you probably wouldn’t do that with these T-SQL hardware-assisted snapshots - it’s more of a traditional crash-consistent approach.</p>
+<p>In Appendices below you can see some OS-related details and tips.</p>
 
 <h3 id="dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</h3>
 
-<p>I haven’t read the documentation for that, but I assume this should be enough:</p>
-
 <ul>
   <li>SolidFire data/log volume(s) and snapshots replicated to another SolidFire cluster</li>
-  <li>SQL Server “metadata” file uploaded to S3, or the volume replicated to another cluster</li>
+  <li>SQL Server backup “metadata” file uploaded to S3, or the volume replicated to another cluster; because SolidFire snapshot happens while DB is frozen and <em>before</em> this snapshot data is taken, it won’t exist on the snapshot of that DB volume. Save it elsewhere (another volume) with a timestamp suffix or - if you keep it on the same volume - also upload it to S3 or someplace safe.</li>
 </ul>
-
-<p>With that in place, SQL Server 2022 at the remote site should be able to restore data.</p>
 
 <h2 id="data-masking">Data masking</h2>
 
@@ -429,17 +454,53 @@ For small databases and databases where many columns need to be masked, the bene
 
 <p>SolidFire snapshots are also used by Velero and other backup software for Kubernetes supports CSI.</p>
 
+<h2 id="solidfire-dba-tools">SolidFire DBA Tools</h2>
+
+<p>For fun &amp; giggles, I modified PureStorageDbaTools which has two hardware-related functions (crash-consistent snapshot and database refresh) and modified the first of those functions.</p>
+
+<p>Here’s an example of the first function with SolidFire:</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-29-simple-crash-consistent-snapshot.png" alt="" /></p>
+
+<p>But it would take some work to make it work for everyone.</p>
+
+<p>For an example, PureStorageDbaTools assumes data and logs are all on the same volume. That’s probably the case for many small databases, but to deal with other cases it would need to look up all volumes, and (on SolidFire) use Consistency Group Snapshots.</p>
+
+<p>The other part is if I want a crash-consistent snapshot, it’s easy enough to do “New-SFGroupSnapshot -VolumeID 200,201”, so to make that function work with databases on multiple volumes it’d need more work and still do the same thing as that one line (crash-consistent SolidFire snapshot command).</p>
+
+<p>The second function from PureStorageDbaTools performs volume copy and optional data masking on the clone, which would also need to be modified to support consistency groups in order to deal with multiple volumes. As-is, using single volume you can get the same with <code class="language-plaintext highlighter-rouge">Copy-SFVolume</code> - just bring the destination DB offline with detach, offline the volume, then Copy-SFVolume, online the clone volume and re-attach the DB.</p>
+
+<p>If you want you can use DbaTools to make both of them nicer. PureStorageDbaTools has one very nice feature and that is it’s able to figure out the volume from drive letter, so as a DBA you don’t need to know the SolidFire Volume ID, you just snapshot your DB instance and let the script figure out which volume to pass to <code class="language-plaintext highlighter-rouge">New-SFSnapshot</code>.</p>
+
+<p>I adjusted that for SolidFire and you can get the function in <a href="https://github.com/scaleoutsean/solidfire-windows/">solidfire-windows</a>.</p>
+
+<h2 id="security">Security</h2>
+
+<p>Be mindful of security when working with scripts that use SolidFire, OS and database credentials.</p>
+
+<ul>
+  <li>Guard the OS</li>
+  <li>Sign your scripts</li>
+  <li>Limit read/execute access to the specific OS account that executes the script</li>
+  <li>Don’t use the default account “admin” on SolidFire and remember to change passwords when/if you rotate them on SolidFire</li>
+  <li>Encrypt the SolidFire account’s password and load it from the script when it runs</li>
+</ul>
+
+<p>As mentioned elsewhere (see my SolidFire RBAC-related posts) you may also go out of your way to route SolidFire API calls through a reverse HTTPS proxy.</p>
+
+<p>Scheduled crash-consistent snapshots on SolidFire give you less flexibility, but more security as there are no scripts to run and no passwords to manage. But the storage admin may need to get involved to set it up and clone/restore volumes when they need to be copied or rolled back.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>T-SQL with hardware snapshots works great - they take less than 10 seconds, are robust and trivially easy to use.</p>
 
 <p>Other approaches may involve more work and more careful performance management. The ability to easily set and un-set a QoS policy specific to backup requirements is also extremely easy - it takes just two commands.</p>
 
-<p>Other use cases for Windows Server 2025 with SolidFire need more investigation. That includes Hyper-V and containers.</p>
+<p>Other use cases for Windows Server 2025 with SolidFire need more investigation. That includes containers, but I haven’t heard of anyone using Kubernetes on Windows with SolidFire.</p>
 
 <h2 id="appendix-a---filesystem-layout">Appendix A - filesystem layout</h2>
 
-<p>My test database was basically empty, but even so - notice how small wwi_snap.bkp is (&lt;40 KB) - it’s just metadata that tells SQL Server about snapshot data and should remain small regardless of database size.</p>
+<p>My test database was basically empty, but even so - notice how small wwi_snap.bkp is (&lt;40 KB) - it’s just metadata that tells SQL Server about what’s supposed to be in the snapshot (should it be cloned and used in a restore operation) and should remain small regardless of database size.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">    </span><span class="n">Directory:</span><span class="w"> </span><span class="nx">E:\data\wwi</span><span class="w">
 
@@ -655,13 +716,14 @@ PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">New-SFSnapshot</span><span class="w"> </span><span class="o">...</span><span class="w">
 </span><span class="nv">$q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Content</span><span class="w"> </span><span class="nx">sp_detach_vip.sql</span><span class="w">
 </span><span class="n">Invoke-Sqlcmd</span><span class="w"> </span><span class="nt">-Query</span><span class="w"> </span><span class="nv">$query</span><span class="o">...</span><span class="w">
-</span><span class="n">New-SFClone</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Copy-SFVolume</span><span class="w">
+</span><span class="n">New-SFClone</span><span class="w"> </span><span class="c"># or Copy-SFVolume</span><span class="w">
 </span><span class="o">...</span><span class="w">
 </span></code></pre></div></div>
 
 <p>I haven’t done this because it was just a one-off workflow, but if you do this daily or for more than one database, maybe you could.</p>
 
 <p>The SolidFire API is well behaving so from that side you’d need very little error handling.</p>
+
 
       </article>
     </div>
@@ -785,7 +847,7 @@ PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false
 
     
   </div><footer class= "footer">
-    <p>2024-04-12 19:27 </p>
+    <p>2024-04-15 22:40 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
