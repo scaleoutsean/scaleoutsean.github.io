@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-01T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two","dateModified":"2024-04-01T00:00:00+08:00","datePublished":"2024-04-01T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-sql-server-2022-solidfire-08-sql-database-wwi-paths.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html","description":"Notes on hardware-assisted T-SQL snapshots (SQL Server 2022, Windows Server 2025, NetApp SolidFire)","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    22 minute read
+    25 minute read
   
 
     </span>
@@ -148,11 +148,9 @@
 <ul>
   <li><a href="#solidfire-snapshots">SolidFire snapshots</a></li>
   <li><a href="#transact-sql-snapshot-backup-with-solidfire">Transact-SQL snapshot backup with SolidFire</a></li>
-  <li><a href="#restore">Restore</a>
-    <ul>
-      <li><a href="#dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</a></li>
-    </ul>
-  </li>
+  <li><a href="#snapshot-schedule-creation">Snapshot schedule creation</a></li>
+  <li><a href="#restore">Restore</a></li>
+  <li><a href="#dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</a></li>
   <li><a href="#data-masking">Data masking</a></li>
   <li><a href="#other-uses-of-solidfire-snapshots">Other uses of SolidFire snapshots</a></li>
   <li><a href="#solidfire-dba-tools">SolidFire DBA Tools</a></li>
@@ -202,7 +200,7 @@
 
 <p>Snapshot retention may be set and in PowerShell we’d use <code class="language-plaintext highlighter-rouge">-Retention "00:10:00"</code> to set the expiration to 10 minutes from the time of snapshot creation.</p>
 
-<p>While you can set expiration to a very low value, that wouldn’t make sense as database would have to fail and be restored within seconds for that snapshot to be useful. Remember, T-SQL “backup” is just data about (snapshot) data - if there’s no snapshot, there’s no way to get data back!</p>
+<p>While you can set expiration to a very low value, that wouldn’t make sense as database would have to fail and be restored within seconds for that snapshot to be useful. Remember, T-SQL “backup” based on storage snapshots is just SQL Server’s data about (snapshot) data - if there’s no snapshot, there’s no way to get data back!</p>
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-04-solidfire-group-snapshot-retention.png" alt="" /></p>
 
@@ -287,8 +285,7 @@
 
 <p>We could query DB log and compare against snapshot’s <code class="language-plaintext highlighter-rouge">CreateTime</code> to make sure snapshot is taken during suspend.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:05:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Example"</span><span class="w">   
-</span><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> 
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">C:\Users\Administrator</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFGroupSnapshot</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="p">,</span><span class="nx">134</span><span class="w"> </span><span class="nt">-Retention</span><span class="w"> </span><span class="s2">"00:05:00"</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Example"</span><span class="w">
 </span><span class="n">GroupSnapshotID</span><span class="w">         </span><span class="p">:</span><span class="w"> </span><span class="nx">67</span><span class="w">
 </span><span class="n">GroupSnapshotUUID</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">cab2e806-3ead-4cc1-b7af-e97d6d79216d</span><span class="w">
 </span><span class="n">Members</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="n">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">Example</span><span class="p">}</span><span class="w">
@@ -300,15 +297,15 @@
 </span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>We can also schedule these jobs independently (SQL Server stored procedure as one, SolidFire snapshot as another) - as long as NTP is managed properly and database can remain suspended 10-15 seconds, that should work fine.</p>
+<p>In <strong>practice</strong>, I had problems with DB instance exiting suspend mode on its own before T-SQL backup job executed which meant that backup always failed.</p>
 
-<p>In <strong>practice</strong> I had problems with DB instance exiting suspend mode on its own before T-SQL backup job executed which meant that backup always failed.</p>
+<p>My second idea was to schedule these jobs independently (SQL Server stored procedure as one, SolidFire snapshot as another). As long as NTP is managed and working properly and database can remain suspended 10-15 seconds, that should work fine.</p>
 
-<p>Eventually the only way I got this to work reliably was:</p>
+<p>Eventually that was the only way to get this to work reliably (from SQL Server 2022 side):</p>
 
 <ul>
   <li>stored procedure that enters suspend mode, sleeps 15 seconds, takes a backup, and leaves suspend mode</li>
-  <li>Scheduled SolidFire snapshots to occur at the time database is suspended</li>
+  <li>Scheduled or manual SolidFire snapshots that occur at the time database is suspended (i.e. they need to start 2-3 seconds after that stored procedure)</li>
 </ul>
 
 <p>We know a backup (command in SQL Server) will fail if database isn’t suspended, so I only had to make sure that SolidFire snapshot occurred during the time it was suspended.</p>
@@ -334,16 +331,18 @@
 
 <p>I added some PRINT and SELECT statements to the stored procedure during debugging to show suspended databases at that time and also compared the time of SolidFire snapshot.</p>
 
-<p>Here we can see that <code class="language-plaintext highlighter-rouge">vip</code> was suspended, but in the second query (after we resumed) it was not.</p>
+<p>Here we can see that <code class="language-plaintext highlighter-rouge">vip</code> was correct suspended, and in the second query (below red rectangle), after we resumed it was not.</p>
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-30-sp-backup-and-ps-snapshot.png" alt="" /></p>
 
-<p>In Messages tab we could see database was suspended and backed up, and that our SolidFire snapshot occurred during the time the DB was frozen.</p>
+<p>In Messages tab we could also see that database was suspended and successfully backed up, and that our SolidFire snapshot occurred during the time the DB was frozen.</p>
+
+<p>Steps show:</p>
 
 <ul>
-  <li>Execute stored procedure backupTSql</li>
-  <li>After 2-3 seconds take a SolidFire snapshot of the volume(s)</li>
-  <li>Observe if snapshot was taken during the wait (when DB was suspended)</li>
+  <li>Execute the stored procedure backupTSql located in <code class="language-plaintext highlighter-rouge">master</code></li>
+  <li>After 2-3 seconds take a SolidFire snapshot of the volume(s) - manually, from a script, or scheduled</li>
+  <li>Observe if snapshot was taken during the wait (while DB was suspended)</li>
 </ul>
 
 <p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-31-sp-backup-and-ps-snapshot-complete.png" alt="" /></p>
@@ -354,18 +353,67 @@
 
 <p>It is possible to run PowerShell scripts from SQL Server (so you’d only have to schedule the SP itself, and take a SolidFire snapshot as one of its steps), but that’s another can of worms.</p>
 
+<h2 id="snapshot-schedule-creation">Snapshot schedule creation</h2>
+
+<p>This is easy to do in the Web UI. We’ll schedule snapshots for Volume ID 135 - one every 10 minutes, retain 30 minutes.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">New-SFSchedule</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">135</span><span class="w"> </span><span class="nt">-ScheduleName</span><span class="w"> </span><span class="nx">db-vip</span><span class="w"> </span><span class="se">`
+</span><span class="w">    </span><span class="nt">-Frequency</span><span class="w"> </span><span class="nx">TimeInterval</span><span class="w"> </span><span class="nt">-TimeIntervalHours</span><span class="w"> </span><span class="nx">0</span><span class="w">      </span><span class="se">`
+</span><span class="w">    </span><span class="nt">-TimeIntervalMinutes</span><span class="w"> </span><span class="nx">10</span><span class="w"> </span><span class="nt">-SnapshotName</span><span class="w"> </span><span class="nx">win2025-g-db-vip-snap</span><span class="w"> </span><span class="se">`
+</span><span class="w">    </span><span class="nt">-RetentionDays</span><span class="w"> </span><span class="nx">0</span><span class="w"> </span><span class="nt">-RetentionHours</span><span class="w"> </span><span class="nx">0</span><span class="w"> </span><span class="nt">-RetentionMinutes</span><span class="w"> </span><span class="nx">30</span><span class="w">
+
+</span><span class="n">Frequency</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">SolidFire.Element.Api.TimeIntervalFrequency</span><span class="w">
+</span><span class="n">HasError</span><span class="w">           </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">LastRunStatus</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">Success</span><span class="w">
+</span><span class="n">LastRunTimeStarted</span><span class="w"> </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Name</span><span class="w">               </span><span class="p">:</span><span class="w"> </span><span class="nx">db-vip</span><span class="w">
+</span><span class="n">Paused</span><span class="w">             </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">Recurring</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">True</span><span class="w">
+</span><span class="n">RunNextInterval</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">ScheduleID</span><span class="w">         </span><span class="p">:</span><span class="w"> </span><span class="nx">3</span><span class="w">
+</span><span class="n">ScheduleInfo</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"Retention"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"00:30:00"</span><span class="p">,</span><span class="w"> </span><span class="s2">"SnapshotName"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"win2025-g-db-vip-snap"</span><span class="p">}</span><span class="w">
+</span><span class="n">StartingDate</span><span class="w">       </span><span class="p">:</span><span class="w"> 
+</span><span class="n">ToBeDeleted</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Group snapshots are created by simply specifying multiple volumes, e.g. <code class="language-plaintext highlighter-rouge">-VolumeID 134,135</code>.</p>
+
+<p>View your schedule with <code class="language-plaintext highlighter-rouge">Get-SFSchedule</code> and see/modify it in SolidFire Web UI under Data Protection &gt; Snapshots (or Group Snapshots).</p>
+
+<p>In the case you’re wondering, snapshots get scheduled like this. We would schedule our stored procedure to start three-four seconds earlier.</p>
+
+<p><img src="/assets/images/windows-server-2025-sql-server-2022-solidfire-33-scheduled-snapshots.png" alt="" /></p>
+
+<p>Notice how all snapshots are named the same. You’d identify them by UUID and as you <code class="language-plaintext highlighter-rouge">Get-SFSnapshot -Volume 135</code> you could sort-descending by Create Time and pick the first to get the latest. Maybe you can by Snapshot ID as well, but personally I prefer to know (and log) the time of creation in any case.</p>
+
+<p>If you want to replicate these to a remote site (probably not; for those I’d create a separate schedule), also consider these options:</p>
+
+<ul>
+  <li>Include in replication</li>
+  <li>FIFO (First In First Out)</li>
+</ul>
+
 <h2 id="restore">Restore</h2>
 
-<p>Please refer to Microsoft examples - there’s nothing SolidFire-specific about that part.</p>
+<p>Please refer to Microsoft examples - there’s little SolidFire-specific about that part.</p>
+
+<ul>
+  <li>T-SQL-assisted snapshots store only metadata, so snapshotted SolidFire volume must be cloned and database file copied either with T-SQL restore command, or manually</li>
+  <li>Hardware snapshots can be rolled back, but that rolls back all databases on the volume, so pay attention</li>
+</ul>
+
+<p>The only <em>SolidFire-specific</em> tip I can think of is that when you roll back a snapshot (to overwrite “original” volume) from the SolidFire UI, you will see a check-box which says “Save volumes’ current state as a group snapshot” (if you’re rolling back a group). Of course, you should stop SQL Server, offline the volume that’s being restored from a snapshot, but you <em>may want</em> to take a snapshot of the volume that’s being rolled back because if you (separately) clone that volume later, you can get some transaction logs from it, to roll the database forward. Or you may want to have a “last before rollback” snapshot of the entire volume, for whatever purposes.</p>
 
 <p>In Appendices below you can see some OS-related details and tips.</p>
 
-<h3 id="dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</h3>
+<h2 id="dr-for-sql-server-t-sql-hardware-assisted-snapshots">DR for SQL Server T-SQL hardware-assisted snapshots</h2>
 
 <ul>
   <li>SolidFire data/log volume(s) and snapshots replicated to another SolidFire cluster</li>
   <li>SQL Server backup “metadata” file uploaded to S3, or the volume replicated to another cluster; because SolidFire snapshot happens while DB is frozen and <em>before</em> this snapshot data is taken, it won’t exist on the snapshot of that DB volume. Save it elsewhere (another volume) with a timestamp suffix or - if you keep it on the same volume - also upload it to S3 or someplace safe.</li>
 </ul>
+
+<p>Remember that SQL Server can <a href="/2023/08/28/sql-server-polybase-s3.html#backup-use-case">backup to S3</a>. It may be less bandwidth-efficient but more operationally efficient to backup SQL Server to S3, especially if you have <a href="/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html">multi-site S3</a> which can take care of DR and is accessible from both sites without any scripting.</p>
 
 <h2 id="data-masking">Data masking</h2>
 
@@ -715,7 +763,7 @@ PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">New-SFSnapshot</span><span class="w"> </span><span class="o">...</span><span class="w">
 </span><span class="nv">$q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Content</span><span class="w"> </span><span class="nx">sp_detach_vip.sql</span><span class="w">
-</span><span class="n">Invoke-Sqlcmd</span><span class="w"> </span><span class="nt">-Query</span><span class="w"> </span><span class="nv">$query</span><span class="o">...</span><span class="w">
+</span><span class="n">Invoke-Sqlcmd</span><span class="w"> </span><span class="nt">-Query</span><span class="w"> </span><span class="nv">$q1</span><span class="o">...</span><span class="w">
 </span><span class="n">New-SFClone</span><span class="w"> </span><span class="c"># or Copy-SFVolume</span><span class="w">
 </span><span class="o">...</span><span class="w">
 </span></code></pre></div></div>
@@ -847,7 +895,7 @@ PS C:\&gt; Remove-SFVolume -VolumeID 141 -Confirm:</span><span class="bp">$false
 
     
   </div><footer class= "footer">
-    <p>2024-04-15 22:40 </p>
+    <p>2024-04-19 16:23 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
