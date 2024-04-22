@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-03-31T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
+{"headline":"Windows Server 2025 with NetApp SolidFire 12 iSCSI","dateModified":"2024-03-31T00:00:00+08:00","datePublished":"2024-03-31T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html"},"image":"https://scaleoutsean.github.io/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/03/31/windows-server-2025-with-solidfire-part-one.html","description":"Notes on using Windows Server 2025 with NetApp SolidFire iSCSI storage","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -297,16 +297,7 @@
 
 <p>Earlier we saw how the “second” SolidFire volume for Windows got discovered and accessed first, so one has to watch out for device slippage and mapping consistency. I don’t say “worry” but “watch out” because I haven’t heard that it’s a problem - we just need to be careful.</p>
 
-<p>So, how to map Windows volumes to SolidFire devices? Can we do it with <code class="language-plaintext highlighter-rouge">Get-Disk</code> and <code class="language-plaintext highlighter-rouge">Get-SFVolume</code>?</p>
-
-<ul>
-  <li>Point 1: Windows serial numbers look promising! But if we look carefully, they are <em>not</em> the same.</li>
-  <li>Point 2: maybe we should consider using disk volume labels that reflect a SolidFire volume’s property? But VolumeID may change (say, if we restore it from a backup), so perhaps we should configure Windows with the Volume Name (which is <em>not</em> done in this screenshot)</li>
-</ul>
-
-<p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-10-windows-to-solidfire-mapping-approaches.png" alt="" /></p>
-
-<p>The second approach seems better, so let’s do that.</p>
+<p>Consider using disk volume labels that reflect a SolidFire volume’s property. If VolumeID changes (say, if we restore it by cloning a snapshot to a different name) perhaps we should configure Windows with the Volume Name.</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-11-windows-filesystemlabel-solidfire-volume-name.png" alt="" /></p>
 
@@ -338,7 +329,7 @@
 
 <p>It’s just a <em>list</em> of drive letters, not a map of drive-to-disk pairing, so I wonder if device slippage can still happen if (say) device binding E or F disappear. We’d want fixed device names, but I haven’t found a way to do it with Windows Server 2025 Preview.</p>
 
-<p>Another confusing detail is that even iSCSI Report (in Configuration tab) is helpless.</p>
+<p>Another confusing detail is that even iSCSI Report (in Configuration tab) isn’t helpful.</p>
 
 <p><img src="/assets/images/windows-server-2025-hyper-v-solidfire-15-windows-iscsi-initiator-report-confusion.png" alt="" /></p>
 
@@ -403,6 +394,27 @@
 </span></code></pre></div></div>
 
 <p>It’s not cluster-aware (it doesn’t gather host names), but it could be modified to gather data from different hosts for a cluster-wide view.</p>
+
+<p>There’s a generic - but GPL 3.0 - script <a href="https://github.com/sstorholm/Windows-iSCSI-Enumerator">here</a>. It doesn’t directly tell you SolidFire volume names and IDs, but you can get them from TargetNodeAddress. Example output:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DiskNumber</span><span class="w">           </span><span class="p">:</span><span class="w"> </span><span class="nx">2</span><span class="w">
+</span><span class="n">DriveLetter</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">E</span><span class="w">
+</span><span class="n">TargetNodeAddress</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.sqldb.136</span><span class="w">
+</span><span class="n">TargetSideIdentifier</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">0100</span><span class="w">
+</span><span class="n">Size</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">5000658944</span><span class="w">
+
+</span><span class="n">DiskNumber</span><span class="w">           </span><span class="p">:</span><span class="w"> </span><span class="nx">3</span><span class="w">
+</span><span class="n">DriveLetter</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">F</span><span class="w">
+</span><span class="n">TargetNodeAddress</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.win1.134</span><span class="w">
+</span><span class="n">TargetSideIdentifier</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">0100</span><span class="w">
+</span><span class="n">Size</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">2000683008</span><span class="w">
+
+</span><span class="n">DiskNumber</span><span class="w">           </span><span class="p">:</span><span class="w"> </span><span class="nx">1</span><span class="w">
+</span><span class="n">DriveLetter</span><span class="w">          </span><span class="p">:</span><span class="w"> </span><span class="nx">G</span><span class="w">
+</span><span class="n">TargetNodeAddress</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">iqn.2010-01.com.solidfire:wcwb.win2.135</span><span class="w">
+</span><span class="n">TargetSideIdentifier</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">0100</span><span class="w">
+</span><span class="n">Size</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">20000538624</span><span class="w">
+</span></code></pre></div></div>
 
 <p>Another way to create a (Windows) cluster-wide or (SolidFire) storage-wide view would be to include server names and key SolidFire volumes on volume.Iqn, and send reports to Elasticsearch or other database. Then it would be easy to get a big picture from a custom table.</p>
 
@@ -494,6 +506,21 @@
     
         
           <div class = "related-posts">
+          <h5><a href="/2024/04/23/econfig-update.html">• New EConfig tools</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
           <h5><a href="/2024/04/11/netapp-eseries-containerized-beegfs-nfs-s3-all-in-one.html">• NetApp E-Series with containerized BeeGFS, NFS, S3</a></h5>
           </div>
           
@@ -543,21 +570,6 @@
           </div>
           
           
-        
-    
-      
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/04/01/windows-server-2025-with-solidfire-part-three-hyper-v.html">• Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Three</a></h5>
-          </div>
-          
-          
             
     
     </div>
@@ -566,7 +578,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-19 16:23 </p>
+    <p>2024-04-23 03:13 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
