@@ -129,7 +129,7 @@
 
   
   
-    2 minute read
+    3 minute read
   
 
     </span>
@@ -147,9 +147,53 @@
 
 <p>Split that in two YAML files as in Appendix A: one Graphite and another SolidFire Collector.</p>
 
-<p>Create a new Kubernetes namespace such as <code class="language-plaintext highlighter-rouge">sfc</code>, and then deploy the two YAML files. Graphite should use graphite-statsd:latest which is relevant to Grafana. SolidFire must have the right Graphite target (<code class="language-plaintext highlighter-rouge">graphite</code>, if it’s in the same namespace).</p>
+<p>Create a new Kubernetes namespace such as <code class="language-plaintext highlighter-rouge">sfc</code>, and then deploy the two YAML files. Graphite should use a recent version, which is relevant to Grafana. SolidFire must have the right Graphite target (<code class="language-plaintext highlighter-rouge">graphite</code>, if it’s in the same namespace).</p>
 
-<p>Check pod logs to make sure both are working, then deploy Grafana 11 Preview. I deployed Grafana in the same namespace, so that I don’t have to fool around with networking.</p>
+<p>Check pod logs to make sure both are working.</p>
+
+<p>graphite-statsd does some preparations and then it settles like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Running migrations:
+  Applying account.0001_initial... OK
+  Applying account.0002_auto_20240423_1019... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying dashboard.0001_initial... OK
+  Applying events.0001_initial... OK
+  Applying events.0002_auto_20240423_1019... OK
+  Applying sessions.0001_initial... OK
+  Applying tagging.0001_initial... OK
+  Applying tagging.0002_on_delete... OK
+  Applying tagging.0003_adapt_max_tag_length... OK
+  Applying tags.0001_initial... OK
+  Applying url_shortener.0001_initial... OK
+ok: run: nginx: <span class="o">(</span>pid 68<span class="o">)</span> 3s
+
+</code></pre></div></div>
+
+<p>SolidFire collector:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2024-04-23 11:03:18,000 https://192.168.1.30:443 <span class="s2">"POST /json-rpc/11.0 HTTP/1.1"</span> 200 None
+2024-04-23 11:03:18,012 - solidfire.Element - INFO - <span class="o">{</span><span class="s2">"method"</span>: <span class="s2">"ListISCSISessions"</span>, <span class="s2">"id"</span>: 3899, <span class="s2">"params"</span>: <span class="o">{}}</span>
+2024-04-23 11:03:18,012 <span class="o">{</span><span class="s2">"method"</span>: <span class="s2">"ListISCSISessions"</span>, <span class="s2">"id"</span>: 3899, <span class="s2">"params"</span>: <span class="o">{}}</span>
+2024-04-23 11:03:18,014 Starting new HTTPS connection <span class="o">(</span>1<span class="o">)</span>: 192.168.1.30:443
+2024-04-23 11:03:18,053 https://192.168.1.30:443 <span class="s2">"POST /json-rpc/11.0 HTTP/1.1"</span> 200 None
+
+</code></pre></div></div>
+
+<p>Then deploy <a href="https://grafana.com/grafana/download/11.0.0-preview?platform=docker&amp;edition=oss">Grafana 11 Preview</a>, in the same namespace or elsewhere on the network (but if you deploy it elsewhere, you must make sure your Graphite service is reachable). I used <code class="language-plaintext highlighter-rouge">grafana/grafana-oss:11.0.0-preview-ubuntu</code>, although there’s a lighter Alpine-based version.</p>
+
+<p>I deployed Grafana in the same namespace, so that I don’t have to fool around with networking.</p>
+
+<p>Relevant images after everything was done:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker images
+REPOSITORY                                TAG                     IMAGE ID       CREATED         SIZE
+grafana/grafana-oss                       11.0.0-preview-ubuntu   e935fc4be353   2 weeks ago     510MB
+graphiteapp/graphite-statsd               latest                  f358fa45fd82   9 months ago    851MB
+scaleoutsean/sfc                          v0.7                    b0e580d6788e   24 months ago   141MB
+</code></pre></div></div>
 
 <p>From that point on, it’s very easy.</p>
 
@@ -157,7 +201,7 @@
 
 <p><img src="/assets/images/sfc-grafana-11-k8s-01-graphite.png" alt="" /></p>
 
-<p>You can’t see it in this screenshot, but there’s a drop-down menu where you pick your Graphite version. <code class="language-plaintext highlighter-rouge">1.1.x</code> is the default and so you don’t have to do anything if you have graphite-statsd(:latest).</p>
+<p>You can’t see it in this screenshot, but there’s a drop-down menu where you pick your Graphite version. <code class="language-plaintext highlighter-rouge">1.1.x</code> is the default and so you don’t have to do anything if you have a recent version.</p>
 
 <p>After that I crated a new dashboard and panel and picked Graphite as my data source.</p>
 
@@ -169,14 +213,14 @@
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>SolidFire Collector still works fine with latest Graphite 1.11 and Grafana 11 (Preview).</p>
+<p>SolidFire Collector v0.7 still works fine with latest Graphite 1.11 and Grafana 11.</p>
 
-<p>Generally I’d recommend SolidFire Exporter (for Prometheus) as an easier metrics collector, but in the case you want to use SolidFire Collector, it’s still good.</p>
+<p>Generally I’d recommend SolidFire Exporter (for Prometheus) as an easier metrics collector, but in the case you want to use SolidFire Collector, it’s still good and easy to customize.</p>
 
 <h2 id="appendix-a---yaml-files">Appendix A - YAML files</h2>
 
 <ul>
-  <li>Graphite deployment and service:</li>
+  <li>Graphite v1.1.10-5 (packaged in <a href="https://github.com/graphite-project/docker-graphite-statsd/releases/tag/1.1.10-5">graphite-statsd</a>) deployment and service:</li>
 </ul>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
@@ -196,7 +240,8 @@
        <span class="na">app</span><span class="pi">:</span> <span class="s">graphite</span>
    <span class="na">spec</span><span class="pi">:</span>
      <span class="na">containers</span><span class="pi">:</span>
-     <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">graphiteapp/graphite-statsd</span>
+     <span class="c1"># https://hub.docker.com/r/graphiteapp/graphite-statsd/tags</span>
+     <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">graphiteapp/graphite-statsd:master</span>
        <span class="na">name</span><span class="pi">:</span> <span class="s">graphite</span>
        <span class="na">ports</span><span class="pi">:</span>
        <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="m">2003</span>
@@ -321,7 +366,7 @@
     
         
           <div class = "related-posts">
-          <h5><a href="/2024/04/23/econfig-update.html">• New EConfig version</a></h5>
+          <h5><a href="/2024/04/23/econfig-update.html">• EConfig v2</a></h5>
           </div>
           
           
@@ -393,7 +438,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-23 18:57 </p>
+    <p>2024-04-23 19:10 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
