@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11" />
+<meta property="og:description" content="Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-04-24T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>24 Apr 2024</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    9 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#initiating-and-monitoring-solidfire-backup-to-s3-jobs">Initiating and monitoring SolidFire backup-to-S3 jobs</a>
+    <ul>
+      <li><a href="#initiation">Initiation</a></li>
+      <li><a href="#status">Status</a></li>
+      <li><a href="#progress">Progress</a></li>
+      <li><a href="#completion-and-result">Completion and result</a></li>
+    </ul>
+  </li>
+  <li><a href="#sending-metrics-to-influxdb-v1">Sending metrics to InfluxDB v1</a></li>
+  <li><a href="#the-little-db-that-could">The little DB that could</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---gauge-visualization">Appendix A - Gauge visualization</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In previous post I wrote about Grafana 11 (Preview), with which good old SolidFire Collector and Graphite work like a charm.</p>
+
+<p>On that occasion I also tested InfluxDB v1 Data Source in Grafana 11 - that also worked great.</p>
+
+<p>Once I had SolidFire Collector, InfluxDB, and Grafana all running, I thought how I should also look at the next steps.</p>
+
+<p>Some two years ago I mentioned how moving SolidFire Collector to InfluxDB would be a good idea, because it’s more widely used (and I use it in E-Series Performance Analyzer as well).</p>
+
+<p>While I still don’t have enough time to do that for SolidFire Collector, there’s an easier target - my PowerShell <a href="https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts">script</a> for parallel SolidFire backup to S3. Why?</p>
+
+<ul>
+  <li>SolidFire Collector doesn’t do any related monitoring</li>
+  <li>Backups are long-running jobs and none of the scripts I wrote had integration with logging or monitoring (although I blogged about 3rd party integrations such as Velero and Kopia, which do have metrics, but I’m now talking about my own scripts)</li>
+</ul>
+
+<p>That’s an opportunity I wouldn’t miss!</p>
+
+<h2 id="initiating-and-monitoring-solidfire-backup-to-s3-jobs">Initiating and monitoring SolidFire backup-to-S3 jobs</h2>
+
+<p>I blogged about SolidFire’s backup-to-S3 in many posts (<a href="/2021/04/21/solidfire-backup-to-s3.html">example</a>), so I’ll just skip that and focus on task at hand.</p>
+
+<p>First, we need to create a backup job. Then we want to monitor it, and finally we want to know whether it was or wasn’t successful. Simple!</p>
+
+<p>But we need to stick to the maximum number of job slots per node, etc. which is why I wrote those scripts before.</p>
+
+<h3 id="initiation">Initiation</h3>
+
+<p>We’re after <a href="https://docs.netapp.com/us-en/element-software/api/reference_element_api_startbulkvolumeread.html">StartBulkVolumeRead</a>.</p>
+
+<p>Let’s backup volume ID 139.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w">
+  </span><span class="s2">"volumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"139"</span><span class="p">;</span><span class="w">
+  </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w">
+  </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w">
+  </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+    </span><span class="s2">"write"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+    </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w">
+    </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w">
+    </span><span class="s2">"bucket"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-backup"</span><span class="p">;</span><span class="w">
+    </span><span class="s2">"prefix"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"PROD-wcwb/pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="w">
+    </span><span class="s2">"endpoint"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w">
+    </span><span class="s2">"hostname"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"s3.com.org.ai"</span><span class="p">;</span><span class="w">
+     </span><span class="p">};</span><span class="w">
+  </span><span class="p">};</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>We get back an async job ID handle (176) and a key that appears in the output of other API calls that we’ll see later.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Name</span><span class="w">                           </span><span class="nx">Value</span><span class="w">
+</span><span class="o">----</span><span class="w">                           </span><span class="o">-----</span><span class="w">
+</span><span class="n">key</span><span class="w">                            </span><span class="nx">88d5819d96dfda7190b16a1426fcded0</span><span class="w">
+</span><span class="n">url</span><span class="w">                            </span><span class="nx">https://192.168.105.29:8443/</span><span class="w">
+</span><span class="n">asyncHandle</span><span class="w">                    </span><span class="nx">176</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="status">Status</h3>
+
+<p>Once a job has been submitted, its job handle can be queried for progress and outcome. We use <code class="language-plaintext highlighter-rouge">-KeepResult:$True</code> in the first query, so that the result lingers a bit longer.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"running"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"bvID"</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"resultType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BulkVolume"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"lastUpdateTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:44:32Z"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"createTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:44:32Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>We repeat this for every job every few minutes until a job is complete.</p>
+
+<p>All images here can be opened in a new tab, by the way.</p>
+
+<p>Submitted:</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-01-submit.png" alt="" /></p>
+
+<p>Completed:</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-02-completed.png" alt="" /></p>
+
+<h3 id="progress">Progress</h3>
+
+<p>As far as progress monitoring is concerned, use Get-SFBulkVolumeJob for that. Notice <code class="language-plaintext highlighter-rouge">bvID: 101</code> in the output above, by the way. We have that here, too.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"BulkVolumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"CreateTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:44:32Z"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"ElapsedTime"</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"native"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88d5819d96dfda7190b16a1426fcded0"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"PercentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"RemainingTime"</span><span class="p">:</span><span class="w"> </span><span class="mi">3960</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"SrcVolumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"running"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"SnapshotID"</span><span class="p">:</span><span class="w"> </span><span class="n">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"BulkVolumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"CreateTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:44:32Z"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"ElapsedTime"</span><span class="p">:</span><span class="w"> </span><span class="mi">152</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"native"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88d5819d96dfda7190b16a1426fcded0"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"PercentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"RemainingTime"</span><span class="p">:</span><span class="w"> </span><span class="mi">164</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"SrcVolumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"running"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"SnapshotID"</span><span class="p">:</span><span class="w"> </span><span class="n">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"Attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+ </span><span class="s2">"nextLba"</span><span class="p">:</span><span class="w"> </span><span class="mi">128000</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"firstPendingLba"</span><span class="p">:</span><span class="w"> </span><span class="mi">118784</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"startLba"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"blocksPerTransfer"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"pendingLbas"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[122880, 123904, 124928, 118784, 119808, 125952, 120832, 126976, 121856]"</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"nLbas"</span><span class="p">:</span><span class="w"> </span><span class="mi">244140</span><span class="p">,</span><span class="w">
+ </span><span class="s2">"percentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>So this BulkVolumeID 101 maps to bvID 101 from async job handle, but only two concurrent bulk volume jobs are supported on the volume in the first place, so it’s unlikely that you’d get confused in any case.</p>
+
+<p>Either way, cross-referencing is possible.</p>
+
+<p>Couple of important points here:</p>
+
+<ul>
+  <li>BulkVolumeID and Key reference our async job we submitted</li>
+  <li>RemainingTime can go up as well as down (beware if doing own math on current and previous value)</li>
+  <li>percentComplete never hits 100% (e.g. you may get 95% as the last reading before job exits; so “<code class="language-plaintext highlighter-rouge">($res -eq $null)</code>” tells you you’re done (job is done). Don’t expect you’ll see a 100% unless if you poll once a second which would be a terrible idea)</li>
+  <li>SnapshotID value will be non-zero if we specified one</li>
+</ul>
+
+<h3 id="completion-and-result">Completion and result</h3>
+
+<p>Eventually jobs complete and either succeed, or fail.</p>
+
+<p>Get-SFBulkVolumeJob does nothing to tell you about the job outcome.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="nx">PS</span><span class="err">&gt;</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Get-SFASyncResult is how we learn the result. Example of a successful job:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"complete"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"resultType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BulkVolume"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"lastUpdateTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:49:14Z"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bulk volume job succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"bvID"</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"createTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:44:32Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>Example of a failed job:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">173</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"complete"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"resultType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BulkVolume"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"lastUpdateTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:22:43Z"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"error"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xBulkVolumeScriptFailure"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bulk volume job failed"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">139</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"bvID"</span><span class="p">:</span><span class="w"> </span><span class="mi">98</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"createTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-04-24T06:20:57Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>My backup-to-S3 script v2 in Awesome SolidFire already handles this. We just need to send this to InfluxDB v1 and visualize it with Grafana 11.</p>
+
+<h2 id="sending-metrics-to-influxdb-v1">Sending metrics to InfluxDB v1</h2>
+
+<p>While you may send whatever you want, I’d start with two metrics: backup job and backup progress.</p>
+
+<p>I haven’t thought about it a lot, but I’d start with something like this.</p>
+
+<p>Backup job:</p>
+
+<ul>
+  <li>Tags: cluster name, volume name, volume ID, bulk volume job ID (maybe more, e.g. K8s PVC, namespace)</li>
+  <li>One filed: status (submitted, running, complete)</li>
+</ul>
+
+<p>Backup progress:</p>
+
+<ul>
+  <li>Tags: similar tags as for backup job</li>
+  <li>Two fields: percentDone, status</li>
+</ul>
+
+<p>We can simulate that by inserting data into InfluxDB.</p>
+
+<p>For backup jobs:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backup</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">volName</span><span class="o">=</span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="nx">volId</span><span class="o">=</span><span class="mi">139</span><span class="p">,</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">status</span><span class="o">=</span><span class="s2">"submitted"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backup</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">volName</span><span class="o">=</span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="nx">volId</span><span class="o">=</span><span class="mi">139</span><span class="p">,</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">status</span><span class="o">=</span><span class="s2">"running"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backup</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">volName</span><span class="o">=</span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="nx">volId</span><span class="o">=</span><span class="mi">139</span><span class="p">,</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">status</span><span class="o">=</span><span class="s2">"running"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backup</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">volName</span><span class="o">=</span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="nx">volId</span><span class="o">=</span><span class="mi">139</span><span class="p">,</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">;</span><span class="nx">result</span><span class="o">=</span><span class="s2">"ok"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">status</span><span class="o">=</span><span class="s2">"complete"</span><span class="p">,}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>How you want to visualize or show that is up to you. If you backup a volume every 24 hours, that query can be something as simple as a table that shows last 24 hours of records (which would show submitted, running, complete).</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png" alt="" /></p>
+
+<p>Grafana 11 can conditionally format table rows, so you can show a bunch of these on a page and format only those that failed (i.e. “result=”ng”) or create alerts for them.</p>
+
+<p>For backup progress:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backupprogress</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">srcVolId</span><span class="o">=</span><span class="mi">139</span><span class="p">;</span><span class="nx">snapId</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">pctDone</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">status</span><span class="o">=</span><span class="s2">"running"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backupprogress</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">srcVolId</span><span class="o">=</span><span class="mi">139</span><span class="p">;</span><span class="nx">snapId</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">pctDone</span><span class="o">=</span><span class="mi">50</span><span class="p">;</span><span class="nx">status</span><span class="o">=</span><span class="s2">"running"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Regarding percentComplete (which can never be 100%), nothing prevents us from creating our own data point with <code class="language-plaintext highlighter-rouge">pctDone=100; status="complete"</code> - if we’ve got <code class="language-plaintext highlighter-rouge">status="complete"</code> and <code class="language-plaintext highlighter-rouge">result="ok"</code> from async job, it’s fair to assume it’s 100% done and complete.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backupprogress</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">srcVolId</span><span class="o">=</span><span class="mi">139</span><span class="p">;</span><span class="nx">snapId</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">pctDone</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span><span class="nx">status</span><span class="o">=</span><span class="s2">"complete"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Again, if we backup once a day, we wouldn’t see a bunch of jobs for each volume - we’d query last 24 hours and maybe just show the results (failed = red, success = green) as we would presumably have a lot of volumes and watch them in a table, perhaps just focusing on “successful backups in last 24 hours = 0”.</p>
+
+<p>But, let’s say I have just one “pet” volume which I like to watch. In that case I may want to watch its progress over time, like this (where I see two backups). It starts at close to zero and moves up to close to 100%. As mentioned above, I insert the last value on my own once I know job completed successfully.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-04-influx-backupprogress-metric.png" alt="" /></p>
+
+<p>Point representing backup job progress is red at the start, orange and yellow as it goes to &gt; 50% it becomes green. That way I can visualize its progress while seeing how it’s progressing over time. For example, the more recent backup was smoother, while the one on the left looks like it almost got stuck at one point.</p>
+
+<p>You can also use other visualizations such as gauge (see Appendix), which may be neat for folks with 10-50 volumes. Maybe try heatmap for more?</p>
+
+<p>To submit data to InfluxDB v1 I used <a href="https://github.com/micelshima/InfluxDB-Powershell-Module/">this community module</a> (license: MIT), but you can use another (there are several) or simply write your own. Or use Python for all of the above.</p>
+
+<h2 id="the-little-db-that-could">The little DB that could</h2>
+
+<p>Under this very light load, InfluxDB v1 container barely used 100 MiB of RAM. View from the Kubernetes worker:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> PID USER      PR  NI    VIRT    RES  %CPU  %MEM     TIME+ S COMMAND  
+ 161292 root      20   0 2588.6m 230.8m   0.0   2.9   0:22.96 S pwsh                                                                            
+ 318616 472       20   0 1463.7m 148.8m   0.0   1.9   0:33.72 S grafana server <span class="nt">--homepath</span><span class="o">=</span>/usr/share/grafana <span class="nt">--config</span><span class="o">=</span>/etc/grafana/grafana.ini+ 
+  67599 root      20   0 1004.7m 104.5m   0.0   1.3   0:44.48 S influxd 
+
+</code></pre></div></div>
+
+<p>It’s embarrassing, but <a href="https://hub.docker.com/r/scaleoutsean/solidshell">solidshell</a> (PowerShell + SolidFire Core) container where I ran SolidFire and InfluxDB client is at the top and uses more than 2x more RAM.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>If you don’t have a bureaucratic IT environment with up to 100 volumes, maybe you use SolidFire’s backup-to-S3.</p>
+
+<p>While most packaged backup solutions - including Velero - have job monitoring built in, SolidFire’s backup-to-S3 needs some extra effort, but can be monitored just as effectively (in fact, even better, as currently Velero still has some bugs in this area).</p>
+
+<p>InfluxDB v1 is far from dead, it can runs in 128 MiB RAM, and it’s easier to use and work with than most other DBs. There are Python and PowerShell clients, which makes integration easy.</p>
+
+<p>Having backup job details in a cloud based VM makes it very easy to find backups in no time, which can be used in DR as well. You’ll be better off with a commercial solution, but if you don’t have one or want to take an independent backup to S3 once a week, this may be the right solution for you.</p>
+
+<h2 id="appendix-a---gauge-visualization">Appendix A - Gauge visualization</h2>
+
+<p>Simply switching to gauge will work, but it may be hard to identify the struggling volumes.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-05-influx-backupprogress-gauges-small.png" alt="" /></p>
+
+<p>With custom threshold formatting, it’s easier to spot which ones are far from being complete.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-06-influx-backupprogress-gauge-thresholds.png" alt="" /></p>
+
+<p>For some reason even though I had srcVolId in my data, I couldn’t show volume ID on the gauges (instead the best I could do was bvId tag), but I didn’t want to spend more time on this. The point is that with proper visualization it’s easy to monitor dozens of volumes this way.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-07-influx-backupprogress-gauge-100pct-complete.png" alt="" /></p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#analytics">analytics</a>
+       
+    
+  </span>
+</div>
+    
+
+    
+      <div class="related" data-pagefind-ignore>
+
+    <h4>Possibly related - use live search at the top to find other content</h4>
+    
+    
+    
+    
+    
+    
+    
+        
+        
+    
+        
+    
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/23/grafana-11-netapp-solidfire-sfc.html">• NetApp SolidFire Collector with Grafana 11</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/23/econfig-update.html">• EConfig v2</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/11/netapp-eseries-containerized-beegfs-nfs-s3-all-in-one.html">• NetApp E-Series with containerized BeeGFS, NFS, S3</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/09/solidbackup-velero-backup-non-k8s-volumes-netapp-solidfire-to-s3.html">• Backup NetApp SolidFire's non-Kubernetes volumes with Velero</a></h5>
+          </div>
+          
+          
+        
+    
+      
+    
+        
+        
+    
+        
+    
+        
+          <div class = "related-posts">
+          <h5><a href="/2024/04/02/storagegrid-networking.html">• NetApp StorageGRID networks</a></h5>
+          </div>
+          
+          
+            
+    
+    </div>
+
+    
+
+    
+  </div><footer class= "footer">
+    <p>2024-04-24 18:00 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>
