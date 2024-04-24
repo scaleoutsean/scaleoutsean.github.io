@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-24T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
+{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    9 minute read
+    11 minute read
   
 
     </span>
@@ -147,6 +147,7 @@
   </li>
   <li><a href="#sending-metrics-to-influxdb-v1">Sending metrics to InfluxDB v1</a></li>
   <li><a href="#the-little-db-that-could">The little DB that could</a></li>
+  <li><a href="#kubernetes-jobs">Kubernetes jobs</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---gauge-visualization">Appendix A - Gauge visualization</a></li>
 </ul>
@@ -172,11 +173,11 @@
 
 <h2 id="initiating-and-monitoring-solidfire-backup-to-s3-jobs">Initiating and monitoring SolidFire backup-to-S3 jobs</h2>
 
-<p>I blogged about SolidFire’s backup-to-S3 in many posts (<a href="/2021/04/21/solidfire-backup-to-s3.html">example</a>), so I’ll just skip that and focus on task at hand.</p>
+<p>I’ve blogged about SolidFire’s backup-to-S3 in many posts (<a href="/2021/04/21/solidfire-backup-to-s3.html">example</a>), so I’ll just skip that and focus on task at hand.</p>
 
-<p>First, we need to create a backup job. Then we want to monitor it, and finally we want to know whether it was or wasn’t successful. Simple!</p>
+<p>First, we need to create a backup job. Then we want to monitor it and finally we want to know whether it was or wasn’t successful. Simple!</p>
 
-<p>But we need to stick to the maximum number of job slots per node, etc. which is why I wrote those scripts before.</p>
+<p>But we need to stick to the maximum number of job slots per node, so it’s not like one giant “for each” loop, which is why I wrote those scripts.</p>
 
 <h3 id="initiation">Initiation</h3>
 
@@ -212,7 +213,9 @@
 
 <h3 id="status">Status</h3>
 
-<p>Once a job has been submitted, its job handle can be queried for progress and outcome. We use <code class="language-plaintext highlighter-rouge">-KeepResult:$True</code> in the first query, so that the result lingers a bit longer.</p>
+<p>Once a job has been submitted, its job handle can be queried for progress and outcome.</p>
+
+<p>We use “<code class="language-plaintext highlighter-rouge">-KeepResult:$True</code>” in the first query so that the API retains this result a longer (and won’t disappear before the job is over).</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -228,21 +231,17 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>We repeat this for every job every few minutes until a job is complete.</p>
+<p>We can run this in a loop every few minutes until the job is complete.</p>
 
-<p>All images here can be opened in a new tab, by the way.</p>
-
-<p>Submitted:</p>
+<p>During that time we’d see something like this in Running Tasks tab of the SolidFire UI:</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-01-submit.png" alt="" /></p>
 
-<p>Completed:</p>
-
-<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-02-completed.png" alt="" /></p>
+<p>All images here can be opened in a new tab, by the way.</p>
 
 <h3 id="progress">Progress</h3>
 
-<p>As far as progress monitoring is concerned, use Get-SFBulkVolumeJob for that. Notice <code class="language-plaintext highlighter-rouge">bvID: 101</code> in the output above, by the way. We have that here, too.</p>
+<p>As far as job progress monitoring is concerned, use Get-SFBulkVolumeJob for that. Notice “<code class="language-plaintext highlighter-rouge">bvID: 101</code>” in the output above, by the way. We have that here, too!</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -288,30 +287,38 @@
 
 </span></code></pre></div></div>
 
-<p>So this BulkVolumeID 101 maps to bvID 101 from async job handle, but only two concurrent bulk volume jobs are supported on the volume in the first place, so it’s unlikely that you’d get confused in any case.</p>
+<p>BulkVolumeID 101 maps to bvID 101 from async job handle but only two concurrent bulk volume jobs are supported on the volume in the first place, so it’s unlikely that you’d get confused in any case - you wouldn’t have more than one backup job at the same time.</p>
 
-<p>Either way, cross-referencing is possible.</p>
+<p>Either way, cross-referencing by using bvID is possible, so we know which is which.</p>
 
 <p>Couple of important points here:</p>
 
 <ul>
-  <li>BulkVolumeID and Key reference our async job we submitted</li>
-  <li>RemainingTime can go up as well as down (beware if doing own math on current and previous value)</li>
-  <li>percentComplete never hits 100% (e.g. you may get 95% as the last reading before job exits; so “<code class="language-plaintext highlighter-rouge">($res -eq $null)</code>” tells you you’re done (job is done). Don’t expect you’ll see a 100% unless if you poll once a second which would be a terrible idea)</li>
-  <li>SnapshotID value will be non-zero if we specified one</li>
+  <li>BulkVolumeID and Key reference async job we submitted</li>
+  <li>RemainingTime can go up as well as down (beware if doing own math on current and previous values)</li>
+  <li>percentComplete never hits 100%. For example, you may get 95% as the last reading before job exits; so “<code class="language-plaintext highlighter-rouge">($res -eq $null)</code>” tells you you’re done (job is done). Don’t expect you’ll see a 100% here!</li>
+  <li>SnapshotID value will be non-zero if we specify one. In the script I mentioned I have a switch that can automatically use the latest snapshot for the volume, if available.</li>
 </ul>
+
+<p>One reminder: we don’t necessarily have to obsess over job progress: we can simply reference that bulk job ID (bv101) and check for its logs in SolidFire Event Log later to see if it succeeded or not!</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-02-completed.png" alt="" /></p>
+
+<p>The reason we <em>can</em> obsess over it is that it’s inexpensive to get and send those metrics to InfluxDB. But it’s not mandatory for knowing if a job succeeded.</p>
+
+<p>I suppose users with smaller volumes wouldn’t care about job progress, but users with large (10TB, for example) volumes would.</p>
 
 <h3 id="completion-and-result">Completion and result</h3>
 
-<p>Eventually jobs complete and either succeed, or fail.</p>
+<p>Eventually jobs complete and their outcome is either success or error.</p>
 
-<p>Get-SFBulkVolumeJob does nothing to tell you about the job outcome.</p>
+<p>Get-SFBulkVolumeJob tells us nothing about the job outcome. Once a job is finished, you get nothing.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="nx">PS</span><span class="err">&gt;</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Get-SFASyncResult is how we learn the result. Example of a successful job:</p>
+<p>Get-SFASyncResult is how we learn of the outcome. Example of a successful job (notice it references async job handle, not volume ID):</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -346,29 +353,29 @@
 
 </span></code></pre></div></div>
 
-<p>My backup-to-S3 script v2 in Awesome SolidFire already handles this. We just need to send this to InfluxDB v1 and visualize it with Grafana 11.</p>
+<p>My backup-to-S3 script v2 in Awesome SolidFire already checks these things. We just need to send that output to InfluxDB v1 and then visualize it with Grafana 11.</p>
 
 <h2 id="sending-metrics-to-influxdb-v1">Sending metrics to InfluxDB v1</h2>
 
-<p>While you may send whatever you want, I’d start with two metrics: backup job and backup progress.</p>
+<p>While you may send to InfluxDB whatever you want, I’d start with just two metrics: backup job and backup progress.</p>
 
-<p>I haven’t thought about it a lot, but I’d start with something like this.</p>
+<p>I haven’t thought about it a lot, but I’d start with something simple.</p>
 
 <p>Backup job:</p>
 
 <ul>
   <li>Tags: cluster name, volume name, volume ID, bulk volume job ID (maybe more, e.g. K8s PVC, namespace)</li>
-  <li>One filed: status (submitted, running, complete)</li>
+  <li>One data field: status (one of: submitted, running, complete)</li>
 </ul>
 
 <p>Backup progress:</p>
 
 <ul>
   <li>Tags: similar tags as for backup job</li>
-  <li>Two fields: percentDone, status</li>
+  <li>Two data fields: percentDone (int), status</li>
 </ul>
 
-<p>We can simulate that by inserting data into InfluxDB.</p>
+<p>We can simulate that by manually inserting data to InfluxDB.</p>
 
 <p>For backup jobs:</p>
 
@@ -379,11 +386,11 @@
 
 </span></code></pre></div></div>
 
-<p>How you want to visualize or show that is up to you. If you backup a volume every 24 hours, that query can be something as simple as a table that shows last 24 hours of records (which would show submitted, running, complete).</p>
+<p>How you want to visualize or show that in Grafana is up to you. If we backup a volume every 24 hours, that query can be something as simple as a table that shows last 24 hours of records (which would show submitted, running, complete) for all volumes we care about.</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png" alt="" /></p>
 
-<p>Grafana 11 can conditionally format table rows, so you can show a bunch of these on a page and format only those that failed (i.e. “result=”ng”) or create alerts for them.</p>
+<p>Grafana 11 can conditionally format table rows, so we can show a bunch of these on a page and emphasize only those that failed (i.e. “result=”ng”) or create Grafana alerts for that.</p>
 
 <p>For backup progress:</p>
 
@@ -391,26 +398,30 @@
 </span><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backupprogress</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">srcVolId</span><span class="o">=</span><span class="mi">139</span><span class="p">;</span><span class="nx">snapId</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">pctDone</span><span class="o">=</span><span class="mi">50</span><span class="p">;</span><span class="nx">status</span><span class="o">=</span><span class="s2">"running"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Regarding percentComplete (which can never be 100%), nothing prevents us from creating our own data point with <code class="language-plaintext highlighter-rouge">pctDone=100; status="complete"</code> - if we’ve got <code class="language-plaintext highlighter-rouge">status="complete"</code> and <code class="language-plaintext highlighter-rouge">result="ok"</code> from async job, it’s fair to assume it’s 100% done and complete.</p>
+<p>Regarding percentComplete (which is unlikely to ever be 100%) - nothing prevents us from creating our own final data point with “<code class="language-plaintext highlighter-rouge">pctDone=100; status="complete"</code>” - if we’ve got <code class="language-plaintext highlighter-rouge">status="complete"</code> and <code class="language-plaintext highlighter-rouge">result="ok"</code> from the async job for the same bvId, it’s fair to assume its progress is 100%.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Write-Influx</span><span class="w"> </span><span class="nt">-Measure</span><span class="w"> </span><span class="nx">backupprogress</span><span class="w"> </span><span class="nt">-Tags</span><span class="w"> </span><span class="p">@{</span><span class="nx">cluster</span><span class="o">=</span><span class="s2">"PROD"</span><span class="p">;</span><span class="nx">srcVolId</span><span class="o">=</span><span class="mi">139</span><span class="p">;</span><span class="nx">snapId</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">bvId</span><span class="o">=</span><span class="mi">101</span><span class="p">}</span><span class="w"> </span><span class="nt">-Metrics</span><span class="w"> </span><span class="p">@{</span><span class="nx">pctDone</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span><span class="nx">status</span><span class="o">=</span><span class="s2">"complete"</span><span class="p">}</span><span class="w"> </span><span class="nt">-Database</span><span class="w"> </span><span class="nx">example</span><span class="w"> </span><span class="nt">-Server</span><span class="w"> </span><span class="nx">http://192.168.50.184:32290</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Again, if we backup once a day, we wouldn’t see a bunch of jobs for each volume - we’d query last 24 hours and maybe just show the results (failed = red, success = green) as we would presumably have a lot of volumes and watch them in a table, perhaps just focusing on “successful backups in last 24 hours = 0”.</p>
+<p>Again, if we backup to S3 once a day, we wouldn’t see a bunch of jobs for each volume. We’d query last 24 hours and maybe just show results (failed = red, success = green), as we would presumably have a lot of volumes and watch them in a table potentially focusing just on those with “successful backups in last 24 hours = 0”.</p>
 
-<p>But, let’s say I have just one “pet” volume which I like to watch. In that case I may want to watch its progress over time, like this (where I see two backups). It starts at close to zero and moves up to close to 100%. As mentioned above, I insert the last value on my own once I know job completed successfully.</p>
+<p>But, let’s say we have one “pet” volume which we like to watch because it often fails to backup to the public cloud.</p>
+
+<p>In that case we may want to watch its progress over time, like this (where we see two recent backups). It starts at close to zero percent complete and moves up to 100% (I insert the last value on my own once I know job completed successfully, as explained above).</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-04-influx-backupprogress-metric.png" alt="" /></p>
 
-<p>Point representing backup job progress is red at the start, orange and yellow as it goes to &gt; 50% it becomes green. That way I can visualize its progress while seeing how it’s progressing over time. For example, the more recent backup was smoother, while the one on the left looks like it almost got stuck at one point.</p>
+<p>Data points representing backup job progress are red at the beginning, change to orange and yellow as they go up, and become green at over 50%. That way I can visualize progress of jobs from different volumes.</p>
 
-<p>You can also use other visualizations such as gauge (see Appendix), which may be neat for folks with 10-50 volumes. Maybe try heatmap for more?</p>
+<p>If query shows data points from multiple backups over time, I can see the newer backup was smoother while the one on the left looks like it almost got stuck at one point.</p>
+
+<p>We can also use other visualization types such as gauge (see Appendix) which may be neat for folks with 10-50 volumes. Maybe try heatmap for more?</p>
 
 <p>To submit data to InfluxDB v1 I used <a href="https://github.com/micelshima/InfluxDB-Powershell-Module/">this community module</a> (license: MIT), but you can use another (there are several) or simply write your own. Or use Python for all of the above.</p>
 
 <h2 id="the-little-db-that-could">The little DB that could</h2>
 
-<p>Under this very light load, InfluxDB v1 container barely used 100 MiB of RAM. View from the Kubernetes worker:</p>
+<p>Under this very light load, my InfluxDB v1 container used 105 MiB of RAM. View from my Kubernetes worker:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> PID USER      PR  NI    VIRT    RES  %CPU  %MEM     TIME+ S COMMAND  
  161292 root      20   0 2588.6m 230.8m   0.0   2.9   0:22.96 S pwsh                                                                            
@@ -419,7 +430,19 @@
 
 </code></pre></div></div>
 
-<p>It’s embarrassing, but <a href="https://hub.docker.com/r/scaleoutsean/solidshell">solidshell</a> (PowerShell + SolidFire Core) container where I ran SolidFire and InfluxDB client is at the top and uses more than 2x more RAM.</p>
+<p><a href="https://hub.docker.com/r/scaleoutsean/solidshell">solidshell</a> (PowerShell + SolidFire Core) container where I ran SolidFire and InfluxDB client is at the top and uses more than 2x more RAM.</p>
+
+<h2 id="kubernetes-jobs">Kubernetes jobs</h2>
+
+<p>solidshell reminds me that my jobs were dispatched from a Kubernetes pod.</p>
+
+<p>I put it in the same namespace as InfluxDB.</p>
+
+<p>You don’t have to backup Kubernetes volumes (PVs) - any volumes can be backed up as backup is done on SolidFire which knows nothing about volume contents - but I mention this because you don’t have to stand up a VM just to run PowerShell.</p>
+
+<p>Also, securing your SolidFire administrator credentials may be easier on Kubernetes than in a VM.</p>
+
+<p>But if you want to run that script from some Windows workstation, that will work as well, as long as you can reach both SolidFire MVIP and InfluxDB API endpoint.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -430,6 +453,8 @@
 <p>InfluxDB v1 is far from dead, it can runs in 128 MiB RAM, and it’s easier to use and work with than most other DBs. There are Python and PowerShell clients, which makes integration easy.</p>
 
 <p>Having backup job details in a cloud based VM makes it very easy to find backups in no time, which can be used in DR as well. You’ll be better off with a commercial solution, but if you don’t have one or want to take an independent backup to S3 once a week, this may be the right solution for you.</p>
+
+<p>If you start with that script I wrote, logging to InfluxDB may take just 1 hour of work.</p>
 
 <h2 id="appendix-a---gauge-visualization">Appendix A - Gauge visualization</h2>
 
@@ -563,7 +588,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-24 18:00 </p>
+    <p>2024-04-24 20:05 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
