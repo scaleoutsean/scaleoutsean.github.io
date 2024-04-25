@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-24T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
+{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    11 minute read
+    13 minute read
   
 
     </span>
@@ -150,6 +150,7 @@
   <li><a href="#kubernetes-jobs">Kubernetes jobs</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---gauge-visualization">Appendix A - Gauge visualization</a></li>
+  <li><a href="#appendix-b---grafana-alerts">Appendix B - Grafana alerts</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -417,7 +418,7 @@
 
 <p>We can also use other visualization types such as gauge (see Appendix) which may be neat for folks with 10-50 volumes. Maybe try heatmap for more?</p>
 
-<p>To submit data to InfluxDB v1 I used <a href="https://github.com/micelshima/InfluxDB-Powershell-Module/">this community module</a> (license: MIT), but you can use another (there are several) or simply write your own. Or use Python for all of the above.</p>
+<p>To submit data to InfluxDB v1 I used <a href="https://github.com/markwragg/PowerShell-Influx">this community module</a> (GPL <strong>3.0</strong> alert!), but you can use another (there are several; <a href="https://github.com/micelshima/InfluxDB-Powershell-Module/blob/master/InfluxDB-Powershell-Module/InfluxDB-Powershell-Module.psm1">this one</a> uses MIT license) or simply write your own. Or use Python for all of the above.</p>
 
 <h2 id="the-little-db-that-could">The little DB that could</h2>
 
@@ -454,7 +455,7 @@
 
 <p>Having backup job details in a cloud based VM makes it very easy to find backups in no time, which can be used in DR as well. You’ll be better off with a commercial solution, but if you don’t have one or want to take an independent backup to S3 once a week, this may be the right solution for you.</p>
 
-<p>If you start with that script I wrote, logging to InfluxDB may take just 1 hour of work.</p>
+<p>If you start with that script I wrote, logging to InfluxDB may take just 2-3 hours of work.</p>
 
 <h2 id="appendix-a---gauge-visualization">Appendix A - Gauge visualization</h2>
 
@@ -469,6 +470,64 @@
 <p>For some reason even though I had srcVolId in my data, I couldn’t show volume ID on the gauges (instead the best I could do was bvId tag), but I didn’t want to spend more time on this. The point is that with proper visualization it’s easy to monitor dozens of volumes this way.</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-07-influx-backupprogress-gauge-100pct-complete.png" alt="" /></p>
+
+<h2 id="appendix-b---grafana-alerts">Appendix B - Grafana alerts</h2>
+
+<p>After some fooling around I created several versions of panels that show failed jobs.</p>
+
+<ul>
+  <li>Example Grafana payload: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,bvId=4444,snapId=4444 volId=44,volName="bigvol2",status="error"'</code></li>
+  <li>Example queries:
+    <ul>
+      <li>(top) <code class="language-plaintext highlighter-rouge">SELECT "status" FROM "backup" WHERE ("cluster"::tag = 'PROD') AND $timeFilter</code></li>
+      <li>(bottom) <code class="language-plaintext highlighter-rouge">SELECT "volId" FROM "backup" WHERE ("cluster"::tag = 'PROD' AND "status"::field = 'error') AND $timeFilter GROUP BY "bvId"::tag ORDER BY time DESC</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>One thing I realized Grafana is very complex to use for multi-column queries (one has to use Transformations, etc - it’s a nightmare). Table at the bottom was the easiest way to create alerts because it simply looks for errors and nothing else.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-09-backup-errors.png" alt="" /></p>
+
+<p>Then we can create alert (email, Slack, etc.), such as “when number of errors in the last 24 hours is &gt; 0”.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-08-grafana-alert-green.png" alt="" /></p>
+
+<p>When such condition occurs alert enters Pending state (not really necessary for backups unless you set Pending Timeout to say 2 hours and have retry logic in the backup job script).</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-10-grafana-alert-pending.png" alt="" /></p>
+
+<p>After Pending timeout expires, alert starts firing at which point it can be acted upon, silenced, etc.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-11-grafana-alert-firing.png" alt="" /></p>
+
+<p>I’d be careful with automated rescheduling of backup-to-S3 jobs because each could create TBs of extra network traffic.</p>
+
+<p>My preferred way of dealing with such alerts would be a way to manually kick off individual backups that should be retried or even do nothing if you backup daily and can wait until the same jobs runs the next day.</p>
+
+<p>Depending on one’s objective, it may be easier to just combine tags into one and eliminate Grafana Transformations. For example, something like this:</p>
+
+<ul>
+  <li>Before: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,bvId=222,snapId=2222 volId=22,volName="bigvol2",status="error"'</code></li>
+  <li>After: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,jobId=v22-s2222-b222 volId=22,status="error"'</code> (v=VolumeID, s=SnapshotID, b=bvID)</li>
+</ul>
+
+<p>Then:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"volId"</span> <span class="k">FROM</span> <span class="nv">"backup"</span> 
+<span class="k">WHERE</span> <span class="p">(</span><span class="nv">"cluster"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'PROD'</span> <span class="k">AND</span> <span class="nv">"status"</span><span class="p">::</span><span class="n">field</span> <span class="o">=</span> <span class="s1">'error'</span><span class="p">)</span> 
+<span class="k">AND</span> <span class="err">$</span><span class="n">timeFilter</span> 
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"jobId"</span><span class="p">::</span><span class="n">tag</span> 
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">time</span> <span class="k">DESC</span>
+</code></pre></div></div>
+
+<p>With that one query we’d see everything we need to know in the column jobId: <code class="language-plaintext highlighter-rouge">v22-s2222-b222</code>.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-12-grafana-combined-tags.png" alt="" /></p>
+
+<p>Combining tags may be convenient, but “by tag” search then becomes impossible without Transformations, so it’s just a tradeoff.</p>
+
+<p>It’s <em>much easier</em> to send logs and jobs to Elasticsearch, and hook Grafana into Elasticsearch instead so that Grafana only does visualization and alerting, if you don’t want to use <a href="https://www.elastic.co/guide/en/kibana/current/alerting-getting-started.html">Kibana</a> for that. <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html#get-events-and-faults-completely-from-api-logs">Here</a> you can see how we can forward SolidFire events to Elasticsearch and get structured logs, backup job reporting, and alerts all done in minutes. If we choose that route, there’s very little we need to send to InfluxDB using our backup script.</p>
 
       </article>
     </div>
@@ -588,7 +647,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-24 20:05 </p>
+    <p>2024-04-25 13:54 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
