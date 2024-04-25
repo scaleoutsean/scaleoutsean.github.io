@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-04-24T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
+{"headline":"Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana","dateModified":"2024-04-24T00:00:00+08:00","datePublished":"2024-04-24T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html","description":"Send NetApp SolidFire backup-to-S3 metrics and logs to InfluxDB and visualize in Grafana 11","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    13 minute read
+    14 minute read
   
 
     </span>
@@ -313,13 +313,13 @@
 
 <p>Eventually jobs complete and their outcome is either success or error.</p>
 
-<p>Get-SFBulkVolumeJob tells us nothing about the job outcome. Once a job is finished, you get nothing.</p>
+<p>Get-SFBulkVolumeJob tells us nothing about the job outcome. Once a job is finished, you get nothing back.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="nx">PS</span><span class="err">&gt;</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Get-SFASyncResult is how we learn of the outcome. Example of a successful job (notice it references async job handle, not volume ID):</p>
+<p>Get-SFASyncResult is how we learn of the outcome. Example of a successful job (notice it references an async job handle, not a volume ID):</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -336,7 +336,7 @@
 
 </span></code></pre></div></div>
 
-<p>Example of a failed job:</p>
+<p>An example of a failed job:</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">173</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -479,8 +479,8 @@
   <li>Example Grafana payload: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,bvId=4444,snapId=4444 volId=44,volName="bigvol2",status="error"'</code></li>
   <li>Example queries:
     <ul>
-      <li>(top) <code class="language-plaintext highlighter-rouge">SELECT "status" FROM "backup" WHERE ("cluster"::tag = 'PROD') AND $timeFilter</code></li>
-      <li>(bottom) <code class="language-plaintext highlighter-rouge">SELECT "volId" FROM "backup" WHERE ("cluster"::tag = 'PROD' AND "status"::field = 'error') AND $timeFilter GROUP BY "bvId"::tag ORDER BY time DESC</code></li>
+      <li>(top panel in screenshot below) <code class="language-plaintext highlighter-rouge">SELECT "status" FROM "backup" WHERE ("cluster"::tag = 'PROD') AND $timeFilter</code></li>
+      <li>(bottom panel) <code class="language-plaintext highlighter-rouge">SELECT "volId" FROM "backup" WHERE ("cluster"::tag = 'PROD' AND "status"::field = 'error') AND $timeFilter GROUP BY "bvId"::tag ORDER BY time DESC</code></li>
     </ul>
   </li>
 </ul>
@@ -493,7 +493,7 @@
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-08-grafana-alert-green.png" alt="" /></p>
 
-<p>When such condition occurs alert enters Pending state (not really necessary for backups unless you set Pending Timeout to say 2 hours and have retry logic in the backup job script).</p>
+<p>When such a condition occurs, that alert enters Pending state (not really necessary for backups unless you set Pending Timeout to say 2 hours and have retry logic in the backup job script).</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-10-grafana-alert-pending.png" alt="" /></p>
 
@@ -505,12 +505,14 @@
 
 <p>My preferred way of dealing with such alerts would be a way to manually kick off individual backups that should be retried or even do nothing if you backup daily and can wait until the same jobs runs the next day.</p>
 
-<p>Depending on one’s objective, it may be easier to just combine tags into one and eliminate Grafana Transformations. For example, something like this:</p>
+<p>Depending on one’s objective, it may be easier to just combine several tags into one and eliminate Grafana Transformations. For example, something like this:</p>
 
 <ul>
-  <li>Before: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,bvId=222,snapId=2222 volId=22,volName="bigvol2",status="error"'</code></li>
-  <li>After: <code class="language-plaintext highlighter-rouge">'backup,cluster=PROD,jobId=v22-s2222-b222 volId=22,status="error"'</code> (v=VolumeID, s=SnapshotID, b=bvID)</li>
+  <li>Before: <code class="language-plaintext highlighter-rouge">'backup, cluster=PROD,bvId=222,snapId=2222 volId=22, volName="bigvol2",status="error"'</code></li>
+  <li>After: <code class="language-plaintext highlighter-rouge">'backup, cluster=PROD,jobId=v22-s2222-b222 volId=22,status="error"'</code> (v=VolumeID, s=SnapshotID, b=bvID)</li>
 </ul>
+
+<p>This isn’t a best practice in InfluxDB world and while it bloats indexes, it works. In this particular case we’re recording backup jobs, so even if you add 1000 entries a day, that’s hardly going to matter. It’s not like we’re running a massive IoT monitoring site.</p>
 
 <p>Then:</p>
 
@@ -527,7 +529,38 @@
 
 <p>Combining tags may be convenient, but “by tag” search then becomes impossible without Transformations, so it’s just a tradeoff.</p>
 
-<p>It’s <em>much easier</em> to send logs and jobs to Elasticsearch, and hook Grafana into Elasticsearch instead so that Grafana only does visualization and alerting, if you don’t want to use <a href="https://www.elastic.co/guide/en/kibana/current/alerting-getting-started.html">Kibana</a> for that. <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html#get-events-and-faults-completely-from-api-logs">Here</a> you can see how we can forward SolidFire events to Elasticsearch and get structured logs, backup job reporting, and alerts all done in minutes. If we choose that route, there’s very little we need to send to InfluxDB using our backup script.</p>
+<p>I also tried another approach, with backup status as 0 (started or running) or 1 (failed):</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">'backup, volId=11,cluster=PROD stage=complete status=1'</code></li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"status"</span> <span class="k">FROM</span> <span class="nv">"backup"</span> 
+<span class="k">WHERE</span> <span class="p">(</span><span class="nv">"cluster"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'PROD'</span><span class="p">)</span> <span class="k">AND</span> <span class="err">$</span><span class="n">timeFilter</span> 
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"volId"</span><span class="p">::</span><span class="n">tag</span> 
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">time</span> <span class="k">DESC</span>
+</code></pre></div></div>
+
+<p>Something like that may make it easier to watch a bunch of volumes and jobs at the same time.</p>
+
+<p>After trial and error, I settled for this approach regarding status values:</p>
+
+<ul>
+  <li>job running = 1</li>
+  <li>success = 3</li>
+  <li>fail = 4</li>
+</ul>
+
+<p>Then in Grafana I just map these values to colors, with 1 mapped to “transparent” (no color).</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-13-grafana-backup-binary-field-values.png" alt="" /></p>
+
+<p>Now I can see when jobs are running, when they’re not, which succeeded and which failed.</p>
+
+<p>If I zoom out timeline-wise or zoom in Volume ID-wise (drop-down selector), I can recognize problematic patterns and implement corrective action, such as adding QoS exceptions to large volumes or scheduling fewer backup jobs in parallel.</p>
+
+<p>I’ll probably use something like this if I add “send-to-InfluxDB” to that backup script of mine.</p>
+
+<p>To be honest, it seems <em>much easier</em> to send logs and jobs to Elasticsearch and hook Grafana into Elasticsearch instead so that Grafana only does visualization and alerting, if you don’t want to use <a href="https://www.elastic.co/guide/en/kibana/current/alerting-getting-started.html">Kibana</a> for that. <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html#get-events-and-faults-completely-from-api-logs">Here</a> you can see how we can forward SolidFire events to Elasticsearch and get structured logs, backup job reporting, and alerts all done in minutes. If we choose that route, there’s very little we need to send to InfluxDB using our backup script.</p>
 
       </article>
     </div>
@@ -647,7 +680,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-25 20:14 </p>
+    <p>2024-04-26 03:23 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
