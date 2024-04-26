@@ -129,7 +129,7 @@
 
   
   
-    14 minute read
+    15 minute read
   
 
     </span>
@@ -155,7 +155,7 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>In previous post I wrote about Grafana 11 (Preview), with which good old SolidFire Collector and Graphite work like a charm.</p>
+<p>In the previous post I wrote about Grafana 11 (Preview), with which good old SolidFire Collector and Graphite work like a charm.</p>
 
 <p>On that occasion I also tested InfluxDB v1 Data Source in Grafana 11 - that also worked great.</p>
 
@@ -163,14 +163,14 @@
 
 <p>Some two years ago I mentioned how moving SolidFire Collector to InfluxDB would be a good idea, because it’s more widely used (and I use it in E-Series Performance Analyzer as well).</p>
 
-<p>While I still don’t have enough time to do that for SolidFire Collector, there’s an easier target - my PowerShell <a href="https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts">script</a> for parallel SolidFire backup to S3. Why?</p>
+<p>While I still don’t have enough time to embark on SolidFire Collector integration with InfluxDB, there’s an easier target - my PowerShell <a href="https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts">script</a> for parallel SolidFire backup to S3. Why?</p>
 
 <ul>
-  <li>SolidFire Collector doesn’t do any related monitoring</li>
-  <li>Backups are long-running jobs and none of the scripts I wrote had integration with logging or monitoring (although I blogged about 3rd party integrations such as Velero and Kopia, which do have metrics, but I’m now talking about my own scripts)</li>
+  <li>SolidFire Collector doesn’t do any monitoring related to backup to S3</li>
+  <li>Backups are long-running jobs and none of the scripts I’ve written so far had integration with logging or monitoring (although I blogged about 3rd party integrations such as Velero and Kopia, which do have metrics, but I’m now talking about my own scripts)</li>
 </ul>
 
-<p>That’s an opportunity I wouldn’t miss!</p>
+<p>An opportunity I couldn’t miss!</p>
 
 <h2 id="initiating-and-monitoring-solidfire-backup-to-s3-jobs">Initiating and monitoring SolidFire backup-to-S3 jobs</h2>
 
@@ -186,21 +186,17 @@
 
 <p>Let’s backup volume ID 139.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w">
-  </span><span class="s2">"volumeID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"139"</span><span class="p">;</span><span class="w">
-  </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w">
-  </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w">
-  </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
-    </span><span class="s2">"write"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
-    </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w">
-    </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w">
-    </span><span class="s2">"bucket"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-backup"</span><span class="p">;</span><span class="w">
-    </span><span class="s2">"prefix"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"PROD-wcwb/pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="w">
-    </span><span class="s2">"endpoint"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w">
-    </span><span class="s2">"hostname"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"s3.com.org.ai"</span><span class="p">;</span><span class="w">
-     </span><span class="p">};</span><span class="w">
-  </span><span class="p">};</span><span class="w">
-</span><span class="p">}</span><span class="w">
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeRead</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="s2">"139"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+  </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
+    </span><span class="s2">"write"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="err">`</span><span class="w">
+      </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w"> </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+      </span><span class="s2">"bucket"</span><span class="o">=</span><span class="w"> </span><span class="s2">"solidfire-backup"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+      </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"PROD-wcwb/pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+      </span><span class="s2">"endpoint"</span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+      </span><span class="s2">"hostname"</span><span class="o">=</span><span class="w"> </span><span class="s2">"a.b.c.d"</span><span class="w"> </span><span class="p">}}}</span><span class="w"> 
 </span></code></pre></div></div>
 
 <p>We get back an async job ID handle (176) and a key that appears in the output of other API calls that we’ll see later.</p>
@@ -305,21 +301,21 @@
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-02-completed.png" alt="" /></p>
 
-<p>The reason we <em>can</em> obsess over it is that it’s inexpensive to get and send those metrics to InfluxDB. But it’s not mandatory for knowing if a job succeeded.</p>
+<p>The reason we <em>can</em> obsess over it is that it’s inexpensive to get and send those backup progress metrics to InfluxDB. But it’s not mandatory for knowing whether a job succeeded.</p>
 
-<p>I suppose users with smaller volumes wouldn’t care about job progress, but users with large (10TB, for example) volumes would.</p>
+<p>I suppose users with fewer smaller volumes wouldn’t care about progress of backup jobs, but users with many large (10TB, for example) volumes would.</p>
 
 <h3 id="completion-and-result">Completion and result</h3>
 
-<p>Eventually jobs complete and their outcome is either success or error.</p>
+<p>Eventually, jobs complete and their outcome is either success or error.</p>
 
-<p>Get-SFBulkVolumeJob tells us nothing about the job outcome. Once a job is finished, you get nothing back.</p>
+<p>Get-SFBulkVolumeJob tells us nothing about the job outcome. It monitors bulk volume jobs, not backups. Once a backup job is finished, you get nothing back.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFBulkVolumeJob</span><span class="w"> </span><span class="nt">-VolumeId</span><span class="w"> </span><span class="nx">139</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="nx">PS</span><span class="err">&gt;</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Get-SFASyncResult is how we learn of the outcome. Example of a successful job (notice it references an async job handle, not a volume ID):</p>
+<p>Get-SFASyncResult is how we learn of outcome. Here’s an example of a successful job (notice it references an async job handle, not a volume ID):</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">176</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -336,7 +332,7 @@
 
 </span></code></pre></div></div>
 
-<p>An example of a failed job:</p>
+<p>And an example of a failed job:</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFASyncResult</span><span class="w"> </span><span class="nt">-ASyncResultID</span><span class="w"> </span><span class="nx">173</span><span class="w"> </span><span class="nt">-KeepResult</span><span class="p">:</span><span class="nv">$True</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ConvertTo-Json</span><span class="w">
 </span><span class="p">{</span><span class="w">
@@ -360,7 +356,7 @@
 
 <p>While you may send to InfluxDB whatever you want, I’d start with just two metrics: backup job and backup progress.</p>
 
-<p>I haven’t thought about it a lot, but I’d start with something simple.</p>
+<p>I haven’t thought about it a lot - this post is in my investigation, in fact - but I’d start with something simple.</p>
 
 <p>Backup job:</p>
 
@@ -387,7 +383,9 @@
 
 </span></code></pre></div></div>
 
-<p>How you want to visualize or show that in Grafana is up to you. If we backup a volume every 24 hours, that query can be something as simple as a table that shows last 24 hours of records (which would show submitted, running, complete) for all volumes we care about.</p>
+<p>How you want to visualize or show that in Grafana is up to you.</p>
+
+<p>If we backup volumes every 24 hours, that query can be something as simple as a table that shows last 24 hours of records (which would show submitted, running, complete) for all volumes we care about.</p>
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-03-influx-backup-metric.png" alt="" /></p>
 
@@ -435,27 +433,25 @@
 
 <h2 id="kubernetes-jobs">Kubernetes jobs</h2>
 
-<p>solidshell reminds me that my jobs were dispatched from a Kubernetes pod.</p>
-
-<p>I put it in the same namespace as InfluxDB.</p>
+<p>solidshell reminds me that my jobs were dispatched from a Kubernetes pod. I should mention I put it in the same namespace as InfluxDB.</p>
 
 <p>You don’t have to backup Kubernetes volumes (PVs) - any volumes can be backed up as backup is done on SolidFire which knows nothing about volume contents - but I mention this because you don’t have to stand up a VM just to run PowerShell.</p>
 
 <p>Also, securing your SolidFire administrator credentials may be easier on Kubernetes than in a VM.</p>
 
-<p>But if you want to run that script from some Windows workstation, that will work as well, as long as you can reach both SolidFire MVIP and InfluxDB API endpoint.</p>
+<p>But if you want to run that script from some Windows workstation, that will work as well as long as you can reach both SolidFire MVIP and InfluxDB API endpoint.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>If you don’t have a bureaucratic IT environment with up to 100 volumes, maybe you use SolidFire’s backup-to-S3.</p>
+<p>If you don’t have a bureaucratic IT environment and if your cluster has up to 100 volumes, maybe you want to use SolidFire’s backup-to-S3.</p>
 
-<p>While most packaged backup solutions - including Velero - have job monitoring built in, SolidFire’s backup-to-S3 needs some extra effort, but can be monitored just as effectively (in fact, even better, as currently Velero still has some bugs in this area).</p>
+<p>While most packaged backup solutions - including Velero - have job monitoring built in, SolidFire’s backup-to-S3 needs some extra effort, but can be monitored just as effectively (in fact, it can be monitored even better as Velero currently still has some bugs in the area of monitoring and metrics).</p>
 
-<p>InfluxDB v1 is far from dead, it can runs in 128 MiB RAM, and it’s easier to use and work with than most other DBs. There are Python and PowerShell clients, which makes integration easy.</p>
+<p>InfluxDB v1 is far from dead, it can run in just 128 MiB RAM and it’s easier to use and work with than most other DBs. There are Python and PowerShell clients, which makes integration easy.</p>
 
-<p>Having backup job details in a cloud based VM makes it very easy to find backups in no time, which can be used in DR as well. You’ll be better off with a commercial solution, but if you don’t have one or want to take an independent backup to S3 once a week, this may be the right solution for you.</p>
+<p>Having backup job details in a cloud-based VM with InfluxDB makes it very easy to find backups in no time, which can be useful for DR as well.</p>
 
-<p>If you start with that script I wrote, logging to InfluxDB may take just 2-3 hours of work.</p>
+<p>You’ll be better off with a commercial solution but if you don’t have one or want to take an independent backup to public cloud S3 once a week, now it’s easy to automate and monitor that workload. If you start with that script I wrote, logging to InfluxDB may take just 2-3 hours of work.</p>
 
 <h2 id="appendix-a---gauge-visualization">Appendix A - Gauge visualization</h2>
 
@@ -501,9 +497,9 @@
 
 <p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-11-grafana-alert-firing.png" alt="" /></p>
 
-<p>I’d be careful with automated rescheduling of backup-to-S3 jobs because each could create TBs of extra network traffic.</p>
+<p>I’d be careful with automated rescheduling of failed backup-to-S3 jobs because each could create TBs of extra network traffic.</p>
 
-<p>My preferred way of dealing with such alerts would be a way to manually kick off individual backups that should be retried or even do nothing if you backup daily and can wait until the same jobs runs the next day.</p>
+<p>My preferred way of dealing with such alerts would be to manually kick off individual backups that should be retried or even do nothing, if you backup daily and can wait until the same jobs runs the next day.</p>
 
 <p>Depending on one’s objective, it may be easier to just combine several tags into one and eliminate Grafana Transformations. For example, something like this:</p>
 
@@ -680,7 +676,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-04-26 13:00 </p>
+    <p>2024-04-26 23:54 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
