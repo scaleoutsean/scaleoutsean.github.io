@@ -15,11 +15,11 @@
     <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
     <title>
         
-            Towards next SolidFire Collector | Acting Technologist
+            Towards next SolidFire Collector (SFC) | Acting Technologist
       
     </title>
     <meta name="description" content="
-     
+     Working on SFC, a successor to HCI Collector
      ">
 
     <!-- LINK TO ATOM FEED FOR SEO -->
@@ -47,13 +47,13 @@
     </script>
 
     <!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Towards next SolidFire Collector | Acting Technologist</title>
+<title>Towards next SolidFire Collector (SFC) | Acting Technologist</title>
 <meta name="generator" content="Jekyll v4.1.1" />
-<meta property="og:title" content="Towards next SolidFire Collector" />
+<meta property="og:title" content="Towards next SolidFire Collector (SFC)" />
 <meta name="author" content="scaleoutSean" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="a blog on enterprise apps and storage" />
-<meta property="og:description" content="a blog on enterprise apps and storage" />
+<meta name="description" content="Working on SFC, a successor to HCI Collector" />
+<meta property="og:description" content="Working on SFC, a successor to HCI Collector" />
 <link rel="canonical" href="https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html" />
 <meta property="og:url" content="https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html" />
 <meta property="og:site_name" content="Acting Technologist" />
@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-03T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Towards next SolidFire Collector","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","description":"a blog on enterprise apps and storage","@context":"https://schema.org"}</script>
+{"headline":"Towards next SolidFire Collector (SFC)","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","description":"Working on SFC, a successor to HCI Collector","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -119,7 +119,7 @@
 
     <div class="post-container">
       <article id = "post">
-        <h1 id = "post-title">Towards next SolidFire Collector</h1>
+        <h1 id = "post-title">Towards next SolidFire Collector (SFC)</h1>
 
   
   <div class = "post-info">
@@ -129,7 +129,7 @@
 
   
   
-    8 minute read
+    9 minute read
   
 
     </span>
@@ -188,6 +188,8 @@
   <li>Changed backend to InfluxDB</li>
   <li>Minimize code dependencies - only SolidFire Python SDK and Requests are used; SFC has no other modules (even InfluxDB SQL is manually crafted)</li>
   <li>Improve code efficiency - lower the number and frequency of API calls to further shorten run time</li>
+  <li>Get volume names into more metrics - I really hate that, as SolidFire enforces unique volume IDs, but names can be duplicate. However, that can’t be helped. Users need to pay attention to not use duplicate volume names.</li>
+  <li>With volume names, it becomes easier to work with Kubernetes as well, as PVC names are shown and with multiple clusters with replication between them it may be easier to create meaningful panels for multi-site observation</li>
 </ul>
 
 <p>This should make SFC much better for people who had busy SolidFire clusters - mostly many volumes:</p>
@@ -205,11 +207,13 @@
 
 <p>As I work on SFC, I look at how much time each type of collection takes. This is to ensure I don’t overzealous collecting data.</p>
 
-<p>Volume efficiency is the busiest one so far (4s for 32 volumes), but it doesn’t need to run every minute - once an hour is enough.</p>
+<p>Volume efficiency is the busiest one so far (4s for 32 volumes), but it doesn’t need to run every minute - once an hour is enough, so it has one hour to finish.</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-01-function-instrumentation.png" alt="" /></p>
 
-<p>That’s what leads me to believe that rest of it (roughly 5s for 33 volumes) can take less than 60s to process 500 volumes. People who have 5 thousand volumes could schedule those collectors to run every 10 minutes rather than every minute, or simply remove collection of data they don’t need.</p>
+<p>That’s what leads me to believe that rest of the functions (roughly 5s for 33 volumes) can take less than 60s to process 500 volumes, and should be even more if I find time to further optimize.</p>
+
+<p>People who have 5 thousand volumes could schedule those collectors to run every 10 minutes rather than every minute, or simply remove collection of data they don’t need.</p>
 
 <p>That panel above may be able to tell the user about potential problems before they happen, so it’s going to be useful in production and not just in development and testing.</p>
 
@@ -249,7 +253,7 @@
 
 <p>For a comparison, cluster deduplication ratio (0.760x) just above the volume count figure is a cluster metric. (It is lower than 1x because of relatively many snapshots).</p>
 
-<p>That query simply gets the value from “dedupe” metric.</p>
+<p>That query simply gets the value from cluster’s “dedupe” metric.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">last</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"cluster"</span> 
   <span class="k">WHERE</span> <span class="p">(</span><span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'dedupe'</span><span class="p">)</span> <span class="k">AND</span> 
@@ -262,13 +266,13 @@
 
 <p>Below that QoS Histogram chart there’s an example of node metrics (for one node, as this is SolidFire Demo VM).</p>
 
-<p>It collects cumulative node statistics over time (so additional “change over time” queries would be needed as shown with little green % figures), except for Cluster Network Utilization and Cluster Storage Network (interface) utilization which should be current values but I haven’t confirmed that as the cluster is currently idle.</p>
+<p>It collects cumulative node statistics over time (so additional “change over time” queries would be needed as shown with little green % figures that show a tiny increase over panel’s time interval which is last 15 minutes), except for Cluster Network Utilization and Cluster Storage Network (interface) utilization which should be current values but I haven’t confirmed that as the cluster is currently idle.</p>
 
 <p>In any case, it’s the same as it is in HCI Collector, passed directly from the API values except where explicitly documented.</p>
 
 <p>I gather other metrics the same way - with end user requirements, rather than data collection, in mind.</p>
 
-<p>This panel below shows:</p>
+<p>These three panels below show:</p>
 
 <ul>
   <li>Tenant-level efficiency - to see which accounts are doing a poor job managing their volumes</li>
@@ -307,7 +311,7 @@
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This is more time-consuming than it seems, which is why I also gave up on creating Grafana dashboards for SFC (I create simple ones to do sanity checks).</p>
+<p>This is more time-consuming than it seems, which is why I also gave up on creating Grafana dashboards for SFC (I create simple ones to do sanity checks). But if there’s just one user out there, it will be useful to someone.</p>
 
 <p>There’s still a lot of work to clean up and post a beta version, but I think SFC already sucks less than before.</p>
 
@@ -326,7 +330,15 @@
       &nbsp; 
     
       <a href="
-      /categories/#automation">automation</a>
+      /categories/#monitoring">monitoring</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#projects">projects</a>
        
     
   </span>
@@ -432,7 +444,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-03 20:14 </p>
+    <p>2024-05-03 20:34 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
