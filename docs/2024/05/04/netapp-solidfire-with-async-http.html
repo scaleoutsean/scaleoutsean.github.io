@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-04T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Access NetApp SolidFire API with Async IO","dateModified":"2024-05-04T00:00:00+08:00","datePublished":"2024-05-04T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html","description":"Using asynchronous IO with NetApp SolidFire API endpoint","@context":"https://schema.org"}</script>
+{"headline":"Access NetApp SolidFire API with Async IO","dateModified":"2024-05-04T00:00:00+08:00","datePublished":"2024-05-04T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html"},"description":"Using asynchronous IO with NetApp SolidFire API endpoint","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -160,7 +160,7 @@
 
 <p>And the same with <code class="language-plaintext highlighter-rouge">aiohttp</code> - just use one of the basic examples with Basic Authentication from their <a href="https://docs.aiohttp.org/en/stable/client_quickstart.html">documentation</a>.</p>
 
-<p>Here’s how that unscientific test (100 x <code class="language-plaintext highlighter-rouge">GetSnmpInfo</code>) worked on Ubuntu 22.04 LTS, Python 3.10.12 and SolidFire Demo VM 12.5 on ESXi:</p>
+<p>Here’s how that unscientific test (100 x <code class="language-plaintext highlighter-rouge">GetSnmpInfo</code>) worked on Ubuntu 22.04 LTS, Python 3.10.12 and SolidFire Demo VM 12.5 on ESXi. HTTPS (TLS) was used in all tests. SolidFire API endpoint runs NGINX and uses HTTP 1.1.</p>
 
 <table>
   <thead>
@@ -185,9 +185,13 @@
   </tbody>
 </table>
 
+<p>In all cases it was just a simple loop (with aiohttp - asynchronous) with 100 API calls.</p>
+
+<p>If <code class="language-plaintext highlighter-rouge">asyncio</code> is used to create 100 async <code class="language-plaintext highlighter-rouge">task</code>s which are then executed in own async HTTP(S) sessions, and the results gathered with <code class="language-plaintext highlighter-rouge">gather(*tasks)</code>, it takes just 1.65 seconds! But that’s a bit more complicated to use and requires better skills than I currently have.</p>
+
 <h2 id="is-it-worth-the-trouble">Is it worth the trouble?</h2>
 
-<p>First, it’s strange that requests runs slower than SolidFire SDK which uses requests, but anyway…</p>
+<p>First, it’s strange that Requests was slower than SolidFire SDK which uses requests, but anyway.</p>
 
 <p>Even compared to SolidFire Python SDK, I get more than a 10% performance improvement with <code class="language-plaintext highlighter-rouge">aiohttp</code>.</p>
 
@@ -216,6 +220,12 @@
 <p><code class="language-plaintext highlighter-rouge">GetAccountEfficiency</code> is one such example. There’s no way to get efficiency for 2 or all accounts. It has to be one by one - maybe because each request makes the API get all the volumes owned by an account and already does a lot of work to get that response back.</p>
 
 <p>With those there’s no choice - one has to send a bunch of requests to get a bunch of responses. <code class="language-plaintext highlighter-rouge">aiohttp</code> can make all of them non-blocking.</p>
+
+<h3 id="json-rpc">JSON-RPC</h3>
+
+<p>Note that in my test above I used simple JSON-RPC that didn’t have to be encoded. For non-trivial use we’d have to use a JSON-RPC integration for <code class="language-plaintext highlighter-rouge">aiohttp</code> (or do the same work ourselves).</p>
+
+<p>There are such <a href="https://github.com/expert-m/aiohttp-rpc">examples on Github</a>, but I have not yet tried them.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -248,106 +258,28 @@
 </div>
     
 
-    
-      <div class="related" data-pagefind-ignore>
-
-    <h4>Possibly related - use live search at the top to find other content</h4>
-    
-    
-    
-    
-    
-    
-    
-        
-        
-    
-        
-    
-        
-    
+  
+    <div>
+      <h3>Related Posts</h3>
+      <ul>
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/05/03/netapp-solidfire-collector-next.html">• Towards next SolidFire Collector (SFC)</a></h5>
-          </div>
-          
-          
-        
-    
+        <li><a href="/2024/04/30/netapp-solidfire-account-attributes.html">Tenant (account) attributes on NetApp SolidFire</a></li>
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/04/30/netapp-solidfire-account-attributes.html">• Tenant (account) attributes on NetApp SolidFire</a></h5>
-          </div>
-          
-          
-        
-    
+        <li><a href="/2022/08/04/solidfire-volume-to-node-and-min-guarantees-per-node.html">Display per-storage node performance guarantees of SolidFire nodes</a></li>
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/04/26/swagger-files-netapp-eseries-arrays.html">• Swagger files for NetApp E-Series</a></h5>
-          </div>
-          
-          
-        
-    
+        <li><a href="/2022/04/28/solidfire-operator-kubernetes.html">SolidFire Operator for Kubernetes</a></li>
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/04/25/openapi-swagger-for-netapp-solidfire.html">• OpenAPI and SolidFire</a></h5>
-          </div>
-          
-          
-        
-    
+        <li><a href="/2022/01/01/getting-solidfire-volume-details-python-powershell-api-cli.html">Getting SolidFire volume details with Powershell and Python</a></li>
       
-    
-        
-        
-    
-        
-    
-        
-          <div class = "related-posts">
-          <h5><a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">• Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana</a></h5>
-          </div>
-          
-          
-            
-    
+        <li><a href="/2022/09/12/new-ddp-and-e-series-santricity-web-restful-api.html">New Dynamic Disk Pool configuration and E-Series SANtricity</a></li>
+      
+      </ul>
     </div>
-
-    
+  
 
     
   </div><footer class= "footer">
-    <p>2024-05-04 03:34 </p>
+    <p>2024-05-04 05:07 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
