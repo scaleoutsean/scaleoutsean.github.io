@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-03T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Towards next SolidFire Collector","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","description":"a blog on enterprise apps and storage","@context":"https://schema.org"}</script>
+{"headline":"Towards next SolidFire Collector","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","description":"a blog on enterprise apps and storage","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    7 minute read
+    8 minute read
   
 
     </span>
@@ -209,13 +209,13 @@
 
 <p><img src="/assets/images/sfc-influxdb-alpha-01-function-instrumentation.png" alt="" /></p>
 
-<p>That’s what leads me to believe that rest of it (roughly 5s for 33 volumes) can take less than 60s to process 500 volumes. People who have 5000 volumes could schedule that script to run every 10 minutes or simply remove collection of data they don’t need.</p>
+<p>That’s what leads me to believe that rest of it (roughly 5s for 33 volumes) can take less than 60s to process 500 volumes. People who have 5 thousand volumes could schedule those collectors to run every 10 minutes rather than every minute, or simply remove collection of data they don’t need.</p>
 
-<p>Actually this panel may be able to tell the user about potential problems before they happen.</p>
+<p>That panel above may be able to tell the user about potential problems before they happen, so it’s going to be useful in production and not just in development and testing.</p>
 
 <p>Next, I’m sticking with InfluxDB v1 and InfluxQL for a “No BS” approach. I looked at different options, but InfluxDB v1 is good enough.</p>
 
-<p>Example: my “cluster” table:</p>
+<p>Here’s an example, my “cluster” metrics table.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="k">cluster</span> <span class="k">limit</span> <span class="mi">10</span>
 <span class="n">name</span><span class="p">:</span> <span class="k">cluster</span>
@@ -229,11 +229,11 @@
 <span class="mi">2024</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">03</span><span class="n">T06</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mi">50</span><span class="n">Z</span> <span class="n">PROD</span>    <span class="n">compress</span>                         <span class="mi">1</span><span class="p">.</span><span class="mi">88</span>
 </code></pre></div></div>
 
-<p>I’m thinking about storing certain non-cluster metrics there, and starting with that premise from the start. Metrics without <code class="language-plaintext highlighter-rouge">type</code> are cluster metrics from the API, and others are specifically called out.</p>
+<p>I’ve been thinking about storing certain non-cluster metrics there and starting with that premise from the start. The metrics without <code class="language-plaintext highlighter-rouge">type</code> tag are cluster metrics from the cluster stats API, while metrics from other API calls are specifically called out (tenant, volume, etc.).</p>
 
-<p>Since the number of accounts isn’t a native cluster metric, I gather it elsewhere, and tag it with `“type=tenant”.</p>
+<p>Since the number of accounts isn’t a native cluster metric, I gather it elsewhere and tag it with `“type=tenant”.</p>
 
-<p>I do that for volumes as well. Rather than using Grafana to run complex InfluxDB (and/or Grafana) queries, I just do this to get the number of tenant accounts on the cluster into InfluxDB and from Grafana there’s just this simple query.</p>
+<p>I do that for volume metric that I store here as well. Rather than using Grafana to run complex InfluxDB (and/or Grafana transformation) queries, I just do this to get the number of tenant accounts on the cluster into InfluxDB and from Grafana there’s just this simple query.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">mean</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"cluster"</span> 
   <span class="k">WHERE</span> <span class="p">(</span><span class="nv">"cluster"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'PROD'</span> 
@@ -241,11 +241,15 @@
   <span class="k">AND</span> <span class="err">$</span><span class="n">timeFilter</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="nb">time</span><span class="p">(</span><span class="err">$</span><span class="n">__interval</span><span class="p">)</span> <span class="n">fill</span><span class="p">(</span><span class="k">null</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>32 is the number of volumes obtained with that query. (As you (may) know, SolidFire supports 400 per node (SolidFire Demo VM is limited to 100, though), so we want to keep an eye on that.)</p>
+<p>That’s one of the places I see value for SFC over simpler and straightforward metrics collection that just gets all the metrics and makes them available: doing some aggregation and analysis on collection can add value by saving time required for dashboard creation and also compute cycles.</p>
+
+<p>Below, 32 is the number of volumes obtained with that query. (As you (may) know, SolidFire supports 400 in-use volumes per node (SolidFire Demo VM is limited to 100, though), so we want to keep an eye on that.)</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-02-cluster-stats.png" alt="" /></p>
 
-<p>For a comparison, cluster deduplication (0.760x) just above it is lower than 1x because of relatively many snapshots:</p>
+<p>For a comparison, cluster deduplication ratio (0.760x) just above the volume count figure is a cluster metric. (It is lower than 1x because of relatively many snapshots).</p>
+
+<p>That query simply gets the value from “dedupe” metric.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">last</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"cluster"</span> 
   <span class="k">WHERE</span> <span class="p">(</span><span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'dedupe'</span><span class="p">)</span> <span class="k">AND</span> 
@@ -256,28 +260,33 @@
 
 <p><img src="/assets/images/sfc-influxdb-alpha-03-qos-histogram-throttle-pct-and-node-metrics.png" alt="" /></p>
 
-<p>Below that QoS Histogram chart there’s an example of node metrics (for one node, as this is SolidFire Demo VM). It collects node statistics over time (so additional “change over time” queries would be needed as shown with little green % figures), except for Cluster Network Utilization and Cluster Storage Network (interface) utilization, which should be current values but I haven’t confirmed that as the cluster is currently idle.</p>
+<p>Below that QoS Histogram chart there’s an example of node metrics (for one node, as this is SolidFire Demo VM).</p>
 
-<p>The rest is being done the same way as volume stats - with user requirements, rather than data collection, in mind.</p>
+<p>It collects cumulative node statistics over time (so additional “change over time” queries would be needed as shown with little green % figures), except for Cluster Network Utilization and Cluster Storage Network (interface) utilization which should be current values but I haven’t confirmed that as the cluster is currently idle.</p>
+
+<p>In any case, it’s the same as it is in HCI Collector, passed directly from the API values except where explicitly documented.</p>
+
+<p>I gather other metrics the same way - with end user requirements, rather than data collection, in mind.</p>
 
 <p>This panel below shows:</p>
 
 <ul>
-  <li>Tenant-level efficiency - to see which accounts are doing a poor job</li>
-  <li>Tenant level volume count- this in “tenants” measurement, unlike the total cluster-wide volume count which I keep in “cluster” measurements.</li>
-  <li>Also tenant-level efficiency, using gauges and a slightly different query</li>
+  <li>Tenant-level efficiency - to see which accounts are doing a poor job managing their volumes</li>
+  <li>Tenant level volume count - this is in “tenants” table (called “measurement” in InfluxDB), unlike cluster-wide volume count which I have in “cluster” measurement.</li>
+  <li>Another tenant-level efficiency - using gauges and a slightly different query</li>
 </ul>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-04-tenant-level-stuff.png" alt="" /></p>
 
 <p>Curiously, there’s a difference between the values from two efficiency queries. For the user hyperv2025, SolidFire shows 2.7537, so the second one is in line with that.</p>
 
-<p>I turned out the first query showed <code class="language-plaintext highlighter-rouge">Last*</code> value i.e. outdated from an older panel. The second query is correct and InfluxDB has the correct metric as well. Whew!</p>
+<p>I had to check and it turned out the first query showed <code class="language-plaintext highlighter-rouge">Last*</code> value i.e. an outdated value. The second query is correct and InfluxDB has the correct metric as well. Whew!</p>
 
-<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">mean</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"tenant"</span> 
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="n">mean</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"tenant"</span> 
   <span class="k">WHERE</span> <span class="p">(</span><span class="nv">"cluster"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'PROD'</span> <span class="k">AND</span> <span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'accountEfficiency'</span><span class="p">)</span> 
   <span class="k">AND</span> <span class="err">$</span><span class="n">timeFilter</span> 
   <span class="k">GROUP</span> <span class="k">BY</span> <span class="nb">time</span><span class="p">(</span><span class="err">$</span><span class="n">__interval</span><span class="p">),</span> <span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span><span class="p">,</span> <span class="nv">"accountName"</span><span class="p">::</span><span class="n">tag</span> <span class="n">fill</span><span class="p">(</span><span class="k">null</span><span class="p">)</span>
+
 <span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">tenant</span> <span class="k">LIMIT</span> <span class="mi">1</span>
 <span class="n">name</span><span class="p">:</span> <span class="n">tenant</span>
 <span class="nb">time</span>                 <span class="n">accountName</span> <span class="k">cluster</span> <span class="n">compress</span> <span class="n">dedupe</span> <span class="n">metric</span>            <span class="n">value</span> <span class="n">valueTP</span>
@@ -288,9 +297,13 @@
 
 <p>Other things from HCI Collector are also working, including cluster alerts, disk information (disk wear level, disk status), etc.</p>
 
-<p>I have 1 warning (Minimum IOPS are over-provisioned on my Demo VM), while (vSphere) disks are all online and SSD wear level is shown as 0% (because vSphere isn’t reporting that).</p>
+<p>Below I have 1 warning (Minimum IOPS are over-provisioned on my Demo VM), while (vSphere) disks are all online and SSD wear level is shown as 0% (because vSphere isn’t reporting that).</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png" alt="" /></p>
+
+<p>There’s more, but the bottom line is all HCI Collector metrics for SolidFire are fully functional, take less time to collect, etc.</p>
+
+<p>Next I need to clean up the code, do performance and capacity characterization, create documentation, create Docker and Kubernetes templates, etc. and eventually push this to Github.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -419,7 +432,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-03 18:50 </p>
+    <p>2024-05-03 20:14 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
