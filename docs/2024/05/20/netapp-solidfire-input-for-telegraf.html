@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-20T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Use Telegraf to send NetApp SolidFire metrics to InfluxDB","dateModified":"2024-05-20T00:00:00+08:00","datePublished":"2024-05-20T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_telegraf_monitor.png","description":"Use Telegraf exec plugin to send SolidFire metrics to InfluxDB","@context":"https://schema.org"}</script>
+{"headline":"Use Telegraf to send NetApp SolidFire metrics to InfluxDB","dateModified":"2024-05-20T00:00:00+08:00","datePublished":"2024-05-20T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html"},"description":"Use Telegraf exec plugin to send SolidFire metrics to InfluxDB","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_telegraf_monitor.png","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -139,15 +139,17 @@
 
 <p>The idea is maybe I should just use Telegraf instead… I’m still thinking about it and today I was evaluating Telegraf again.</p>
 
-<p><a href="/2021/08/13/solidfire-snmp-v3-grafana.html">This</a> post shows how to use SNMP input for Telegraf to collect SolidFire metrics, but SolidFire SNMP output is quite basic.</p>
+<p><a href="/2021/08/13/solidfire-snmp-v3-grafana.html">This</a> post shows how to use SNMP input for Telegraf to collect SolidFire metrics, but SolidFir’s SNMP output is quite basic.</p>
 
 <p>A better - but also time-consuming - approach is to use another input and gater SolidFire metrics from the API.</p>
 
-<p>I used PowerShell to collect volume metrics. I probably shouldn’t have…</p>
+<p>For this PoC I used PowerShell to collect volume metrics. I probably shouldn’t have…</p>
 
-<p>Thanks to a PowerShell bug I ended up collecting metrics <em>indirectly</em>. That is, instead of using <code class="language-plaintext highlighter-rouge">inputs.exec</code> with PowerShell script that sends output to InfluxDB, I had to run the script as root and spit data out to where Telegraf can read it.</p>
+<p>Thanks to a PowerShell bug I ended up collecting metrics <em>indirectly</em>.</p>
 
-<p>I know that shouldn’t be /etc/telegraf/, but I ran out of patience. Anyways, this is how my config looks like after volume properties (Get-SFVolume) and stats (Get-SFVolumeStats) are saved to two files in the InfluxDB format.</p>
+<p>That is, instead of using <code class="language-plaintext highlighter-rouge">inputs.exec</code> with a PowerShell script that sends output to InfluxDB, I had to run the script as root and spit data out to where Telegraf’s <code class="language-plaintext highlighter-rouge">input.file</code> can read it.</p>
+
+<p>I know that location shouldn’t be /etc/telegraf/, but that’s Telegraf’s home directory and I ran out of patience. Anyways, this is how my config looks like after volume properties (Get-SFVolume) and stats (Get-SFVolumeStats) are saved to two files in the InfluxDB format.</p>
 
 <pre><code class="language-raw">[agent]
   interval = "60s"
@@ -173,7 +175,7 @@
 
 <p>I just run a script from crontab and overwrite these two files every minute.</p>
 
-<p>Then Telegraf picks them uip and sends them to InfluxDB (version 1, in my case - see <code class="language-plaintext highlighter-rouge">output.influxdb</code> above), and I get this:</p>
+<p>Telegraf agent picks them up and sends them to InfluxDB version 1 (in my case - see <code class="language-plaintext highlighter-rouge">output.influxdb</code> above) and that gives me these metrics in the <code class="language-plaintext highlighter-rouge">solidgraf</code> DB:</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">volumeStats</span>
 <span class="n">name</span><span class="p">:</span> <span class="n">volumeStats</span>
@@ -210,8 +212,17 @@
 
 <p>I suspect I would have been better off if I used Python, but it’s too late now.</p>
 
-<p>You can find the code in the scripts directory of Awesome SolidFire.</p>
+<p>As far as SFC is concerned, using Telegraf’s exec plugin removes the need for heavy optimizing SFC code:</p>
 
+<ul>
+  <li>Use Telegraf for the busy, high frequency probes that run every 60 seconds</li>
+  <li>Use simpler SFC Python code for the rest (probes that run every 10 or 60 minutes)</li>
+  <li>Package both in a container</li>
+</ul>
+
+<p>But I’ll still think about it, and I’d have to rewrite the volumes script in Python because PowerShell doesn’t play nicely here.</p>
+
+<p>You can find the PowerShell script in the scripts directory of Awesome SolidFire.</p>
 
       </article>
     </div>
@@ -257,7 +268,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-20 15:31 </p>
+    <p>2024-05-20 18:47 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
