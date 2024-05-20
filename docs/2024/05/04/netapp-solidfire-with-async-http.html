@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-04T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Access NetApp SolidFire API with Async IO","dateModified":"2024-05-04T00:00:00+08:00","datePublished":"2024-05-04T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html"},"description":"Using asynchronous IO with NetApp SolidFire API endpoint","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
+{"headline":"Access NetApp SolidFire API with Async IO","dateModified":"2024-05-04T00:00:00+08:00","datePublished":"2024-05-04T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/04/netapp-solidfire-with-async-http.html"},"description":"Using asynchronous IO with NetApp SolidFire API endpoint","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +128,7 @@
 
   
   
-    4 minute read
+    5 minute read
   
 
     </span>
@@ -138,7 +138,11 @@
 
 <p>When using Python with SolidFire I usually use SolidFire Python SDK which in turn uses requests and <a href="https://github.com/solidfire/solidfire-sdk-python/blob/49fe23e2e9383dcd75723d680ffd18a475dccea5/solidfire/common/__init__.py">urllib3</a>.</p>
 
-<p>One opportunity for performance enhancement with scripts that issue a lot of API requests is asynchronous access to the SolidFire API.</p>
+<p>One opportunity for performance enhancement with scripts that issue a lot of Get and List API requests is asynchronous access to the SolidFire API.</p>
+
+<p>Opportunities should be evaluated in the context of use case and application behavior. Get and List requests in monitoring applications are usually async-safe and the same should apply to long-running jobs which are asynchronous on SolidFire as well (e.g. cloning or backup-to-S3).</p>
+
+<p>Python’s <code class="language-plaintext highlighter-rouge">asyncio</code> provides ways to safely use other methods, but that requires more effort and skill. In this post I only want to evaluate its viability in simple &amp; low risk use cases.</p>
 
 <p>(Async IO isn’t limited to Python clients - it’s just that I will use Python in this particular post.)</p>
 
@@ -160,7 +164,7 @@
 
 <p>And the same with <code class="language-plaintext highlighter-rouge">aiohttp</code> - just use one of the basic examples with Basic Authentication from their <a href="https://docs.aiohttp.org/en/stable/client_quickstart.html">documentation</a>.</p>
 
-<p>Here’s how that unscientific test (100 x <code class="language-plaintext highlighter-rouge">GetSnmpInfo</code>) worked on Ubuntu 22.04 LTS, Python 3.10.12 and SolidFire Demo VM 12.5 on ESXi. HTTPS (TLS) was used in all tests. SolidFire API endpoint runs NGINX and uses HTTP 1.1.</p>
+<p>Here’s how that unscientific test (100 x <code class="language-plaintext highlighter-rouge">GetSnmpInfo</code>) worked on Ubuntu 22.04 LTS, Python 3.10.12 and SolidFire Demo VM 12.5 on ESXi. HTTPS (TLS) was used in all tests. SolidFire API endpoints run behind built-in NGINX (reverse proxy API gateway) which uses HTTP 1.1 - that’s the “HTTP server”.</p>
 
 <table>
   <thead>
@@ -211,7 +215,7 @@
 
 <p>Another extreme would be to send 500 requests with 500 responses of approximately 1 kB each. This increases the use of CPU on the SolidFire node where API endpoint is located.</p>
 
-<p>What I do in SolidFire Collector (alpha) is something in between, I batch volume IDs in requests, so that I can send one or 20, and all but one be “medium” size. This is where farming those out to a dozen parallel <code class="language-plaintext highlighter-rouge">aiohttp</code> requests would be useful.</p>
+<p>What I do in SolidFire Collector (v2 alpha) is something in between: I batch volume IDs in requests, so that I can send one or 20, and all but one be “medium” size. This is where farming those out to a dozen parallel <code class="language-plaintext highlighter-rouge">aiohttp</code> requests would be useful. (Multi)threading is also helpful here, but that only parallelizes work and after some success may create more blocking and contention so a combination of both is more helpful than multithreading alone.</p>
 
 <h3 id="single-object-requests-that-need-to-be-repeated">Single-object requests that need to be repeated</h3>
 
@@ -223,9 +227,11 @@
 
 <h3 id="json-rpc">JSON-RPC</h3>
 
-<p>Note that in my test above I used simple JSON-RPC that didn’t have to be encoded. For non-trivial use we’d have to use a JSON-RPC integration for <code class="language-plaintext highlighter-rouge">aiohttp</code> (or do the same work ourselves).</p>
+<p>Note that in my test above I used simple JSON-RPC that didn’t have to be URL-encoded.</p>
 
-<p>There are such <a href="https://github.com/expert-m/aiohttp-rpc">examples on Github</a>, but I have not yet tried them.</p>
+<p>For non-trivial use we’d have to use a JSON-RPC integration for <code class="language-plaintext highlighter-rouge">aiohttp</code> or do the same work ourselves, by “manually” creating JSON payload for aiohttp requests.</p>
+
+<p>There are <a href="https://github.com/expert-m/aiohttp-rpc">JSON-RPC projects for asyncio on Github</a>, but I have not yet tried them. Manual assembly of POST requests works  - it’s less productive, but doesn’t have external dependencies.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -279,7 +285,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-04 05:07 </p>
+    <p>2024-05-20 15:31 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

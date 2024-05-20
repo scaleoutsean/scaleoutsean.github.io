@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-03T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Towards next SolidFire Collector (SFC)","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"description":"Working on SFC, a successor to HCI Collector","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","@context":"https://schema.org"}</script>
+{"headline":"Towards next SolidFire Collector (SFC)","dateModified":"2024-05-03T00:00:00+08:00","datePublished":"2024-05-03T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/03/netapp-solidfire-collector-next.html"},"image":"https://scaleoutsean.github.io/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png","description":"Working on SFC, a successor to HCI Collector","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    9 minute read
+    10 minute read
   
 
     </span>
@@ -166,60 +166,64 @@
 
 <p>After that I also used the setup to try SolidFire Backup-to-S3 with InfluxDB which can be <a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">visualized in Grafana</a>.</p>
 
-<p>With that done I was just a few steps from getting there:</p>
+<p>With that done I was just two steps from getting there:</p>
 
 <ul>
   <li>Change project name to “SFC” from “HCI Collector” (that name was always incredibly annoying to me)</li>
-  <li>Switch to InfluxDB v1 (so that both EPA and SFC use the same back-end DB)</li>
+  <li>Change back-end to InfluxDB v1 (so that both EPA and SFC use the same back-end DB)</li>
 </ul>
+
+<p>At that point the question was: why not now?</p>
 
 <h2 id="progress-so-far">Progress so far</h2>
 
 <p>I’ve created a new Github repository for <a href="https://github.com/scaleoutsean/sfc">SFC</a>. There’s no new code there yet - I’m still working on “alpha” version of the new SFC described in this post.</p>
 
-<p>Old HCI Collector repository was deleted because it contained a commit with credentials (from 2016), but the SFC repository has last release of HCI Collector (without commit history and the offending commit).</p>
+<p>The old HCI Collector repository was deleted because it contained a commit with some internal credentials (from 2016, committed “before my time”), but the SFC repository has last release of HCI Collector without commit history and the offending commit.</p>
 
 <p>First, about some things that are hard or impossible to see in screenshots (and arguably more important):</p>
 
 <ul>
   <li>Changed job scheduling from one mega job with a bunch of tasks and tons of collection to separate threads with smaller tasks</li>
-  <li>Separate threads run on separate schedules, giving the user the ability to schedule less important collection to once every hour</li>
-  <li>Multiple schedules allow SFC to shorten regular collection time and lowers the load on SolidFire API endpoint</li>
-  <li>Changed backend to InfluxDB</li>
-  <li>Minimize code dependencies - only SolidFire Python SDK and Requests are used; SFC has no other modules (even InfluxDB SQL is manually crafted)</li>
-  <li>Improve code efficiency - lower the number and frequency of API calls to further shorten run time</li>
-  <li>Get volume names into more metrics - I really hate that, as SolidFire enforces unique volume IDs, but names can be duplicate. However, that can’t be helped. Users need to pay attention to not use duplicate volume names.</li>
-  <li>With volume names, it becomes easier to work with Kubernetes as well, as PVC names are shown and with multiple clusters with replication between them it may be easier to create meaningful panels for multi-site observation</li>
+  <li>Separated threads run on separate schedules, giving the user the ability to schedule less important collection to once every hour</li>
+  <li>Created multiple schedules allow SFC to shorten regular collection time and lowers the load on SolidFire API endpoint</li>
+  <li>Changed backend to InfluxDB v1</li>
+  <li>Minimized code dependencies - only SolidFire Python SDK and Requests are used; SFC has no other modules (even InfluxDB SQL is manually crafted)</li>
+  <li>Improved code efficiency - lower the number and frequency of API calls to further shorten run time</li>
+  <li>Got volume names (rather than IDs) into more metrics - I really hate that, as SolidFire enforces unique volume IDs but volume names can be duplicate. However, that can’t be helped. Users need to pay attention to not use duplicate volume names.</li>
+  <li>With volume names, it becomes easier to work with Kubernetes as well, as PVC names are shown and with multiple clusters with replication between them it may be easier to create meaningful panels for multi-site or multi-cluster monitoring</li>
 </ul>
 
-<p>This should make SFC much better for people who had busy SolidFire clusters - mostly many volumes:</p>
+<p>This should make SFC much better for people who had busy SolidFire clusters - which mostly means “clusters with many volumes”:</p>
 
 <ul>
-  <li>I hope SFC should be able to handle SolidFire clusters with 500 volumes at 60s volume collection frequency</li>
-  <li>SFC should be much easier to modify to selectively lessen workload on SolidFire</li>
+  <li>SFC should be able to handle SolidFire clusters with 500 volumes at 60s volume collection frequency</li>
+  <li>SFC should be much easier to modify to selectively lessen the workload on SolidFire</li>
 </ul>
 
-<p>As I mentioned in HCICollector v0.7, I don’t want to involved in vSphere-related collection, so next release will have only SFC itself, and Docker Compose and Kubernetes deployment templates (with optional InfluxDB and Grafana containers) will be retained.</p>
+<p>There are few other tricks I can still use to improve performance, such as <a href="/2024/05/04/netapp-solidfire-with-async-http.html">this one</a>, caching and more.</p>
 
-<p>Second, the obligatory alpha-quality chart pr0n.</p>
+<p>As I mentioned in posts and FAQs related HCI Collector v0.7, I don’t want to involved in vSphere metrics collection, so next release will have only SFC itself, Docker Compose and Kubernetes deployment templates (with optional InfluxDB and Grafana containers) will be retained. Folks who want vSphere collection should just add their own and use SFC for SolidFire, I believe, because SFC should be much better.</p>
 
-<p>These are just draft panels, to see if the data is there and make sure it makes sense.</p>
+<p>Second, let’s view some obligatory alpha-quality chart pr0n.</p>
 
-<p>As I work on SFC, I look at how much time each type of collection takes. This is to ensure I don’t overzealous collecting data.</p>
+<p>These are just draft panels that let me see if the data is there and make sure it makes sense.</p>
 
-<p>Volume efficiency is the busiest one so far (4s for 32 volumes), but it doesn’t need to run every minute - once an hour is enough, so it has one hour to finish.</p>
+<p>As I work on SFC I look at how much time each type of collection takes. This is to ensure I don’t get overzealous collecting data.</p>
+
+<p>Volume efficiency is the busiest calls one so far (4s for 32 volumes) but it doesn’t need to run every minute - once an hour is enough, so it has one hour to finish.</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-01-function-instrumentation.png" alt="" /></p>
 
 <p>That’s what leads me to believe that rest of the functions (roughly 5s for 33 volumes) can take less than 60s to process 500 volumes, and should be even more if I find time to further optimize.</p>
 
-<p>People who have 5 thousand volumes could schedule those collectors to run every 10 minutes rather than every minute, or simply remove collection of data they don’t need.</p>
+<p>People who have 5 thousand volumes in their cluster could schedule those collectors to run every 10 minutes rather than every minute, or simply remove collection of data they don’t need.</p>
 
 <p>That panel above may be able to tell the user about potential problems before they happen, so it’s going to be useful in production and not just in development and testing.</p>
 
 <p>Next, I’m sticking with InfluxDB v1 and InfluxQL for a “No BS” approach. I looked at different options, but InfluxDB v1 is more than good enough.</p>
 
-<p>Here’s an example, my “cluster” metrics table.</p>
+<p>Here’s an example, my “cluster” metrics table in InfluxDB v1.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="k">cluster</span> <span class="k">limit</span> <span class="mi">10</span>
 <span class="n">name</span><span class="p">:</span> <span class="k">cluster</span>
@@ -233,9 +237,11 @@
 <span class="mi">2024</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">03</span><span class="n">T06</span><span class="p">:</span><span class="mi">49</span><span class="p">:</span><span class="mi">50</span><span class="n">Z</span> <span class="n">PROD</span>    <span class="n">compress</span>                         <span class="mi">1</span><span class="p">.</span><span class="mi">88</span>
 </code></pre></div></div>
 
-<p>I’ve been thinking about storing certain non-cluster metrics there and starting with that premise from the start. The metrics without <code class="language-plaintext highlighter-rouge">type</code> tag are cluster metrics from the cluster stats API, while metrics from other API calls are specifically called out (tenant, volume, etc.).</p>
+<p>I’ve been thinking about storing certain non-cluster-related metrics into that table, and I started with that approach from the start.</p>
 
-<p>Since the number of accounts isn’t a native cluster metric, I gather it elsewhere and tag it with `“type=tenant”. I think that’s better (and in line with my “opinionated” approach) for users as anything cluster-related ought to be here and not elsewhere.</p>
+<p>All metrics without <code class="language-plaintext highlighter-rouge">type</code> tag are cluster metrics from the cluster stats API response, while metrics from other API calls are specifically called out (tenant, volume, etc.).</p>
+
+<p>Since the number of accounts isn’t a native cluster metric, I gather it elsewhere and tag it with <code class="language-plaintext highlighter-rouge">"type=tenant"</code>. I think that’s better (and in line with my “opinionated” approach) for users as anything cluster-related ought to be here and not elsewhere.</p>
 
 <p>I do that for volume metric that I store here as well. Rather than using Grafana to run complex InfluxDB (and/or Grafana transformation) queries, I just do this to get the number of tenant accounts on the cluster into InfluxDB and from Grafana there’s just this simple query.</p>
 
@@ -260,11 +266,11 @@
   <span class="err">$</span><span class="n">timeFilter</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="nb">time</span><span class="p">(</span><span class="err">$</span><span class="n">__interval</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>QoS Histograms are working as well but - like I’ve said before - that was never documented or evangelized properly, so figuring out what these mean is another problem (maybe for an ‘SFC AI Plugin’)…</p>
+<p>QoS Histograms are working as well but - like I’ve said before - that was never documented or evangelized properly, so figuring out what these mean is another problem (got to leave some work for an ‘SFC AI Plugin’)…</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-03-qos-histogram-throttle-pct-and-node-metrics.png" alt="" /></p>
 
-<p>Below that QoS Histogram chart there’s an example of node metrics (for one node, as this is SolidFire Demo VM).</p>
+<p>Below that QoS Histogram chart there’s an example of node metrics (for one node, as this is a SolidFire Demo VM).</p>
 
 <p>It collects cumulative node statistics over time (so additional “change over time” queries would be needed as shown with little green % figures that show a tiny increase over panel’s time interval which is last 15 minutes), except for Cluster Network Utilization and Cluster Storage Network (interface) utilization which should be current values but I haven’t confirmed that as the cluster is currently idle.</p>
 
@@ -282,16 +288,20 @@
 
 <p><img src="/assets/images/sfc-influxdb-alpha-04-tenant-level-stuff.png" alt="" /></p>
 
-<p>Curiously, there’s a difference between the values from two efficiency queries. For the user hyperv2025, SolidFire shows 2.7537, so the second one is in line with that.</p>
+<p>Curiously, there’s a difference between the values from two efficiency queries, but I don’t care about it enough to figure out why. For the user <code class="language-plaintext highlighter-rouge">hyperv2025</code>, SolidFire shows 2.7537x, so the second one is in line with that.</p>
 
-<p>I had to check and it turned out the first query showed <code class="language-plaintext highlighter-rouge">Last*</code> value i.e. an outdated value. The second query is correct and InfluxDB has the correct metric as well. Whew!</p>
+<p>I had to check the query and it turned out the first query showed <code class="language-plaintext highlighter-rouge">Last*</code> value i.e. an outdated value. The second query is correct.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="n">mean</span><span class="p">(</span><span class="nv">"value"</span><span class="p">)</span> <span class="k">FROM</span> <span class="nv">"tenant"</span> 
   <span class="k">WHERE</span> <span class="p">(</span><span class="nv">"cluster"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'PROD'</span> <span class="k">AND</span> <span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span> <span class="o">=</span> <span class="s1">'accountEfficiency'</span><span class="p">)</span> 
   <span class="k">AND</span> <span class="err">$</span><span class="n">timeFilter</span> 
   <span class="k">GROUP</span> <span class="k">BY</span> <span class="nb">time</span><span class="p">(</span><span class="err">$</span><span class="n">__interval</span><span class="p">),</span> <span class="nv">"metric"</span><span class="p">::</span><span class="n">tag</span><span class="p">,</span> <span class="nv">"accountName"</span><span class="p">::</span><span class="n">tag</span> <span class="n">fill</span><span class="p">(</span><span class="k">null</span><span class="p">)</span>
 
-<span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">tenant</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<p>InluxDB had the correct metric as well. Whew!</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">tenant</span> <span class="k">LIMIT</span> <span class="mi">1</span>
 <span class="n">name</span><span class="p">:</span> <span class="n">tenant</span>
 <span class="nb">time</span>                 <span class="n">accountName</span> <span class="k">cluster</span> <span class="n">compress</span> <span class="n">dedupe</span> <span class="n">metric</span>            <span class="n">value</span> <span class="n">valueTP</span>
 <span class="c1">----                 ----------- ------- -------- ------ ------            ----- -------</span>
@@ -299,9 +309,9 @@
 
 </code></pre></div></div>
 
-<p>Other things from HCI Collector are also working, including cluster alerts, disk information (disk wear level, disk status), etc.</p>
+<p>Other metrics from HCI Collector are also collected including cluster alerts, disk information (disk wear level, disk status), etc.</p>
 
-<p>Below I have 1 warning (Minimum IOPS are over-provisioned on my Demo VM), while (vSphere) disks are all online and SSD wear level is shown as 0% (because vSphere isn’t reporting that).</p>
+<p>Below I have 1 warning (Minimum IOPS are over-provisioned on this Demo VM), while (vSphere) disks are all online and SSD wear level is shown as 0% (because vSphere isn’t reporting that).</p>
 
 <p><img src="/assets/images/sfc-influxdb-alpha-05-cluster-alerts-efficiency-disk-status-and-wear.png" alt="" /></p>
 
@@ -350,6 +360,8 @@
       <h3>Related Posts</h3>
       <ul>
       
+        <li><a href="/2024/05/20/netapp-solidfire-input-for-telegraf.html">Use Telegraf to send NetApp SolidFire metrics to InfluxDB</a></li>
+      
         <li><a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana</a></li>
       
         <li><a href="/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html">NetApp E-Series Performance Analyzer in orchestrated container environments</a></li>
@@ -358,15 +370,13 @@
       
         <li><a href="/2022/10/26/eseries-performance-analyzer-e-series.html">Notes on NetApp E-Series Performance Analyzer</a></li>
       
-        <li><a href="/2024/04/23/grafana-11-netapp-solidfire-sfc.html">NetApp SolidFire Collector with Grafana 11</a></li>
-      
       </ul>
     </div>
   
 
     
   </div><footer class= "footer">
-    <p>2024-05-04 05:07 </p>
+    <p>2024-05-20 15:31 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
