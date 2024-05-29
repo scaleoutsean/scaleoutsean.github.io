@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-20T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Use Telegraf to send NetApp SolidFire metrics to InfluxDB","dateModified":"2024-05-20T00:00:00+08:00","datePublished":"2024-05-20T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html"},"description":"Use Telegraf exec plugin to send SolidFire metrics to InfluxDB","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_telegraf_monitor.png","@context":"https://schema.org"}</script>
+{"headline":"Use Telegraf to send NetApp SolidFire metrics to InfluxDB","dateModified":"2024-05-20T00:00:00+08:00","datePublished":"2024-05-20T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/20/netapp-solidfire-input-for-telegraf.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_telegraf_monitor.png","description":"Use Telegraf exec plugin to send SolidFire metrics to InfluxDB","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,27 +129,38 @@
 
   
   
-    3 minute read
+    5 minute read
   
 
     </span>
   </div>
   
-        <p>As I’m still thinking how to move ahead with <a href="/2024/05/03/netapp-solidfire-collector-next.html">SFC</a>, I’ve been checking out Telegraf again.</p>
+        <ul>
+  <li><a href="#telegraf-for-heavy-lifting">Telegraf for heavy lifting?</a></li>
+  <li><a href="#poc-with-powershell">PoC with PowerShell</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---python-version">Appendix A - Python version</a></li>
+</ul>
 
-<p>The idea is maybe I should just use Telegraf instead… I’m still thinking about it and today I was evaluating Telegraf again.</p>
+<h2 id="telegraf-for-heavy-lifting">Telegraf for heavy lifting?</h2>
 
-<p><a href="/2021/08/13/solidfire-snmp-v3-grafana.html">This</a> post shows how to use SNMP input for Telegraf to collect SolidFire metrics, but SolidFir’s SNMP output is quite basic.</p>
+<p>As I’m still thinking how to move ahead with <a href="/2024/05/03/netapp-solidfire-collector-next.html">SFC</a>, I’ve been checking out Telegraf again.</p>
+
+<p>I thought maybe I should just use Telegraf instead, so today I’ve been revisiting Telegraf again.</p>
+
+<p><a href="/2021/08/13/solidfire-snmp-v3-grafana.html">This</a> post shows how to use SNMP as a Telegraf input that collects SolidFire metrics, but SolidFir’s SNMP output is quite basic, so that approach couldn’t work well.</p>
 
 <p>A better - but also time-consuming - approach is to use another input and gater SolidFire metrics from the API.</p>
 
-<p>For this PoC I used PowerShell to collect volume metrics. I probably shouldn’t have…</p>
+<h2 id="poc-with-powershell">PoC with PowerShell</h2>
+
+<p>For this PoC I used PowerShell to collect volume metrics. I probably shouldn’t have (more on that later).</p>
 
 <p>Thanks to a PowerShell bug I ended up collecting metrics <em>indirectly</em>.</p>
 
-<p>That is, instead of using <code class="language-plaintext highlighter-rouge">inputs.exec</code> with a PowerShell script that sends output to InfluxDB, I had to run the script as root and spit data out to where Telegraf’s <code class="language-plaintext highlighter-rouge">input.file</code> can read it.</p>
+<p>That is, instead of using <code class="language-plaintext highlighter-rouge">inputs.exec</code> with a PowerShell script that sends output to InfluxDB, I had to run the script independently of Telegraf, spit data out to a place where Telegraf’s <code class="language-plaintext highlighter-rouge">input.file</code> can fetch it and submit to InfluxDB.</p>
 
-<p>I know that location shouldn’t be /etc/telegraf/, but that’s Telegraf’s home directory and I ran out of patience. Anyways, this is how my config looks like after volume properties (Get-SFVolume) and stats (Get-SFVolumeStats) are saved to two files in the InfluxDB format.</p>
+<p>Telegraf configuration file:</p>
 
 <pre><code class="language-raw">[agent]
   interval = "60s"
@@ -161,7 +172,6 @@
   flush_jitter = "5s"
   precision = "60s"
   omit_hostname = true
-[global_tags]
 [[inputs.file]]
   data_format = "influx"
   files = ["/etc/telegraf/telegraf01.out", "/etc/telegraf/telegraf02.out"]
@@ -173,7 +183,9 @@
   content_encoding = "gzip"
 </code></pre>
 
-<p>I just run a script from crontab and overwrite these two files every minute.</p>
+<p>I know that location shouldn’t be /etc/telegraf/, but that’s Telegraf’s home directory and I ran out of patience. Anyways, this is how my config looks like after volume properties (Get-SFVolume) and stats (Get-SFVolumeStats) are saved to two files in the InfluxDB format.</p>
+
+<p>I run a PowerShell script from crontab and overwrite those two files every minute.</p>
 
 <p>Telegraf agent picks them up and sends them to InfluxDB version 1 (in my case - see <code class="language-plaintext highlighter-rouge">output.influxdb</code> above) and that gives me these metrics in the <code class="language-plaintext highlighter-rouge">solidgraf</code> DB:</p>
 
@@ -203,26 +215,40 @@
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">host</code> name of the system where Telegraf agent is running is sent to InfluxDB although agent configuration says not to</li>
-  <li>InfluxDB v1 adds this stupid <code class="language-plaintext highlighter-rouge">_final</code> to some field names; I haven’t had the time to figure out what the hell that is</li>
+  <li><code class="language-plaintext highlighter-rouge">_final</code> appears in some field names because I mistakenly used the same value for both key and field in the same measurement; avoid that and you won’t have this problem</li>
 </ul>
 
-<p>Not <em>all</em> fields from Get-SFVolume and Get-SFVolumeStats responses are sent to InfluxDB - only about 50% of the more important stuff is. Feel free to adjust if necessary.</p>
+<p>You can find the PowerShell script in the scripts directory of Awesome SolidFire. In the case you wonder why the metrics-related code looks so laborious, it’s because it is - it’s all manually crafted to minimize code complexity at the expense of coding time. SolidFire.Core is the only external PowerShell module I used.</p>
 
-<p>Volume stats and properties is probably the most intensive part of metrics collection as it’s usually collected most frequently and take up most space which is one of the reasons why the script doesn’t send all output to InfluxDB.</p>
+<p>Also, not <em>all</em> fields from Get-SFVolume and Get-SFVolumeStats responses are sent to InfluxDB - only about 50% of the important stuff is. Feel free to adjust if necessary.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Volume stats and properties are probably two most intensive parts of metrics collection in SFC as these are usually collected most frequently and take up most space which is one of the reasons why the script doesn’t send all output to InfluxDB.</p>
 
 <p>I suspect I would have been better off if I used Python, but it’s too late now.</p>
 
-<p>As far as SFC is concerned, using Telegraf’s exec plugin removes the need for heavy optimizing SFC code:</p>
+<p>Meanwhile I rewrote the script in Python (notes below), which behaves a bit better on Linux. With it I also took a similarly minimalist approach.</p>
+
+<p>After evaluating Telegraf with both Python and PowerShell, I’ve concluded it’s easier to just use Python (or PowerShell) and keep things simple. SolidFire Collector (SFC) is a simple program and it’s easier to add a scheduler module and keep everything within one script than use Telegraf for scheduling and InfluxDB communication.</p>
+
+<p>Telegraf is good, but SFC doesn’t do much and adding a 250 MB container to do schedule Web POST events is hard to justify for this use case.</p>
+
+<h2 id="appendix-a---python-version">Appendix A - Python version</h2>
+
+<p>Rewritten for Python, it works slightly less badly. Telegraf is weird. Working around its quirks, I did it like this:</p>
 
 <ul>
-  <li>Use Telegraf for the busy, high frequency probes that run every 60 seconds</li>
-  <li>Use simpler SFC Python code for the rest (probes that run every 10 or 60 minutes)</li>
-  <li>Package both in a container</li>
+  <li>Python service that collects data every 60 seconds and outputs to /etc/telegraf/out/telegraf-solidfire.out. Python service runs as another user who’s member of the telegraf group</li>
+  <li>/etc/telegraf/out is owned by this user, let’s say sean:telegraf, so that he can write to it. /etc/telegraf/out/telegraf-solidfire.out is made accessible world with 755</li>
+  <li><code class="language-plaintext highlighter-rouge">[[inputs.file]]</code> plugin collects /etc/telegraf/out/telegraf-solidfire.out and sends to InfluxDB v1</li>
 </ul>
 
-<p>But I’ll still think about it, and I’d have to rewrite the volumes script in Python because PowerShell doesn’t play nicely here.</p>
+<pre><code class="language-raw">[[inputs.file]]
+  files = ["/etc/telegraf/out/solidfire-telegraf.out"]
+</code></pre>
 
-<p>You can find the PowerShell script in the scripts directory of Awesome SolidFire.</p>
+<p>Compared to known BS from PowerShell code, there are no such problems in the Python script.</p>
 
       </article>
     </div>
@@ -254,13 +280,13 @@
       
         <li><a href="/2024/05/03/netapp-solidfire-collector-next.html">Towards next SolidFire Collector (SFC)</a></li>
       
-        <li><a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana</a></li>
-      
         <li><a href="/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html">NetApp E-Series Performance Analyzer in orchestrated container environments</a></li>
       
-        <li><a href="/2023/11/04/eseries-perf-analyzer-epa-330.html">E-Series Perf Analyzer (EPA) v3.3.0</a></li>
-      
         <li><a href="/2022/10/26/eseries-performance-analyzer-e-series.html">Notes on NetApp E-Series Performance Analyzer</a></li>
+      
+        <li><a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">Metrics for NetApp SolidFire backup-to-S3 in InfluxDB and Grafana</a></li>
+      
+        <li><a href="/2023/11/04/eseries-perf-analyzer-epa-330.html">E-Series Perf Analyzer (EPA) v3.3.0</a></li>
       
       </ul>
     </div>
@@ -268,7 +294,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-20 18:47 </p>
+    <p>2024-05-30 00:22 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
