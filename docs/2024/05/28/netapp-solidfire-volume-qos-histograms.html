@@ -129,7 +129,7 @@
 
   
   
-    7 minute read
+    9 minute read
   
 
     </span>
@@ -142,22 +142,24 @@
   <li><a href="#response">Response</a></li>
   <li><a href="#what-are-these-things">What <em>are</em> these things?</a></li>
   <li><a href="#bucket-naming">Bucket naming</a></li>
-  <li><a href="#should-you-use-it">Should you use it?</a></li>
+  <li><a href="#should-you-use-qos-histogram-information">Should you use QoS histogram information?</a></li>
   <li><a href="#role-of-metrics-collection">Role of metrics collection</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
 <h2 id="intro">Intro</h2>
 
-<p>As I’ve been <a href="/2024/05/03/netapp-solidfire-collector-next.html">working on SFC v2</a> I’ve been playing with SolidFire’s QoS histograms and because of what I want to say below I thought I should also write a post about it.</p>
+<p>As I’ve been <a href="/2024/05/03/netapp-solidfire-collector-next.html">working on SFC v2</a> I’ve been playing with SolidFire’s QoS histograms and I thought I should write a post about it (why, more on that below).</p>
 
-<p>Some SFC users will use QoS histograms, but maybe even those who use other tools, or don’t use any, can make use of the API call in their own environment.</p>
+<p>Some SFC users will use QoS histograms but maybe even those who use other tools (or don’t use any) can make use of the API call in their own environment.</p>
+
+<p>Secondly, QoS histograms aren’t exposed in the SolidFire UI, so unless you looked at the API you may not even know it existed.</p>
 
 <h2 id="about-qos-histograms-on-netapp-solidfire">About QoS histograms on NetApp SolidFire</h2>
 
-<p>In my opinion Volume QoS Histograms, as they’re called, is one of the worst-marketed features on NetApp SolidFire.</p>
+<p>In my opinion Volume QoS Histograms - as they’re called - is one of the worst-marketed features on NetApp SolidFire.</p>
 
-<p>What do they do?</p>
+<p>What do do they?</p>
 
 <p>Well, <a href="https://docs.netapp.com/us-en/element-software/api/reference_element_api_listvolumeqoshistograms.html?q=Volume">here</a> it says:</p>
 
@@ -165,11 +167,13 @@
   <p>… generate a histogram of volume QoS usage for one volume or multiple volumes. This enables you to better understand how volumes are using QoS.</p>
 </blockquote>
 
-<p>But if you’re looking for help on how to make sense of them or how to use them to improve storage management, you’re out of luck.</p>
+<p>That’s about it.</p>
+
+<p>If you’re looking for help on how to make sense of them or how to use them to improve storage management, you’re out of luck.</p>
 
 <h2 id="request">Request</h2>
 
-<p>We request QoS histogram for one or more volumes. If you have 5 volumes you care about, you would provide something like [1,24,33,41,57] instead of [1].</p>
+<p>We request QoS histogram for one or more volumes. If you have 5 volumes you care about you maybe provide something like [1,24,33,41,57] instead of [1].</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ListVolumeQoSHistograms"</span><span class="p">,</span><span class="w">
@@ -182,15 +186,17 @@
 
 <h2 id="response">Response</h2>
 
-<p>This is where things get funny. Here’s what the response means (same page from the documentation):</p>
+<p>This is where things start to get funny.</p>
+
+<p>Here’s what the response means (same page from the documentation):</p>
 
 <blockquote>
   <p>A list of objects describing volume usage for one or more volumes.</p>
 </blockquote>
 
-<p>Go figure…</p>
+<p>That’s it. Go figure…</p>
 
-<p>To keep it short, I’ll show just one histogram, <code class="language-plaintext highlighter-rouge">belowMinIopsPercentages</code>.</p>
+<p>To keep it short, I’ll show just one histogram item, <code class="language-plaintext highlighter-rouge">belowMinIopsPercentages</code>, out of six available for each volume.</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
@@ -216,26 +222,28 @@
 
 <h2 id="what-are-these-things">What <em>are</em> these things?</h2>
 
-<p>These are the six dictionaries with KV pairs that you get back for each volume.</p>
+<p>These are the six dictionaries with bucket-named KV pairs that you get back for each volume.</p>
 
 <p>Unlike other SolidFire API objects, there’s nothing meaningful in the docs that can help you do much with it without experimentation.</p>
 
 <p>Of course, it’s not ancient Egyptian, it’s just English, but still… Let’s see…</p>
 
 <ul>
-  <li>‘belowMinIopsPercentages’ - tells you how much time the volume has spent below Min QoS setting level. Example: if a lot of time is spent below Min IOPS, maybe QoS settings for the volume are too generous.</li>
-  <li>‘minToMaxIopsPercentages’ - same, but for time spent in the “right” range, between Min &amp; Max</li>
-  <li>‘readBlockSizes’ - breakdown by block sizes in read requests</li>
-  <li>‘targetUtilizationPercentages’ - this one is more tricky. Below 100% is below Max IOPS. Above 101 is bursting.</li>
-  <li>‘throttlePercentages’ - how much time volume is being QoS-throttled (meaning, hitting maximum and exhausting all, or not having any, Burst IOPS)</li>
-  <li>‘writeBlockSizes’ - like read above</li>
+  <li><code class="language-plaintext highlighter-rouge">belowMinIopsPercentages</code> - tells you how much time the volume has spent below Min QoS setting level. Example: if a lot of time is spent below Min IOPS, maybe QoS settings for the volume are too generous.</li>
+  <li><code class="language-plaintext highlighter-rouge">minToMaxIopsPercentages</code> - same, but for time spent in the “right” range, between Min &amp; Max</li>
+  <li><code class="language-plaintext highlighter-rouge">readBlockSizes</code> - breakdown by block sizes in read requests</li>
+  <li><code class="language-plaintext highlighter-rouge">targetUtilizationPercentages</code> - this one is more tricky. Below 100% is below Max IOPS. Above 101 is bursting.</li>
+  <li><code class="language-plaintext highlighter-rouge">throttlePercentages</code> - how much time volume is being QoS-throttled (meaning, hitting maximum and exhausting all, or not having any, Burst IOPS)</li>
+  <li><code class="language-plaintext highlighter-rouge">writeBlockSizes</code> - like read above</li>
 </ul>
 
-<p>Once you’ve sort figured that out, you start wondering about stuff.</p>
+<p>Once you’ve sort of figured that out, you start wondering about stuff.</p>
 
 <p>If a volume is 10 months old and it was idle (“pre-prod testing”) for 6 months, then it enters production and it looks like it’s spent most of time idling below MinIOPS, is that actionable?</p>
 
-<p>Then you come up with a few more questions like these and realize you’d really want to see a 15m video or read a nice blog about this which may help you save time and avoid mistakes. But there’s nothing, which is why I say it’s one of the worst marketed features of this product (rivaling Backup to S3).</p>
+<p>Then you come up with a few more questions like these and realize you’d really want to see a 15-minute video or read a nice blog about this which may help you save time and avoid mistakes.</p>
+
+<p>But there’s nothing, even in the API documentation, which is why I say it’s one of the worst marketed features of this product (rivaling Backup to S3).</p>
 
 <h2 id="bucket-naming">Bucket naming</h2>
 
@@ -252,31 +260,39 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>This is terrible - hard to read and naturally sorts in the wrong order with the largest bucket at the top, followed by the smallest bucket.</p>
+<p>It’s hard to read and sorts in the wrong order with the largest bucket at the top, followed by the smallest bucket. Terrible!</p>
 
-<h2 id="should-you-use-it">Should you use it?</h2>
+<h2 id="should-you-use-qos-histogram-information">Should you use QoS histogram information?</h2>
 
 <p>If you haven’t thought about using it, you probably don’t need it.</p>
 
 <p>But if you’re curious, I’ll give one example that may increase your interest.</p>
 
-<p>This is volume ID 134 which happens to be a SQL Server data volume (from the recent SQL Server 2022 post). <code class="language-plaintext highlighter-rouge">writeBlockSizes</code> tells me the great majority of all writes are 4-8 KiB.</p>
+<p>This is volume ID 134 which happens to be a SQL Server data volume (from the recent SQL Server 2022 post).</p>
+
+<p><code class="language-plaintext highlighter-rouge">writeBlockSizes</code> tells me the great majority of all writes are 4-8 KiB.</p>
 
 <p><img src="/assets/images/solidfire_sfc_volume_qos_histograms_01_write_block_sizes.png" alt="" /></p>
 
-<p>Oh, and by the way, check out the bucket names (Bucket131072Plus is b_131072_plus and properly located at the <em>bottom</em> of the list).</p>
+<p>Oh, and by the way, check out the bucket names (Bucket131072Plus is b_131072_plus here) - they are correctly displayed <em>at the bottom</em> of the list. Because they sort correctly, you don’t even need to read the numbers (although I find them more readable, too).</p>
 
 <p>Below that we have <code class="language-plaintext highlighter-rouge">readBlockSizes</code>, where tiny-to-small blocks dominate.</p>
 
 <p><img src="/assets/images/solidfire_sfc_volume_qos_histograms_02_read_block_sizes.png" alt="" /></p>
 
-<p>The two above use regular Time Series visualization. You just pick the volume (I “hardcoded” it in my visualization, but you could have a drop-down list) and view that one volume.</p>
+<p>Now you may think - what’s the point, it’s just a bunch of horizontal lines. But that’s just for one hour, and lines can go up and down when and if composition of IO patterns changes. For an example, you may notice changes after an application update and suggest changing QoS policy for the volume.</p>
 
-<p>I suppose viewing a whole bunch at once could be messy.</p>
+<p>The two visualizations above use regular Time Series from Grafana. You just pick a volume ID (I “hardcoded” the ID in my visualization query but you could have volume names in a drop-down list instead) and add all six buckets to pull those values.</p>
+
+<p>I suppose viewing a whole bunch of volumes at once could be messy, and in any case I always prefer to watch “key” volumes/apps rather than the entire cluster.</p>
+
+<p>This what unscrewed bucket names look like in Grafana when querying InfluxDB populated by SFC v2: they look good. And when you select them, they’re sorted in the proper, ascending order. Also there’s a <code class="language-plaintext highlighter-rouge">tag::name</code> (not in <code class="language-plaintext highlighter-rouge">ListQoSHistograms</code> response) was added for convenience in selecting volume by name, either here or in the panel if you want to make it interactive. (The volume names aren’t sorted in ascending alphabetic order because they are sorted based on volume IDs. If that’s inconvenient - it might be if you have more than 20-30 - you could probably create a custom query that sorts them right.)</p>
+
+<p><img src="/assets/images/solidfire_sfc_volume_qos_histograms_04_volume_selection.png" alt="" /></p>
 
 <p>Below we have <code class="language-plaintext highlighter-rouge">belowMinIopsPercentages</code>. This uses Grafana Histogram visualization.</p>
 
-<p>It’s kind of hard to decipher and because most people view these in charts rather than spreadsheets, this is another example why tutorials or guides about this should have been part of “this is how to do it” which was never created.</p>
+<p>It’s hard to decipher and because most people view these in charts rather than spreadsheets, this is another reason why tutorials or guides about this should have been part of “this is how to do it” which was never created.</p>
 
 <p><img src="/assets/images/solidfire_sfc_volume_qos_histograms_03_time_spent_below_min_iops.png" alt="" /></p>
 
@@ -311,9 +327,11 @@
 
 <h2 id="role-of-metrics-collection">Role of metrics collection</h2>
 
-<p>When you start thinking about this, you are surely going to come up with more questions. Such as, do these metrics show “last 60 days”? Or go back to the time the volume was created? Why do two volumes created at the same time have a different number of samples?</p>
+<p>When you start thinking about how you may want to use that information, you are surely going to come up with more questions.</p>
 
-<p>I don’t know answers to these questions, but then there’s also the question of watching QoS histogram changes over time.</p>
+<p>Such as, do these metrics show “last 60 days”? Or go back to the time the volume was created? Why do two volumes created at the same time have a different number of samples?</p>
+
+<p>Then there’s also the question of watching QoS histogram changes over time.</p>
 
 <ul>
   <li>First, I’m not sure what “down-sampling” does to these numbers and whether they have any meaning once down-sampled</li>
@@ -322,21 +340,25 @@
   <li>Fourth, if volume performance statistics are down-sampled as well, there are more questions about the validity of anything you see that way</li>
 </ul>
 
-<p>These answers can be found, but it takes an effort. Without knowing them I’d still say collecting metrics can be useful, but I’d only reference data that hasn’t been down-sampled (and averaged) until I know for sure.</p>
+<p>These answers can be found with some effort, but that takes time and effort.</p>
 
-<p>Currently with SFC I’m seeing just around 1 MB/day with 32 volumes and one (SF Demo VM) node, so retaining full metrics for 30 to 60 days should be easy. Down-sampling could be avoided even past that time limit (dump data to a file, upload to S3 or some other low-cost location and keep it for a year), but it’s probably not necessary.</p>
+<p>Without having them I’d still say these metrics can be useful and actionable, but I’d only reference data that hasn’t been down-sampled (and averaged) until I know how that affects visualizations.</p>
 
-<p>Maybe the greatest value and simplest use case is for new workloads that are being onboarded and QoS histograms combined with QoS policies make it simple for the SolidFire administrator to optimize QoS policies with very little effort during the first week or two of new workload coming online.</p>
+<p>In terms of cost, currently with SFC v2 (still being worked on) I’m seeing just about 1 MB/day with 32 volumes and one (SF Demo VM) node, so retaining full metrics for 30 to 60 days should be easy. Compared to HCI Collector I collect less data and less frequently when it comes to data that doesn’t need to be pulled every 60 seconds, so SFC v2 makes collecting QoS histogram data effortless and affordable .</p>
+
+<p>Down-sampling could be avoided even past that any built-in time limit: use SQL to dump older data to a file, upload backups to S3 or some other low-cost location, keep it there for a year and download when running monthly analytics. But that is probably not necessary.</p>
+
+<p>Maybe the greatest value and simplest use case for QoS histograms is for new workloads that are being onboarded. QoS histograms combined with QoS policies make it simple for the SolidFire administrator to optimize QoS policies with very little effort within the first week or two of new workload coming online.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Hopefully these examples answer some of the questions for you.</p>
 
-<p>If we can guess what QoS histograms mean, they can be useful. As an example, simply being able to know IO request sizes over time is nice. I know it can be done from each host, but this is much easier and you don’t have to ask the DBA to do anything.</p>
+<p>If we can guess what QoS histograms mean, they can be useful. As an example, simply being able to know IO request sizes over time is nice. I know it can be done from each host, but this is much easier and you don’t have to ask the DBA or application owner to do anything.</p>
 
 <p>But there are also unanswered questions that may or may not be answered in coming months.</p>
 
-<p>As far as SFC v2 is concerned, QoS histograms will be included and available. They were/are in HCI Collector as well, but they used to work very slowly and were scheduled the same way as everything else, once every 60 seconds (by default). In SFC v2 it takes less than 1 second to query the API, parse JSON, unscrew the bucket names and send data to InfluxDB, and QoS histograms can be scheduled separately from the rest, so if you run it once every 600 seconds it could still finish in time even on SolidFIre clusters with thousands of volumes.</p>
+<p>As far as SFC v2 is concerned, QoS histograms will be included and available. They were/are in HCI Collector as well, but they used to work very slowly and were scheduled the same way as everything else, once every 60 seconds (by default). In SFC v2 it takes less than 1 second to make the API call for QoS histograms, parse JSON response, unscrew the bucket names and send data to InfluxDB. Because QoS histograms can be scheduled separately from the rest, if you run it once every 600 seconds it could still finish in time even on SolidFIre clusters with thousands of volumes.</p>
 
 
       </article>
@@ -383,7 +405,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-30 00:22 </p>
+    <p>2024-05-30 08:55 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
