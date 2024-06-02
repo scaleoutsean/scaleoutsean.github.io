@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-05-29T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"SolidFire Collector v2.0.0 is ready","dateModified":"2024-05-29T00:00:00+08:00","datePublished":"2024-05-29T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/05/29/sfc-v2.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/29/sfc-v2.html"},"description":"SFC v2 sucks less than HCI Collector v0.7!","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_sfc_01_sfc_observability.png","@context":"https://schema.org"}</script>
+{"headline":"SolidFire Collector v2.0.0 is ready","dateModified":"2024-05-29T00:00:00+08:00","datePublished":"2024-05-29T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/05/29/sfc-v2.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/05/29/sfc-v2.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire_sfc_01_sfc_observability.png","description":"SFC v2 sucks less than HCI Collector v0.7!","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    18 minute read
+    21 minute read
   
 
     </span>
@@ -153,7 +153,8 @@
   <li><a href="#dependencies-and-the-messy-code">Dependencies and the messy code</a></li>
   <li><a href="#grafana-and-python">Grafana and Python</a></li>
   <li><a href="#packaging">Packaging</a></li>
-  <li><a href="#whats-next">What’s next</a></li>
+  <li><a href="#security">Security</a></li>
+  <li><a href="#whats-next-for-sfc">What’s next for SFC</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
@@ -185,7 +186,7 @@
 
 <p>Make it <strong>easy to do more</strong>. In order to do that, I had to make the code both save space (related to DB back-end) and time (related to scheduling, async, and other bits and pieces).</p>
 
-<p><strong>Drop Grafana dashboards</strong>, because I’m not good at dashboard design and people can create average dashboards on their own. I still have a “reference dashboard” with “one of each” to get people started, but I’m not going to include it or attempt to create dashboards that use external plugins. This also removes the need to update Docker Compose and Kubernetes templates every time there’s a new Grafana or plugin security bug.</p>
+<p><strong>Drop Grafana dashboards</strong>, because I’m not good at dashboard design and people can create average dashboards on their own. I still have a “reference dashboard” with “one of each” to get people started, but I’m not going to include it or attempt to create dashboards that use external plugins. This also removes the need to update <strong>and test</strong> Docker Compose and Kubernetes templates every time there’s a new Grafana or plugin security bug.</p>
 
 <h2 id="whats-new-in-sfc">What’s new in SFC</h2>
 
@@ -197,17 +198,17 @@
 
 <p>This isn’t a “feature” or improvement, but I want to say it - I’ve rewritten HCI Collector five times.</p>
 
-<p>The first two attempts in 2022 and 2023 were with multithreading and the right structure, but every time I got busy and couldn’t find the bits and pieces of code</p>
+<p>The first two attempts in 2022 and 2023 were with multithreading and the right structure, but every time I got busy and couldn’t find the bits and pieces of code that I kept around in various VMs and containers.</p>
 
-<p>The third attempt was based on asynchronous requests, but I lost it due to two unrelated mistakes in OS management (first one problem happened, then another in a different place, and each resulted in deletion of myh work in progress).</p>
+<p>The third attempt was based on asynchronous requests, but I lost it due to two unrelated mistakes in OS management (first one problem happened and the first copy was gone, then another in a different place wiped the second copy, and all work in progress was lost).</p>
 
 <p>The fourth attempt was with async and Telegraf, but I realized it was too complicated.</p>
 
 <p>The final attempt was this one, async with almost everything else done manually.</p>
 
-<p>If this sounds like an advertisement for backups, it is. 3-2-1 is a thing.</p>
+<p>If this sounds like an advertisement for off-site backups, it is. 3-2-1 is a thing!</p>
 
-<p>Aside from that, I haven’t been idle when it comes to SFC - since v0.7 came out I’ve tested and updated Grafana 8, collector for VMware (including testing with VMware vSphere 7), etc.</p>
+<p>Aside from that, I haven’t been idle when it comes to SFC - since v0.7 came out I’ve tested and updated Grafana 8, collector for VMware (including testing with VMware vSphere 7), built and tested Kubernetes templates, etc.</p>
 
 <h3 id="back-end-database-change">Back-end database change</h3>
 
@@ -299,6 +300,8 @@
 2024-05-30T09:13:34Z - INFO - hi_freq_tasks - Completed combined high-frequency collection. Sending to InfluxDB next. Time taken:0.3489999771118164 seconds.
 </code></pre>
 
+<p>It looks like one would expect - not better, not worse. But in HCI Collector logging was worse.</p>
+
 <h3 id="qos-histograms">QoS Histograms</h3>
 
 <p>HCI Collector v0.7 has QoS histograms, but I rewrote that part so that it’s more usable in Grafana.</p>
@@ -330,7 +333,7 @@
 
 <p><em>Normally</em> it will look good, but <em>abnormally</em> it won’t.</p>
 
-<p>Even we you maximize the panel, it’s still useless. WTF???</p>
+<p>Even we maximize the panel, it’s still useless. WTF???</p>
 
 <p><img src="/assets/images/solidfire_sfc_03_quality-of-life-options.png" alt="" /></p>
 
@@ -351,7 +354,7 @@
 
 <p>People who have just one vSphere cluster won’t find that useful at all (in that case they likely have just one tenant account), while at scale Stat hits “the volume problem” and you simply have to use something else (table, etc.).</p>
 
-<p>A silly workaround (if that counts) is to use account (or volume) IDs and have a separate panel with an ID to name mapping so if something stands out, you can look it up quickly. I’m not sure how practical this is.</p>
+<p>A workaround (if that counts) is to use account (or volume) IDs and have a separate panel with an ID to name mapping so if something stands out, you can look it up quickly. I’m not sure how practical this is, but personally I like it.</p>
 
 <p><img src="/assets/images/solidfire_sfc_05_quality-of-life-aid-to-aname.png" alt="" /></p>
 
@@ -381,13 +384,13 @@
   <li>aiohttp - to make it easier to use async IO (aiohttp has half a dozen own dependencies, but it’s actively maintained)</li>
 </ul>
 
-<p>The other day I <a href="/2024/05/20/netapp-solidfire-input-for-telegraf.html">considered “offloading” InfluxDB-related work to Telegraf</a>, but as I explained in that post I thought my “manual” ad-hoc approach works well enough and Telegraf container alone is 250 MiB, while my SFC on Alpine less than 70 MB. <em>If</em> the simple send-to-Influx function in SFC turns out to be garbage, I would still try using a Python module before using Telegram.</p>
+<p>The other day I <a href="/2024/05/20/netapp-solidfire-input-for-telegraf.html">considered “offloading” InfluxDB-related work to Telegraf</a>, but as I explained in that post I thought my “manual” ad-hoc approach works well enough and Telegraf container alone is 250 MiB, while my SFC v2 (packaged with Alpine base image) less than 70 MB. <em>If</em> the simple send-to-Influx function in SFC turns out to be garbage, I would still try using a Python module before using Telegram.</p>
 
 <h2 id="grafana-and-python">Grafana and Python</h2>
 
 <p>Most recently Grafana kicked out unsigned plugins and also some based on Angular or whatever, so I’m glad I made the decision to not provide dashboards or use external plugins - that’s just too much to handle for a tiny single contributor project.</p>
 
-<p>SFC v2 uses Grafana 11 - which I <a href="/2024/04/23/grafana-11-netapp-solidfire-sfc.html">tested in preview</a>, so I knew it wasn’t too different and because I use no plugins I am able to support it mere weeks after v11 came out. SFC likely works with older versions because there aren’t any dependencies and InfluxDB v1 is mature and older versions also support it.</p>
+<p>SFC v2 reference dashboard was created using Grafana 11 - which I <a href="/2024/04/23/grafana-11-netapp-solidfire-sfc.html">also tested in preview with the old HCI Collector</a>, so I knew it wasn’t too different and because I use no plugins, it’s easy to switch to a new version mere weeks after v11 came out. SFC likely works with older versions because there aren’t any dependencies and InfluxDB v1 is mature and older versions also support it.</p>
 
 <p>I used Python 3.10 because that’s what Ubuntu 22.04 has and I don’t use any fancy features found in latest &amp; greatest Python releases.</p>
 
@@ -397,9 +400,40 @@
 
 <p>I version this release as v2 because although last versions of HCI Collector were v0.7.x, SolidFire collector script contained in them was v1+ and given the improvements and the big change of back-end DB, version 2 seems justified.</p>
 
-<p>I still need to create a container and Docker Compose and Kubernetes templates.</p>
+<p><a href="https://hub.docker.com/r/scaleoutsean/sfc/tags">SFC container v2.0.0</a> has been published to Docker Hub for both ARM64 and x86_64. But most users won’t be able to use it (see next section).</p>
 
-<h2 id="whats-next">What’s next</h2>
+<p>Docker Compose and Kubernetes templates are still on my to-do list.</p>
+
+<h2 id="security">Security</h2>
+
+<p>Partially because it’s the right thing to do, partially because it’s boring work, SFC v2 no longer helps the user circumvent HTTPS security by accepting snake oil certificates.</p>
+
+<p>If SolidFire TLS certificate cannot be validated, SFC won’t start.</p>
+
+<p>Most users use either internal or “fake” TLS certificates, which means most likely such certificates will have to be built into their container (seems like the easiest way to me). That’s why I think almost no one will be able to use the container I posted on Docker Hub. But the SFC repository provides instructions on how to build SFC with custom certificates, so it’s just a small extra effort.</p>
+
+<p>Importing TLS certificates into OS certificate store is easy, so for VM users this change isn’t going to be a problem.</p>
+
+<p>I know some folks will be upset that they have to do the “extra” work, but I’ve often mentioned this:</p>
+
+<ul>
+  <li>SFC can use a read-only account to access the SolidFire API</li>
+  <li>That account - among other things - collects data about storage accounts, volumes, and more. Storage account details contain CHAP passwords</li>
+  <li>The next step is fake TLS certificates. If SFC accepts invalid certificate, an attacker can position himself between SFC and SolidFire and get CHAP passwords for all storage accounts</li>
+  <li>Since they’re able to insert themselves between SFC and SolidFire (which is probably on Management LAN or at least internal network, they probably can also control some client on iSCSI network, which means they may be abel to access all data on tenants whose volumes are protected <a href="/2021/07/16/iqn-level-chap-authentiation-on-solidfire.html">only</a> by CHAP)</li>
+  <li>That means SFC that accepts fake certificates can put you out of business. An attacker can’t delete anything using a read-only admin account, but they may be able to read storage data.</li>
+</ul>
+
+<p>If you run SFC on a properly secured VM or container stack and don’t accept fake TLS certificates, then you’re pretty safe and that’s why there’s no need to spend extra time to make it less secure.</p>
+
+<p>In fact it should also default to TLS when it connects to InfluxDB - it uses HTTP now - but:</p>
+
+<ul>
+  <li>In most cases InfluxDB will run in the same namespace or VM/Docker host</li>
+  <li>Nothing confidential is stored in InfluxDB. Volumes, storage account names (not passwords), performance statistics, that kind of things</li>
+</ul>
+
+<h2 id="whats-next-for-sfc">What’s next for SFC</h2>
 
 <p>I still have to clean up the code and re-create the docs I recently created for the version that was supposed to work with Telegraf, but I’m already thinking about some enhancements that shouldn’t take years.</p>
 
@@ -425,7 +459,7 @@
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>After several failed attempts, one of them involving a catastrophic loss of data, I’m happy that I’ve managed to get the new SFC to a usable and release-able state. For years I’ve been wondering if I’ll ever get here - it’s like one of those Github comments from years past which say “I’ll fix this in coming days” and the issue is still open.</p>
+<p>After several failed attempts, one of them involving catastrophic loss of data, I’m happy that I’ve managed to get the new SFC to a usable and release-able state. For years I’ve been wondering if I’ll ever get here - it’s like one of those Github comments from years past which say “I’ll fix this in coming days” and the issue is still open.</p>
 
 <p>The code, documentation and a reference dashboard will be posted to the <a href="https://github.com/scaleoutsean/sfc">repo</a> within days.</p>
 
@@ -474,7 +508,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-05-31 19:45 </p>
+    <p>2024-06-02 16:26 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

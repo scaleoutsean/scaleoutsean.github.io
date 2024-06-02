@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            Kubernetes, Trident and SolidFire configuration visibility | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Understand SolidFire configuration in a Kubernetes environment
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Kubernetes, Trident and SolidFire configuration visibility | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Kubernetes, Trident and SolidFire configuration visibility" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Understand SolidFire configuration in a Kubernetes environment" />
+<meta property="og:description" content="Understand SolidFire configuration in a Kubernetes environment" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/kubernetes_to_trident_to_solidfire.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-01T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"Kubernetes, Trident and SolidFire configuration visibility","dateModified":"2024-06-01T00:00:00+08:00","datePublished":"2024-06-01T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html"},"image":"https://scaleoutsean.github.io/assets/images/kubernetes_to_trident_to_solidfire.png","description":"Understand SolidFire configuration in a Kubernetes environment","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">Kubernetes, Trident and SolidFire configuration visibility</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>01 Jun 2024</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    23 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#mapping-applications-to-kubernetes-pvcs-with-kubectl">Mapping applications to Kubernetes PVCs with kubectl</a></li>
+  <li><a href="#mapping-pvcs-to-storage-with-tridentctl">Mapping PVCs to storage with tridentctl</a></li>
+  <li><a href="#mapping-trident-to-solidfire-with-scripts-or-sql-queries">Mapping Trident to SolidFire with scripts or SQL queries</a></li>
+  <li><a href="#solidfire-api-vs-external-database">SolidFire API vs. external database</a></li>
+  <li><a href="#using-the-solidfire-api-to-enhance-configuration-mapping">Using the SolidFire API to enhance configuration mapping</a></li>
+  <li><a href="#using-a-database-to-assist-in-configuration-mapping">Using a database to assist in configuration mapping</a></li>
+  <li><a href="#assembling-replicated-iscsi-target-names-for-trident-import">Assembling replicated iSCSI target names for Trident import</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---tridentctl-output-for-volumes-and-backends">Appendix A - tridentctl output for volumes and backends</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Recently I realized that in 2021 intended to publish Kubernetes failover and failback scripts for SolidFire with NetApp Trident, but never go to it.</p>
+
+<p>No one asked, so I forgot to finish those PowerShell scripts. But the <a href="/2021/03/20/kubernetes-solidfire-failover-failback.html">post</a> that deep dives into how to do it seems clear and it’s not hard in the first place.</p>
+
+<p>I know that many enterprise users are very good at automation so I’m not surprised that no one asked. If you can’t do it yourself you probably don’t want to use a script from Github either. I mean this for enterprise users.</p>
+
+<p>Still, there are other users who have simpler requirements such as storage and configuration replication, without BC requirements (the ability to switch over and provide services at the remote site).</p>
+
+<p>They can get away by simply configuring volume replication on SolidFire - as long as data is replicated and you upload your Kubernetes backup to S3, that’s enough.</p>
+
+<p>But maybe even those users want simple tools to make it easier to see what’s going on in their VM or Kubernetes environment, so I’ll add some content about that in this post.</p>
+
+<p>Anyway, this post will not provide a solution for anything, but will look at where to get the information required to build it.</p>
+
+<p>I may use this information to enhance SolidFire Collector and also to write another post that will “connect the dots” from this post, perhaps into a workflow or a script.</p>
+
+<h2 id="mapping-applications-to-kubernetes-pvcs-with-kubectl">Mapping applications to Kubernetes PVCs with kubectl</h2>
+
+<p>To get a list of PVCs use standard <code class="language-plaintext highlighter-rouge">kubectl</code> or or Kubernetes API. For example, to get PVCs:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get pvc <span class="nt">-n</span> <span class="k">${</span><span class="nv">NS</span><span class="k">}</span>
+</code></pre></div></div>
+
+<p>Let’s see an example (with just Name and Source parts of output shown for brevity).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pv pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c <span class="nt">-n</span> important
+Name:            pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c
+...
+Source:
+    Type:              CSI <span class="o">(</span>a Container Storage Interface <span class="o">(</span>CSI<span class="o">)</span> volume <span class="nb">source</span><span class="o">)</span>
+    Driver:            csi.trident.netapp.io
+    FSType:            xfs
+    VolumeHandle:      pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c
+    ReadOnly:          <span class="nb">false
+    </span>VolumeAttributes:      <span class="nv">backendUUID</span><span class="o">=</span>b3680925-a9c1-4552-a1b4-1e4a0a273e8e
+                           <span class="nv">internalName</span><span class="o">=</span>pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c
+                           <span class="nv">name</span><span class="o">=</span>pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c
+                           <span class="nv">protocol</span><span class="o">=</span>block
+                           storage.kubernetes.io/csiProvisionerIdentity<span class="o">=</span>1711014850727-2146-csi.trident.netapp.io
+</code></pre></div></div>
+
+<p>This is the simplest case, where name and internalName are the same.</p>
+
+<p>Once we have a list of volumes (PVs can be queried as well), we can move to Trident.</p>
+
+<h2 id="mapping-pvcs-to-storage-with-tridentctl">Mapping PVCs to storage with tridentctl</h2>
+
+<p>I wrote a post about using the Trident API <a href="/2022/05/04/trident-csi-api.html">here</a>. If you want to use the API directly, check out that post for some examples and then the Trident repository on Github, since the API isn’t static.</p>
+
+<p>In these examples I’ll use the CLI because it’s easier.</p>
+
+<p>Each SolidFire cluster is a separate backend in Trident configuration. Here we have one such backend.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./trident-installer/tridentctl <span class="nt">-n</span> trident get backend
++--------------------------+----------------+--------------------------------------+--------+------------+---------+
+|           NAME           | STORAGE DRIVER |                 UUID                 | STATE  | USER-STATE | VOLUMES |
++--------------------------+----------------+--------------------------------------+--------+------------+---------+
+| solidfire_192.168.105.30 | solidfire-san  | b3680925-a9c1-4552-a1b4-1e4a0a273e8e | online | normal     |       5 |
++--------------------------+----------------+--------------------------------------+--------+------------+---------+
+</code></pre></div></div>
+
+<p>If there are volumes on the backend, we can view them like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl <span class="nt">-n</span> trident get volumes
++------------------------------------------+---------+---------------+----------+--------------------------------------+-------+---------+
+|                   NAME                   |  SIZE   | STORAGE CLASS | PROTOCOL |             BACKEND UUID             | STATE | MANAGED |
++------------------------------------------+---------+---------------+----------+--------------------------------------+-------+---------+
+| pvc-14a51322-16c8-4b95-a7e4-28d9963450b3 | 2.0 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e |       | <span class="nb">true</span>    |
+| pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c | 2.0 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e |       | <span class="nb">true</span>    |
+| pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1 | 2.0 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e |       | <span class="nb">true</span>    |
+| pvc-d793176f-2484-48ea-9255-f70215a7c5f7 | 2.0 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e |       | <span class="nb">true</span>    |
+| pvc-fec78b61-a216-4825-a709-a24069cfadc7 | 4.7 GiB | silver        | block    | b3680925-a9c1-4552-a1b4-1e4a0a273e8e |       | <span class="nb">false</span>   |
++------------------------------------------+---------+---------------+----------+--------------------------------------+-------+---------+
+</code></pre></div></div>
+
+<p>One of the more interesting details is <code class="language-plaintext highlighter-rouge">MANAGED</code> (in one case <code class="language-plaintext highlighter-rouge">false</code>).</p>
+
+<p>When a volume is natively created through Trident, it’s managed. When it’s imported, it can be put under Trident management or not (in which case you’d see <code class="language-plaintext highlighter-rouge">false</code> there). That’s useful if you import volumes for temporary purposes such as backup from Kubernetes, or maybe data masking and whatnot.</p>
+
+<p>This may be easier to do using the Trident API, but for simple reporting <code class="language-plaintext highlighter-rouge">tridentcli</code> is good enough.</p>
+
+<p>We can have it output JSON responses like this, which may be how a storage admin might actually get this output from Kubernetes admins - they could upload output of this command to an off-site S3 bucket, for example, so that we don’t need to access the Kubernetes or Trident API or CLI.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./trident-installer/tridentctl <span class="nt">-n</span> trident get volume pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c <span class="nt">-o</span> json
+</code></pre></div></div>
+
+<p>You may see a sample of “get volume(s)” and “get backend(s)” output in Appendix A.  That contains all the information we need from Trident.</p>
+
+<p>Next, we want to map Trident volumes to SolidFire.</p>
+
+<h2 id="mapping-trident-to-solidfire-with-scripts-or-sql-queries">Mapping Trident to SolidFire with scripts or SQL queries</h2>
+
+<p>You may say “I don’t need to map anything here, I already have internalName(s). Maybe. But maybe you also want to get more details about the accounts or other details from tridentctl output.</p>
+
+<p>As  you can see in Appendix A, each volume has the following groups of parameters:</p>
+
+<ul>
+  <li>Config: volume-related info</li>
+  <li>backend: needs to be extracted when you have multiple SolidFire clusters, or multiple sites</li>
+  <li>backendUUID: unique UUID (randomly generated every time a backend is added) for <code class="language-plaintext highlighter-rouge">backend</code></li>
+  <li>pool: usually not relevant to SolidFire and identical to storage class</li>
+  <li>orphaned: as the name says, something’s wrong… Maybe check this and spit out some warning if not empty.</li>
+</ul>
+
+<p>In the key part, Config, we find <code class="language-plaintext highlighter-rouge">name</code> and <code class="language-plaintext highlighter-rouge">internalName</code>.</p>
+
+<p>I wrote about those in the post at the top so I won’t write again, but I’ll say for new volumes they’re identical, but if you replicate a volume and import it from a different SolidFire using the same Kubernetes cluster, they’ll diverge.</p>
+
+<p>Anyway, back to the names: we can easily extract those values.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tv</span><span class="p">[</span><span class="s">'items'</span><span class="p">]:</span>
+<span class="p">...</span>   <span class="k">print</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s">'Config'</span><span class="p">][</span><span class="s">'name'</span><span class="p">])</span>
+<span class="p">...</span> 
+<span class="n">pvc</span><span class="o">-</span><span class="mi">14</span><span class="n">a51322</span><span class="o">-</span><span class="mi">16</span><span class="n">c8</span><span class="o">-</span><span class="mi">4</span><span class="n">b95</span><span class="o">-</span><span class="n">a7e4</span><span class="o">-</span><span class="mi">28</span><span class="n">d9963450b3</span>
+<span class="n">pvc</span><span class="o">-</span><span class="mi">4</span><span class="n">fb5d7f5</span><span class="o">-</span><span class="mi">4</span><span class="n">d98</span><span class="o">-</span><span class="mi">429</span><span class="n">e</span><span class="o">-</span><span class="n">ab36</span><span class="o">-</span><span class="mi">1</span><span class="n">b2118b7e55c</span>
+<span class="n">pvc</span><span class="o">-</span><span class="n">a5f21571</span><span class="o">-</span><span class="n">e002</span><span class="o">-</span><span class="mi">493</span><span class="n">f</span><span class="o">-</span><span class="n">b2dc</span><span class="o">-</span><span class="n">df01f40c1fa1</span>
+<span class="n">pvc</span><span class="o">-</span><span class="n">d793176f</span><span class="o">-</span><span class="mi">2484</span><span class="o">-</span><span class="mi">48</span><span class="n">ea</span><span class="o">-</span><span class="mi">9255</span><span class="o">-</span><span class="n">f70215a7c5f7</span>
+<span class="n">pvc</span><span class="o">-</span><span class="n">fec78b61</span><span class="o">-</span><span class="n">a216</span><span class="o">-</span><span class="mi">4825</span><span class="o">-</span><span class="n">a709</span><span class="o">-</span><span class="n">a24069cfadc7</span>
+</code></pre></div></div>
+
+<p>Since relying purely on <code class="language-plaintext highlighter-rouge">name</code> isn’t 100% reliable - a SolidFire volume <em>may</em> be named the same as your PVC, but after some trouble such as failing over to another array, that may change - we’ll also extract other attributes.</p>
+
+<p>We can loop through that list and extract additional items of interest.</p>
+
+<p>For example, I’ve collected top 3 interesting properties from that Trident output: name, internal name, and target IQN (sample for 2 volumes).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span>
+    <span class="p">{</span><span class="s">'name'</span><span class="p">:</span> <span class="s">'pvc-14a51322-16c8-4b95-a7e4-28d9963450b3'</span><span class="p">,</span> 
+     <span class="s">'name_internal'</span><span class="p">:</span> <span class="s">'pvc-14a51322-16c8-4b95-a7e4-28d9963450b3'</span><span class="p">,</span> 
+     <span class="s">'tgt_iqn'</span><span class="p">:</span> <span class="s">'iqn.2010-01.com.solidfire:wcwb.pvc-14a51322-16c8-4b95-a7e4-28d9963450b3.112'</span><span class="p">},</span>
+    <span class="p">{</span><span class="s">'name'</span><span class="p">:</span> <span class="s">'pvc-fec78b61-a216-4825-a709-a24069cfadc7'</span><span class="p">,</span> 
+     <span class="s">'name_internal'</span><span class="p">:</span> <span class="s">'velero-vol-136-202404090816z'</span><span class="p">,</span> 
+     <span class="s">'tgt_iqn'</span><span class="p">:</span> <span class="s">'iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090816z.140'</span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div></div>
+
+<ul>
+  <li>name: PVC name</li>
+  <li>name_internal: “storage name”. The second volume’s internal name is <em>different</em> from the Kubernetes name because this volume was imported. (I think some time in the past I restored a Velero backup to a new volume and then imported that volume to Kubernetes with Trident CSI.)</li>
+  <li>target IQN: this is what connects any PVC name to SolidFire cluster and volume ID</li>
+</ul>
+
+<p>If you use SolidFire Collector, you’ll have Target IQNs in the database, or you can get them off SolidFire at any time (for <em>presently</em> available targets, of course).</p>
+
+<p>With a database that keeps track of that over time you can look it up for yesterday or last week.</p>
+
+<p>Going back to that target IQN, we can use it to identify the volume details without looking it up elsewhere:</p>
+
+<pre><code class="language-raw"># iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090816z.140
+# iqn.2010-01.com.solidfire:wcwb.pvc-14a51322-16c8-4b95-a7e4-28d9963450b3.112
+(?:iqn.2010-01.com.solidfire)\:([a-z0-9]{4})\.(.*).(\d+)
+</code></pre>
+
+<p>With this I have detailed SolidFire-related properties of my iSCSI targets:</p>
+
+<ul>
+  <li>SolidFire cluster UUID (<code class="language-plaintext highlighter-rouge">wcwb</code>)</li>
+  <li><strong>SolidFire</strong> volume name (which should be equal to <strong>nameInternal</strong> in tridentctl output, but <em>may</em> be different from Kubernetes or Trident <em>*name</em>.</li>
+  <li>SolidFire volume ID (140, 112) - these alone are enough to setup replication, snapshots, etc.</li>
+</ul>
+
+<p>We simply query these volume IDs and create detailed reports or even use these to set up SolidFire storage replication to another cluster. Something like this:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>PVC</th>
+      <th>PV</th>
+      <th>SF UUID</th>
+      <th>SF vName</th>
+      <th>SF vID</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>pvc-ab12</td>
+      <td>pvc-int12</td>
+      <td>wcwb</td>
+      <td>pvc-int12</td>
+      <td>140</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>(Here I have to say that I’m not 100% sure if internalNam and SF volume name are always identical, but it should be that way. We know SolidFire iSCSI Target doesn’t change, so the way it was named when it was created is the way it stays as long as the volume is round.)</p>
+
+<p>With two SolidFire clusters (with replication between them), it would be trivial to create a wider table with end-to-end mapping for two sites, each with its own K8s-SolidFire stack:</p>
+
+<ul>
+  <li>Kubernetes #1 &lt;==&gt; SolidFire #1</li>
+  <li>SolidFire #1 &lt;==&gt; SolidFire #2</li>
+  <li>SolidFire #2 &lt;==&gt; Kubernetes #2</li>
+</ul>
+
+<p>The bidirectional arrows signify we can create PVCs on K8s #1, replicate volumes to site #2, failover storage to site #2 if we need to, create more Kubernetes volumes on K8s on site #2, setup replication for those new volumes from site #2 to #1, and failback when ready. All without a lot of hassle or effort.</p>
+
+<h2 id="solidfire-api-vs-external-database">SolidFire API vs. external database</h2>
+
+<p>Before we move on, I just want to reiterate we have a choice here:</p>
+
+<ul>
+  <li>We can choose to query SolidFire or a database with SolidFire information in it</li>
+  <li>The first choice is easier, but:
+    <ul>
+      <li>No history</li>
+      <li>No way to query if SolidFire or network are down or a site disconnected from the site where you’re at</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Neither is wrong, but having a small database in a $10 VM on Digital Ocean and a script that posts SolidFire information to it can be a low-cost Plan B even if you prefer to query SolidFire directly.</p>
+
+<p>Grafana has a free tier in their cloud service, by the way.</p>
+
+<h2 id="using-the-solidfire-api-to-enhance-configuration-mapping">Using the SolidFire API to enhance configuration mapping</h2>
+
+<p>Assuming SolidFire is usable and reachable (which may not be the case for the SolidFire at a disconnected remote site), you can query your cluster or both clusters using the API or CLI.</p>
+
+<p>This is easy, of course, given a list of volume IDs we can query them, set up or reverse replication relationships and more.</p>
+
+<p>But there’s another interesting detail, which is that Trident uses SolidFire volume attributes to store its metadata.</p>
+
+<p><img src="/assets/images/kubernetes_trident_solidfire_mapping_01_volume_attributes.png" alt="" /></p>
+
+<p>When SolidFire returns volume details, volume[‘attributes’] may have additional details (it may be empty if it’s not a Trident volume, though).</p>
+
+<p>For a single Trident volume, these details look like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="s">'docker-name'</span><span class="p">:</span> <span class="s">'pvc-ba3213cd-01bc-4920-b1c7-708ed89e5730'</span><span class="p">,</span> <span class="s">'fstype'</span><span class="p">:</span> <span class="s">'xfs'</span><span class="p">,</span> <span class="s">'provisioning'</span><span class="p">:</span> <span class="s">''</span><span class="p">,</span> <span class="s">'trident'</span><span class="p">:</span> <span class="s">'{"version":"23.07.0-custom+e2344922b27d1aec8c2574153962ef7ea49e390d","backendUUID":"f069f7c4-759a-4758-9b90-564d290e76a4","platform":"kubernetes","platformVersion":"v1.25.14-rc1+k3s1","plugin":"solidfire-san"}'</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Again, a volume may have attributes, but not <em>Trident</em> attributes.</p>
+
+<p>We can look for ‘docker-name’ and ‘trident’ to see if there are Trident attributes present, and since Trident attribute is e string we convert it to JSON and extract Trident-related information such as backendUUID, etc.</p>
+
+<p>How is that information useful? Here’s an example from two volumes named “pvc-*”: while listing Backend UUIDs, I found there were two different backends, indicating these were different Trident instances, likely from two different Kubernetes clusters on the same site (I do have multiple small Kubernetes in my environment).</p>
+
+<ul>
+  <li>f069f7c4-759a-4758-9b90-564d290e76a4</li>
+  <li>6ebdc64a-76bd-4e2e-969f-64bcd575e288</li>
+</ul>
+
+<p>Even ‘fstype’ from those volume attributes (you can see it above, its value is ‘xfs’) is useful. Based on ‘fstype’ we can decide if we want to clone, mount and <a href="/2022/03/15/velero-18-with-restic-and-trident-2201.html">backup that volume to S3</a>, for example.</p>
+
+<p>We can also query all other volume or backend properties that you’re already familiar with.</p>
+
+<h2 id="using-a-database-to-assist-in-configuration-mapping">Using a database to assist in configuration mapping</h2>
+
+<p>If the volumes are gone or the cluster unreachable, you wont be able to find more about them (i.e. by extracting attributes) by querying the SolidFire API, but you can regularly query SolidFire and store output over time and query such a database if you have it.</p>
+
+<p><a href="/2024/05/29/sfc-v2.html">SolidFire Collector aka SFC</a> is a tool that gathers volume (and other) information and stores them in a database, but NetApp Cloud Insights or your in-house tools can be used as well (even Splunk, etc.).</p>
+
+<p>SFC currently does not extract volume attributes, but it stores to InfluxDB a lot of other useful information about volumes, accounts, QoS settings and such. (Attributes may be gathered in a future release - this post, in fact, is partially a blueprint for that feature.)</p>
+
+<p>Currently SFC collects the following, and I’ll give a few examples.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">show</span> <span class="n">measurements</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">measurements</span>
+<span class="n">name</span>
+<span class="c1">----</span>
+<span class="n">account_efficiency</span>
+<span class="n">accounts</span>
+<span class="n">cluster_capacity</span>
+<span class="n">cluster_faults</span>
+<span class="n">cluster_performance</span>
+<span class="n">cluster_version</span>
+<span class="n">drive_stats</span>
+<span class="n">histogram_below_min_iops_percentages</span>
+<span class="n">histogram_min_to_max_iops_percentages</span>
+<span class="n">histogram_read_block_sizes</span>
+<span class="n">histogram_target_utilization_percentage</span>
+<span class="n">histogram_throttle_percentages</span>
+<span class="n">histogram_write_block_sizes</span>
+<span class="n">iscsi_sessions</span>
+<span class="n">node_performance</span>
+<span class="n">sfc_metrics</span>
+<span class="n">volume_efficiency</span>
+<span class="n">volume_performance</span>
+<span class="n">volumes</span>
+</code></pre></div></div>
+
+<p>For volume 140, did we see it recently? It’s supposed to exist but if it doesn’t, then you may have not replicated it to DR site.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="nb">time</span><span class="p">,</span><span class="n">id</span><span class="p">,</span><span class="n">qos_policy_id</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">WHERE</span> <span class="nv">"id"</span> <span class="o">=</span> <span class="s1">'140'</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">time</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<p>My volume 140 does not exist on SolidFire. Maybe I deleted it by mistake, but no one has complained because it hasn’t been used lately.</p>
+
+<p>From the volumes measurement we can find volumes by ID and “last seen” time. This can help you determine if a PVC is used or just abandoned because of poorly configured retention policy in Storage Class, in which case you may want to ask your Kubernetes admin to check, rather than replicate this volume because simply because it exists.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="nb">time</span><span class="p">,</span><span class="n">id</span><span class="p">,</span><span class="n">qos_policy_id</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">WHERE</span> <span class="nv">"name"</span> <span class="o">=</span> <span class="s1">'iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090816z.140'</span> <span class="k">AND</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="mi">60</span><span class="n">m</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">volumes</span>
+<span class="nb">time</span>                 <span class="n">id</span>  <span class="n">qos_policy_id</span>
+<span class="c1">----                 --  -------------</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">30</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">140</span> <span class="mi">0</span>
+</code></pre></div></div>
+
+<p>When was a volume last accessed (2024-05-31T15:13:45Z)? We can get that answer from the iscsi_sessions measurements in SFC.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="nv">"ms_since_last_iscsi_pdu"</span><span class="p">,</span> <span class="nv">"target_name"</span> <span class="k">FROM</span> <span class="nv">"iscsi_sessions"</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">time</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">2</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">iscsi_sessions</span>
+<span class="nb">time</span>                 <span class="n">ms_since_last_iscsi_pdu</span> <span class="n">target_name</span>
+<span class="c1">----                 ----------------------- -----------</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">31</span><span class="n">T15</span><span class="p">:</span><span class="mi">13</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">45665</span>                   <span class="n">iqn</span><span class="p">.</span><span class="mi">2010</span><span class="o">-</span><span class="mi">01</span><span class="p">.</span><span class="n">com</span><span class="p">.</span><span class="n">solidfire</span><span class="p">:</span><span class="n">wcwb</span><span class="p">.</span><span class="n">velero</span><span class="o">-</span><span class="n">vol</span><span class="o">-</span><span class="mi">136</span><span class="o">-</span><span class="mi">202404090816</span><span class="n">z</span><span class="p">.</span><span class="mi">140</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">31</span><span class="n">T15</span><span class="p">:</span><span class="mi">13</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">45671</span>                   <span class="n">iqn</span><span class="p">.</span><span class="mi">2010</span><span class="o">-</span><span class="mi">01</span><span class="p">.</span><span class="n">com</span><span class="p">.</span><span class="n">solidfire</span><span class="p">:</span><span class="n">wcwb</span><span class="p">.</span><span class="n">pvc</span><span class="o">-</span><span class="mi">14</span><span class="n">a51322</span><span class="o">-</span><span class="mi">16</span><span class="n">c8</span><span class="o">-</span><span class="mi">4</span><span class="n">b95</span><span class="o">-</span><span class="n">a7e4</span><span class="o">-</span><span class="mi">28</span><span class="n">d9963450b3</span><span class="p">.</span><span class="mi">112</span>
+</code></pre></div></div>
+
+<p>The volumes measurement has other details, such as FIFO related settings that are important for snapshot replication (which is why SFC now collects them).</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="k">desc</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">volumes</span>
+<span class="nb">time</span>                 <span class="k">access</span>    <span class="n">account_id</span> <span class="n">block_size</span> <span class="k">cluster</span> <span class="n">enable_512e</span> <span class="n">fifo_size</span> <span class="n">id</span> <span class="n">min_fifo_size</span> <span class="n">name</span>                                     <span class="n">qos_policy_id</span> <span class="n">scsi_naa_dev_id</span>                  <span class="n">total_size</span> <span class="n">vol_cg_group_id</span>
+<span class="c1">----                 ------    ---------- ---------- ------- ----------- --------- -- ------------- ----                                     ------------- ---------------                  ---------- ---------------</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">30</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="n">readWrite</span> <span class="mi">8</span>          <span class="mi">4096</span>       <span class="n">PROD</span>    <span class="k">True</span>        <span class="mi">5</span>         <span class="mi">59</span> <span class="mi">0</span>             <span class="n">pvc</span><span class="o">-</span><span class="n">ba3213cd</span><span class="o">-</span><span class="mi">01</span><span class="n">bc</span><span class="o">-</span><span class="mi">4920</span><span class="o">-</span><span class="n">b1c7</span><span class="o">-</span><span class="mi">708</span><span class="n">ed89e5730</span> <span class="mi">0</span>             <span class="mi">6</span><span class="n">f47acc100000000776377620000003b</span> <span class="mi">2147483648</span> <span class="n">cc9e9aa0</span><span class="o">-</span><span class="n">e194</span><span class="o">-</span><span class="mi">4</span><span class="n">eb6</span><span class="o">-</span><span class="n">a25e</span><span class="o">-</span><span class="mi">0</span><span class="n">d816553c2c1</span>
+
+</code></pre></div></div>
+
+<p>Find all volumes named <code class="language-plaintext highlighter-rouge">pvc-</code> and seen on SolidFire within last 15 minutes:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="nb">time</span><span class="p">,</span><span class="n">id</span><span class="p">,</span><span class="n">qos_policy_id</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">WHERE</span> <span class="nv">"name"</span> <span class="o">=~</span> <span class="o">/</span><span class="n">pvc</span><span class="o">-/</span> <span class="k">AND</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="mi">15</span><span class="n">m</span> 
+<span class="n">name</span><span class="p">:</span> <span class="n">volumes</span>
+<span class="nb">time</span>                 <span class="n">id</span>  <span class="n">qos_policy_id</span>
+<span class="c1">----                 --  -------------</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">111</span> <span class="mi">0</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">112</span> <span class="mi">0</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">113</span> <span class="mi">0</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">115</span> <span class="mi">0</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T11</span><span class="p">:</span><span class="mi">40</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">116</span> <span class="mi">0</span>
+</code></pre></div></div>
+
+<p>Some comments about <code class="language-plaintext highlighter-rouge">qos_policy_id</code> in the query above:</p>
+
+<ul>
+  <li>qos_policy_id appears because InfluxDB must query <em>some</em> value - InfluxQL won’t let you query just tags</li>
+  <li>the SolidFire API can’t have QoS policy 0; QoS policy IDs start at 1, but when there’s <em>no</em> policy setting (but instead just manual QoS settings) then the API returns nothing. SFC stores that as 0, that’s why it’s expected to be 0 for Kubernetes volumes - Trident applies QoS settings, but not through policy ID, but based on Trident’s configuration file. You can see how Trident stores types (i.e. Storage Class definitions) in <code class="language-plaintext highlighter-rouge">get backend</code> output given in Appendix A.</li>
+</ul>
+
+<p>If Trident account is ID 6 and replication is set up, check <a href="/2021/04/20/solidfire-12.3.html">FIFO settings</a> on volumes for that account.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">/</span><span class="n">fifo</span><span class="o">/</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">WHERE</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="mi">15</span><span class="n">m</span> <span class="k">AND</span> <span class="n">account_id</span> <span class="o">=</span> <span class="s1">'6'</span> <span class="k">group</span> <span class="k">by</span> <span class="n">account_id</span> 
+<span class="n">name</span><span class="p">:</span> <span class="n">volumes</span>
+<span class="n">tags</span><span class="p">:</span> <span class="n">account_id</span><span class="o">=</span><span class="mi">6</span>
+<span class="nb">time</span>                 <span class="n">fifo_size</span> <span class="n">min_fifo_size</span>
+<span class="c1">----                 --------- -------------</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">01</span><span class="n">T16</span><span class="p">:</span><span class="mi">30</span><span class="p">:</span><span class="mi">45</span><span class="n">Z</span> <span class="mi">5</span>         <span class="mi">0</span>
+<span class="p">...</span>
+</code></pre></div></div>
+
+<p>The FIFO setting specifies <a href="https://docs.netapp.com/us-en/element-software/storage/task_data_protection_create_a_snapshot_schedule.html">the minimum and maximum number of snapshots to retain</a>. The idea is that for snapshot replication, if the network gets flakey no more than “FIFO size” number of snapshots will be retained. Sometimes it’s easier to limit FIFO size than to communicate network issues to Kubernetes users. Also see <code class="language-plaintext highlighter-rouge">ensureSerialCreation</code> <a href="https://docs.netapp.com/us-en/element-software/api/reference_element_api_createsnapshot.html#parameters">here</a>. So the above query can help you perform automated checks and you can raise alerts in Grafana if something doesn’t check out.</p>
+
+<p>Even though SFC doesn’t (yet) gather volume attributes, we can learn a lot about our storage configuration and it can also help us watch for deviations from best practices.</p>
+
+<p>Similarly, you can get this information with SolidFire Exporter (for Prometheus), and probably NetApp Cloud Insights.</p>
+
+<h2 id="assembling-replicated-iscsi-target-names-for-trident-import">Assembling replicated iSCSI target names for Trident import</h2>
+
+<p>With storage configuration from Kubernetes (I mean JSON output from Trident, although we could also store Kubernetes PVC output as well) and SolidFire from both sites available for querying, it’s easy to figure out which volumes should be imported even if we did not prepare for that in advance.</p>
+
+<p>Simply by querying SolidFire’s replication relationship for the volume we know that Cluster UUID <code class="language-plaintext highlighter-rouge">abcd</code> should be swapped for <code class="language-plaintext highlighter-rouge">wcwb</code>, and the same for volume name and volume ID.</p>
+
+<ul>
+  <li>iqn.2010-01.com.solidfire:abcd.pvc-abc-111.33 &lt;=&gt; iqn.2010-01.com.solidfire:wcwb.pvc-xyz-222.44</li>
+</ul>
+
+<p>Trident import is then easy, because on site #2 we look for pvc-abc-111 from site #2, and import pvc-xyz-222 on site #2.</p>
+
+<p>There’s only one problem and that is Trident doesn’t make failback easy. I wrote about that in the posted linked at the top: if you have a stretched Kubernetes cluster (across two sites), failing back doesn’t work well because Trident can’t handle it, so my workaround for that is to uninstall Trident on site #1 and import all volumes. That’s why this external juggling of names, IDs and replication relationships is important. If Trident didn’t get confused, it would be much less necessary.</p>
+
+<p>It may be different for ONTAP (especially if you use the non-free version of Trident), but I don’t think they’ve ever improved it for SolidFire. One interesting exception to this is Kubernetes on OpenStack with SolidFire because that can use SolidFire’s Cinder driver (rather than Trident) and then you don’t have to use Trident and it works fine. You can read about that <a href="/2022/02/22/openstack-solidfire.html">here</a>.</p>
+
+<p>If you have a Kubernetes and a SolidFire cluster at each site, then you just leave Trident on each site alone.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In my opinion SolidFire is still the best NetApp block storage array for Kubernetes. It’s effortless to manage, works well in two- and three-site configurations, and generally just gets out of your way. And that’s despite just 1-2 major features added to it between the early 2016 and late 2022 (when NetApp stopped actively developing it; end-of-sale was in late 2023).</p>
+
+<p>iSCSI will be fine for 90% of general workloads years from now, so I think users with two or more SolidFire clusters shouldn’t hesitate to use them with Kubernetes in multi-site deployments with and without storage replication.</p>
+
+<p>These workflows aren’t complicated, nothing in here relies on paid Trident features, so you may want to be in charge of your own DR workflow. The free Trident needs to continue supporting solidfire-san driver and new Kubernetes releases, which I think is expected for as long as SolidFire is supported (until late 2028, if I’m not mistaken).</p>
+
+<p>We’ve seen how we can connect kubectl to tridentctl and further to SolidFire cross-site APIs to make sometimes complicated relationships easy to manage even in multi-site environments.</p>
+
+<p>This post gives most, if not all, high-level steps one needs to implement reliable monitoring and site failover without getting lost in hundreds of volumes and replication relationships.</p>
+
+<p>Edit: before finalizing this blog I decided to spend some extra time and write a script, to finish this part of my PoC. You can find the script in my Awesome SolidFire repository. Permissively licensed, of course.</p>
+
+<p><img src="/assets/images/kubernetes_to_trident_to_solidfire.png" alt="Kubernetes-to-Trident-to-SolidFire" /></p>
+
+<h2 id="appendix-a---tridentctl-output-for-volumes-and-backends">Appendix A - tridentctl output for volumes and backends</h2>
+
+<p>This example shows a single item (volume). Note that <code class="language-plaintext highlighter-rouge">iscsiTargetSecret</code> and <code class="language-plaintext highlighter-rouge">iscsiInitiatorSecret</code> appear in plain text in this output!</p>
+
+<p>If you output this information from Trident, this must be removed before it’s shared or posted to a DB or a bucket. Command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl <span class="nt">-n</span> trident get volume <span class="nt">-o</span> json
+</code></pre></div></div>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"Config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2147483648"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"block"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"spaceReserve"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"securityStyle"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"storageClass"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"accessMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ReadWriteOnce"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"volumeMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Filesystem"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c.113"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"useCHAP"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"iscsiInitiatorSecret"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xxxxxxxxxxxxxxxxx"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"iscsiTargetSecret"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xxxxxxxxxxxxxxxxx"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"blockSize"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"fileSystem"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xfs"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"encryption"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cloneSourceVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cloneSourceVolumeInternal"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cloneSourceSnapshot"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cloneSourceSnapshotInternal"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"splitOnClone"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"readOnlyClone"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"mountOptions"</span><span class="p">:</span><span class="w"> </span><span class="s2">"discard"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"shareSourceVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"pool"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"orphaned"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>We could ask the Trident administrator to output information like this:</p>
+
+<ul>
+  <li>All volumes as JSON file volumes-${time}.json</li>
+  <li>No secrets included</li>
+</ul>
+
+<p>Command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./trident-installer/tridentctl <span class="nt">-n</span> trident get volume <span class="nt">-o</span> json | jq <span class="s1">'[.items[] | del(.Config.accessInformation.iscsiTargetSecret) | del(.Config.accessInformation.iscsiInitiatorSecret) | del(.Config.accessInformation.useCHAP)  | {name: .Config.name, internalName: .Config.internalName, backend: .backend, backendUUID: .backendUUID, state: .state, accessInformation: .Config.accessInformation}]'</span>
+</code></pre></div></div>
+
+<p>Output (one per volume):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-14a51322-16c8-4b95-a7e4-28d9963450b3"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-14a51322-16c8-4b95-a7e4-28d9963450b3"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.pvc-14a51322-16c8-4b95-a7e4-28d9963450b3.112"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c.113"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1.157"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.pvc-d793176f-2484-48ea-9255-f70215a7c5f7.139"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"internalName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero-vol-136-202404090816z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backend"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accessInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"iscsiTargetPortal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiTargetIqn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2010-01.com.solidfire:wcwb.velero-vol-136-202404090816z.140"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"iscsiUsername"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Then we’d also want the state (not sure what states there are, but if it’s not empty, I’d raise a warning) and backendUUID (at least that one is present, whereas backend name is missing in tridentctl output, but that doesn’t affect us as we can get that separately from <code class="language-plaintext highlighter-rouge">get backend</code> output).</p>
+
+<p>This reminds me - let’s check <code class="language-plaintext highlighter-rouge">get backend</code> in JSON as well. Command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./trident-installer/tridentctl <span class="nt">-n</span> trident get backend <span class="nt">-o</span> json
+</code></pre></div></div>
+
+<p>Response (<code class="language-plaintext highlighter-rouge">serialNumbers</code> contains VMware volume ID because this is a SolidFire Demo VM):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"block"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"AccessGroups"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"DefaultBlockSize"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://</span><span class="se">\u</span><span class="s2">003cREDACTED</span><span class="se">\u</span><span class="s2">003e@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"InitiatorIFace"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"LegacyNamePrefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"SVIP"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.105.30:3260"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"TenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"Types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"QOS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"burstIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"maxIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"minIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bronze"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"QOS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"burstIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"maxIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"minIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">601</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"QOS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"burstIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"maxIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"minIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">801</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gold"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="nl">"UseCHAP"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"backendName"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"backendPools"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="s2">"eyJhY2NvdW50SUQiOiIxMSIsInRlbmFudE5hbWUiOiJ0cmlkZW50azIifQ=="</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="nl">"credentials"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="se">\u</span><span class="s2">003cREDACTED</span><span class="se">\u</span><span class="s2">003e"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="se">\u</span><span class="s2">003cREDACTED</span><span class="se">\u</span><span class="s2">003e"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"debug"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"debugTraceFlags"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"defaults"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1G"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"disableDelete"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"limitVolumeSize"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"region"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"serialNumbers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="s2">"VMware-56 4d 2e 3e c7 7b ca d2-2d 79 85 d5 fb 05 16 43"</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="nl">"storage"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"storageDriverName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire-san"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"storagePrefix"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nl">"supportedTopologies"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"zone"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"storage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"bronze"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bronze"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"storageAttributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"IOPS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"min"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"backendType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"solidfire-san"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"clones"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"encryption"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"media"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"ssd"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"provisioningType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"thin"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"replication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"snapshots"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"storageClasses"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+          </span><span class="nl">"supportedTopologies"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"gold"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gold"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"storageAttributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"IOPS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"min"</span><span class="p">:</span><span class="w"> </span><span class="mi">801</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"backendType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"solidfire-san"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"clones"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"encryption"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"media"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"ssd"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"provisioningType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"thin"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"replication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"snapshots"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"storageClasses"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+          </span><span class="nl">"supportedTopologies"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"silver"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"storageAttributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"IOPS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"max"</span><span class="p">:</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w">
+              </span><span class="nl">"min"</span><span class="p">:</span><span class="w"> </span><span class="mi">601</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"backendType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"solidfire-san"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"clones"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"encryption"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"media"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"ssd"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"provisioningType"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"thin"</span><span class="w">
+              </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"replication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"snapshots"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"offer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"storageClasses"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+            </span><span class="s2">"silver"</span><span class="w">
+          </span><span class="p">],</span><span class="w">
+          </span><span class="nl">"supportedTopologies"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"StateReason"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"pvc-14a51322-16c8-4b95-a7e4-28d9963450b3"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nl">"configRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>So, the bug with the missing backendName in <code class="language-plaintext highlighter-rouge">get volumes</code> output is that the name is only included as top-level <code class="language-plaintext highlighter-rouge">name</code>, not as <code class="language-plaintext highlighter-rouge">.Config.name</code>.</p>
+
+<p>Other than that, we want all the “interesting parts” as well. Perhaps something like this.</p>
+
+<ul>
+  <li>name</li>
+  <li>backendUUID</li>
+  <li>protocol</li>
+  <li>config</li>
+  <li>storage</li>
+  <li>state</li>
+  <li>userState</li>
+  <li>online</li>
+  <li>StateReason</li>
+  <li>volumes</li>
+  <li>configRef</li>
+</ul>
+
+<p>Storage Classes should be pre-agreed and changed in a planned manner, so we don’t need those details.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./trident-installer/tridentctl <span class="nt">-n</span> trident get backend <span class="nt">-o</span> json | jq <span class="s1">'[.items[] | {name: .name, backendUUID: .backendUUID, EndPoint: .config.EndPoint, tenantName: .config.TenantName, state: .state, online: .online, userState: .userState, stateReason: .stateReason, volumes: .volumes[]}]'</span>
+</code></pre></div></div>
+
+<p>That produces one item per managed volume, as volumes are included at the end. If you need just a list of volumes, exclude the rest or extract from the below after you get the JSON file, or ask Trident administrator to generate it separately:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;REDACTED&gt;@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stateReason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-a5f21571-e002-493f-b2dc-df01f40c1fa1"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;REDACTED&gt;@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stateReason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-14a51322-16c8-4b95-a7e4-28d9963450b3"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;REDACTED&gt;@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stateReason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-4fb5d7f5-4d98-429e-ab36-1b2118b7e55c"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;REDACTED&gt;@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stateReason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-d793176f-2484-48ea-9255-f70215a7c5f7"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire_192.168.105.30"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backendUUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b3680925-a9c1-4552-a1b4-1e4a0a273e8e"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EndPoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://&lt;REDACTED&gt;@192.168.1.30/json-rpc/11.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tridentk2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"online"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"userState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"normal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stateReason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-fec78b61-a216-4825-a709-a24069cfadc7"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>EndPoint value has the password for SolidFire already redacted, so that’s fine.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#kubernetes">kubernetes</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#solidfire">solidfire</a>
+       
+    
+  </span>
+</div>
+    
+
+  
+    <div>
+      <h3>Related Posts</h3>
+      <ul>
+      
+        <li><a href="/2024/05/04/netapp-solidfire-with-async-http.html">Access NetApp SolidFire API with Async IO</a></li>
+      
+        <li><a href="/2024/04/30/netapp-solidfire-account-attributes.html">Tenant (account) attributes on NetApp SolidFire</a></li>
+      
+        <li><a href="/2022/09/12/new-ddp-and-e-series-santricity-web-restful-api.html">New Dynamic Disk Pool configuration and E-Series SANtricity</a></li>
+      
+        <li><a href="/2023/07/31/solidfire-web-management-api-behind-proxy.html">SolidFire management Web site and API endpoint behind a proxy</a></li>
+      
+        <li><a href="/2024/05/28/netapp-solidfire-volume-qos-histograms.html">Make use of storage QoS histograms on NetApp SolidFire</a></li>
+      
+      </ul>
+    </div>
+  
+
+    
+  </div><footer class= "footer">
+    <p>2024-06-02 16:26 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>
