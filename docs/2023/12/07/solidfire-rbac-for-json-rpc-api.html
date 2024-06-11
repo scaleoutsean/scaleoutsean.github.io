@@ -300,11 +300,11 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
 
 <p><img src="/assets/images/solidfire-rbac-lua-example-restful-matching.png" alt="" /></p>
 
-<p><strong>NOTE</strong>: this is just a made-up example to illustrate how this could work, but it’s not good enough for SolidFire because JSON-RPC requests can be smuggled in HTTP body. But this would work for the “custom API” example further below, because that API is <em>only</em> RESTful.</p>
+<p><strong>NOTE</strong>: this is just a made-up example to illustrate how this could work, but it’s not good enough for all SolidFire API calls because JSON-RPC requests can be smuggled in HTTP body so the above RBAC wouldn’t be effective. But this would work for the “custom API” example further below, because that API is <em>only</em> RESTful.</p>
 
 <h2 id="json-rpc">JSON-RPC</h2>
 
-<p>The example above <strong>cannot</strong> fully cover JSON-RPC use cases because, as already mentioned, JSON-RPC doesn’t have to use URLs which means path-based rules wouldn’t work.</p>
+<p>The example above <strong>cannot</strong> fully cover JSON-RPC use cases because, as already mentioned, JSON-RPC doesn’t have to use URLs which means path-based rules wouldn’t filter by parameters.</p>
 
 <p>The second problem is Lua has no idea to know who “alice” is, unless we authenticate on Reverse Proxy which can be done, but may be a completely different account from the SolidFire local account by the same name. (SolidFire can disable all local accounts except “admin”, and additional admins can be mapped to ADS/LDAP groups, so if authentication uses the same ADS/LDAP, then user identity could be the same on Reverse Proxy and SolidFire).</p>
 
@@ -362,13 +362,13 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
 
 <p><img src="/assets/images/solidfire-rbac-lua-example-restful-provisioning.png" alt="" /></p>
 
-<p>For production I’d add authentication and ideally a few more parameters - such as the ability to specify volume size and QoS in volume parameters, but it’s just a matter of spending a bit more time on PUT volume method.</p>
+<p>For production I’d add authentication and ideally a few more parameters - such as the ability to specify volume size and QoS in volume parameters, but it’s just a matter of spending a bit more time on that PUT volume method.</p>
 
 <p>No other paths and requests are supported, so although I’m using a full-featured SolidFire admin account, there’s nothing else that I can do with it but those 4 operations on my own account’s volumes.</p>
 
 <p>Because this API is fully RESTful, it could be filtered like we did in that Casbin example above. Still, since we fully control it, there’s no need to filter it - for example, if admin account assigned Team B does <code class="language-plaintext highlighter-rouge">curl http://192.168.1.187:5000/volumes/107 -X DELETE</code> but volume 107 is named <code class="language-plaintext highlighter-rouge">team-c-vol-sqlite</code> (belongs to Team C) - that’s easy to detect, reject and report in logs forwarded to your monitoring system.</p>
 
-<p>For this simple PoC I hard-coded volume size (it doesn’t matter - SolidFire uses Thin Provisioning) and per-proxy account ID. The usual SolidFire Python SDK was used for all back-end communications, filtering, etc.</p>
+<p>For this simple PoC I hard-coded the volume size (it doesn’t matter - SolidFire uses Thin Provisioning) and per-proxy account ID. The usual SolidFire Python SDK was used for all back-end communications, filtering, etc.</p>
 
 <p>To make it easier to GET volumes based on Volume ID, I created this dictionary keyed on (<code class="language-plaintext highlighter-rouge">volume_</code> + $volumeID). SolidFire volume names can be non-unique but IDs are always unique, so we can’t reliably use volume names.</p>
 
@@ -425,7 +425,7 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
 
 <p>Is it necessary to reinvent the wheel like this?</p>
 
-<p>No, but we haven’t “reinvented” anything: the SolidFire API is RPC-JSON and can’t be easily filtered, while this custom API is already restrictive and RESTful.</p>
+<p>No, but we haven’t “reinvented” anything: the SolidFire API is JSON-RPC and can’t be easily filtered, while this custom API is already restrictive and RESTful.</p>
 
 <p><strong>NOTE</strong>: this proxy couldn’t work for SolidFire’s vSphere Plugin, for example: it is hard-coded to the SolidFire API, so that client (plugin runnign on vCenter) would have to be given access to the native SolidFire API. Dissection and filtering with Lua would be possible, of course.</p>
 
@@ -451,6 +451,8 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
   <li>Setup async replication for volumes based on Velero backup job definitions</li>
   <li>Run Backup-to-S3 jobs for PVCs defined in Velero backup schedule</li>
 </ul>
+
+<p>Update (2024/06/06): I’ve revisited this recently and have created <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">this post</a> and may do more (in fact I have part 2 written but not yet published, and part 3 is coming soon). These posts (and scripts that go with them) are meant to partially fix and/or automate things. Check out that post and others if interested.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -499,9 +501,9 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
       
         <li><a href="/2021/06/08/solidfire-networks-used-for-storage-replication.html">Role of SolidFire networks in SolidFire storage replication</a></li>
       
-        <li><a href="/2024/05/04/netapp-solidfire-with-async-http.html">Access NetApp SolidFire API with Async IO</a></li>
+        <li><a href="/2024/05/29/sfc-v2.html">SolidFire Collector v2.0.0 is ready</a></li>
       
-        <li><a href="/2024/04/30/netapp-solidfire-account-attributes.html">Tenant (account) attributes on NetApp SolidFire</a></li>
+        <li><a href="/2024/05/04/netapp-solidfire-with-async-http.html">Access NetApp SolidFire API with Async IO</a></li>
       
       </ul>
     </div>
@@ -509,7 +511,7 @@ monitor, /json-rpc/12.5?method=GetVolumeStats&amp;params=%7B%22volumeID%22%3A1%7
 
     
   </div><footer class= "footer">
-    <p>2024-06-02 16:26 </p>
+    <p>2024-06-11 15:02 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
