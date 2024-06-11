@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-11T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Project Longhorny","dateModified":"2024-06-11T00:00:00+08:00","datePublished":"2024-06-11T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/11/introducing-project-longhorny.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/11/introducing-project-longhorny.html"},"image":"https://scaleoutsean.github.io/assets/images/introducing-longhorny-volume-help-screenshot.png","description":"Manage SolidFire cluster pairs and volume replication from the CLI","@context":"https://schema.org"}</script>
+{"headline":"Project Longhorny","dateModified":"2024-06-11T00:00:00+08:00","datePublished":"2024-06-11T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/06/11/introducing-project-longhorny.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/11/introducing-project-longhorny.html"},"description":"Manage SolidFire cluster pairs and volume replication from the CLI","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/introducing-longhorny-volume-help-screenshot.png","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    8 minute read
+    10 minute read
   
 
     </span>
@@ -139,6 +139,7 @@
   <li><a href="#introduction">Introduction</a></li>
   <li><a href="#what-exactly-does-longhorny-do">What exactly does Longhorny do?</a></li>
   <li><a href="#longhorny-walk-through">Longhorny walk-through</a></li>
+  <li><a href="#site-level-actions">Site-level actions</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
@@ -235,7 +236,7 @@
 
 <p>All right, that’s good. The next step is to create an account and volumes on the remote site. You may create them manually and set them to <code class="language-plaintext highlighter-rouge">replicationTarget</code> mode and then <code class="language-plaintext highlighter-rouge">--pair</code> them.</p>
 
-<p>On the <strong>remote</strong> site we created account ID 3 and one volume with the same properties (size, etc.) as volume 40 from the <strong>source</strong> site. Its volume ID is 5.</p>
+<p>On the <strong>remote</strong> site cluster we created account ID 3 and one volume with the same properties (size, etc.) as volume 40 from the <strong>source</strong> site. Its volume ID is 5.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--pair</span> <span class="nt">--data</span> <span class="s2">"40,5"</span>
 </code></pre></div></div>
@@ -296,11 +297,9 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--reverse</span>
 </code></pre></div></div>
 
-<p>I mentioned that in the documentation, but in the case you didn’t notice, Longhorny doesn’t have super-pretty CLI output. That’s on purpose.</p>
+<p>I mentioned that in the documentation but in the case you didn’t notice, Longhorny doesn’t have a super-pretty CLI output. That’s on purpose.</p>
 
 <p>Take an example of this “<code class="language-plaintext highlighter-rouge">volume --mismatched</code>” (finds “orphaned” paired volumes) output that you’d see if someone unilaterally removed 5,40 replication pair <strong>at the remote site</strong> (where it’s 40,5). We could identify this quickly with three paired volumes on the source, but then what?</p>
-
-<p>Longhorny outputs Python objects to the shell so that you can take this output, paste it into your Python shell and do something with it.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[{</span><span class="s">'PROD'</span><span class="p">:</span> <span class="p">{</span><span class="s">'volumeID'</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
            <span class="s">'volumePairUUID'</span><span class="p">:</span> <span class="s">'44df1d5e-8694-4ed1-bdaf-fa773fb9b165'</span><span class="p">,</span>
@@ -308,19 +307,41 @@
            <span class="s">'remoteVolumeID'</span><span class="p">:</span> <span class="mi">5</span><span class="p">}}]</span>
 </code></pre></div></div>
 
+<p>Longhorny outputs Python objects to the shell so that you can take this output, paste it into your Python shell and do something with it.</p>
+
 <p>All Longhorny output is like that - it’s meant to be used elsewhere (send to SFC, send to Splunk, send to own script, etc.) and not something that merely lets you do in the CLI what you can already do in the Web UI.</p>
+
+<h2 id="site-level-actions">Site-level actions</h2>
+
+<p>I haven’t used any site-level actions in this walk-through, so here are some quick notes on that:</p>
+
+<ul>
+  <li>As of now, Longhorny connects to both the source and destination, because usually it needs information on how each side views cluster and volume relationships.</li>
+  <li>That means although I have some <code class="language-plaintext highlighter-rouge">site</code>-level actions, they can’t really work if the other site is unreachable, which sometimes defeats the purpose.</li>
+  <li>I could modify the code to ignore the unreachable site, but it’s not that simple; we’d also have to have some idea on how to reconcile the relationships after that, etc.</li>
+</ul>
+
+<p>To make an example, I’ll expand on something from the Longhorny README file, which is that Longhorny doesn’t prevent you from setting up replication pairs for volumes that belong to multiple accounts on the same site. Maybe you have three Kubernetes clusters on site A, which means you need three storage accounts for Trident CSI on site A. Fair enough.</p>
+
+<p>But we know what’s coming next - now different accounts/cluster owners want, or don’t want - to failover to site B. Some do, some don’t. Now we need per-account “<code class="language-plaintext highlighter-rouge">volume --reverse</code>”. Okay, let’s add that feature (I haven’t, though).</p>
+
+<p>Then a site fails. “Okay, not a problem - I’mma use a <code class="language-plaintext highlighter-rouge">site</code> action to override!”</p>
+
+<p>Well, sure but now you may have a mess, especially if said Kubernetes admins are allowed to use Longhorny on their own. Some volumes are read-write on both sites, some on one site where a site-action was used to severe relationships and promote the site to read-write, some are read-only (replicationTarget mode) on both sites and no one remembers what exactly they did, there are no pre- or post-failover snapshots, etc.</p>
+
+<p>I recognize the need for more features, but I think this is where things can get very complicated. At this moment site-level features are limited and as I don’t really want to make them completely useful for the situations where a site is down or unreachable.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Longhorny isn’t perfect and I could have done it better, but it’s decent enough. I wrote it after I finished SFC v2 - in fact I started writing it before I pushed the SFC v2 to Github (I haven’t done that yet, but that’s next).</p>
+<p>Longhorny isn’t perfect and I could have done it better, but it’s decent enough. I wrote it after I finished SFC v2 early this month - in fact I started writing it before I pushed the SFC v2 to Github (I haven’t done that yet, but that’s next).</p>
 
-<p>Longhorny doesn’t do anything you can’t do yourself in the SolidFire Web UI, except that it can take input from, and send output to, other programs. Which is the main thing about it.</p>
+<p>Longhorny doesn’t do anything you can’t do by yourself in the SolidFire Web UI, except that it can take input from, and send output to, other programs. Which is the main thing about it.</p>
 
 <p>It’s usable and serves as reference to myself as I now have code to gather replication relationship information with SFC. I - and anybody who wants, really - also have a way to connect Trident configuration with SolidFire configuration, so that we can have a decently automated site failover for Kubernetes with SolidFire.</p>
 
-<p>As I mention in <a href="/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">part 2 of the Kubernetes, Trident and SolidFire</a> series, there are some other ideas where Longhorny will be useful.</p>
+<p>As I mentioned in <a href="/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">part 2 of the Kubernetes, Trident and SolidFire</a> series, there are some other scenarios where the Longhorny code will be useful.</p>
 
-<p>In terms of programming languages, I’m a beginner, but I think it would have been easier and nicer to do Longhorny in PowerShell. But I almost had no choice but to do it in Python, considering that SFC is in Python and other integration (Trident, etc.) works better with Python. Before I wrote (didn’t publish the code) a PowerShell wrapper for <code class="language-plaintext highlighter-rouge">kubectl</code> and it worked great, but with Python I and others don’t need a wrapper there’s a native Python client. So I think Python is the right choice, although not the best tool.</p>
+<p>In terms of programming languages, I’m a beginner, but I think it would have been easier and nicer to do Longhorny in PowerShell. But I almost had no choice but to do it in Python, considering that SFC is in Python and other integration (Trident, etc.) works better with Python. Before I wrote (didn’t publish the code) a PowerShell wrapper for <code class="language-plaintext highlighter-rouge">kubectl</code> and it worked great, but with Python I and others don’t need a wrapper there’s a native Python client. So I think Python is the right choice, although not the best tool for this particular purpose.</p>
 
       </article>
     </div>
@@ -362,7 +383,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-06-11 15:34 </p>
+    <p>2024-06-11 17:51 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
