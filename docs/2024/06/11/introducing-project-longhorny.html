@@ -141,6 +141,7 @@
   <li><a href="#longhorny-walk-through">Longhorny walk-through</a></li>
   <li><a href="#site-level-actions">Site-level actions</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#demo-video">Demo video</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -241,7 +242,7 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--pair</span> <span class="nt">--data</span> <span class="s2">"40,5"</span>
 </code></pre></div></div>
 
-<p>That pairs volume ID 40 from the source cluster with volume ID 5 on the destination cluster. SolidFire sets up pairing in Async replication mode by default.</p>
+<p>That pairs volume ID 40 from the source cluster with volume ID 5 on the destination cluster. SolidFire sets up pairing in Async replication mode by default. Output from: <code class="language-plaintext highlighter-rouge">volume --list</code>:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[{</span><span class="s">'clusterPairID'</span><span class="p">:</span> <span class="mi">55</span><span class="p">,</span>
   <span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
@@ -257,33 +258,33 @@
 
 <p>It may take a few minutes for the volumes to sync, depending on network bandwidth and volume data size.</p>
 
-<p>For the other two source volumes (41, 42), we can try <code class="language-plaintext highlighter-rouge">--prime-dst</code>. When we use <code class="language-plaintext highlighter-rouge">--prime-dst</code>, the first <code class="language-plaintext highlighter-rouge">DATA</code> element is account IDs (from the source and destination) and the second is list of volume IDs from the source.</p>
+<p>For the other two source volumes (41, 42), we can try <code class="language-plaintext highlighter-rouge">--prime-dst</code>. When we use <code class="language-plaintext highlighter-rouge">--prime-dst</code>, the first <code class="language-plaintext highlighter-rouge">DATA</code> element is account IDs (from the source <em>and</em> destination) and the second is list of volume IDs from the source that we want to create replication targets for.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--prime-dst</span> <span class="nt">--data</span> <span class="s2">"13,3;41,42"</span>
 </code></pre></div></div>
 
-<p>This takes the properties of volume IDs 41 and 42 that belong to account ID, and creates “the same” at the remote site with the remote account ID 3 as their owner. Let’s say these new, remote volumes have IDs 6, 7.</p>
+<p>This takes the properties of volume IDs 41 and 42 that belong to account ID 13 and creates “the same” at the remote site with the remote account ID 3 as their owner. Let’s say these new, remote volumes have IDs 6, 7.</p>
 
-<p>They have the same properties, including name and priming sets them in replicationTarget mode, so our task is now very easy, we just need to pair them.</p>
+<p>They have the same properties as 41, 42 from the source, including name and priming changes the new volumes to replicationTarget mode, so our task is now very easy - we just need to pair them.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--pair</span> <span class="nt">--data</span> <span class="s2">"41,6;42,7"</span>
 </code></pre></div></div>
 
-<p>Now <code class="language-plaintext highlighter-rouge">volume list</code> shows three volume pairs.</p>
+<p>Now <code class="language-plaintext highlighter-rouge">volume --list</code> shows three volume pairs.</p>
 
 <p>Let’s say volumes 40 and 42 are less important apps and I would be content with SnapshotOnly replication mode. Let’s do that!</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--set-mode</span> <span class="nt">--data</span> <span class="s2">"SnapshotsOnly;41,42"</span>
 </code></pre></div></div>
 
-<p>What if I need to failover to the remote site? There’s <code class="language-plaintext highlighter-rouge">volume reverse</code>, but let’s take a snapshot of the replicated volumes at the source site first, just in the case DR test craps out.</p>
+<p>What if I need to failover to the remote site? There’s <code class="language-plaintext highlighter-rouge">volume reverse</code>, but let’s take a snapshot of the replicated volumes at the source site first, just in the case this DR test craps out.</p>
 
 <p>The snapshots are taken individually, so if you have consistency groups, take those separately. Longhorny currently does not know what volume is or isn’t in some logical grouping.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~<span class="nv">$ </span>./longhorny.py volume <span class="nt">--snapshot</span> <span class="nt">--data</span> <span class="s2">"24;before-dr"</span>
 </code></pre></div></div>
 
-<p>Three local (not replicated) snapshots named “<code class="language-plaintext highlighter-rouge">before-dr</code>” have been created on the source with 24 hour retention. We can execute our DR test now.</p>
+<p>Three local (not replicated) snapshots named “<code class="language-plaintext highlighter-rouge">before-dr</code>” have been created on the source and have a 24 hour retention. We can execute our DR test now.</p>
 
 <p>Now we <strong>should stop all workloads</strong> that use paired volumes as we’ll make the paired volumes on the source replication targets, which will deny access to iSCSI clients at the source site. At the remote site you also don’t want to be having any workloads attempting to use the remote volumes (they can’t be used yet, they’re in replication target mode).</p>
 
@@ -307,7 +308,7 @@
            <span class="s">'remoteVolumeID'</span><span class="p">:</span> <span class="mi">5</span><span class="p">}}]</span>
 </code></pre></div></div>
 
-<p>Longhorny outputs Python objects to the shell so that you can take this output, paste it into your Python shell and do something with it.</p>
+<p>Longhorny outputs Python “sequences” to the shell so that you can take this output, paste it into your Python shell and do something with it.</p>
 
 <p>All Longhorny output is like that - it’s meant to be used elsewhere (send to SFC, send to Splunk, send to own script, etc.) and not something that merely lets you do in the CLI what you can already do in the Web UI.</p>
 
@@ -325,9 +326,9 @@
 
 <p>But we know what’s coming next - now different accounts/cluster owners want, or don’t want - to failover to site B. Some do, some don’t. Now we need per-account “<code class="language-plaintext highlighter-rouge">volume --reverse</code>”. Okay, let’s add that feature (I haven’t, though).</p>
 
-<p>Then a site fails. “Okay, not a problem - I’mma use a <code class="language-plaintext highlighter-rouge">site</code> action to override!”</p>
+<p>Then a site fails. “Okay, not a problem - I’ll use a <code class="language-plaintext highlighter-rouge">site</code> action to override!”</p>
 
-<p>Well, sure but now you may have a mess, especially if said Kubernetes admins are allowed to use Longhorny on their own. Some volumes are read-write on both sites, some on one site where a site-action was used to severe relationships and promote the site to read-write, some are read-only (replicationTarget mode) on both sites and no one remembers what exactly they did, there are no pre- or post-failover snapshots, etc.</p>
+<p>Well, sure, but now you may have a mess at your hands, especially if said Kubernetes admins are allowed to use Longhorny on their own. Some volumes are read-write on both sites, some on a site where a site-action was used to severe relationships and promote the site to read-write, some are read-only (replicationTarget mode) on both sites and no one remembers what exactly they did, there are no pre- or post-failover snapshots, etc. Mr. Storage Admin, can you figure it out for us?</p>
 
 <p>I recognize the need for more features, but I think this is where things can get very complicated. At this moment site-level features are limited and as I don’t really want to make them completely useful for the situations where a site is down or unreachable.</p>
 
@@ -342,6 +343,12 @@
 <p>As I mentioned in <a href="/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">part 2 of the Kubernetes, Trident and SolidFire</a> series, there are some other scenarios where the Longhorny code will be useful.</p>
 
 <p>In terms of programming languages, I’m a beginner, but I think it would have been easier and nicer to do Longhorny in PowerShell. But I almost had no choice but to do it in Python, considering that SFC is in Python and other integration (Trident, etc.) works better with Python. Before I wrote (didn’t publish the code) a PowerShell wrapper for <code class="language-plaintext highlighter-rouge">kubectl</code> and it worked great, but with Python I and others don’t need a wrapper there’s a native Python client. So I think Python is the right choice, although not the best tool for this particular purpose.</p>
+
+<h2 id="demo-video">Demo video</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v513r8w-project-longhorny.html">Project Longhorny</a> - 5m11s</li>
+</ul>
 
       </article>
     </div>
@@ -383,7 +390,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-06-11 17:51 </p>
+    <p>2024-06-12 17:41 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
