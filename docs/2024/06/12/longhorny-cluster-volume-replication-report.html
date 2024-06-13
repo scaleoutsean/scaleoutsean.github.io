@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-12T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Reporting multi-cluster and volume pairing relationships","dateModified":"2024-06-12T00:00:00+08:00","datePublished":"2024-06-12T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/12/longhorny-cluster-volume-replication-report.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/12/longhorny-cluster-volume-replication-report.html"},"image":"https://scaleoutsean.github.io/assets/images/cluster_pairing_relationships_cluster_pair.png","description":"Creating report on SolidFire cluster pairs and volume replication pairs","@context":"https://schema.org"}</script>
+{"headline":"Reporting multi-cluster and volume pairing relationships","dateModified":"2024-06-12T00:00:00+08:00","datePublished":"2024-06-12T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/06/12/longhorny-cluster-volume-replication-report.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/12/longhorny-cluster-volume-replication-report.html"},"description":"Creating report on SolidFire cluster pairs and volume replication pairs","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/cluster_pairing_relationships_cluster_pair.png","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    3 minute read
+    10 minute read
   
 
     </span>
@@ -139,9 +139,9 @@
 
 <p>This week I <a href="/2024/06/11/introducing-project-longhorny.html">released</a> Longhorny, my simple tool for SolidFire volume replication management and while there’s a “list” action for both cluster and volumes, I mentioned that these are meant to list relationships for a Longhorny-supported setup the user is working with, which is 1-to-1 exclusive pairing.</p>
 
-<p>Longhorny can also find mismatched volumes, so given that Longhorny won’t even pair clusters with an existing relationship, the only problem that can happen is a mismatched volume or two.</p>
+<p>Longhorny can also find mismatched volumes, so given that Longhorny won’t even pair clusters with an existing relationship, the only problem that can happen with careful management is a mismatched volume or two.</p>
 
-<p>I did notice two things, though: if a cluster is already paired, Longhornyh doesn’t particularly care why and who, it just exits. The second is that if there’s more than a handful of mismatched volumes, it may be hard to figure out what’s what.</p>
+<p>I did notice two things, though: if a cluster is already paired, Longhorny doesn’t particularly care why and who, it just exits. Figuring out why is out of scope. The second is that if there’s more than a handful of mismatched volumes, which may happen in large clusters, it may be hard to figure out what’s what.</p>
 
 <p>That made me think about creating the report action that would report on anything it sees - for both cluster relationships and volume relationships - and potentially be useful to non-Longhorny users with multiple clusters as well.</p>
 
@@ -177,7 +177,9 @@ UNCONFIGURED CLUSTERS
 PROD
 </code></pre></div></div>
 
-<p>In this case I figure out the source (PROD) and can determine where the problem is.</p>
+<p>The same approach works for 3, 4 and 5-way pairs.</p>
+
+<p>In this case we can figure the problem (PROD) and determine where the problem is. This isn’t hard to do without a matrix, but it may be for volumes because there may be hundreds or thousands and comparing them the traditional way would be slow and maybe need a lot of RAM.</p>
 
 <p>For volumes, it’s going to be same approach, but I’m still thinking if I should try a multi-dimensional matrix with each item being a collection of more properties (number of cluster pairing relationships, number of paired volumes, number of all volumes). That seems more useful, but also more difficult to deal with.</p>
 
@@ -191,15 +193,163 @@ PROD
 
 <p>For up to 10-20 unilaterally paired volumes it’d be nice to be able to see names and maybe even accounts, so it appears “what’s better” is relative and needs experimentation.</p>
 
+<p>If HTML is used, then plain old tables - especially if they can be filtered and sorted by column - may be valuable, too.</p>
+
+<h2 id="tables">Tables</h2>
+
+<p>As I progressed with volumes, it quickly became clear this is harder than clusters. And also, that hacking without a plan isn’t the best approach when you’re working on something not simple.</p>
+
+<p>Volume pairings can be screwed up in many ways, which makes it more complex than clusters.</p>
+
+<p>Because I don’t want to spend a week on this, I abandoned the goal of adding the cluster dimension beyond 1-on-1. That would have to be another “level” of recursion, so nothing challenging, just more complicated and would need 3 or more clusters for testing, which I can’t run due to limited RAM in my lab.</p>
+
+<p>So, with two mutually paired clusters, it is important to scan paired volumes twice and in both directions. That may seem strange at first, but unlike two clusters which are either paired or not paired, a volume pair can be paired and not paired at the same time (depending on the direction), and on top of that if a pair isn’t symmetrically paired one of the volumes may not even exist (which is important to know because re-pairing them in isn’t possible and corrective actions are different in different cases).</p>
+
+<p>To put this in a matrix seems rather complicated (at least to me), so I’ll try using tables here.</p>
+
+<p>I’m sure there is some “famous algorithms” that solves this and everyone but me knows about it, but we also need to check volume properties, so…</p>
+
+<p>I produce a report (Appendix A) on a cluster pair with messed up</p>
+
+<h2 id="ispaired-in-solidfire-listvolumes-parameters"><code class="language-plaintext highlighter-rouge">isPaired</code> in SolidFire ListVolumes parameters</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s">'isPaired'</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sfe_a</span><span class="p">.</span><span class="n">invoke_sfapi</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'ListVolumes'</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">)[</span><span class="s">'volumes'</span><span class="p">])</span>
+<span class="mi">5</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s">'isPaired'</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sfe_a</span><span class="p">.</span><span class="n">invoke_sfapi</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'ListVolumes'</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">)[</span><span class="s">'volumes'</span><span class="p">])</span>
+<span class="mi">35</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>is_paired (bool) – Returns volumes that are paired or not paired. Possible values are: true: Returns all paired volumes. false: Returns all volumes that are not paired. (<a href="https://solidfire-sdk-python.readthedocs.io/en/latest/solidfire.html#solidfire.models.ListVolumesRequest">source</a>)</p>
+</blockquote>
+
+<p>In other to get <em>all</em> volumes, we simply use <code class="language-plaintext highlighter-rouge">None</code>, right? Right?</p>
+
+<p>Wrong. But I spent 1 day troubleshooting my own code because of that.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s">'isPaired'</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sfe_a</span><span class="p">.</span><span class="n">invoke_sfapi</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'ListVolumes'</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">params</span><span class="p">)[</span><span class="s">'volumes'</span><span class="p">])</span>
+<span class="mi">35</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sfe_a</span><span class="p">.</span><span class="n">invoke_sfapi</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'ListVolumes'</span><span class="p">)[</span><span class="s">'volumes'</span><span class="p">])</span>
+<span class="mi">40</span>
+</code></pre></div></div>
+
+<p>The documentation doesn’t say <code class="language-plaintext highlighter-rouge">False</code> is default, and anything else is also <code class="language-plaintext highlighter-rouge">False</code>.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>I don’t know how many people have 2 clusters, let alone 3 or 4, but it’s an interesting problem in any case.</p>
 
 <p>Unlike with one-to-many and any-to-any relationships that may be present on networks, these relationships seem easier to understand with matrices and especially so in 2-cluster situations.</p>
 
-<p>The problem of “optimal” visualization requires some experimentation as I usually don’t deal with problems of this nature. For example, the image in this post would ideally use specific colors for anything that’s &gt;2 and for any non-0 value in UNCONFIGURED, but the software I used can’t do that. But at least now I know what I want!</p>
+<p>The problem of “optimal” visualization requires some experimentation as I usually don’t deal with problems of this nature. For example, the image in this post would ideally use specific colors for anything that’s &gt;2 and for any non-0 value in UNCONFIGURED, but the software I used can’t do that.</p>
 
-<p>If I complete this script I’ll post it to Awesome SolidFire, but I may also include a simple text-only version in Longhorny.</p>
+<p>Approximately half the time I spent unnecessarily “debugging” my own code, whereas I was unknowingly not getting the right responses from the API due to that isPaired thing above. And because of that the script is now an incredible mess and requires a complete rework. If I find the energy to deal with that stuff again, I may add it to Longhorny. I thought to do a bit more, but I’ve had enough of dealing with this stuff!</p>
+
+<h2 id="appendix-a---tabular-report">Appendix A - tabular report</h2>
+
+<p>Pairings on this cluster are truly messed up - different directions, sizes, accounts, missing one-side relationships, missing volumes…</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="s">'PROD'</span><span class="p">:</span> <span class="p">[{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">135</span><span class="p">,</span>
+           <span class="s">'remoteVolumeId'</span><span class="p">:</span> <span class="mi">395</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'remoteAccessMode'</span><span class="p">:</span> <span class="s">'replicationTarget'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'remoteAccountID'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">20000538624</span><span class="p">,</span>
+           <span class="s">'remoteSize'</span><span class="p">:</span> <span class="mi">20000538624</span><span class="p">,</span>
+           <span class="s">'volumeSizeDiff'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'SnapshotsOnly'</span><span class="p">,</span>
+           <span class="s">'remoteReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'direction'</span><span class="p">:</span> <span class="s">'Local -&gt; Remote'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">164</span><span class="p">,</span>
+           <span class="s">'remoteVolumeId'</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'remoteAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'remoteAccountID'</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">3001024512</span><span class="p">,</span>
+           <span class="s">'remoteSize'</span><span class="p">:</span> <span class="mi">3001024512</span><span class="p">,</span>
+           <span class="s">'volumeSizeDiff'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'remoteReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'direction'</span><span class="p">:</span> <span class="s">'Local &lt;-!!!-&gt; Remote'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">167</span><span class="p">,</span>
+           <span class="s">'remoteVolumeId'</span><span class="p">:</span> <span class="mi">401</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'remoteAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'remoteAccountID'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">10000269312</span><span class="p">,</span>
+           <span class="s">'remoteSize'</span><span class="p">:</span> <span class="mi">10000269312</span><span class="p">,</span>
+           <span class="s">'volumeSizeDiff'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'remoteReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'direction'</span><span class="p">:</span> <span class="s">'Local &lt;-!!!-&gt; Remote'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">169</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">4000317440</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'SnapshotsOnly'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">170</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">17</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">2000683008</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">171</span><span class="p">,</span>
+           <span class="s">'remoteVolumeId'</span><span class="p">:</span> <span class="mi">412</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'remoteAccessMode'</span><span class="p">:</span> <span class="s">'readWrite'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'remoteAccountID'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">2147483648</span><span class="p">,</span>
+           <span class="s">'remoteSize'</span><span class="p">:</span> <span class="mi">1073741824</span><span class="p">,</span>
+           <span class="s">'volumeSizeDiff'</span><span class="p">:</span> <span class="mi">1073741824</span><span class="p">,</span>
+           <span class="s">'localReplicationMode'</span><span class="p">:</span> <span class="s">'SnapshotsOnly'</span><span class="p">,</span>
+           <span class="s">'remoteReplicationMode'</span><span class="p">:</span> <span class="s">'Async'</span><span class="p">,</span>
+           <span class="s">'direction'</span><span class="p">:</span> <span class="s">'Local &lt;-!!!-&gt; Remote'</span><span class="p">},</span>
+          <span class="p">{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">158</span><span class="p">,</span>
+           <span class="s">'localAccessMode'</span><span class="p">:</span> <span class="s">'replicationTarget'</span><span class="p">,</span>
+           <span class="s">'localAccountID'</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+           <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">2000683008</span><span class="p">}]}</span>
+</code></pre></div></div>
+
+<p>Again, the curious part is even as I realized I needed to look from each sides twice, it took me even longer to realize that you can’t even have a proper report produced for a site where a volume is <strong>missing</strong>. You can only get that from the other site, where there may be a one-sided pairing to the site with the missing volume.</p>
+
+<p>It appears we not only need to view relationships from each site on every site, but also produce reports at each site.</p>
+
+<p>In this case the first table created at the “source” site shows the same thing as that long output above. View from local “SRC”:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+---------------+----------------+-------------------+-------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+| localVolumeID | remoteVolumeId |  localAccessMode  | remoteAccessMode  | localAccountID | remoteAccountID |  localSize  | remoteSize  | volumeSizeDiff | localReplicationMode | remoteReplicationMode |      direction       |
++---------------+----------------+-------------------+-------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+|      135      |      395       |     readWrite     | replicationTarget |       13       |        3        | 20000538624 | 20000538624 |       0        |    SnapshotsOnly     |         Async         |   Local -&gt; Remote    |
+|      164      |      400       |     readWrite     |     readWrite     |       13       |       14        | 3001024512  | 3001024512  |       0        |        Async         |         Async         | Local &lt;-!!!-&gt; Remote |
+|      167      |      401       |     readWrite     |     readWrite     |       13       |        3        | 10000269312 | 10000269312 |       0        |        Async         |         Async         | Local &lt;-!!!-&gt; Remote |
+|      169      |                |     readWrite     |                   |       13       |                 | 4000317440  |             |                |    SnapshotsOnly     |                       |                      |
+|      170      |                |     readWrite     |                   |       17       |                 | 2000683008  |             |                |        Async         |                       |                      |
+|      171      |      412       |     readWrite     |     readWrite     |       13       |        7        | 2147483648  | 1073741824  |   1073741824   |    SnapshotsOnly     |         Async         | Local &lt;-!!!-&gt; Remote |
+|      158      |                | replicationTarget |                   |       13       |                 | 2000683008  |             |                |                      |                       |                      |
++---------------+----------------+-------------------+-------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+</code></pre></div></div>
+
+<p>But, since some local volumes may be missing, we also need to look and report from remote cluster (DST). Of course, we could have <code class="language-plaintext highlighter-rouge">-</code> in localVolumeID in the SRC-side report, but what would the SRC-side admin do with a row of no mostly content but a remote volume ID?</p>
+
+<p>I think it’s best to be able to create two views by simply swapping <code class="language-plaintext highlighter-rouge">--src</code> and <code class="language-plaintext highlighter-rouge">--dst</code> in the command. View of the same pairing relationships from the remote site (“DST”).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+---------------+----------------+-------------------+------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+| localVolumeID | remoteVolumeId |  localAccessMode  | remoteAccessMode | localAccountID | remoteAccountID |  localSize  | remoteSize  | volumeSizeDiff | localReplicationMode | remoteReplicationMode |      direction       |
++---------------+----------------+-------------------+------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+|      395      |      135       | replicationTarget |    readWrite     |       3        |       13        | 20000538624 | 20000538624 |       0        |        Async         |     SnapshotsOnly     |   Remote -&gt; Local    |
+|      397      |                |     readWrite     |                  |       3        |                 | 2000683008  |             |                |        Async         |                       |                      |
+|      400      |      164       |     readWrite     |    readWrite     |       14       |       13        | 3001024512  | 3001024512  |       0        |        Async         |         Async         | Local &lt;-!!!-&gt; Remote |
+|      401      |      167       |     readWrite     |    readWrite     |       3        |       13        | 10000269312 | 10000269312 |       0        |        Async         |         Async         | Local &lt;-!!!-&gt; Remote |
+|      412      |      171       |     readWrite     |    readWrite     |       7        |       13        | 1073741824  | 2147483648  |  <span class="nt">-1073741824</span>   |        Async         |     SnapshotsOnly     | Local &lt;-!!!-&gt; Remote |
+|      411      |                |     readWrite     |                  |       7        |                 | 2000683008  |             |                |                      |                       |                      |
++---------------+----------------+-------------------+------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
+</code></pre></div></div>
 
       </article>
     </div>
@@ -241,7 +391,7 @@ PROD
 
     
   </div><footer class= "footer">
-    <p>2024-06-12 18:39 </p>
+    <p>2024-06-13 21:12 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
