@@ -209,7 +209,7 @@ PROD
 
 <p>I’m sure there is some “famous algorithms” that solves this and everyone but me knows about it, but we also need to check volume properties, so…</p>
 
-<p>I produce a report (Appendix A) on a cluster pair with messed up</p>
+<p>I produce a report (Appendix A) on a cluster pair with messed up not just relationships, but also volumes (see in Appendix A).</p>
 
 <h2 id="ispaired-in-solidfire-listvolumes-parameters"><code class="language-plaintext highlighter-rouge">isPaired</code> in SolidFire ListVolumes parameters</h2>
 
@@ -251,6 +251,26 @@ PROD
 <h2 id="appendix-a---tabular-report">Appendix A - tabular report</h2>
 
 <p>Pairings on this cluster are truly messed up - different directions, sizes, accounts, missing one-side relationships, missing volumes…</p>
+
+<p>Longhorny has a simple <code class="language-plaintext highlighter-rouge">--list</code> action for paired relationships only. For this same cluster pair with the same pairing issues, it returns this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MISMATCHED PAIRED VOLUMES ONLY:
+
+<span class="o">[{</span><span class="s1">'DR'</span>: <span class="o">{</span><span class="s1">'volumeID'</span>: 397,
+         <span class="s1">'volumePairUUID'</span>: <span class="s1">'d0970043-322d-442c-bbaa-7f87a79b82db'</span>,
+         <span class="s1">'mismatchSite'</span>: <span class="s1">'PROD'</span>,
+         <span class="s1">'remoteVolumeID'</span>: 158<span class="o">}}</span>,
+ <span class="o">{</span><span class="s1">'PROD'</span>: <span class="o">{</span><span class="s1">'volumeID'</span>: 169,
+           <span class="s1">'volumePairUUID'</span>: <span class="s1">'2484f857-9f7b-4d43-af86-8663774072a4'</span>,
+           <span class="s1">'remoteSite'</span>: <span class="s1">'DR'</span>,
+           <span class="s1">'remoteVolumeID'</span>: 410<span class="o">}}</span>,
+ <span class="o">{</span><span class="s1">'PROD'</span>: <span class="o">{</span><span class="s1">'volumeID'</span>: 170,
+           <span class="s1">'volumePairUUID'</span>: <span class="s1">'602c3630-ad30-4b2a-b03c-e9165f45d574'</span>,
+           <span class="s1">'remoteSite'</span>: <span class="s1">'DR'</span>,
+           <span class="s1">'remoteVolumeID'</span>: 411<span class="o">}}]</span>
+</code></pre></div></div>
+
+<p>The new <code class="language-plaintext highlighter-rouge">--report</code> action could provide information more detailed than just pairing-related information. Here’s what I get my my garbage code now.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="s">'PROD'</span><span class="p">:</span> <span class="p">[{</span><span class="s">'localVolumeID'</span><span class="p">:</span> <span class="mi">135</span><span class="p">,</span>
            <span class="s">'remoteVolumeId'</span><span class="p">:</span> <span class="mi">395</span><span class="p">,</span>
@@ -316,9 +336,7 @@ PROD
            <span class="s">'localSize'</span><span class="p">:</span> <span class="mi">2000683008</span><span class="p">}]}</span>
 </code></pre></div></div>
 
-<p>Again, the curious part is even as I realized I needed to look from each sides twice, it took me even longer to realize that you can’t even have a proper report produced for a site where a volume is <strong>missing</strong>. You can only get that from the other site, where there may be a one-sided pairing to the site with the missing volume.</p>
-
-<p>It appears we not only need to view relationships from each site on every site, but also produce reports at each site.</p>
+<p>I’d also output that in tables for folks who want to view that output and not paste it into some program.</p>
 
 <p>In this case the first table created at the “source” site shows the same thing as that long output above. View from local “SRC”:</p>
 
@@ -335,9 +353,9 @@ PROD
 +---------------+----------------+-------------------+-------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
 </code></pre></div></div>
 
-<p>But, since some local volumes may be missing, we also need to look and report from remote cluster (DST). Of course, we could have <code class="language-plaintext highlighter-rouge">-</code> in localVolumeID in the SRC-side report, but what would the SRC-side admin do with a row of no mostly content but a remote volume ID?</p>
+<p>But, since some local volumes may be missing, we also need to look and report from remote cluster (DST). Of course, we could have <code class="language-plaintext highlighter-rouge">-</code> in localVolumeID values in SRC report, but it seems un-actionable, when stuff is simply missing.</p>
 
-<p>I think it’s best to be able to create two views by simply swapping <code class="language-plaintext highlighter-rouge">--src</code> and <code class="language-plaintext highlighter-rouge">--dst</code> in the command. View of the same pairing relationships from the remote site (“DST”).</p>
+<p>I think it’s better to have two views, which can be done by simply swapping <code class="language-plaintext highlighter-rouge">--src</code> and <code class="language-plaintext highlighter-rouge">--dst</code>. View of the same pairing relationships from the remote site (“DST”):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+---------------+----------------+-------------------+------------------+----------------+-----------------+-------------+-------------+----------------+----------------------+-----------------------+----------------------+
 | localVolumeID | remoteVolumeId |  localAccessMode  | remoteAccessMode | localAccountID | remoteAccountID |  localSize  | remoteSize  | volumeSizeDiff | localReplicationMode | remoteReplicationMode |      direction       |
@@ -391,7 +409,7 @@ PROD
 
     
   </div><footer class= "footer">
-    <p>2024-06-13 21:12 </p>
+    <p>2024-06-13 21:31 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
