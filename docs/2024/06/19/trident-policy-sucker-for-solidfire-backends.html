@@ -129,17 +129,17 @@
 
   
   
-    4 minute read
+    6 minute read
   
 
     </span>
   </div>
   
-        <p>This isn’t some huge idea, but I just thought of it and quickly wrote a script that does it.</p>
+        <h2 id="pull-qos-policy-from-solidfire-into-trident-back-end-configuration-for-solidfire-san">Pull QoS policy from SolidFire into Trident back-end configuration for solidfire-san</h2>
 
-<p>So, what is this about again?</p>
+<p>This isn’t some huge idea, but I just thought of it and quickly wrote a script that does it.</p>
 
-<p>Well, recently I’ve been looking at NetApp Trident and <a href="/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">musing about the ways to make use of SolidFire’s QoS policies within it</a>, rather than rely on what Trident does out of the box.</p>
+<p>Recently I’ve been looking at NetApp Trident and <a href="/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">musing about the ways to make use of SolidFire’s QoS policies within it</a>, rather than rely on what Trident does out of the box.</p>
 
 <p>Then today I thought about the other direction as well.</p>
 
@@ -150,12 +150,14 @@
 <p>In other words:</p>
 
 <ul>
-  <li>(1) Take your current back-end configuration file for SolidFire SAN back-end</li>
-  <li>(2) Patch it to reflect your QoS policies on SolidFire</li>
-  <li>(3) Profit, or maybe lose less money</li>
+  <li>Take your current back-end configuration file for SolidFire SAN back-end</li>
+  <li>Patch it to reflect your QoS policies on SolidFire</li>
+  <li>Profit, or maybe lose less money</li>
 </ul>
 
-<p>The benefit is that you can sort-of-transplant your SolidFire QoS policies into your Kubernetes environments.</p>
+<p>One of the benefits is that you can sort-of-transplant your SolidFire QoS policies into your Kubernetes environments.</p>
+
+<p>The script:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./solidfire-qos-policy-id-to-trident-qos.py <span class="nt">-h</span>
 usage: solidfire-qos-policy-id-to-trident-qos.py <span class="o">[</span><span class="nt">-h</span><span class="o">]</span> <span class="nt">-m</span> MVIP <span class="nt">-u</span> U <span class="o">[</span><span class="nt">-p</span> P] <span class="nt">-q</span>
@@ -175,13 +177,13 @@ options:
                         Output file path and name.
 </code></pre></div></div>
 
-<p>Output:</p>
+<p>Output (plus to console, which you can see in Appendix A):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> <span class="k">*</span>.new
 <span class="nt">-rw-------</span> 1 sean sean 511 Jun 19 00:54 solidfire-backend.json.new
 </code></pre></div></div>
 
-<p>Now you may say “well, that’s a one-off thing, who cares”. That’s fine.</p>
+<p>Now you may say “well, that’s a one-off thing, who cares”. And that’s fine.</p>
 
 <p>But it’s a necessary step towards what I discussed in that other post.</p>
 
@@ -189,26 +191,62 @@ options:
 
 <p>I can also occasionally “update” QoS policies or add new ones in my Trident configuration file and let the Kubernetes admins to use policies 11, 14 and 25 and I don’t have to email them what they are, and they don’t have to learn how to figure it out.</p>
 
-<p><strong>NOTES</strong></p>
-
-<ul>
-  <li>I’m not suggesting you should just go ahead and create a cronjob that simply overwrites your Trident back-end configuration file. Test and like I said in that post, you’d have to test again every time before upgrading Trident. Trident currently still does <strong>not</strong> support volume retyping (<a href="https://github.com/NetApp/trident/issues/281">issue</a>). Of course, this script doesn’t retype volumes, it just sucks out the config so that it reflects some QoS Policy IDs. But it could be used in a retyping workflow (which is not supported).</li>
-  <li>In my sample file you may notice that QoS policy ranges [Min, Max] do not overlap among QoS types. See <a href="https://github.com/NetApp/trident/issues/281">this</a>.</li>
-</ul>
-
-<p>If you have SolidFire but haven’t used Kubernetes, check out <a href="https://solidfire-kubernetes.pages.dev/">“Kubernetes with SolidFire”</a> to get started. (The TLD .dev is a free domain popular among spammers, so nobody knows about that site. Other than that, I’ve no reason to mention it as it has neither any meaningful analytics and it’s ads-free).</p>
+<p>Now if we could also create Kubernetes Storage Classes from that… Sure. I’ve added that, too.</p>
 
 <p>I’ve uploaded the script <a href="https://github.com/scaleoutsean/awesome-solidfire/">to Awesome SolidFire</a> (solidfire-qos-policy-id-to-trident-qos.py in scripts directory).</p>
 
-<p>Now if we could also create Kubernetes Storage Classes from that… Sure. I’ve added that.</p>
+<h2 id="exercise-care">Exercise care</h2>
+
+<p>I’m not suggesting you should just go ahead and create a cronjob that simply overwrites your Trident back-end configuration file. Test and like I said in that post, you’d have to test again every time before upgrading Trident. Trident currently still does <strong>not</strong> support volume retyping (<a href="https://github.com/NetApp/trident/issues/281">issue</a>). Of course, this script doesn’t retype volumes, it just sucks out the config so that it reflects some QoS Policy IDs. But it could be used in a retyping workflow (which is not supported).</p>
+
+<p>In my sample file you may notice that QoS policy ranges [Min, Max] do not overlap among QoS types. See <a href="https://github.com/NetApp/trident/issues/281">Trident issue #281</a>.</p>
+
+<p>If you have SolidFire but haven’t used Kubernetes, check out <a href="https://solidfire-kubernetes.pages.dev/">“Kubernetes with SolidFire”</a> to get started. (The TLD .dev is a free domain popular among spammers, so nobody knows about that site. Other than that, I’ve no reason to mention it as it has neither any meaningful analytics and it’s ads-free).</p>
+
+<p>If you just use this script to generate the initial configuration for new clusters, there’s not much to be careful about as long as you create a working configuration file.</p>
+
+<p>If you want to update existing back-end which already has some volumes, that may not be supported and while you can still try, do some testing.</p>
+
+<p>I haven’t tried updating Trident back-end configuration file, but here’s how that is <a href="https://docs.netapp.com/us-en/trident-2110/trident-use/backend_ops_tridentctl.html">done</a>. Note the first is a backend <strong>name</strong>, not existing backend file.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tridentctl update backend <span class="k">${</span><span class="nv">backend</span><span class="p">-name</span><span class="k">}</span> <span class="nt">-f</span> <span class="k">${</span><span class="nv">backend</span><span class="p">-file</span><span class="k">}</span> <span class="nt">-n</span> trident
+</code></pre></div></div>
+
+<p>If updating Trident back-end config doesn’t help refresh storage classes, another way would be to reinstall Trident and reimport volumes, but that’s not a great idea.</p>
+
+<h2 id="what-does-the-iops-really-do">What does the IOPS really do?</h2>
+
+<p>That’s a good question. I’m not 100% sure (again, see Trident issue #281 lined above).</p>
+
+<p><a href="https://docs.netapp.com/us-en/trident-2110/trident-use/element.html">TFM</a> says:</p>
+
+<blockquote>
+  <p>The last StorageClass (solidfire-silver) calls out any storage pool which offers a silver performance. Astra Trident will decide which virtual storage pool is selected and will ensure the storage requirement is met.</p>
+</blockquote>
+
+<p>But that’s when Pools are specified. If you don’t have any pools then what?</p>
+
+<p>It appears that a stand-alone IOPS setting in a Storage Class also picks a matching (Min-to-Max range) Type from back-end configuration used by the Storage Class, which is why I don’t overlap them when it matters (they do overlap in the example in Appendix A, but that’s a random example.)</p>
+
+<p>Here’s an example which I think comes from a SC which had the QoS range 601/800/1,000. Presumably a slower one was 401/600/800 or something like that.</p>
+
+<p><img src="/assets/images/solidfire-qos-policy-sucker-sc-example.png" alt="Trident Type and Kubernetes SC example in SolidFire" /></p>
+
+<p>What I’m not 100% sure if Burst impacts the selection. TFM doesn’t say so we should check the solidfire-san’s driver source code to find out.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Automating Trident deployments - with Helm or whatever - is nice, but a more advanced integration with SolidFire arrays is even better.</p>
+
+<p>Templating for back-end and Storage Class brings users closer to that goal.</p>
+
+<p>We can probably do that with Ansible without writing own scripts, but if you dislike Ansible or waiting for it to finish then Python or PowerShell scripts may be the right answer for your automation workflows.</p>
+
+<p>Additional steps could also create the SolidFire tenant account for Trident to completely automate the entire Trident configuration file. Maybe in one of the future posts.</p>
 
 <h2 id="appendix-a---sample-run">Appendix A - sample run</h2>
 
 <p>I want to update my Trident Types to be in sync with my SolidFire QoS policies 1 and 2, so I run the script with <code class="language-plaintext highlighter-rouge">-q 1,2</code>.</p>
-
-<p>Then I just copy-paste the config to my existing config.</p>
-
-<p>The script is permissively licensed so you can easily modify it to run regularly and update your Trident config files… But that’s dangerous. I don’t plan to do this (yet), so I haven’t yet checked how Trident refreshes backend (maybe we need to kill some pod or something).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./solidfire-qos-policy-id-to-trident-qos.py <span class="nt">--mvip</span> <span class="s1">'192.168.1.30'</span> <span class="nt">-u</span> admin <span class="nt">-p</span> <span class="k">********</span> <span class="nt">-q</span> 1,2
 
@@ -380,7 +418,7 @@ parameters:
 
     
   </div><footer class= "footer">
-    <p>2024-06-19 02:24 </p>
+    <p>2024-06-19 03:29 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
