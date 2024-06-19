@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-20T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Snapshots and snapshot schedules in SFC v2","dateModified":"2024-06-20T00:00:00+08:00","datePublished":"2024-06-20T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/20/snapshot-and-schedules-in-sfc.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/20/snapshot-and-schedules-in-sfc.html"},"image":"https://scaleoutsean.github.io/assets/images/sfc-snapshots-schedules-snapshot-groups.png","description":"Monitoring of schedules, snapshots and snapshot groups in SFC","@context":"https://schema.org"}</script>
+{"headline":"Snapshots and snapshot schedules in SFC v2","dateModified":"2024-06-20T00:00:00+08:00","datePublished":"2024-06-20T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/06/20/snapshot-and-schedules-in-sfc.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/20/snapshot-and-schedules-in-sfc.html"},"description":"Monitoring of schedules, snapshots and snapshot groups in SFC","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/sfc-snapshots-schedules-snapshot-groups.png","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    12 minute read
+    13 minute read
   
 
     </span>
@@ -193,7 +193,7 @@
 
 <p>This almost looks useful, except that it’s the pretty Grafana UI playing games with our mind.</p>
 
-<p><img src="/assets/images/sfc-snapshots-schedules-snapshot-groups.png" alt="" /></p>
+<p><img src="/assets/images/sfc-snapshots-schedules-snapshot-groups.png" alt="SFC - snapshot and schedule panels" /></p>
 
 <p>The first panel shows volumes by name and ID that have a remote snapshot replica. Sort of useful. Except that you can’t see <em>from when</em>. Are those from 2023? Or from yesterday? The saving grace is you may know that volume pairing replication is configured to replicate snapshots to the remote site and retain them for 2 days, for example, so in the worst case the snapshots you see are less than 2 days old. This is semi-useful, but on the happy side <a href="/2024/06/15/sfc-adds-volume-replication-monitoring.html">I blogged how I’ve added replication monitoring to SFC</a> so you actually have another place to look at the replication delay, for example.</p>
 
@@ -221,19 +221,23 @@
 <span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">19</span><span class="n">T15</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mi">42</span><span class="n">Z</span> <span class="n">PROD</span>    <span class="mi">1</span>                                                <span class="mi">0</span>         <span class="mi">1</span>               <span class="mi">0</span>      <span class="mi">1</span>         <span class="mi">0</span>                 <span class="mi">7</span>           <span class="nb">int</span><span class="o">-</span><span class="k">group</span><span class="o">-</span><span class="mi">1</span><span class="n">h</span><span class="o">-</span><span class="n">rep</span><span class="o">-</span><span class="mi">24</span><span class="n">h</span> <span class="n">Snapshot</span>      <span class="nb">int</span><span class="o">-</span><span class="k">group</span><span class="o">-</span><span class="mi">1</span><span class="n">h</span><span class="o">-</span><span class="n">rep</span><span class="o">-</span><span class="mi">24</span><span class="n">h</span> <span class="mi">3</span>
 </code></pre></div></div>
 
-<p>There’s another point - I just noticed in this SQL output so I’ll mention it - it would seem wise to not store 0 where the API returns nothing. It just creates more IO and takes up more space, and yet it doesn’t give mor insight. We want to know if <code class="language-plaintext highlighter-rouge">enable_remote_replication</code> schedule is 1 and if it’s not, we know volume snapshots aren’t being replicated. But this seems to impact either one or both Influx and Grafana.</p>
+<p>There’s another point - I just noticed in this SQL output so I’ll mention it - it would seem wise to not store 0 where the API returns nothing. It just creates more IO and takes up more space, and yet it doesn’t give mor insight.</p>
 
-<p>There are many quirks and puzzles of that nature. Another (visual) example is below - the second panel from the larger screenshot above.</p>
+<p>We want to know if “<code class="language-plaintext highlighter-rouge">enable_remote_replication</code>” value is 1 and if it’s not we know volume snapshots aren’t being replicated.</p>
+
+<p>The other problem is that some API responses simply do not have anything in them because if the option isn’t enabled, it may not even show in API responses. That’s why some columns have 0s and some don’t, and populating those missing values with 0s may even be misleading.</p>
+
+<p>And I wonder if <code class="language-plaintext highlighter-rouge">null</code> values impact either (or both) Influx and Grafana queries which may be why some volumes refuse to show up in panels. Another example is below - the second panel from the larger screenshot above.</p>
 
 <p><img src="/assets/images/sfc-snapshots-schedules-snapshot-groups-quirks.png" alt="Grafana/InfluxDB quirks" /></p>
 
-<p>Every 10th time InfluxDB returns query parameters in another order and messes up Grafana transformations (until next refresh cycle which in Auto (1 min) mode means if you look 5-10 minutes you may notice it).</p>
+<p>Approximately every 10th refresh InfluxDB returns query parameters in another order and messes up my Grafana transformations until next refresh cycle which in Auto (1 min) mode means if you look 5-10 minutes you may notice it, just enough to annoy you. I don’t know if that’s a Grafana bug or something else.</p>
 
 <h2 id="the-good-news">The good news</h2>
 
-<p>It’s mostly bad news, but there are some good news, too. Data that’s collected - to the extent that it’s accurate, but it will take more than a single user to find that out - is valid and usable.</p>
+<p>It’s mostly the bad news, but there are some good news, too. Data that’s collected - to the extent that it’s accurate, but it will take more than a single user to find that out - is valid and readily usable.</p>
 
-<p>We can easily query this from anywhere, including Influx CLI or Python or PowerShell, to get collected historic data. That works.</p>
+<p>We can easily query this from anywhere, including Influx CLI or Python or PowerShell, to get data or reports. That works fine. Recently reported snapshot metrics:</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">snapshots</span> <span class="k">WHERE</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="s1">'2024-06-19T18:06:47Z'</span> 
 <span class="n">name</span><span class="p">:</span> <span class="n">snapshots</span>
@@ -244,7 +248,7 @@
 <span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">19</span><span class="n">T18</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="n">Z</span> <span class="n">PROD</span>    <span class="mi">1712614787</span>  <span class="mi">0</span>                         <span class="mi">433230012</span>        <span class="mi">0</span>        <span class="n">velero</span><span class="o">-</span><span class="n">vol</span><span class="o">-</span><span class="mi">136</span><span class="o">-</span><span class="mi">202404090619</span><span class="n">Z</span>                  <span class="mi">0</span>             <span class="mi">439</span>         <span class="mi">1</span>      <span class="mi">136</span>       <span class="n">sqldb</span>                                    <span class="mi">0</span>
 </code></pre></div></div>
 
-<p>Even that darn second panel above, it’s easy to query InfluxDB and get all the replicated snapshots from snapshot group ID 118 reported in the last 30 minutes. The actual creation time was 1718726400 which was Tuesday, June 18, 2024 4:00:00 PM (UTC) and this schedule keeps snapshots at the remote site for 25 hours.</p>
+<p>Even that darn second panel above, it’s easy to query InfluxDB and get all the replicated snapshots from snapshot group ID 118 reported in the last 30 minutes. The actual snapshot creation time for all 3 volumes (as it’s a Consistency Group) was 1718726400 which was Tuesday, June 18, 2024 4:00:00 PM (UTC) and this schedule keeps snapshots at the remote site for 25 hours (expiration delta 90000 seconds).</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">snapshots</span> <span class="k">WHERE</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">118</span> <span class="k">AND</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="mi">30</span><span class="n">m</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">time</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">3</span>
 <span class="n">name</span><span class="p">:</span> <span class="n">snapshots</span>
@@ -255,13 +259,13 @@
 <span class="mi">2024</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">19</span><span class="n">T18</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="n">Z</span> <span class="n">PROD</span>    <span class="mi">1718726400</span>  <span class="mi">1</span>                         <span class="mi">90000</span>            <span class="mi">118</span>      <span class="k">group</span><span class="o">-</span><span class="k">sql</span><span class="o">-</span><span class="n">snapshot</span> <span class="mi">1</span>             <span class="mi">812</span>         <span class="mi">1</span>      <span class="mi">135</span>       <span class="n">win2</span>        <span class="mi">5</span><span class="n">f70fc08</span><span class="o">-</span><span class="n">fad6</span><span class="o">-</span><span class="mi">465</span><span class="n">d</span><span class="o">-</span><span class="mi">8</span><span class="n">dac</span><span class="o">-</span><span class="mi">83766</span><span class="n">eb38ab4</span>
 </code></pre></div></div>
 
-<p>I may not be able to present this in Grafana in a visually appealing way, but I can create queries to get data that I no longer exist on SolidFire or in NetApp AIQ, or may take many hours of clicking around and copy-pasting to figure out.</p>
+<p>I may not be able to present this in Grafana in a visually appealing way, but I can create queries to get data that I no longer exist on SolidFire or in NetApp AIQ, or may take many hours of clicking around and copy-pasting to figure it out (while you make mistakes copy-pasting to Excel or Notepad).</p>
 
-<p>If you scroll the above query all the way to the right you’ll see the last column is <code class="language-plaintext highlighter-rouge">volume_pair_uuid</code>. So this is a paired volume, and the volumes “table” has this list of paired volumes.</p>
+<p>If you scroll the above query all the way to the right, you’ll see the last column is <code class="language-plaintext highlighter-rouge">volume_pair_uuid</code>. This volume is paired and the volumes “table” has this information.</p>
 
-<p>SFC updates it every 10 minutes, so by querying the volumes measurement for that volume pair UUID in last 15 minutes I expect a single match.</p>
+<p>SFC (by default) updates the volumes table every 10 minutes, so by querying the volumes measurement for that volume pair UUID in last 15 minutes I expect a single match if I have SFC only on one site, or two if the destination has an SFC instance sending data to the same InfluxDB.</p>
 
-<p>Abbreviated response:</p>
+<p>Abbreviated response with many columns omitted:</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">volumes</span> <span class="k">WHERE</span> <span class="n">volume_pair_uuid</span> <span class="o">=</span> <span class="s1">'5f70fc08-fad6-465d-8dac-83766eb38ab4'</span> <span class="k">AND</span> <span class="nb">time</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="mi">15</span><span class="n">m</span><span class="p">)</span>
 <span class="n">name</span><span class="p">:</span> <span class="n">volumes</span>
@@ -271,8 +275,8 @@
 </code></pre></div></div>
 
 <ul>
-  <li>Replication mode 3 is SFC’s code for SnapshotsOnly</li>
-  <li>Remote replication state 2 is “Idle” (so, no backlog)</li>
+  <li>Replication mode 3 is SFC representation for “SnapshotsOnly” mode of replication</li>
+  <li>Remote replication state 2 is “Idle” (so, no backlog or ongoing synchronization)</li>
   <li>Remote volume ID and Name at the remote site are 10 and win2-replica, respectively. That’s the other half of the volume pair.</li>
 </ul>
 
@@ -280,25 +284,25 @@
 
 <p><img src="/assets/images/solidfire-replication-monitoring-07-sfc-implementation.png" alt="Replication monitoring in SFC" /></p>
 
-<p>If we need to quickly produce a list of paired volumes or a point-in-time report on all volume relationships and replication delays, you probably want SQL (InfluxQL, in this case) rather than Grafana.</p>
+<p>If we need to quickly produce a list of paired volumes or a point-in-time report on all volume relationships and replication delays, we probably want to use SQL (or InfluxQL, in this case) rather than Grafana.</p>
 
-<p>Getting this info would be easier in Elasticsearch - but this isn’t too bad.</p>
+<p>Getting this info would be easier in Elasticsearch, but this isn’t too bad.</p>
 
-<p>For a comparison, I don’t think this is even possible in Active IQ or in the SolidFire API (considering that only current metrics are available and retained), no matter how much time you are willing to spend or what skills you posses.</p>
+<p>For a comparison, I don’t think this is even <em>possible</em> in NetApp Active IQ or in the SolidFire API (considering that only current metrics are available and nothing is retained) no matter how much time you are willing to spend or what skills you posses.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Snapshots and schedules aren’t a good use case and I did a lousy job coding these features, too. Not that “it doesn’t work” (maybe in some cases it does not) but rather that it was clearly written solving problems “on the fly”. I even had a plan, but the API, InfluxDB and Grafana punched me in the face.</p>
+<p>Snapshots and schedules aren’t a good use case for SFC and on top of that I did a lousy job coding these features, too. Not that “it doesn’t work” (maybe in some cases it does not) but rather that it was clearly written solving problems “on the fly”. I even had a plan, but the API, InfluxDB and Grafana punched me in the face.</p>
 
-<p>Additionally, the implementation took some shortcuts and made compromises.</p>
+<p>Additionally, my implementation took some shortcuts and made inevitable compromises.</p>
 
-<p>Schedules cover only time interval-based schedules, in many cases after many attempts I just had to resort to replacing string responses (ex: “Done”, “Success”) with integers (ex: 1) and the schedules table reminds me of one that I must remember to document, which is that the last column (<code class="language-plaintext highlighter-rouge">volume_count</code>) doesn’t exist in SolidFire - I compute it to find a compromise between omitting information and using too much storage space.</p>
+<p>The schedules cover only time interval-based schedules. In many cases and after many attempts to avoid that, I just had to resort to replacing string responses (ex: “Done”, “Success”) with integers (ex: 1) and the schedules table reminds me of one that I must remember to document, which is that the last column (<code class="language-plaintext highlighter-rouge">volume_count</code>) doesn’t exist in SolidFire API responses (I compute it to find a compromise between omitting information and using too much storage space).</p>
 
-<p>There are trade-offs and while I’d prefer to send this data to Elasticsearch, SFC is a <em>very</em> lightweight application and InfluxDB is relatively small as well, so I think these are worthy compromises.</p>
+<p>There are trade-offs and while I’d prefer to send this data to Elasticsearch, SFC is a <em>very</em> lightweight application and InfluxDB is relatively small as well, so I think these are reasonable compromises to avoid adding too much complexity to the code, too much useless data to storage and so on.</p>
 
-<p>After all, now that the code is ready, it’s not hard to send data to Elasticsearch (or elsewhere, such as Splunk) if you want to. There’s already a detailed <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html">how-to</a> for SolidFire logging to Elasticsearch, so combined with either data import from InfluxDB or the modified SFC code to send measurements to Elasticsearch, it’s a choice we can implement <strong>in addition to</strong>, or <strong>instead of</strong>, SFC with InfluxDB.</p>
+<p>Now that this collection works, it’s not hard to send data to Elasticsearch (or elsewhere) if you want to. There’s already a detailed <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html">how-to</a> for SolidFire logging to Elasticsearch, so combined with either data import from InfluxDB or the modified SFC code to send measurements to Elasticsearch, it’s a choice we can implement <strong>in addition to</strong> or <strong>instead of</strong> SFC with InfluxDB.</p>
 
-<p>I will take me a few days to tidy up and document the added measurements, but I think now I have almost everything I want except volume attributes (required for various Kubernetes/Trident-related use cases) and bulk volume jobs (SolidFire’s <a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">backup to S3</a>, or backup-to-another-SolidFire). After these two features are added, then I may revisit Kubernetes-related use cases including Kubernetes &amp; storage failover/failback and Kubernetes backup, to see if this data in InfluxDB is any helpful.</p>
+<p>I will take me a few days to tidy up and document the added measurements, but I think now I have almost everything I want except volume attributes (required for various Kubernetes/Trident-related use cases) and bulk volume jobs (SolidFire’s <a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">backup to S3</a>, or backup-to-another-SolidFire). After these two features are added, then I may revisit Kubernetes-related use cases including Kubernetes and storage failover/failback and Kubernetes backup, to see if this data in InfluxDB is any helpful.</p>
 
 
       </article>
@@ -345,7 +349,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-06-20 03:04 </p>
+    <p>2024-06-20 03:28 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
