@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-19T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Trident QoS policy sucker for SolidFire backend","dateModified":"2024-06-19T00:00:00+08:00","datePublished":"2024-06-19T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/06/19/trident-policy-sucker-for-solidfire-backends.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/19/trident-policy-sucker-for-solidfire-backends.html"},"description":"Script stores SolidFire QoS policies into Trident config","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-qos-policy-sucker.png","@context":"https://schema.org"}</script>
+{"headline":"Trident QoS policy sucker for SolidFire backend","dateModified":"2024-06-19T00:00:00+08:00","datePublished":"2024-06-19T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/19/trident-policy-sucker-for-solidfire-backends.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/19/trident-policy-sucker-for-solidfire-backends.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-qos-policy-sucker.png","description":"Script stores SolidFire QoS policies into Trident config","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,13 +129,22 @@
 
   
   
-    8 minute read
+    9 minute read
   
 
     </span>
   </div>
   
-        <h2 id="pull-qos-policy-from-solidfire-into-trident-back-end-configuration-for-solidfire-san">Pull QoS policy from SolidFire into Trident back-end configuration for solidfire-san</h2>
+        <ul>
+  <li><a href="#pull-qos-policy-from-solidfire-into-trident-back-end-configuration-for-solidfire-san">Pull QoS policy from SolidFire into Trident back-end configuration for solidfire-san</a></li>
+  <li><a href="#exercise-care">Exercise care</a></li>
+  <li><a href="#what-does-the-iops-really-do">What does the IOPS really do?</a></li>
+  <li><a href="#what-does-all-this-mean">What does all this mean?</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---sample-run">Appendix A - sample run</a></li>
+</ul>
+
+<h2 id="pull-qos-policy-from-solidfire-into-trident-back-end-configuration-for-solidfire-san">Pull QoS policy from SolidFire into Trident back-end configuration for solidfire-san</h2>
 
 <p>This isn’t some huge idea, but I just thought of it and quickly wrote a script that does it.</p>
 
@@ -233,6 +242,17 @@ options:
 <p><img src="/assets/images/solidfire-qos-policy-sucker-sc-example.png" alt="Trident Type and Kubernetes SC example in SolidFire" /></p>
 
 <p>What I’m not 100% sure if Burst impacts the selection. TFM doesn’t say so we should check the solidfire-san’s driver source code to find out.</p>
+
+<p>Also noteworthy is this: in TFM Silver and Gold both can be used for a SC “goldsilver” that specifies 6000 IOPS.</p>
+
+<pre><code class="language-raw">"Types": [{"Type": "Bronze", "Qos": {"minIOPS": 1000, "maxIOPS": 2000, "burstIOPS": 4000}},
+              {"Type": "Silver", "Qos": {"minIOPS": 4000, "maxIOPS": 6000, "burstIOPS": 8000}},
+              {"Type": "Gold", "Qos": {"minIOPS": 6000, "maxIOPS": 8000, "burstIOPS": 10000}}],
+</code></pre>
+
+<p>If one has half a dozen such volumes, it’s not a big deal (except that creating 3 “goldsilver” SC-based volumes for Elasticsearch or Cassandra may result in one node being slower than the other two).</p>
+
+<p>But if there’s 50 of them, then it may start mattering as you may be guaranteeing (6000-4000) * 50 PVs * 50% chance of getting “Gold” = 50,000 IOPS or 0.5 SolidFire H610S node. Again, I don’t know if that’s possible and what the odds of getting Sold or Silver are, but in issue 281 I spotted such behavior when Min-Max ranges overlapped between back-end QoS settings.</p>
 
 <h2 id="what-does-all-this-mean">What does all this mean?</h2>
 
@@ -436,7 +456,7 @@ parameters:
 
     
   </div><footer class= "footer">
-    <p>2024-06-19 03:43 </p>
+    <p>2024-06-20 03:04 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
