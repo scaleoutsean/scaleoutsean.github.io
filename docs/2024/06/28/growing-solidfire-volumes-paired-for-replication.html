@@ -57,10 +57,11 @@
 <link rel="canonical" href="https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html" />
 <meta property="og:url" content="https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html" />
 <meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/solidfire-volume-pairing-at-source.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-28T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Increase size of SolidFire volumes paired for replication","dateModified":"2024-06-28T00:00:00+08:00","datePublished":"2024-06-28T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html"},"description":"How to increase total size of SolidFire volumes paired for replication","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
+{"headline":"Increase size of SolidFire volumes paired for replication","dateModified":"2024-06-28T00:00:00+08:00","datePublished":"2024-06-28T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/06/28/growing-solidfire-volumes-paired-for-replication.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-volume-pairing-at-source.png","description":"How to increase total size of SolidFire volumes paired for replication","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -147,7 +148,7 @@
 
 <p>You’ve paired two volumes at the source and the destination cluster, and now you need to grow their size.</p>
 
-<p>This post reviews how to do that correctly on SolidFire?</p>
+<p>This post reviews how to do that correctly on SolidFire.</p>
 
 <h2 id="situation">Situation</h2>
 
@@ -155,7 +156,7 @@
 
 <p><img src="/assets/images/solidfire-volume-pairing-at-source.png" alt="" /></p>
 
-<p>Destination:</p>
+<p>Destination: incoming Async replication from the source.</p>
 
 <p><img src="/assets/images/solidfire-volume-pairing-at-destination.png" alt="" /></p>
 
@@ -165,9 +166,11 @@
   <p>The source volume should be of equal size to the target volume. If the size of the source and target volumes do not match, replication transitions to an error state.</p>
 </blockquote>
 
-<p>Uh, okay… Good to know, Pete. But 95% of the readers must be wondering how to <em>avoid</em> this problem when they need to grow a replicated volume and clearly that’s too much to ask for: it’s an exercise for the reader, as they say!</p>
+<p>Uh, okay… Good to know, Pete. But 95% of the readers must be wondering how to <em>avoid</em> this problem when they need to grow a replicated volume.</p>
 
 <p><img src="/assets/images/solidfire-volume-pairing-useless-advice.png" alt="" /></p>
+
+<p>Clearly that’s too much to ask for: it’s an exercise for the reader, as they say.</p>
 
 <h2 id="procedure">Procedure</h2>
 
@@ -221,7 +224,7 @@
 
 <p>Modify the relationship by manually pausing replication at the source.</p>
 
-<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Set-SFVolumePair</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-PausedManual</span><span class="p">:</span><span class="nv">$False</span><span class="w"> 
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Set-SFVolumePair</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-PausedManual</span><span class="p">:</span><span class="nv">$True</span><span class="w"> 
 </span></code></pre></div></div>
 
 <p>Now we can increase the size of both the source and target. Total size given above is 5000658944 bytes. Let’s add 4,000 in 4096 byte blocks = 16384000 bytes. New size: 5000658944 + 16384000 = 5017042944 bytes.</p>
@@ -261,7 +264,7 @@
 
 </span></code></pre></div></div>
 
-<p>Now repeat this <strong>on the source side</strong> of the pair.</p>
+<p>Now repeat this <strong>on the source side</strong> for the pair, where the volume is readWrite.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="nx">/home/sean</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Set-SFVolume</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nx">136</span><span class="w"> </span><span class="nt">-TotalSize</span><span class="w"> </span><span class="nx">5017042944</span><span class="w">                  
 
@@ -315,7 +318,7 @@
 
 <h2 id="kubernetes">Kubernetes</h2>
 
-<p>In a Kubernetes environment, if resizing is allowed in the StorageClass, editing the PVC claim is enough to resize the volume and filesystem at the source. But the remote volume would remain undersized, so that volume pair’s replication would enter error state. To avoid that, you need to resize the destination as well.</p>
+<p>In a Kubernetes environment, if resizing is allowed in the StorageClass, editing the PVC claim is enough to resize the volume and filesystem at the source. But the remote volume would still remain undersized, so that the volume pair’s replication would enter error state. To avoid that, you need to resize the destination volume as well.</p>
 
 <p>Because in Trident CSI PVCs you probably use larger units like 20G or 20Gi rather than bytes (which is allowed, but not common), you can use the SoliFire UI to pick the same size at the destination, or maybe a CLI utility that changes the destination first and gives you the amount of bytes to use in PVC at the source side. That way you don’t have to use the UI if you can accomplish everything from the CLI.</p>
 
@@ -327,7 +330,7 @@
 
 <h2 id="appendix-a---upsize-remote-and-resize-in-longhorny">Appendix A - upsize remote and resize in Longhorny</h2>
 
-<p>Two actions have been added to Longhorny:</p>
+<p>Two actions have been added to <a href="https://github.com/scaleoutsean/longhorny">Longhorny</a>:</p>
 
 <ul>
   <li>resize</li>
@@ -367,6 +370,8 @@
       <h3>Related Posts</h3>
       <ul>
       
+        <li><a href="/2024/07/02/solidfire-volume-attributes-from-trident-and-other-apps.html">Extract SolidFire volume attributes created by Trident or other apps</a></li>
+      
         <li><a href="/2022/01/01/getting-solidfire-volume-details-python-powershell-api-cli.html">Getting SolidFire volume details with Powershell and Python</a></li>
       
         <li><a href="/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html">Windows Server 2025 with NetApp SolidFire 12 iSCSI Part Two</a></li>
@@ -375,15 +380,13 @@
       
         <li><a href="/2021/06/22/solidfire-backup-and-cloning-with-per-storage-node-queues.html">Maximum parallelization of SolidFire Backup and Volume Copy/Clone jobs</a></li>
       
-        <li><a href="/2020/12/19/solidfire-powershell-python-cli-sdk-1.7.html">SolidFire PowerShell Tools, Python CLI and SDK pip packages v1.7</a></li>
-      
       </ul>
     </div>
   
 
     
   </div><footer class= "footer">
-    <p>2024-07-02 14:52 </p>
+    <p>2024-07-02 23:15 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
