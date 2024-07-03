@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2023-09-01T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Block volume mode in Kubernetes with SolidFire","dateModified":"2023-09-01T00:00:00+08:00","datePublished":"2023-09-01T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/09/01/kubernetes-solidfire-block-volumemode.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/09/01/kubernetes-solidfire-block-volumemode.html"},"description":"About CSI volumes in block volume mode with SolidFire","@context":"https://schema.org"}</script>
+{"headline":"Block volume mode in Kubernetes with SolidFire","dateModified":"2023-09-01T00:00:00+08:00","datePublished":"2023-09-01T00:00:00+08:00","url":"https://scaleoutsean.github.io/2023/09/01/kubernetes-solidfire-block-volumemode.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/09/01/kubernetes-solidfire-block-volumemode.html"},"description":"About CSI volumes in block volume mode with SolidFire","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +128,7 @@
 
   
   
-    11 minute read
+    12 minute read
   
 
     </span>
@@ -147,6 +147,7 @@
     </ul>
   </li>
   <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---example-with-trident-v2406-and-solidfire">Appendix A - example with Trident v24.06 and SolidFire</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -525,6 +526,50 @@ Fri Sep  1 04:04:36 UTC 2023
 
 <p>Using LVM, btrfs, or ZFS on Trident-provisioned volumes are probably more popular use cases, as is (presumably possible) access to filesystems on partitions of Trident-imported volumes.</p>
 
+<h2 id="appendix-a---example-with-trident-v2406-and-solidfire">Appendix A - example with Trident v24.06 and SolidFire</h2>
+
+<p>PVC <code class="language-plaintext highlighter-rouge">firstblock</code> in the namespace <code class="language-plaintext highlighter-rouge">bla-bla</code>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">firstblock</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">bla-bla</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+  <span class="na">volumeMode</span><span class="pi">:</span> <span class="s">Block</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">2Gi</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">bronze</span>
+</code></pre></div></div>
+
+<p>Pod <code class="language-plaintext highlighter-rouge">bla-bla-bla</code> using the PVC:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">bla-bla-bla</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">bla-bla</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">blockmode-container</span>
+      <span class="na">image</span><span class="pi">:</span> <span class="s">ubuntu:24.04</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">/bin/sh"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">-c"</span><span class="pi">]</span>
+      <span class="na">args</span><span class="pi">:</span> <span class="pi">[</span> <span class="s2">"</span><span class="s">tail</span><span class="nv"> </span><span class="s">-f</span><span class="nv"> </span><span class="s">/dev/null"</span> <span class="pi">]</span>
+      <span class="na">volumeDevices</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">firstblock</span>
+          <span class="na">devicePath</span><span class="pi">:</span> <span class="s">/dev/xvda</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">firstblock</span>
+      <span class="na">persistentVolumeClaim</span><span class="pi">:</span>
+        <span class="na">claimName</span><span class="pi">:</span> <span class="s">firstblock</span>
+</code></pre></div></div>
+
+<p>Multipathd must be running on the worker node. Privileged security context may be needed to format and mount the device inside the pod.</p>
+
+
       </article>
     </div>
     
@@ -569,7 +614,7 @@ Fri Sep  1 04:04:36 UTC 2023
 
     
   </div><footer class= "footer">
-    <p>2024-07-02 23:15 </p>
+    <p>2024-07-03 17:52 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
