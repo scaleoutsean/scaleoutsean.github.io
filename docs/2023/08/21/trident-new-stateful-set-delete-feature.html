@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2023-08-21T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"StatefulSet PVC Retention with Trident and SolidFire","dateModified":"2023-08-21T00:00:00+08:00","datePublished":"2023-08-21T00:00:00+08:00","url":"https://scaleoutsean.github.io/2023/08/21/trident-new-stateful-set-delete-feature.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/08/21/trident-new-stateful-set-delete-feature.html"},"description":"How Stateful Set PVC Retention may benefit SolidFire users","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
+{"headline":"StatefulSet PVC Retention with Trident and SolidFire","dateModified":"2023-08-21T00:00:00+08:00","datePublished":"2023-08-21T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/08/21/trident-new-stateful-set-delete-feature.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/08/21/trident-new-stateful-set-delete-feature.html"},"description":"How Stateful Set PVC Retention may benefit SolidFire users","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +128,7 @@
 
   
   
-    7 minute read
+    8 minute read
   
 
     </span>
@@ -269,15 +269,25 @@ mysql-1   2/2     Running           0          10s
 
 <h2 id="other-notes">Other notes</h2>
 
-<h3 id="replication-workload">Replication workload</h3>
+<h3 id="local-replication-workload">Local replication workload</h3>
 
-<p>1TB stateful set that requires a replica likely introduces 1TB of data copying.</p>
+<p>A TB-sized stateful set that requires a replica likely requires 1TB of data copying.</p>
 
-<p>If we have a Master MySQL instance with three replicas and data is being added to Master at 5 MB/s, the replicas may add another 15 MB/s in write workload.</p>
+<p>If we have a Master MySQL instance with three replicas and data is being added to Master at 5 MB/s, the replicas may add another 15 MB/s in local write workload.</p>
 
 <p>We need to consider these details when deciding whether to use Stateful Sets, and when we do, whether it’s cheaper to retain or delete.</p>
 
 <p>This is also one of the answers to the question “why not leave Stateful Set at max number of replicas at all times?” - we could, but it will constantly consume CPU, RAM and IO resources. If you run SQL reports once a week or month, it may be better to scale out just in time.</p>
+
+<h3 id="remote-replication-workload">Remote replication workload</h3>
+
+<p>With database workloads it is expected that each replica may have at least slightly different data (e.g. transaction log may not be 100% the same on each stateful set member). Replicas in other stateful set workloads  - such as Web applications - may completely deduplicate each other, especially if logging is done to an external location.</p>
+
+<p>Because of these differences it’s hard to give a generic estimate for the increase in replication bandwidth with stateful sets. In some cases it may be very low, in others it may be a little higher and in the extreme case using N copies may result in a lot more replication bandwidth.</p>
+
+<p>I would suggest to analyze larger stateful sets case by case, and if they’re often scaled up and down, consider retaining them on scale-down if bandwidth is more scarce than IO or disk space.</p>
+
+<p>Another thing to consider is volume pairing for stateful sets: if they’re deleted every time a stateful set is scaled down, then volume pairing needs to be cleaned up. If there’s no automation in place, it may be better to leave unnecessary volumes in place during scale-down periods and remove them only periodically.</p>
 
 <h3 id="load-balancing">Load balancing</h3>
 
@@ -286,7 +296,7 @@ mysql-1   2/2     Running           0          10s
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">@@</span><span class="n">server_id</span><span class="p">,</span><span class="n">NOW</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p>That worked well. When I scaled out, I had to submit new queries to have the new server (server_id 102 was added last) picked by the client. That was’t a big deal as client sessions come and go.</p>
+<p>That worked well. When I scaled out, I had to submit new queries to have the new server (server_id 102 was added last) picked by the client. That wasn’t a big deal as client sessions come and go.</p>
 
 <pre><code class="language-raw">+-------------+---------------------+
 | @@server_id | NOW()               |
@@ -392,7 +402,7 @@ mysql-1   2/2     Running           0          10s
 
     
   </div><footer class= "footer">
-    <p>2024-07-03 17:52 </p>
+    <p>2024-07-09 14:23 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

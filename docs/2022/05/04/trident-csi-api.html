@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2022-05-04T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Trident CSI REST API","dateModified":"2022-05-04T00:00:00+08:00","datePublished":"2022-05-04T00:00:00+08:00","url":"https://scaleoutsean.github.io/2022/05/04/trident-csi-api.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/05/04/trident-csi-api.html"},"description":"Some details on the Trident CSI API","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
+{"headline":"Trident CSI REST API","dateModified":"2022-05-04T00:00:00+08:00","datePublished":"2022-05-04T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/05/04/trident-csi-api.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/05/04/trident-csi-api.html"},"description":"Some details on the Trident CSI API","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,21 +128,23 @@
 
   
   
-    9 minute read
+    11 minute read
   
 
     </span>
   </div>
   
         <ul>
+  <li><a href="#why-access-trident-api">Why access Trident API</a></li>
   <li><a href="#controller-routes">Controller routes</a></li>
   <li><a href="#trident-resources">Trident resources</a></li>
+  <li><a href="#expose-the-trident-rest-api">Expose the Trident REST API</a></li>
   <li><a href="#examples">Examples</a></li>
   <li><a href="#what-about-it">What about it</a></li>
   <li><a href="#appendix-list-of-trident-resources">Appendix: List of Trident Resources</a></li>
 </ul>
 
-<p>First off, I’m not recommending or suggesting to access the Trident API directly on production clusters to change Trident configuration. If you’re contemplating direct access to the Trident API, check the Knowledge Based articles on the topic of Trident support.</p>
+<h2 id="why-access-trident-api">Why access Trident API</h2>
 
 <p>Why would one want to access the Trident API? Maybe there’s a bug in the CLI, maybe something’s not readily available through the CLI, maybe <a href="https://github.com/NetApp/trident/issues/670">using the CLI increases your workload</a>, etc.</p>
 
@@ -209,6 +211,110 @@
   <li>tridentvolumepublications</li>
   <li>tridentvolumes</li>
 </ul>
+
+<h2 id="expose-the-trident-rest-api">Expose the Trident REST API</h2>
+
+<p>As of v24.06 <a href="https://docs.netapp.com/us-en/trident/trident-reference/rest-api.html">here</a> it says:</p>
+
+<blockquote>
+  <p>For better security, the Astra Trident REST API is restricted to localhost by default when running inside a pod. To change this behavior, you need to set Astra Trident’s -address argument in its pod configuration.</p>
+</blockquote>
+
+<p>Aside from the mistyped configuration argument (<code class="language-plaintext highlighter-rouge">--address</code>, not <code class="language-plaintext highlighter-rouge">-address</code>) there’s a conflicting information <a href="https://docs.netapp.com/us-en/trident/trident-managing-k8s/tridentctl.html">on the linked page</a> which is supposed to contain helpful details:</p>
+
+<blockquote>
+  <p>Trident REST interface can be configured to listen and serve at 127.0.0.1 (for IPv4) or [::1] (for IPv6) only.</p>
+</blockquote>
+
+<p>Go figure…</p>
+
+<p>Looking for <code class="language-plaintext highlighter-rouge">--address</code>, that can be changed by modifying <code class="language-plaintext highlighter-rouge">trident-deployment.yaml</code>.</p>
+
+<p>By default, your Trident CSI namespace services may look like this.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get services <span class="nt">-n</span> trident
+NAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>              AGE
+trident-csi   ClusterIP   10.43.58.152   &lt;none&gt;        34571/TCP,9220/TCP   5d14h
+</code></pre></div></div>
+
+<p>However, what we’re interested in is trident-controller and 10.42.0.7:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>sean@s194 setup]<span class="nv">$ </span>kubectl describe pod trident-controller-98ffcbc55-92kcr <span class="nt">-n</span> trident
+Name:             trident-controller-98ffcbc55-92kcr
+Namespace:        trident
+Priority:         0
+Service Account:  trident-controller
+Node:             s194/192.168.1.194
+Start Time:       Tue, 02 Jul 2024 19:30:35 +0100
+Labels:           <span class="nv">app</span><span class="o">=</span>controller.csi.trident.netapp.io
+                  pod-template-hash<span class="o">=</span>98ffcbc55
+Annotations:      openshift.io/required-scc: trident-controller
+Status:           Running
+IP:               10.42.0.7
+IPs:
+  IP:           10.42.0.7
+Controlled By:  ReplicaSet/trident-controller-98ffcbc55
+Containers:
+  trident-main:
+    Container ID:  containerd://f571965ecfd4c5194ffe2afa65d0f905abd2975b184801636164da615e1f981f
+    Image:         netapp/trident:24.06.0
+    Image ID:      docker.io/netapp/trident@sha256:cdb0f68a639eccea30aa66accfe9ed205a0fab97b1ae58b8096dff02bf18574a
+    Ports:         8443/TCP, 8001/TCP
+    Host Ports:    0/TCP, 0/TCP
+    Command:
+      /trident_orchestrator
+    Args:
+      <span class="nt">--crd_persistence</span>
+      <span class="nt">--k8s_pod</span>
+      <span class="nt">--https_rest</span>
+      <span class="nt">--https_port</span><span class="o">=</span>8443
+      <span class="nt">--csi_node_name</span><span class="o">=</span><span class="si">$(</span>KUBE_NODE_NAME<span class="si">)</span>
+      <span class="nt">--csi_endpoint</span><span class="o">=</span><span class="si">$(</span>CSI_ENDPOINT<span class="si">)</span>
+      <span class="nt">--csi_role</span><span class="o">=</span>controller
+      <span class="nt">--log_format</span><span class="o">=</span>text
+      <span class="nt">--log_level</span><span class="o">=</span>info
+      <span class="nt">--log_workflows</span><span class="o">=</span>
+      <span class="nt">--log_layers</span><span class="o">=</span>
+      <span class="nt">--disable_audit_log</span><span class="o">=</span><span class="nb">true</span>
+      <span class="nt">--address</span><span class="o">=</span>127.0.0.1
+      <span class="nt">--http_request_timeout</span><span class="o">=</span>1m30s
+      <span class="nt">--enable_force_detach</span><span class="o">=</span><span class="nb">false</span>
+      <span class="nt">--metrics</span>
+    State:          Running
+    ...
+</code></pre></div></div>
+
+<p>Funny thing is: accessing this IP at port 8001 gives me Prometheus metrics. Wait, wut?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-s</span> http://10.42.0.7:8001/apis/trident.netapp.io/v1/tridentstorageclasses
+
+<span class="c"># HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.</span>
+<span class="c"># TYPE go_gc_duration_seconds summary</span>
+go_gc_duration_seconds<span class="o">{</span><span class="nv">quantile</span><span class="o">=</span><span class="s2">"0"</span><span class="o">}</span> 4.391e-05
+go_gc_duration_seconds<span class="o">{</span><span class="nv">quantile</span><span class="o">=</span><span class="s2">"0.25"</span><span class="o">}</span> 7.5119e-05
+...
+<span class="c"># TYPE trident_operation_duration_milliseconds summary</span>
+trident_operation_duration_milliseconds<span class="o">{</span><span class="nv">operation</span><span class="o">=</span><span class="s2">"backend_add"</span>,success<span class="o">=</span><span class="s2">"true"</span>,quantile<span class="o">=</span><span class="s2">"0.5"</span><span class="o">}</span> NaN
+trident_operation_duration_milliseconds<span class="o">{</span><span class="nv">operation</span><span class="o">=</span><span class="s2">"backend_add"</span>,success<span class="o">=</span><span class="s2">"true"</span>,quantile<span class="o">=</span><span class="s2">"0.9"</span><span class="o">}</span> NaN
+trident_operation_duration_milliseconds<span class="o">{</span><span class="nv">operation</span><span class="o">=</span><span class="s2">"backend_add"</span>,success<span class="o">=</span><span class="s2">"true"</span>,quantile<span class="o">=</span><span class="s2">"0.99"</span><span class="o">}</span> NaN
+...
+</code></pre></div></div>
+
+<p>Okay, then, we can get Trident CSI Prometheus metrics with <code class="language-plaintext highlighter-rouge">curl -s http://10.42.0.7:8001/</code>. The correct URL is <code class="language-plaintext highlighter-rouge">http://10.42.0.7:8001/metrics</code>, but it appears there’s a universal redirect in place.</p>
+
+<p>To get to the rest, we need to change <code class="language-plaintext highlighter-rouge">--address</code> or use Kube proxy (<code class="language-plaintext highlighter-rouge">kubectl proxy</code>) and work through that proxy IP:PORT.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># curl http://127.0.0.1:8001/apis/trident.netapp.io/v1/tridentsnapshots</span>
+<span class="o">{</span>
+  <span class="s2">"apiVersion"</span>: <span class="s2">"trident.netapp.io/v1"</span>,
+  <span class="s2">"items"</span>: <span class="o">[]</span>,
+  <span class="s2">"kind"</span>: <span class="s2">"TridentSnapshotList"</span>,
+  <span class="s2">"metadata"</span>: <span class="o">{</span>
+    <span class="s2">"continue"</span>: <span class="s2">""</span>,
+    <span class="s2">"resourceVersion"</span>: <span class="s2">"156946"</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="examples">Examples</h2>
 
@@ -282,7 +388,7 @@
 
 <p>Regarding the last example, I do have multiple storage classes, but Trident has only one.</p>
 
-<p>This cluster happens to have <a href="/2022/04/09/beegfs-csi-introduction.html">BeeGFS CSI</a> as well.</p>
+<p>This cluster happens to have <a href="/2022/04/09/beegfs-csi-introduction.html">BeeGFS CSI</a> as well, which is where the other SC is coming from.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> sfc
 NAME                       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS         AGE
@@ -686,7 +792,7 @@ pvc-volume-in-another-ns   Bound    pvc-ced42f23-e95e-48ca-9017-1c7b27cd3f35   1
 
     
   </div><footer class= "footer">
-    <p>2024-07-03 17:52 </p>
+    <p>2024-07-09 14:23 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
