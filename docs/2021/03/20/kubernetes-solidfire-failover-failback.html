@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2021-03-20T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Kubernetes failover and failback with Trident CSI and SolidFire","dateModified":"2021-03-20T00:00:00+08:00","datePublished":"2021-03-20T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2021/03/20/kubernetes-solidfire-failover-failback.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/03/20/kubernetes-solidfire-failover-failback.html"},"description":"Use Trident CSI and SolidFire to protect data and provide failover and failback to Kubernetes clusters","@context":"https://schema.org"}</script>
+{"headline":"Kubernetes failover and failback with Trident CSI and SolidFire","dateModified":"2021-03-20T00:00:00+08:00","datePublished":"2021-03-20T00:00:00+08:00","url":"https://scaleoutsean.github.io/2021/03/20/kubernetes-solidfire-failover-failback.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2021/03/20/kubernetes-solidfire-failover-failback.html"},"description":"Use Trident CSI and SolidFire to protect data and provide failover and failback to Kubernetes clusters","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -135,52 +135,64 @@
   </div>
   
         <ul>
-  <li><a href="#summary">Summary</a></li>
-  <li><a href="#introduction">Introduction</a>
+  <li><a href="#update">UPDATE</a>
     <ul>
-      <li><a href="#comparison-between-pv-patching-and-trident-volume-import-approach">Comparison between PV Patching and Trident Volume Import approach</a></li>
-      <li><a href="#why-only-scenario-1">Why only Scenario 1</a></li>
-    </ul>
-  </li>
-  <li><a href="#failover-proddr">Failover (PROD=&gt;DR)</a>
-    <ul>
-      <li><a href="#steps-to-failover-a-solidfire-cluster">Steps to failover a SolidFire cluster</a>
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#introduction">Introduction</a>
         <ul>
-          <li><a href="#configure-kubernetes-and-trident-csi-for-the-solidfire-cluster-prod">Configure Kubernetes and Trident CSI for the SolidFire cluster PROD</a></li>
-          <li><a href="#notes-about-restoring-workloads-on-the-remote-solidfire-cluster">Notes about restoring workloads on the remote SolidFire cluster</a></li>
+          <li><a href="#comparison-between-pv-patching-and-trident-volume-import-approach">Comparison between PV Patching and Trident Volume Import approach</a></li>
+          <li><a href="#why-only-scenario-1">Why only Scenario 1</a></li>
         </ul>
       </li>
-      <li><a href="#steps-to-configure-solidfire-volume-replication-in-the-opposite-direction">Steps to configure SolidFire volume replication in the opposite direction</a></li>
-    </ul>
-  </li>
-  <li><a href="#failback-drprod">Failback (DR=&gt;PROD)</a>
-    <ul>
-      <li><a href="#steps-for-a-solidfire-cluster-failback">Steps for a SolidFire cluster failback</a>
+      <li><a href="#failover-proddr">Failover (PROD=&gt;DR)</a>
         <ul>
-          <li><a href="#notes-on-failback">Notes on failback</a></li>
+          <li><a href="#steps-to-failover-a-solidfire-cluster">Steps to failover a SolidFire cluster</a>
+            <ul>
+              <li><a href="#configure-kubernetes-and-trident-csi-for-the-solidfire-cluster-prod">Configure Kubernetes and Trident CSI for the SolidFire cluster PROD</a></li>
+              <li><a href="#notes-about-restoring-workloads-on-the-remote-solidfire-cluster">Notes about restoring workloads on the remote SolidFire cluster</a></li>
+            </ul>
+          </li>
+          <li><a href="#steps-to-configure-solidfire-volume-replication-in-the-opposite-direction">Steps to configure SolidFire volume replication in the opposite direction</a></li>
         </ul>
       </li>
-    </ul>
-  </li>
-  <li><a href="#conclusion">Conclusion</a></li>
-  <li><a href="#appendix">Appendix</a>
-    <ul>
-      <li><a href="#solidfire-replication-and-switch-over-under-the-hood">SolidFire replication and switch-over under the hood</a></li>
-      <li><a href="#solidfire-volume-names-and-ids">SolidFire Volume Names and IDs</a></li>
-      <li><a href="#fail-prod-cluster">Fail PROD cluster</a></li>
-      <li><a href="#configure-replication">Configure replication</a></li>
-      <li><a href="#restore-read-write-access-to-target-replica-volumes">Restore read-write access to target replica volumes</a></li>
-      <li><a href="#why-use-retain-for-replicated-volumes">Why use Retain for replicated volumes</a></li>
-      <li><a href="#solidfire-replication-and-kubernetes-snapshot-volume-class">SolidFire replication and Kubernetes Snapshot Volume Class</a></li>
-      <li><a href="#dealing-with-different-types-of-storage-cluster-failures">Dealing with different types of storage cluster failures</a></li>
-      <li><a href="#conduct-failover-and-failback-testing">Conduct failover and failback testing</a></li>
-      <li><a href="#automate-storage-failover-steps">Automate storage failover steps</a></li>
-      <li><a href="#video-demo">Video demo</a></li>
+      <li><a href="#failback-drprod">Failback (DR=&gt;PROD)</a>
+        <ul>
+          <li><a href="#steps-for-a-solidfire-cluster-failback">Steps for a SolidFire cluster failback</a>
+            <ul>
+              <li><a href="#notes-on-failback">Notes on failback</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><a href="#conclusion">Conclusion</a></li>
+      <li><a href="#appendix">Appendix</a>
+        <ul>
+          <li><a href="#solidfire-replication-and-switch-over-under-the-hood">SolidFire replication and switch-over under the hood</a></li>
+          <li><a href="#solidfire-volume-names-and-ids">SolidFire Volume Names and IDs</a></li>
+          <li><a href="#fail-prod-cluster">Fail PROD cluster</a></li>
+          <li><a href="#configure-replication">Configure replication</a></li>
+          <li><a href="#restore-read-write-access-to-target-replica-volumes">Restore read-write access to target replica volumes</a></li>
+          <li><a href="#why-use-retain-for-replicated-volumes">Why use Retain for replicated volumes</a></li>
+          <li><a href="#solidfire-replication-and-kubernetes-snapshot-volume-class">SolidFire replication and Kubernetes Snapshot Volume Class</a></li>
+          <li><a href="#dealing-with-different-types-of-storage-cluster-failures">Dealing with different types of storage cluster failures</a></li>
+          <li><a href="#conduct-failover-and-failback-testing">Conduct failover and failback testing</a></li>
+          <li><a href="#automate-storage-failover-steps">Automate storage failover steps</a></li>
+          <li><a href="#video-demo">Video demo</a></li>
+        </ul>
+      </li>
     </ul>
   </li>
 </ul>
 
-<p><strong>UPDATE</strong> (2024/06): I notice people visit this post often. Please note that <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">Kubernetes, Trident and SolidFire configuration visibility</a> and another post in that series continue to build on this. There’s a Kubernetes-to-Trident-to-SolidFire mapping script in that new post, there’s a <a href="/2024/06/11/introducing-project-longhorny.html">SolidFire replication management CLI</a>, and SolidFire replication monitoring is now available in <a href="/2024/06/15/sfc-adds-volume-replication-monitoring.html">SFC v2</a>. It’s all permissively licensed and there are only 2-3 other features/scripts that are missing, so make sure to check the recent posts for the latest and greatest in this area.</p>
+<h1 id="update">UPDATE</h1>
+
+<p>I notice people visit this post often. Please note:</p>
+
+<ul>
+  <li>This scenario is for a single Kubernetes/Trident CSI instance with two SolidFire clusters which is <strong>NOT</strong> recommended (this posts explains why)</li>
+  <li><a href="/2024/07/05/kubefire-for-failover-failback-of-kubernetes-with-solidfire-backend.html">Kubefire - tools and recipes for Kubernetes failover/failback with SolidFire</a> introduces the recommended approach and links to a new Github repository which contains an additional scenario (two sites with Kubernetes/Trident/SolidFire at each) and will feature a complete workflow with scripts</li>
+  <li>Additional background can be found in the post <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">Kubernetes, Trident and SolidFire configuration visibility</a> and other posts in that series. There’s a Kubernetes-to-Trident-to-SolidFire mapping script in that post, there’s a <a href="/2024/06/11/introducing-project-longhorny.html">SolidFire replication management CLI</a> and SolidFire replication monitoring is now available in <a href="/2024/06/15/sfc-adds-volume-replication-monitoring.html">SFC v2</a>. It’s all permissively licensed and you can reuse and improve all of them, so make sure to check the recent posts for the latest and greatest in this area.</li>
+</ul>
 
 <h2 id="summary">Summary</h2>
 
@@ -1175,7 +1187,7 @@ Source:
 
     
   </div><footer class= "footer">
-    <p>2024-07-09 14:23 </p>
+    <p>2024-07-10 22:16 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
