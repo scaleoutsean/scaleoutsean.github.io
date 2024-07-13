@@ -172,14 +172,14 @@ Check your key and signing method.
 
 <p>In the related Github issue, some have reported success with the proposed “None” setting, i.e. <code class="language-plaintext highlighter-rouge">checksumAlgorithm=""</code>. That’s supposed to be set in Velero’s backupStorageLocation aka BLS parameters when installing.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero <span class="nb">install</span> ...
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero <span class="nb">install</span> <span class="se">\</span>
   <span class="nt">--backup-location-config</span> <span class="nv">checksumAlgorithm</span><span class="o">=</span><span class="s2">""</span> <span class="se">\</span>
   ...
 </code></pre></div></div>
 
-<p>You can also set this with Helm.</p>
+<p>You can also set that with Helm.</p>
 
-<p>That reportedly works for StorageGRID, but does not for ONTAP.</p>
+<p>That reportedly works for StorageGRID, but does not for ONTAP S3.</p>
 
 <p>For ONTAP S3, I tried different things (about 20-30 combinations) and one of the finds was that there seems to be some stale caching somewhere in the stack because it took me a while to get this combination to work although I tried it early on, then kept trying other things, then later it worked. Anyway, this is what worked for me:</p>
 
@@ -194,7 +194,7 @@ Check your key and signing method.
 
 <p>I used Kubernetes 1.30 this time, but I doubt that matters. I did not use CSI as I was concerned only about the S3 issue.</p>
 
-<p>My ONTAP S3 bucket is backup, hostname http://s55(.datafabric.lab). You can see there’s no checksumAlgorithm.</p>
+<p>My ONTAP S3 bucket is backup, hostname http://s55(.datafabric.lab). You can see there’s no checksumAlgorithm. I use <code class="language-plaintext highlighter-rouge">signatureVersion=4</code> on ONTAP S3, but that’s the default so it doesn’t need to be set.</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
   </span><span class="nl">"provider"</span><span class="p">:</span><span class="w"> </span><span class="s2">"aws"</span><span class="p">,</span><span class="w">
@@ -223,7 +223,7 @@ NAME                 STATUS      ERRORS   WARNINGS   CREATED                    
 v114-nginx2ontaps3   Completed   0        0          2024-07-13 08:24:58 +0000 UTC   29d       default            &lt;none&gt;
 </code></pre></div></div>
 
-<p>I <strong>still</strong> get the error in “velero backup describe”, but Velero can connect to S3 and backup is reportedly successful.</p>
+<p>I <strong>still</strong> get the checksum error in “velero backup describe”, but Velero can connect to S3 and backup is reportedly successful.</p>
 
 <p>Velero version details:</p>
 
@@ -257,7 +257,9 @@ velero-f6dc7df46-r54vd                                       1/1     Running    
 
 <p>As you can see filesystem backup (Kopia) was used instead of CSI with Velero v1.14.0 and Velero Plugin for AWS v1.8.2 (“old”, but not even a year).</p>
 
-<h2 id="conclusions">Conclusions</h2>
+<p>If you decide to fall back to older Velero version, you may need to install CSI plugin (if you plan to use it). For Velero v1.14.0, plugin for CSI is included, but you can disable it if you don’t want to use it.</p>
+
+<h2 id="conclusion">Conclusion</h2>
 
 <p>If you’ve upgraded to Velero v1.14.0, you may try to uninstall it and then install with Plugin for AWS v1.8.2, but you need to check if Velero can remain aware of your S3 backups. If you’ve installed Velero v1.14.0, you may do the same; since you probably haven’t been successful backing up to S3 with Plugin v1.9+, you probably have little to worry in terms of S3 backups, but maybe you have other backups.</p>
 
@@ -400,7 +402,7 @@ HooksFailed:     0
 
     
   </div><footer class= "footer">
-    <p>2024-07-13 22:07 </p>
+    <p>2024-07-13 22:13 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
