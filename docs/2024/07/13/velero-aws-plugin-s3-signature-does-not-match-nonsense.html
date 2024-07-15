@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-07-13T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Velero AWS Plugin and SignatureDoesNotMatch nonsense","dateModified":"2024-07-13T00:00:00+08:00","datePublished":"2024-07-13T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/07/13/velero-aws-plugin-s3-signature-does-not-match-nonsense.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/07/13/velero-aws-plugin-s3-signature-does-not-match-nonsense.html"},"description":"Deal with SignatureDoesNotMatch until they fix it","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/velero-plugin-aws-signature-mismatch-nonsense.png","@context":"https://schema.org"}</script>
+{"headline":"Velero AWS Plugin and SignatureDoesNotMatch nonsense","dateModified":"2024-07-13T00:00:00+08:00","datePublished":"2024-07-13T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/07/13/velero-aws-plugin-s3-signature-does-not-match-nonsense.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/07/13/velero-aws-plugin-s3-signature-does-not-match-nonsense.html"},"image":"https://scaleoutsean.github.io/assets/images/velero-plugin-aws-signature-mismatch-nonsense.png","description":"Deal with SignatureDoesNotMatch until they fix it","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,19 +129,32 @@
 
   
   
-    6 minute read
+    8 minute read
   
 
     </span>
   </div>
   
-        <h2 id="introduction">Introduction</h2>
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#before">Before</a></li>
+  <li><a href="#after">After</a></li>
+  <li><a href="#workarounds">Workarounds</a>
+    <ul>
+      <li><a href="#https">HTTPS</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---ontap-s3-backup-listing-and-velero-backup-describe">Appendix A - ONTAP S3 backup listing and Velero backup describe</a></li>
+</ul>
 
-<p>Apparently some world improver from the Velero team <a href="https://github.com/vmware-tanzu/velero-plugin-for-aws/commit/c3ed86b57a4720ff957e76fb873be063b94bad01">applied</a> the latest and greatest AWS S3 feature to Velero Plugin for AWS (i.e. S3) and as people are upgrading, their backup stops working.</p>
+<h2 id="introduction">Introduction</h2>
+
+<p>Apparently world improvers from the Velero team <a href="https://github.com/vmware-tanzu/velero-plugin-for-aws/commit/c3ed86b57a4720ff957e76fb873be063b94bad01">applied</a> the latest and greatest AWS S3 feature to Velero Plugin for AWS (i.e. S3) and as people are upgrading, their backup stops working.</p>
 
 <p>Brilliant!</p>
 
-<p>This broke both StorageGRID and ONTAP S3.</p>
+<p>This broke Velero-to-StorageGRID, ONTAP S3 as well as many others (IBM COS, Backblaze, etc.).</p>
 
 <h2 id="before">Before</h2>
 
@@ -152,7 +165,7 @@
 <ul>
   <li>Velero v1.11</li>
   <li>Velero Plugin for AWS v1.7.1</li>
-  <li>ONTAP 9.12.1 with “standard” S3 bucket served over HTTP (I didn’t use HTTPS, but I think it would have worked, too)</li>
+  <li>ONTAP 9.12.1 with “standard” S3 bucket served over HTTP (I didn’t use HTTPS)</li>
 </ul>
 
 <h2 id="after">After</h2>
@@ -185,8 +198,8 @@ Check your key and signing method.
 
 <ul>
   <li>Velero v1.14.0</li>
-  <li>Velero Plugin for AWS v1.8.2</li>
-  <li>ONTAP v9.14.1 RC 1</li>
+  <li>Velero Plugin for AWS v1.8.2 or v1.9.2 (supposedly the last release prior to the genius switchover to AWS SDK v2)</li>
+  <li>ONTAP v9.14.1 RC1</li>
   <li>ONTAP S3 with “standard” S3 bucket served over HTTP (same as last year)</li>
 </ul>
 
@@ -257,21 +270,44 @@ velero-f6dc7df46-r54vd                                       1/1     Running    
 
 <p>As you can see filesystem backup (Kopia) was used instead of CSI with Velero v1.14.0 and Velero Plugin for AWS v1.8.2 (“old”, but not even a year).</p>
 
-<p>If you decide to fall back to older Velero version, you may need to install CSI plugin (if you plan to use it). For Velero v1.14.0, plugin for CSI is included, but you can disable it if you don’t want to use it.</p>
+<p>If you decide to fall back to an older Velero version, you may need to install CSI plugin (if you plan to use it). For Velero v1.14.0, plugin for CSI is included, but you can disable it if you don’t want to use it.</p>
+
+<h3 id="https">HTTPS</h3>
+
+<p>I assumed HTTPS should work just fine, but in my latest configuration:</p>
+
+<ul>
+  <li>ONTAP 9.14.1 RC1 (HTTPS; TLSv1.2 with cipher is ECDHE-RSA-AES256-GCM-SHA384)</li>
+  <li>Velero v1.14.0</li>
+  <li>Velero plugin for AWS v1.9.2</li>
+</ul>
+
+<p>I get: <code class="language-plaintext highlighter-rouge">SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided. Check your key and signing method.</code></p>
+
+<p>The same plugin for AWS works fine with HTTP (I tried twice), which may explain why v1.9.2 didn’t work for me last Saturday (as I was originally trying with HTTPS), but it “started working” later (as I switched to HTTP).</p>
+
+<p>Confusingly the error looks the same as related to checksumAlgorithm (maybe it even the same root cause).</p>
+
+<p>Alternatively, this problem may be something related to my HTTPS configuration. I know my internal certificates are valid on the host, but I’m not 100% sure if they’re valid <em>inside</em> of Velero containers (I did load them properly when installing).  I’m not in a mood to debug further and Velero encrypts backups at source, so there’s no technical need to use HTTPS, but if you must, then be ready to investigate this further and try HTTP to confirm it’s related to HTTPS.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>If you’ve upgraded to Velero v1.14.0, you may try to uninstall it and then install with Plugin for AWS v1.8.2, but you need to check if Velero can remain aware of your S3 backups. If you’ve installed Velero v1.14.0, you may do the same; since you probably haven’t been successful backing up to S3 with Plugin v1.9+, you probably have little to worry in terms of S3 backups, but maybe you have other backups.</p>
+<p>If you’ve upgraded to Velero v1.14.0, you may try to uninstall it and then install with Plugin for AWS v1.9.2, v1.9.1, v1.9.1, or even one of the v1.8 versions, but you need to check if Velero can remain aware of your S3 backups if you re-install it. If you’ve installed Velero v1.14.0, you may do the same; since you probably haven’t been successful backing up to S3 with Plugin v1.9+, you probably have little to worry in terms of S3 backups, but maybe you have other backups.</p>
 
-<p>Another possibility is to downgrade Velero as well: since Velero probably doesn’t test latest Velero with older Plugin for AWS, using older Velero may be safer (but who really knows). There’s also a potential risk here, related to backup format. Velero backup job taken with Velero v1.14.0 reports “Backup Format Version: 1.1.0”. You need to check the Velero documentation to make sure that <strong>downgrading</strong> is safe. I haven’t looked (and don’t know which version you may or may not have) so I can’t say whether downgrading to some older version is or isn’t safe.</p>
+<p>Another possibility is to downgrade Velero as well: since Velero probably doesn’t test latest Velero with older Plugin for AWS, using older Velero may be safer (but who really knows). There’s also a potential risk here, related to backup format. Velero backup job taken with Velero v1.14.0 reports “Backup Format Version: 1.1.0”. You need to check the Velero documentation to make sure that downgrading is safe. For what it’s worth, it seems Velero should be safe to downgrade from v1.14 to v1.11 (the one I tested last summer) or one of in-between versions, if needed:</p>
 
-<p>The third option is to wait until they fix the bug. Now checksumAlgorithm=”” doesn’t work for ONTAP S3, but works for StorageGRID. The option doesn’t work for quite a few other object stores, so maybe Velero will fix their plugin to work around and use older style access when accessing object stores which can’t support any checksumAlgorithm that’s currently available (“CRC32”,  “CRC32C”, “SHA1”, “SHA256”, “” (i.e. none)).</p>
+<ul>
+  <li>Velero v1.14 - current backup output format is version 1.1 (https://velero.io/docs/v1.14/output-file-format/)</li>
+  <li>Velero v1.11 - also uses Velero backup format 1.1 (https://velero.io/docs/v1.11/output-file-format/)</li>
+</ul>
 
-<p>The fourth option is to wait until ONTAP S3 starts supporting one of these algorithms, but this will likely take months.</p>
+<p>The third option is to wait until Velero fix their implementation (if they be willing). Now checksumAlgorithm=”” doesn’t work for ONTAP S3, but works for StorageGRID. The option doesn’t work for quite a few other object stores, so maybe Velero will fix their plugin to work around and use older style access when accessing object stores which can’t support any checksumAlgorithm that’s currently available (“CRC32”,  “CRC32C”, “SHA1”, “SHA256”, “” (i.e. none)).</p>
 
-<p>Personally, depending on urgency, I’d downgrade Plugin for AWS only, and if that’s too risky, wait for 2-3 weeks to see if Velero fixes the plugin.</p>
+<p>The fourth option is to wait until ONTAP S3 starts supporting one of these algorithms, but <em>my guess</em> is this could take longer than just weeks.</p>
 
-<p>If downgrading Velero (or Velero plugin) doesn’t work, try giving it a couple of hours just in the case there’s some stale caching going on, as I think that’s what happened to me today (or maybe I was looking only at the logs (where the error keeps appearing) and didn’t notice that backup had started working, I don’t know).</p>
+<p>Personally, depending on urgency, I’d downgrade Plugin for AWS only and if that’s too risky, wait for 2-3 weeks to see if Velero fixes the plugin.</p>
+
+<p>If downgrading Velero (or Velero plugin for AWS) doesn’t work, try giving it a couple of hours just in the case there’s some stale caching going on, as I think that’s what happened to me today (or maybe I was looking only at the logs (where the error keeps appearing) and didn’t notice that backup had started working, I don’t know).</p>
 
 <h2 id="appendix-a---ontap-s3-backup-listing-and-velero-backup-describe">Appendix A - ONTAP S3 backup listing and Velero backup describe</h2>
 
@@ -362,6 +398,10 @@ HooksFailed:     0
 
 </code></pre></div></div>
 
+<p><strong>Update (2024/07/15):</strong> - ONTAP 9.14.1 HTTP with Velero v1.14.0 and Plugin for AWS v1.9.2 also works. I still don’t understand why AWS plugin v1.9.2 did not work last Saturday…</p>
+
+<p><img src="/assets/images/velero-plugin-aws-signature-mismatch-revert-to-v1.9.2.png" alt="" /></p>
+
       </article>
     </div>
     
@@ -402,7 +442,7 @@ HooksFailed:     0
 
     
   </div><footer class= "footer">
-    <p>2024-07-13 22:13 </p>
+    <p>2024-07-15 18:11 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
