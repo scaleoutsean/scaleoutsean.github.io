@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-07-26T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"Rapid PVC provisioning with NetApp Trident and SolidFire","dateModified":"2024-07-26T00:00:00+08:00","datePublished":"2024-07-26T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/07/26/netapp-trident-csi-rapid-volume-provisioning-solidfire.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/07/26/netapp-trident-csi-rapid-volume-provisioning-solidfire.html"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-clone-precreation-01.png","description":"Rapid volume provisioning on Kubernetes","@context":"https://schema.org"}</script>
+{"headline":"Rapid PVC provisioning with NetApp Trident and SolidFire","dateModified":"2024-07-26T00:00:00+08:00","datePublished":"2024-07-26T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/07/26/netapp-trident-csi-rapid-volume-provisioning-solidfire.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/07/26/netapp-trident-csi-rapid-volume-provisioning-solidfire.html"},"description":"Rapid volume provisioning on Kubernetes","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/solidfire-clone-precreation-01.png","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -213,9 +213,9 @@ www-web-9   Bound    pvc-047208ef-d9b8-4aef-af0e-a2813923a4fd   1Gi        RWO  
 
 <h2 id="other-approaches">Other approaches</h2>
 
-<p>If the user can recycle volumes on their own, then it may be faster to deploy application into existing idling pods with PVCs already mounted. That would be more elaborate, but it would allow volumes to be preserved and we’d need to create them just once. SolidFire uses Thin Provisioning by default, so the main limits are storage capacity i.e. metadata and data (use <code class="language-plaintext highlighter-rouge">discard</code>!) space, and number of iSCSI connections (400 per SolidFire node). It’s fine to create 200 volumes larger than the largest size you need and use them as necessary.</p>
+<p>If the user can recycle volumes on their own, then it may be faster to deploy application into existing idling pods with PVCs already mounted. That would be more elaborate, but it would allow volumes to be preserved and we’d need to create them just once. SolidFire uses Thin Provisioning by default, so the main limits are storage capacity i.e. metadata and data (use <code class="language-plaintext highlighter-rouge">discard</code>!) space, and number of iSCSI connections (400 per SolidFire node). It’s fine to create 200 volumes larger than the largest size you need and use them as necessary - just keep an eye on those three constraints which you can do with <a href="https://github.com/scaleoutsean/sfc">SFC</a> or similar. (Note that SolidFire capacity information is updated after each hourly GC run.)</p>
 
-<p>“Automatic” recycling in Trident isn’t available: <code class="language-plaintext highlighter-rouge">Recycle</code> isn’t available to Trident CSI users. Only <code class="language-plaintext highlighter-rouge">Retain</code> and <code class="language-plaintext highlighter-rouge">Delete</code> (default) are available.</p>
+<p>“Automatic” recycling in Trident isn’t available: <code class="language-plaintext highlighter-rouge">Recycle</code> was deprecated and isn’t available to Trident CSI users. Only <code class="language-plaintext highlighter-rouge">Retain</code> and <code class="language-plaintext highlighter-rouge">Delete</code> (default) are available.</p>
 
 <p>But, if Storage Class recycle policy is set to Retain, volumes are already in place before the next deployment, so we can Reuse them. If I create the same Stateful Set, Kubernetes just start the containers and even though they start one by one, this takes only 90 seconds using one worker node.</p>
 
@@ -232,9 +232,15 @@ web-8   1/1     Running   0          21s
 web-9   1/1     Running   0          11s
 </code></pre></div></div>
 
-<p>Data cleansing, if required, has to be done separately from a sidecar container, for example. Simple Alpine container with “<code class="language-plaintext highlighter-rouge">rm -rf /data/*</code>” could be enough if you don’t require secure deletion.</p>
+<p>Data cleansing, if required, has to be done separately from a sidecar container, for example. A basic scrub (“<code class="language-plaintext highlighter-rouge">rm -rf /data/*</code>”) can be enough if secure deletion isn’t required. That’s how <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#recycle">Recycle did it</a>.</p>
 
-<p>Another approach is to do rapid cloning host-side, e.g. by leveraging <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">ZFS</a> or other filesystem on SolidFire volumes. In this case we’d have two CSI drivers, Trident CSI and whatever filesystem you use.</p>
+<p>Another approach is to do rapid cloning host-side, e.g. by leveraging <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html">ZFS</a> or other filesystem on SolidFire volumes. In this case we’d have two CSI drivers, Trident CSI and whatever filesystem you use. This “solves” the problem by not using Trident CSI.</p>
+
+<p>From one of the older posts, here’s a comparison of the speed of PVC creation: Hashicorp Nomad CSI vs. Kubernetes CSI using BeeGFS CSI driver (which creates directory-based PVs): Nomad can create 100 volumes in 9 seconds. Kubernetes barely got to 30 by the time Nomad was done with 100.</p>
+
+<p><img src="/assets/images/k-vs-n-pvc-creation-animated.gif" alt="" /></p>
+
+<p>This goes to show that different approaches have different advantages. If the speed of volume creation is critical and “workarounds” don’t help, there’s no need to hassle with Trident CSI. Use what works.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -290,7 +296,7 @@ web-9   1/1     Running   0          11s
 
     
   </div><footer class= "footer">
-    <p>2024-07-26 22:22 </p>
+    <p>2024-07-30 12:11 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
