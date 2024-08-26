@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2023-12-10T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"NetApp SolidFire backup to S3 and MinIO compression savings","dateModified":"2023-12-10T00:00:00+08:00","datePublished":"2023-12-10T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2023/12/10/solidfire-backup-to-minio-compression.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/12/10/solidfire-backup-to-minio-compression.html"},"description":"Can MinIO compression save space more than native SolidFire compression in backup to S3","@context":"https://schema.org"}</script>
+{"headline":"NetApp SolidFire backup to S3 and MinIO compression savings","dateModified":"2023-12-10T00:00:00+08:00","datePublished":"2023-12-10T00:00:00+08:00","url":"https://scaleoutsean.github.io/2023/12/10/solidfire-backup-to-minio-compression.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2023/12/10/solidfire-backup-to-minio-compression.html"},"description":"Can MinIO compression save space more than native SolidFire compression in backup to S3","author":{"@type":"Person","name":"scaleoutSean"},"@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +128,7 @@
 
   
   
-    5 minute read
+    6 minute read
   
 
     </span>
@@ -203,7 +203,7 @@
 
 <h2 id="conclusions">Conclusions</h2>
 
-<p>Uncompressed SolidFire backups waste even Thin Provisioning savings as gigabytes of 0s from SolidFire volumes are dumped to S3. It is very important to use discard or fstrim the SolidFire volume (on the iSCSI client) before backup to S3 - <em>especially</em> uncompressed backup (when we want MinIO to compress this unallocated capacity to 0).</p>
+<p>Uncompressed SolidFire backups waste even its Thin Provisioning savings as gigabytes of 0s from SolidFire volumes are dumped to S3. It is very important to use discard or fstrim the SolidFire volumes (on the iSCSI clients) before backup to S3 - <em>especially</em> so if you use uncompressed backup (when we want MinIO to compress this unallocated capacity to 0).</p>
 
 <p>Uncompressed SolidFire backups to MinIO with compression enabled save 49% of S3 capacity (vs. 33% on of “live” SolidFire volumes, which presumably use light compression to provide low I/O latency).</p>
 
@@ -221,6 +221,13 @@
 <p>You have to be careful with those object extensions, because enabling MinIO compression for virtually all objects would increase CPU consumption on MinIO cluster. Perhaps it’s a good approach to backup several volumes and see if extensions are always the same, and if so whitelist only those for MinIO compression.</p>
 
 <p>As that file extension may very well be the same for native and uncompressed SolidFire objects, I’d stick with one approach for all volumes backed up to MinIO.</p>
+
+<p>If you use a “wildcard approach” (add a bunch of extensions to MinIO’s “compress these” list), then MinIO will compress everything whch may or may not be what you want.</p>
+
+<ul>
+  <li>If the MinIO cluster is used for slow workloads, it would waste CPU on compressing compressed data, but this may not matter to you</li>
+  <li>You could set up a dedicated MinIO cluster just for SolidFire backup (e.g. a MinIO VM attached to E-Series), which would eliminate those concerns. One such MinIO VM can deliver 1GB/s (<a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#minio-without-ec">and 4 can deliver 5 GB/s</a>) which is enough even for large SolidFire clusters</li>
+</ul>
 
 <p>I have not measured “ingress” bandwidth taken by uncompressed SolidFire backups on MinIO system but I assume wire traffic is the same as “native” backup and MinIO’s disk IO (with compression enabled) is the same as well, because empty blocks sent by SolidFire get compressed to almost nothing. So, the cost of not compressing backups on SolidFire and compressing them on MinIO should be very low and affordable.</p>
 
@@ -270,7 +277,7 @@
 
     
   </div><footer class= "footer">
-    <p>2024-08-04 13:23 </p>
+    <p>2024-08-26 16:00 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
