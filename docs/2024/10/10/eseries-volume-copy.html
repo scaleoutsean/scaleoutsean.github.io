@@ -129,7 +129,7 @@
 
   
   
-    5 minute read
+    6 minute read
   
 
     </span>
@@ -179,7 +179,7 @@
   <li>Location: Reserve volume can be placed anywhere - e.g. on VG1 or VG2</li>
 </ul>
 
-<p>Another decision - which can be modified on the fly at a later time - is about the priority. Pick low if the array and source VG are busy, and Max if they’re idle.</p>
+<p>Another decision - which can be modified on the fly at a later time - is about job priority. Use a lower priority setting if the array and source VG are busy and a higher if they’re idle.</p>
 
 <p>This drawing shows a mix of the two use cases above:</p>
 
@@ -190,11 +190,22 @@
 
 <p><img src="/assets/images/e-series-vi-volume-copy-01.png" alt="E-Series Volume Copy workflow" /></p>
 
+<p>The Reserve volume (“r”) is located on VG2 (more on that below).</p>
+
 <h2 id="reserve-size">Reserve size</h2>
 
-<p>As I’ve mentioned, 40% is a lot. The purpose of Reserve volume is to hold <em>changes</em> to the Source volume while Volume y is ongoing.</p>
+<p>As I’ve mentioned, 40% is a lot. The purpose of Reserve volume is to hold <em>changes</em> to the Source volume while Volume Copy job is executing.</p>
 
 <p>These “changes” are made on the Source volume, of course, but existing data (from the point-in-time we kicked off Volume Copy process) are evacuated and copied from the Source volume to Reserve so that Volume Copy can find all Source volume data as it was when copying started.</p>
+
+<p>That is why the diagram above shows two copy processes:</p>
+
+<ul>
+  <li>From Source to Destination for data unchanged since Volume Copy started</li>
+  <li>From Reserve to Destination for data changed on Source (and evacuated to Reserve via CoW) after Volume Copy started</li>
+</ul>
+
+<p>Priority setting:</p>
 
 <ul>
   <li>If Source volume is huge, Volume Copy priority low, array busy and so on, it can take 1-2 weeks to copy it. That’s why Reserve is so large.</li>
@@ -224,6 +235,8 @@
 <p><img src="/assets/images/e-series-vi-volume-copy-priority-02.png" alt="Controller utilization with maximum Volume Copy Priority" /></p>
 
 <p>In other words, there’s no harm in running half a dozen on those at the highest priority as long as they can finish by 6-7 am.</p>
+
+<p>Job priority can be changed while a job is running and fiddling with it should reflect immediately in time-to-completion indicators you can see in the Web UI or API. If you’re concerned about the impact you cn start with a lower priority and increase it as you watch job progress indicator and array performance.</p>
 
 <h2 id="automating-volume-copy">Automating Volume Copy</h2>
 
@@ -258,9 +271,11 @@ smcli show volumeCopy allVolumes
 
 <h2 id="consistency-groups">Consistency groups</h2>
 
-<p>Read about that <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html">here</a>.</p>
+<p>SANtricity has “Consistency Group snapshots”. Read about them <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html">here</a>.</p>
 
-<p>There’s no “Group Volume Copy” that would do the same thing. You’d have to offline (or disconnect from) Source volumes for that.</p>
+<p>There’s no “Group Volume Copy” that would do the same thing.</p>
+
+<p>You’d have to offline (or disconnect from) Source volumes and start multiple copy jobs for that. After jobs have been started, you could online your primary workload (because change delta would be Copy-on-Write-d to Reserve volumes).</p>
 
 <h2 id="comparison-with-snapshot-based-clones">Comparison with snapshot-based clones</h2>
 
@@ -274,7 +289,7 @@ smcli show volumeCopy allVolumes
 
 <p>Volume Copy feature creates clones that are located on physically independent disk drives. Such clones can remain unavailable to any hosts and therefore safe from accidental or deliberate deletion from hosts. They can also survive volume group failures.</p>
 
-<p>On Hybrid arrays Destination can be located on a lower-cost volume group (e.g. R5 instead of R6 or R10, NL-SAS HDD instead of SAS SSD).</p>
+<p>On Hybrid arrays Destination can be located on a lower-cost volume group (e.g. R5 instead of R6 or R10 used for Source, or NL-SAS HDD instead of SAS SSD).</p>
 
 <p>Automation is also relatively easy, especially if use Volume Copy wizard to create pairs from the SANtricity Web UI.</p>
 
@@ -315,7 +330,7 @@ smcli show volumeCopy allVolumes
 
     
   </div><footer class= "footer">
-    <p>2024-10-10 00:14 </p>
+    <p>2024-10-10 03:40 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
