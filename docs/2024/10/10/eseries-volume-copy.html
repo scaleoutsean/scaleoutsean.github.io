@@ -129,7 +129,7 @@
 
   
   
-    6 minute read
+    10 minute read
   
 
     </span>
@@ -138,6 +138,7 @@
         <ul>
   <li><a href="#what-is-a-volume-created-by-volume-copy-operation">What is a volume created by Volume Copy operation</a></li>
   <li><a href="#how-does-it-work">How does it work?</a></li>
+  <li><a href="#progress">Progress</a></li>
   <li><a href="#reserve-size">Reserve size</a></li>
   <li><a href="#reserve-location">Reserve location</a></li>
   <li><a href="#priority">Priority</a></li>
@@ -145,7 +146,16 @@
   <li><a href="#application-aware-snapshots">Application-aware snapshots</a></li>
   <li><a href="#consistency-groups">Consistency groups</a></li>
   <li><a href="#comparison-with-snapshot-based-clones">Comparison with snapshot-based clones</a></li>
+  <li><a href="#monitoring-and-logging">Monitoring and logging</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---volume-copy-api">Appendix A - Volume Copy API</a></li>
+  <li><a href="#get-volume-copy-pairing-relationship-information">Get Volume Copy pairing relationship information</a>
+    <ul>
+      <li><a href="#volume-copy-progress">Volume Copy progress</a></li>
+    </ul>
+  </li>
+  <li><a href="#update-priority-of-volume-copy-job">Update priority of Volume Copy job</a></li>
+  <li><a href="#delete-volume-copy-job-pairing">Delete Volume Copy job (pairing)</a></li>
 </ul>
 
 <h2 id="what-is-a-volume-created-by-volume-copy-operation">What is a volume created by Volume Copy operation</h2>
@@ -192,7 +202,25 @@
 
 <p>The Reserve volume (“r”) is located on VG2 (more on that below).</p>
 
+<h2 id="progress">Progress</h2>
+
+<p>Volume Copy progress may be observed from the Web UI.</p>
+
+<p><img src="/assets/images/e-series-vi-volume-copy-progress-03.png" alt="Volume Copy jobs in progress" /></p>
+
+<p>Based on overall array situation and progress indicator, you can decide to change job priority.</p>
+
+<p><img src="/assets/images/e-series-vi-volume-copy-progress-04.png" alt="Volume Copy job details" /></p>
+
+<p>Once a job finishes, don’t “Clear” it in the Web UI unless you want to delete the pairing relationship (i.e. the next time you want to copy the same Source to the same Destination, you’d have to re-run the wizard).</p>
+
 <h2 id="reserve-size">Reserve size</h2>
+
+<p>This is the second step of Volume Copy wizard in the SANtricity Web UI.</p>
+
+<p><img src="/assets/images/e-series-vi-volume-copy-reserve-05.png" alt="Volume Copy Reserve size default value" /></p>
+
+<p>I’ve selected to place Reserve on the Destination VG and choose a smaller value (5%) because it’s a small volume that will be copied quickly.</p>
 
 <p>As I’ve mentioned, 40% is a lot. The purpose of Reserve volume is to hold <em>changes</em> to the Source volume while Volume Copy job is executing.</p>
 
@@ -237,6 +265,8 @@
 <p>In other words, there’s no harm in running half a dozen on those at the highest priority as long as they can finish by 6-7 am.</p>
 
 <p>Job priority can be changed while a job is running and fiddling with it should reflect immediately in time-to-completion indicators you can see in the Web UI or API. If you’re concerned about the impact you cn start with a lower priority and increase it as you watch job progress indicator and array performance.</p>
+
+<p>Note that the lowest priority seems like a no-brainer, but it is very slow. The reason isn’t that E-Series is slow, but that it copies data so that there’s almost no impact on array performance. Even if your array is doing nothing else, this will be very slow because even opportunistic low-priority acceleration is not used in this case.</p>
 
 <h2 id="automating-volume-copy">Automating Volume Copy</h2>
 
@@ -285,14 +315,141 @@ smcli show volumeCopy allVolumes
 
 <p>Clones created with Volume Copy are on physically separate media and wiping out the source does not wipe the copy.</p>
 
+<h2 id="monitoring-and-logging">Monitoring and logging</h2>
+
+<p>I mentioned earlier posts on SNMP and such, where you can find how to monitor these in 3rd party systems or services.</p>
+
+<p>There’s also <a href="/2022/10/26/eseries-performance-analyzer-e-series.html">E-Series Performance Analyzer (EPA)</a> which could be modified to send progress metrics for various Volume Copy job IDs. I haven’t heard of users using Volume Copy so I haven’t considered adding those metrics it to EPA, but if you need them create an issue in the EPA repository on Github (or submit your pull request).</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Volume Copy feature creates clones that are located on physically independent disk drives. Such clones can remain unavailable to any hosts and therefore safe from accidental or deliberate deletion from hosts. They can also survive volume group failures.</p>
 
 <p>On Hybrid arrays Destination can be located on a lower-cost volume group (e.g. R5 instead of R6 or R10 used for Source, or NL-SAS HDD instead of SAS SSD).</p>
 
-<p>Automation is also relatively easy, especially if use Volume Copy wizard to create pairs from the SANtricity Web UI.</p>
+<p>The automation is also relatively easy, especially if use Volume Copy wizard to create pairs from the SANtricity Web UI.</p>
 
+<h2 id="appendix-a---volume-copy-api">Appendix A - Volume Copy API</h2>
+
+<p>I’ll assume you setup and delete relationships using in the Web UI.</p>
+
+<p>What’s left is GET pairing info, start/stop job ID, and GET progress.</p>
+
+<h2 id="get-volume-copy-pairing-relationship-information">Get Volume Copy pairing relationship information</h2>
+
+<p>For relationship 18000000600A098000E3C1B0000033CF66FFF329:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> GET <span class="s2">"https://C1/devmgr/v2/storage-systems/1/volume-copy-jobs/18000000600A098000E3C1B0000033CF66FFF329"</span> <span class="se">\</span>
+<span class="nt">-H</span>  <span class="s2">"accept: application/json"</span>
+</code></pre></div></div>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"worldWideName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"600A098000E3C1B0000033CF66FFF329"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volcopyHandle"</span><span class="p">:</span><span class="w"> </span><span class="mi">49170</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volcopyRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18000000600A098000E3C1B0000033CF66FFF329"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"complete"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"sourceVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35000000600A098000E3C1B0000033CE66FFF329"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"targetVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000F637140000308466FFF5DA"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"currentManager"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000002"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"idleTargetWriteProt"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyCompleteTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1728073083"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyStartTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1728073048"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority4"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"reserved1"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"cloneCopy"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"pgRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33000000600A098000E3C1B0000033CA66FFF328"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"offline"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"autoClearOnCompletion"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"baseSourceVolumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000E3C1B0000033BF66FFF11E"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"onlineCopy"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18000000600A098000E3C1B0000033CF66FFF329"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>To avoid errors, it’s good to have a list of expected pairings (e.g. job IDs such as 18000000600A098000E3C1B0000033CF66FFF329), get all pairings from the array, check if the expected one(s) is/are present, and then start each.</p>
+
+<h3 id="volume-copy-progress">Volume Copy progress</h3>
+
+<p>Query management IP of controller 1 for job ID 18000000600A098000E3C1B0000033C766FFF1A8:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> GET <span class="s2">"https://C1/devmgr/v2/storage-systems/1/volume-copy-jobs-control/18000000600A098000E3C1B0000033C766FFF1A8"</span> <span class="se">\</span>
+  <span class="nt">-H</span>  <span class="s2">"accept: application/json"</span>
+</code></pre></div></div>
+
+<p>Sample response if job exists (this one has been started, but hasn’t moved from 0 yet):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"percentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"timeToCompletion"</span><span class="p">:</span><span class="w"> </span><span class="mi">332</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"fractionalPercentComplete"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volumeCopyId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18000000600A098000E3C1B0000033C766FFF1A8"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="update-priority-of-volume-copy-job">Update priority of Volume Copy job</h2>
+
+<p>Change priority0 (the lowest) to priority3 (second highest) with:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST <span class="s2">"https://C1/v2/storage-systems/1/volume-copy-jobs/18000000600A098000E3C1B0000033C766FFF1A8"</span> <span class="se">\</span>
+  <span class="nt">-H</span>  <span class="s2">"accept: application/json"</span> <span class="se">\</span>
+  <span class="nt">-H</span>  <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s2">"{  </span><span class="se">\"</span><span class="s2">copyPriority</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">priority3</span><span class="se">\"</span><span class="s2">,  </span><span class="se">\"</span><span class="s2">targetWriteProtected</span><span class="se">\"</span><span class="s2">: true}"</span>
+</code></pre></div></div>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"worldWideName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"600A098000E3C1B0000033C766FFF1A8"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volcopyHandle"</span><span class="p">:</span><span class="w"> </span><span class="mi">49170</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volcopyRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18000000600A098000E3C1B0000033C766FFF1A8"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"inProgress"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"sourceVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35000000600A098000E3C1B0000033C666FFF1A8"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"targetVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000F637140000308466FFF5DA"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"currentManager"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000002"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"idleTargetWriteProt"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyCompleteTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyStartTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1728072662"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"copyPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority3"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"reserved1"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"cloneCopy"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"pgRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33000000600A098000E3C1B0000033C266FFF1A7"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"offline"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"autoClearOnCompletion"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"baseSourceVolumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000E3C1B0000033BF66FFF11E"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"onlineCopy"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18000000600A098000E3C1B0000033C766FFF1A8"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If you want to be smart you could modify this dynamically based on overall array performance stats:</p>
+
+<ul>
+  <li>if controller utilization less than x% and IOPS less than Y and MB/s less than Z:
+    <ul>
+      <li>increase priority by 1 if not already at level 4</li>
+    </ul>
+  </li>
+  <li>elseif (if greater than some values)
+    <ul>
+      <li>decrease priority by 1 if not already at level 1</li>
+    </ul>
+  </li>
+  <li>else leave as is</li>
+</ul>
+
+<h2 id="delete-volume-copy-job-pairing">Delete Volume Copy job (pairing)</h2>
+
+<p>You wouldn’t want to do this if you do it in the Web UI, but you could stop (if it’s running) a job and delete its pairing.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> DELETE <span class="s2">"https://C1/devmgr/v2/storage-systems/1/volume-copy-jobs/18000000600A098000E3C1B0000033C766FFF1A8?retainRepositories=false"</span> <span class="se">\</span>
+  <span class="nt">-H</span>  <span class="s2">"accept: application/json"</span>
+</code></pre></div></div>
+
+<p>I mention this because you can delete a pairing relationship but retain the reserve repository and potentially reuse it later, assuming you remember its details.</p>
+
+<p>I haven’t played with this in the API, so I don’t know what happens if you delete a job but leave the repository in place and forget about it. This is another reason why I suggest that jobs be created and deleted in the Web UI unless you figure out the exact details of these API methods and not shoot yourself in the foot automating those steps.</p>
 
       </article>
     </div>
@@ -330,7 +487,7 @@ smcli show volumeCopy allVolumes
 
     
   </div><footer class= "footer">
-    <p>2024-10-10 03:40 </p>
+    <p>2024-10-10 13:31 </p>
     <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
