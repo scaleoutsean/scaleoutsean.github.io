@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+        <meta charset="UTF-8">
+    <meta http-equiv="content-language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="googlebot" content="noarchive">
+    <meta name="googlebot" content="max-snippet:60">
+    <meta name="googlebot" content="max-image-preview:small">
+    <meta name="bingbot" content="noarchive">
+    <meta name="bingbot" content="max-snippet:60">
+    <meta name="bingbot" content="max-image-preview:small">
+    <meta name="robots" content="noarchive">
+    <meta name="robots" content="max-snippet:60">
+    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <title>
+        
+            MinIO and Versity GW S3 SDS with tiny object workloads on NetApp | Acting Technologist
+      
+    </title>
+    <meta name="description" content="
+     Notes on MinIO and VersityGW's S3 performance with small objects
+     ">
+
+    <!-- LINK TO ATOM FEED FOR SEO -->
+    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/syntax.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+
+    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
+    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
+    <div id="search"></div>
+    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: "#search" });
+        });
+    </script>
+
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>MinIO and Versity GW S3 SDS with tiny object workloads on NetApp | Acting Technologist</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="MinIO and Versity GW S3 SDS with tiny object workloads on NetApp" />
+<meta name="author" content="scaleoutSean" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Notes on MinIO and VersityGW’s S3 performance with small objects" />
+<meta property="og:description" content="Notes on MinIO and VersityGW’s S3 performance with small objects" />
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html" />
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html" />
+<meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/s3-tiny-object-workloads-10-versitygw-s3-tiny-objects-objs.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-10-14T00:00:00+08:00" />
+<script type="application/ld+json">
+{"headline":"MinIO and Versity GW S3 SDS with tiny object workloads on NetApp","dateModified":"2024-10-14T00:00:00+08:00","datePublished":"2024-10-14T00:00:00+08:00","author":{"@type":"Person","name":"scaleoutSean"},"@type":"BlogPosting","url":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html"},"image":"https://scaleoutsean.github.io/assets/images/s3-tiny-object-workloads-10-versitygw-s3-tiny-objects-objs.png","description":"Notes on MinIO and VersityGW’s S3 performance with small objects","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+<body>
+
+  <div class="container">
+    <header id="header">
+	<div id = site_title>
+		<a href="https://scaleoutsean.github.io/">
+			<h2 style="font-size:1.8em;">Acting Technologist</h2>
+		</a>
+		
+		<h3>
+			civilizations are created by individuals
+		</h3>
+		
+	</div>
+
+	<div id="subheader">
+		
+		<nav class="pages">
+<a href="/about.html">About</a>
+
+<a href="/archive.html">Archive</a>
+
+<a href="/categories/">Categories</a>
+
+<a href="/projects.html">Projects</a>
+</nav>
+		
+		
+		<nav class="social">
+			
+  
+    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
+  
+   
+
+  
+    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  
+   
+
+  
+  
+    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
+   
+
+		</nav>
+		
+	</div>
+</header>
+
+
+    <div class="post-container">
+      <article id = "post">
+        <h1 id = "post-title">MinIO and Versity GW S3 SDS with tiny object workloads on NetApp</h1>
+
+  
+  <div class = "post-info">
+    <span>
+        <i class="far fa-calendar" aria-hidden="true"></i> <span>14 Oct 2024</span> - <i class="far fa-clock"></i> 
+
+
+  
+  
+    13 minute read
+  
+
+    </span>
+  </div>
+  
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#the-problem">The problem</a></li>
+  <li><a href="#solutions">Solutions</a></li>
+  <li><a href="#notes-on-minio">Notes on MinIO</a></li>
+  <li><a href="#notes-on-versitygw">Notes on VersityGW</a></li>
+  <li><a href="#benchmarking-and-testing">Benchmarking and testing</a>
+    <ul>
+      <li><a href="#tests">Tests</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#observations">Observations</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Everyone knows what MinIO is, and everyone <em>should</em> know what <a href="https://www.versity.com/products/versitygw/">VersityGW</a> is.</p>
+
+<p>I’ve blogged about Versity gateway <a href="/2023/09/20/versity-gw-s3-posix-gateway-beegfs-eseries.html">here</a> and in another post linked from that one.</p>
+
+<p>I also have posts on MinIO, but you can find those anywhere. But one sort-of-unique and relevant post on that I should mention is the one about <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">MinIO EC on E-Series</a>.</p>
+
+<p>The topic of this post is (very) small object performance with S3 SDS on NetApp E-Series.</p>
+
+<h2 id="the-problem">The problem</h2>
+
+<p>Small files aren’t a problem as such.</p>
+
+<p>If you just need to slowly write them and never read them back (maybe they get expired with a retention/expiration policy), you mostly have to care about inodes (if your object store lives on a “traditional” filesystem).</p>
+
+<p>Capacity won’t be a problem either. 10 billion 1 KiB files takes much less than 100 GiB of disk space.</p>
+
+<p>Then there are cases where something matters - maybe you need to write them <em>quickly</em>. Or read quickly. Or small object churn is considerable.</p>
+
+<h2 id="solutions">Solutions</h2>
+
+<p>Object storage isn’t really meant for such use cases, but then again, people use NAS for use cases which aren’t meant for NAS either.</p>
+
+<p>Maybe the problem isn’t significant enough to warrant a dedicated NAS box. Maybe there’s no budget for NAS.</p>
+
+<p>Maybe it’s OK to waste some time waiting a bit longer with S3 (this often depends on how expensive your compute stack is - 128 H100s currently costs thousands of US$ per hour, so if you wait 40 hours per year, you may be able to save money by buying a NAS, for example).</p>
+
+<p>There are many reasons why people choose to leave their small object workloads on S3-compatible storage.</p>
+
+<p>NetApp offers S3 on:</p>
+
+<ul>
+  <li>(Product) ONTAP - unified NFS/S3/Block storage (appliances and SDS)</li>
+  <li>(Product) StorageGRID - S3-only appliances (leverage E-Series arrays and x86 servers)</li>
+  <li>(Back-end block storage) 3rd party S3 SDS on E-Series/EF-Series arrays (requires external servers to run S3 SDS)</li>
+</ul>
+
+<p>Between those two products, ONTAP is more suitable for S3 with small object workloads compared to StorageGRID. But StorageGRID has many S3-related advantages (including horizontal scalability to 200 nodes, geo-clustering, etc.) and sometimes adding a caching layer (Varnish, for example) is enough to make it viable depending on use case/workload.</p>
+
+<p>Because these are usually purchased as appliances, their small object workload behavior is reasonably well understood.</p>
+
+<p>I wanted to focus on the third choice - solutions based on S3-compatible SDS that leverages E/EF-Series arrays.</p>
+
+<p>MinIO and VersityGW work on industry-standard servers, so I revisited these two.</p>
+
+<h2 id="notes-on-minio">Notes on MinIO</h2>
+
+<p>MinIO should (to avoid data loss and downtime) use Erasure Coding (EC). EC doesn’t work well with small files, so that’s a problem.</p>
+
+<p>One way to “fix” it - but not really - is to not use EC, i.e. either use a single MinIO VM/container node with 1 large volume/disk or use several containers/VMs in a “RAID 0” fashion (in terms of S3 data) as far as MinIO’s scale-out is concerned.</p>
+
+<p>Usually neither of those are acceptable to enterprise users, so what I did is tested EC 3+1 (literally an “odd” choice, I know, and also not an EC format recommended by MinIO; but I had 4 volumes I could use). My testing wasn’t “scientific” anyway, so feel free to assume MinIO 12+4 would work much better (normally it should, but I doubt that striping small objects even wider would change your fortunes in this particular case with tiny objects).</p>
+
+<p>As we shall see below, tiny object performance wasn’t good. This isn’t to say MinIO is bad - I wouldn’t blog about it more than once if that was the case - but that if you use it with intensive or important tiny block workloads, you’ll probably have to compromise.</p>
+
+<p>If tiny object workload is the only workload you have, maybe you shouldn’t use MinIO, or maybe you could setup a single node MinIO with EC N+0.</p>
+
+<p>MinIO Enterprise Edition has configurable <a href="https://min.io/product/enterprise/object-store-cache">cache</a> which can improve <code class="language-plaintext highlighter-rouge">GET</code> performance with tiny objects. (If you read about it, you’ll see it was created to address performance challenges with tiny objects.)</p>
+
+<h2 id="notes-on-versitygw">Notes on VersityGW</h2>
+
+<p><a href="https://min.io/docs/minio/linux/operations/install-deploy-manage/migrate-fs-gateway.html#procedure">Unlike</a> MinIO, VersityGW “exports” underlying POSIX filesystem via S3-compatible service. If you need just one object storage server, it’s similar - but not the same - to running a single MinIO server with EC N+0 (it’s the same to running MinIO in gateway mode, but that’s no longer possible).</p>
+
+<p>The difference vs current MinIO versions is MinIO will <em>always</em> slice and dice objects before saving them to disk, and they won’t be recognizable in the shell whereas VersityGW won’t do that - it’s a gateway. (You can see the BeeGFS-related post at the top for more details on scaling out VersityGW on BeeGFS).</p>
+
+<p>What that means is if you want to scale-out S3 access to same data, you’ll need a cluster file system (or else you won’t be able to scale out with VersityGW). But you’ll be able to view and use files both from S3 and shell (or NFS, for example).</p>
+
+<p>What that also means is you can put 100 million small files to a MinIO cluster or StorageGRID bucket, but on VersityGW you’d end up with 100 million files in one directory (=disaster). Most POSIX users know that and don’t put 100K+ files in a single directory, but if you can’t choose (e.g. closed source IoT client) you may need to find a workaround (either move objects after they land, or do something else).</p>
+
+<p>VersityGW is a much younger product compared to MinIO, so it’s still maturing. Some features may not be available, and there may be relatively more bugs compared to MinIO. You can buy commercial support from Versity and download the program from Github to give it a try, both of which makes those risks low.</p>
+
+<h2 id="benchmarking-and-testing">Benchmarking and testing</h2>
+
+<ul>
+  <li>1 x86_64 box (2 CPUs)
+    <ul>
+      <li>Ubuntu 24.04 LTS</li>
+      <li>Runs both S3 benchmark client and S3 SDS</li>
+    </ul>
+  </li>
+  <li>1 E-Series EF570 (old EF-Series array that’s no longer available; would be considered “entry-level” array these days)
+    <ul>
+      <li>iSER protocol (56 Gbps IB)</li>
+      <li>For MinIO, I used 4 SSDs, each was 1-disk RAID 0 volume “group” with 1 LUN on the group; except for EF570 controllers between the disks and the server, this is very much like DAS with JBOD</li>
+      <li>For VersityGW, I used just one of four disks from the MinIO scenario - this looked exactly like server with 1 unprotected, directly-attached disk, except that EF570 controllers provided some smarts like caching and path balancing</li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-00-mino-versity-test.png" alt="VersityGW, MinIO, E-Series environment" /></p>
+
+<p>As I’ve mentioned above, MinIO was 1 server with 4 disks (mapped to 4 unprotected SSDs) and MinIO EC 3+1.</p>
+
+<p>Versity was 1 server with 1 disk (one of the 4 MinIO disks). One could say VersityGW had 25% of IOPS/bandwidth of MinIO, but no EC overheads. (The dimmed 2nd disk underneath VersityGW indicates that on VersityGW an effect similar to EC could be achieved by striping over multiple disks with LVM or <a href="/2024/02/28/incus-zfs-netapp-eseries.html">ZFS</a> pools and similarly on parallel file systems such as ScoutFS or BeeGFS.)</p>
+
+<p>Small objects don’t use much bandwidth, so the single disk in VersityGW didn’t matter to it. At around 128 KiB requests (concurrency 64), storage bandwidth would get close to 2 GB/s at which point you may wonder if adding more disks would help, but for the 1-64 KiB range it wasn’t more than one disk could handle.</p>
+
+<p>All volumes were XFS-formatted using the default formatting options.</p>
+
+<h3 id="tests">Tests</h3>
+
+<p>I ran tests on the same server and did not try to clearly segregate server and client workloads because of limited time and resources.</p>
+
+<p>MinIO’s WARP benchmark to test PUT and GET with 64 threads (more than server had, so at times all CPU cores could get 100% busy):</p>
+
+<ul>
+  <li>1k PUT and GET</li>
+  <li>4k PUt and GET</li>
+  <li>16k PUT and GET</li>
+</ul>
+
+<p>I also tried disabling controller-level cache on the LUNs involved, but because the bottleneck wasn’t disk speed but small objects, it didn’t seem to matter in results.</p>
+
+<p>I had problems with <code class="language-plaintext highlighter-rouge">GET</code> tests using WARP with VersityGW (some S3-compatibility issue between these two products; I plan to follow up with them to submit an issue) and also with <a href="https://github.com/s3tester/s3tester/">s3tester</a> using VersityGW because I was stupid and forgot that s3tester doesn’t create “subdirectories” in buckets which doesn’t work well on VersityGW-style S3 gateways.</p>
+
+<p>VersityGW has its own benchmark client, but I couldn’t get it to work well with anything. It’s “test run” docs are not very good.</p>
+
+<h3 id="results">Results</h3>
+
+<p>These aren’t scientific or even “best practice” tests, so there’s no point in “deep diving” into each scenario and result. You could assume these are “worst case” scenarios, because I’ve done no tuning, best practices or other optimization.</p>
+
+<p>In essence, EC kills tiny object performance on MinIO, but you can easily scale out.</p>
+
+<p>VersityGW works great, but you must pay attention to some of the things I’ve mentioned earlier if they can affect  you.</p>
+
+<p>I used 50% Median values for all Excel-generated charts.</p>
+
+<h3 id="observations">Observations</h3>
+
+<p>Maybe this was a consequence of the suboptimal EC 3+1 on MinIO, but usually the first and second volume (especially the first) were disproportionately heavily utilized.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-01-mino-write-imbalance.png" alt="MinIO EC imbalance" /></p>
+
+<p>I don’t know if this also appears with EC 12+4 or other MinIO-recommended schemas, but this imbalance could benefit from E-Series pools: rather than using single-disk R0’s (the JBOD approach that I used here) with MinIO EC 12+4, you could use DDPs (protected disk pools) with EC 4+1 like I suggested in the EC-related post. At the time I didn’t highlight this benefit, but if EC I/O is imbalanced then balancing disk I/O across E/EF-Series pools would be another reason to not use RAID 0 with MinIO on E/EF-Series.</p>
+
+<p>One may think that MinIO EC somehow “consolidates” tiny objects before chunking them into larger 128 KB or 1 MB chunks (for example), but that’s not what I saw. I observed quite a few IOPS (50K!) and MB/s divided by IOPS translated to ~20kB “average” request sizes on disk. Which is a lot for tiny objects, of course.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-02-mino-iops.png" alt="MinIO and array IOPS with tiny object workloads" /></p>
+
+<p>That still works fine on EF570 (all-flash, no problme), but I/O requests were smaller than I thought EC would create.</p>
+
+<p>Maybe MinIO EC chunks “not more than X” files per stripe so when objects are tiny EC chunks end up being tiny as well. I wouldn’t say that’s a bad thing - it’s impossible to optimize for everything.</p>
+
+<p>The other surprise with MinIO was that despite these tiny objects (4 KiB in this test below), S3 client throughput was 10 MB/s while disk level I/O was 40x more (and this is EC on RAID 0 disks - no “RAID overheads” that MinIO likes to highlight). Again, I’m not sure if that’s an EC 3+1 thing, but you may want to keep this in mind when sizing your storage.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-03-mino-mbs.png" alt="MinIO and array MB/s with tiny object workloads" /></p>
+
+<p>(Clarification: “4 storage containers” is 4 Linux volumes, each living on its own LUN, with each LUN being the sole LUN on a R0 Volume “Group”. Essentially it’s a JBOD setup on E-Series that I use to eliminate doubts about “RAID overheads”.)</p>
+
+<p>In the case you wonder “how many objects per second is good”, it’s relative. Here’s an example from a StorageGRID with Varnish RAM-based cache using a 4x higher concurrency and (obviously) RAM cache for <strong>GET</strong>s (tests above were PUTs): 9K obj/sec (4 KB request sizes, not highlighted in the screenshots) and this is with several StorageGRID nodes plus Varnish cache in front of them.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-04-sg-varnish.png" alt="StorageGRID with Varnish - 100% cached GET" /></p>
+
+<p>Even for 32 KB objects, “objects per second” was still around 9,000, suggesting you need to scale out to get more requests per second (i.e. it may not be a disk bottleneck).</p>
+
+<p>As an example, VersityGW simply passes objects to underlying filesystem, so overhead is comparatively tiny: even with 1 KiB requests IOPS are below 5,000 and MB/s not more than 100 MB/s. Much easier on storage, with some downsides as mentioned earlier.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-05-versitygw-iops.png" alt="VersityGW IOPS with tiny object workloads - 1 KiB PUT" /></p>
+
+<p>Even with 4 KiB PUTs - same as MinIO above - VersityGW was consistent and didn’t amplify nearly as much as MinIO’s EC. (Notice this is just 1 R0-based volume, not 4).</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-06-versitygw-mbs.png" alt="VersityGW IOPS with tiny object workloads - 4 KiB PUT" /></p>
+
+<p>Runs with 4 KiB requests seem almost negligible comapred to 16 KiB and 1 KiB is of course even worse.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-07-versitygw-4kb-vs-16kb.png" alt="VersityGW IOPS with tiny object workloads - 4 KiB PUT" /></p>
+
+<p>This chart below compares MinIO and VersityGW for those absolutely terrible workloads (1 KiB, 4 KiB requests), PUT only (why, because I had issues with GET tests, as I’ve mentioned earlier).</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-08-minio-vs-versitygw-s3-tiny-objects-put.png" alt="MinIO vs VersityGW with tiny S3 workloads - 1 and 4 KiB PUT" /></p>
+
+<p>GETs are multiple times faster, by the way. But - back to this chart above - tiny PUTs on VersityGW are 3-4 times faster.</p>
+
+<p>To my earlier point about low throughput with 1 KiB and 4 KiB PUTs: even on VersityGW, 1 KiB PUTs will make you wait. If you think in terms of data volume you need to PUT, 10 GiB of such tiny files can take 15 minutes to upload.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-09-versitygw-s3-tiny-objects-mbps.png" alt="VersityGW throughput with tiny object workloads - 1, 4, 16 KiB PUT" /></p>
+
+<p>Similar to results from the StorageGRID-Varnish technical report, objects/second can be deceiving: all tests achieve similar result measures in objects per second, suggesting we’d need additional gateways (or MinIO nodes) to scale performance and make the storage work harder.</p>
+
+<p><img src="/assets/images/s3-tiny-object-workloads-10-versitygw-s3-tiny-objects-objs.png" alt="VersityGW objects-per-second with tiny object workloads - 1, 4, 16 KiB PUT" /></p>
+
+<p>Versity has good sequential performance as well (find it on <a href="https://www.versity.com/unlocking-the-power-of-scalability-analyzing-versity-gateways-scale-out-performance/">their Web site</a>), and can scale out on top of a shared filesystem such as BeeGFS or ScoutFS, both of which work well with E-Series. MinIO does own EC, so you need to be careful about disk placement if you scale MinIO across additional E-Series arrays (see that earlier post on MinIO EC and E-Series.)</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>If your S3 workload is heavily focused on tiny object performance, you may consider VersityGW, especially if you prefer object/file duality which many HPC users do. This is similar to preferences of users used to NFS, for which NetApp of course recommends unified ONTAP NFS/S storage.</p>
+
+<p>VersityGW can use E-Series for single-node S3 sharing as I did in this post, or deploy scale-out VersityGW on ScoutFS or BeeGFS with E-Series, for example.</p>
+
+<p>S3-focused SDS users may want to consider MinIO. It’s not fast, but all object storage is slow with tiny objects. E-Series’ protected disks can level uneven disk load across many physical disks, and also eliminate worries about storage management. MinIO can still use EC (e.g. N+1), but because chunks on N disks are always protected by E-Series, there’s no risk of data loss and no need to acquire EC and JBOD management skills.</p>
+
+<p>EF-Series 600 (EF600) can deliver up to 2 million read IOPS. In 4 KiB <code class="language-plaintext highlighter-rouge">GET</code>s that would be around 8 GB/s, but we need to be careful about sizing PUTs because of significant write overheads that seem exist for both MinIO and VersityGW when tiny objects are involved. Tiny PUT workloads may need to be sized as “sequential” write workloads, which may be counterintuitive, but appears based on these tests.</p>
+
+<p>Last but not least, pay attention to other details and requirements such as logging/auditing, compliance, multi-site deployments, S3 API compatibility and so on.</p>
+
+      </article>
+    </div>
+    
+      <div class="categories">
+    <span><p>Categories:</p>
+    
+    
+      <a href="
+      /categories/#storage">storage</a>
+      &nbsp; 
+    
+      <a href="
+      /categories/#performance">performance</a>
+       
+    
+  </span>
+</div>
+    
+
+  
+    <div>
+      <h3>Related Posts</h3>
+      <ul>
+      
+        <li><a href="/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html">Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series</a></li>
+      
+        <li><a href="/2023/09/20/versity-gw-s3-posix-gateway-beegfs-eseries.html">Versity S3 Gateway with BeeGFS</a></li>
+      
+        <li><a href="/2022/08/09/nomad-beegfs-minio-s3.html">Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO</a></li>
+      
+        <li><a href="/2023/06/14/versity-s3-posix-gateway.html">Versity S3 Gateway</a></li>
+      
+        <li><a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">MinIO Erasure Coding with NetApp E-Series</a></li>
+      
+      </ul>
+    </div>
+  
+
+    
+  </div><footer class= "footer">
+    <p>2024-10-16 17:19 </p>
+    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+</footer>
+
+</body>
+</html>
