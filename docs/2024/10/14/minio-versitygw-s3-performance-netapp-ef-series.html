@@ -48,7 +48,7 @@
 
     <!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>MinIO and Versity GW S3 SDS with tiny object workloads on NetApp | Acting Technologist</title>
-<meta name="generator" content="Jekyll v4.1.1" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="MinIO and Versity GW S3 SDS with tiny object workloads on NetApp" />
 <meta name="author" content="scaleoutSean" />
 <meta property="og:locale" content="en_US" />
@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-10-14T00:00:00+08:00" />
 <script type="application/ld+json">
-{"headline":"MinIO and Versity GW S3 SDS with tiny object workloads on NetApp","dateModified":"2024-10-14T00:00:00+08:00","datePublished":"2024-10-14T00:00:00+08:00","url":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html"},"description":"Notes on MinIO and VersityGW’s S3 performance with small objects","author":{"@type":"Person","name":"scaleoutSean"},"image":"https://scaleoutsean.github.io/assets/images/s3-tiny-object-workloads-10-versitygw-s3-tiny-objects-objs.png","@context":"https://schema.org"}</script>
+{"author":{"@type":"Person","name":"scaleoutSean"},"description":"Notes on MinIO and VersityGW’s S3 performance with small objects","@type":"BlogPosting","headline":"MinIO and Versity GW S3 SDS with tiny object workloads on NetApp","dateModified":"2024-10-14T00:00:00+08:00","datePublished":"2024-10-14T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/s3-tiny-object-workloads-10-versitygw-s3-tiny-objects-objs.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html"},"url":"https://scaleoutsean.github.io/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    17 minute read
+    18 minute read
   
 
     </span>
@@ -143,6 +143,7 @@
   <li><a href="#notes-on-versitygw">Notes on VersityGW</a></li>
   <li><a href="#benchmarking-and-testing">Benchmarking and testing</a>
     <ul>
+      <li><a href="#versitygw-on-scale-out-file-systems-vs-erasure-coding-on-s3-sds">VersityGW on scale-out file systems vs Erasure Coding on S3 SDS</a></li>
       <li><a href="#tests">Tests</a></li>
       <li><a href="#results">Results</a></li>
       <li><a href="#observations">Observations</a></li>
@@ -256,6 +257,20 @@
 <p>Small objects don’t use much bandwidth and data sets were smaller than EF570 controller cache, so the single disk in VersityGW didn’t matter to it. At around 128 KiB requests with the concurrency level 64, storage bandwidth would get close to 2 GB/s at which point you may wonder if adding more disks would help, but for the 1-64 KiB range it wasn’t more than one disk could handle.</p>
 
 <p>All volumes in all scenarios were XFS-formatted using the default formatting options.</p>
+
+<h4 id="versitygw-on-scale-out-file-systems-vs-erasure-coding-on-s3-sds">VersityGW on scale-out file systems vs Erasure Coding on S3 SDS</h4>
+
+<p>This goes without saying, but I don’t want to appear biased so I’ll mention that multiple VersityGW instances can scale out beyond the performance of single host when VersityGW runs on top of a POSIX-compliant filesystem.</p>
+
+<p>Everyone knows scale-out filesystems are generally not great for tiny files, so we won’t multiply performance of one VersityGW host by 4 and claim it would “destroy” MinIO EC 3+1 because one VersityGW works very well with tiny S3 objects. Running on a parallel filesystem, VersityGW would perform slower because parallel filesystems are usually slower with small, metadata-intensive files than single-host filesystems.</p>
+
+<p>Four VersityGW nodes on a 4-node BeeGFS cluster may be just a tiny bit faster than this one VersityGW instance. It’s possible. But at the same time let’s not forget that due to its dual nature (block + object) you could access such data over BeeGFS and save a lot of time by not using S3 in the first place.</p>
+
+<p><a href="https://docs.netapp.com/us-en/beegfs/second-gen/beegfs-design-solution-verification.html#ior-bandwidth-tests-single-client">Here</a> we can find an example of a metadata performance with MDTest, BeeGFS on E-Series. I’m going to reproduce the image in the case that link goes away: 22,000 file create operations per second.</p>
+
+<p><a href="/assetts/images/s3-tiny-object-workloads-13-versitygw-beegfs-mdtest.png">BeeGFS MDTest</a></p>
+
+<p>Compare that to some of the results below (9,000 obj/s for StorageGRID with Varnish, 14,000 with VersityGW on single host filesystem, etc.). It’s not bad!</p>
 
 <h3 id="tests">Tests</h3>
 
@@ -431,8 +446,8 @@
 
     
   </div><footer class= "footer">
-    <p>2024-10-17 18:29 </p>
-    <p>Copyright © 2024 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
+    <p>2025-01-24 01:15 </p>
+    <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
 </body>
