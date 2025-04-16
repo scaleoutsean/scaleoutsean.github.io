@@ -128,7 +128,7 @@
 
   
   
-    10 minute read
+    13 minute read
   
 
     </span>
@@ -141,6 +141,7 @@
   <li><a href="#other-details">Other details</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#appendix-a---example">Appendix A - Example</a></li>
+  <li><a href="#update-202504">Update (2025/04)</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -182,17 +183,17 @@
 
 <p>Create a database:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ influxdb3 create database epa
-Database "epa" created successfully
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>influxdb3 create database epa
+Database <span class="s2">"epa"</span> created successfully
 
-$ influxdb3 show databases
+<span class="nv">$ </span>influxdb3 show databases
 +---------------+
 | iox::database |
 +---------------+
 | epa           |
 +---------------+
 
-$ export INFLUXDB3_DATABASE_NAME="epa"
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">INFLUXDB3_DATABASE_NAME</span><span class="o">=</span><span class="s2">"epa"</span>
 </code></pre></div></div>
 
 <p>Now we’re set to use the new DB and can write to <code class="language-plaintext highlighter-rouge">epa</code>.</p>
@@ -424,6 +425,111 @@ success
   <li>Extra MinIO container and basic documentation for convenient tiering to S3 from Day 1</li>
 </ul>
 
+<h2 id="update-202504">Update (2025/04)</h2>
+
+<p>InfluxDB 3 OSS has been released and now we can start looking into modifying E-Series Performance Analyzer and SolidFire Collector for it…</p>
+
+<p>In line with SFC’s approach to security, I think TLS by default should be the only option. InfluxDB 3.0 Core added certificate related arguments, so we can try that out.</p>
+
+<p>Here’s how I start InfluxDB 3.0 with a valid, CA-issued certificate (the CA certificate is in OS truststore and this is not a dockerized instance).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/home/sean/.influxdb/influxdb3 serve 
+  <span class="nt">--node-id</span><span class="o">=</span><span class="s1">'writer0'</span> <span class="se">\</span>
+  <span class="nt">--http-bind</span><span class="o">=</span><span class="s1">'s146:8181'</span> <span class="se">\</span>
+  <span class="nt">--object-store</span> file <span class="nt">--data-dir</span> /home/sean/.influxdb/data <span class="se">\</span>
+  <span class="nt">--tls-cert</span> /home/sean/.influxdb/certs/server.crt <span class="nt">--tls-key</span> /home/sean/.influxdb/certs/server.key
+</code></pre></div></div>
+
+<p>(In EPA and SFC I would use S3 and not filesystem to store InfluxDB data.)</p>
+
+<p>I didn’t disable authorization, so I need a bearer token and then I can access the server securely without any issues (“SSL certificate verify ok.`”).</p>
+
+<p>It’s a bit silly that there’s just one port (same as in previous versions) so when one accessess service at 8181, it’s anyone’s guess what the protocol may be (HTTP or HTTPS). I’ve submitted an <a href="https://github.com/influxdata/influxdb/issues/26263">enhancement request</a> about that, although I doubt it will be accepted. Anyway, let’s move on…</p>
+
+<pre><code class="language-raw">$ curl  -v https://s146:8181/health \
+  --Header "Authorization: Bearer apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ"
+
+* Host s146:8181 was resolved.
+* IPv6: (none)
+* IPv4: 192.168.1.146
+*   Trying 192.168.1.146:8181...
+* Connected to s146 (192.168.1.146) port 8181
+* ALPN: curl offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=s146.datafabric.lan
+*  start date: Apr 14 09:39:56 2025 GMT
+*  expire date: Jul 13 09:40:56 2025 GMT
+*  subjectAltName: host "s146" matched cert's "s146"
+*  issuer: O=DataFabric; CN=DataFabric Intermediate CA
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA256
+*   Certificate level 1: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA256
+*   Certificate level 2: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA256
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://s146:8181/health
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: s146:8181]
+* [HTTP/2] [1] [:path: /health]
+* [HTTP/2] [1] [user-agent: curl/8.5.0]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [authorization: Bearer apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ]
+&gt; GET /health HTTP/2
+&gt; Host: s146:8181
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt; Authorization: Bearer apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ
+&gt; 
+&lt; HTTP/2 401 
+&lt; date: Wed, 16 Apr 2025 04:10:44 GMT
+&lt; 
+* Connection #0 to host s146 left intact
+</code></pre>
+
+<p>All good, TLS 1.3 is working!</p>
+
+<p>Or, a mix of CLI and curl commands to query an empty <code class="language-plaintext highlighter-rouge">epa</code> DB on <code class="language-plaintext highlighter-rouge">https://s146</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>/home/sean/.influxdb/influxdb3 create token <span class="nt">--admin</span> <span class="nt">-H</span> <span class="s2">"https://s146:8181"</span>
+
+<span class="c"># Token: apiv3_1nSeJAtDL2Z2E7vYdIQhHckmPFIHvtWABaulZMvTVwQNuiNe8JA3Hcr-3aAVp0kndWzenDzGaWWCoOVVw52qsw</span>
+
+<span class="nv">$ </span>/home/sean/.influxdb/influxdb3 create database epa <span class="se">\</span>
+  <span class="nt">--token</span> apiv3_1nSeJAtDL2Z2E7vYdIQhHckmPFIHvtWABaulZMvTVwQNuiNe8JA3Hcr-3aAVp0kndWzenDzGaWWCoOVVw52qsw <span class="se">\</span>
+  <span class="nt">-H</span> https://s146:8181/query
+
+<span class="c"># Database "epa" created successfully</span>
+
+<span class="nv">$ </span>curl https://s146:8181/query <span class="se">\</span>
+  <span class="nt">--Header</span> <span class="s2">"Authorization: Bearer apiv3_1nSeJAtDL2Z2E7vYdIQhHckmPFIHvtWABaulZMvTVwQNuiNe8JA3Hcr-3aAVp0kndWzenDzGaWWCoOVVw52qsw"</span> <span class="se">\</span>
+  <span class="nt">--data-urlencode</span> <span class="s2">"db=epa"</span> <span class="nt">--data-urlencode</span> <span class="s2">"q=SELECT * FROM epa"</span>
+
+<span class="c"># {"results":[{"statement_id":0}]}</span>
+</code></pre></div></div>
+
+<p>Now in order to get EPA and SFC to use InfluxDB 3 OSS, it just needs to be put together and packaged!</p>
+
+<p>Which I may or may not (since I’ve never heard that anyone uses these things) do. But the source code is available and we know it won’t be hard.</p>
+
       </article>
     </div>
     
@@ -464,7 +570,7 @@ success
 
     
   </div><footer class= "footer">
-    <p>2025-02-18 20:54 </p>
+    <p>2025-04-16 12:58 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
