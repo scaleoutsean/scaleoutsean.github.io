@@ -128,7 +128,7 @@
 
   
   
-    11 minute read
+    12 minute read
   
 
     </span>
@@ -226,17 +226,21 @@
 
 <p><a href="/2022/07/06/apache-ozone-netapp-eseries.html">Apache Ozone S3 and NetApp E-Series</a> was a topic here back in 2022, so you can read about it and E-Series in that post. As mentioned in that post, it appears Cloudera provides support for Ozone (best to confirm with them), so storage just needs to provide sufficient bandwidth.</p>
 
+<p>There’s a dedicated page on <a href="https://docs.cloudera.com/cdp-private-cloud-base/7.3.1/howto-next-gen-storage.html">“Next-Gen”</a> (aka Ozone) storage where you can see how it can be used with Cloudera. <a href="https://docs.cloudera.com/cdp-private-cloud-upgrade/latest/hdfs-ozone-migration/topics/hdfs-ozone-migration-intro.html">This page</a> shows how to migrate from HDFS to Ozone. I’d like to highlight this:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">ofs</code>: A Hadoop-compatible filesystem (HCFS) allowing any application that expects an HDFS-like interface to work against Ozone with no API changes. Frameworks like Apache Spark, YARN and Hive work against Ozone without the need of any change.</li>
+</ul>
+
 <p>What that means is:</p>
 
 <ul>
-  <li>Storage protocol simplicity - if you consider file and object (NFS, S3) to be simpler than block - is here for E-Series users. “<code class="language-plaintext highlighter-rouge">mc cp -r /data/in s3://datamart/etl</code>” and you’re done.</li>
-  <li>Look, Kubernetes! As I’ve been saying all along - you <em>don’t need</em> NetApp Trident to support E-Series. Why? Because Ozone has Erasure Coding, so PV failover isn’t critical.Host and worker reboots (and Ozone container restarts) can be handled transparently to S3 users. <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#e-series-with-unprotected-media">Like with MinIO</a>, you can run Ozone on RAID 0 (which E-Series supports) and protect data exclusively with Ozone. Or you can do a combination (wide DDP on E-Series plus EC on Ozone on top of that).</li>
+  <li>Storage protocol simplicity - if you consider file and object (NFS, S3) to be simpler than block - is here for E-Series users. “<code class="language-plaintext highlighter-rouge">mc cp -r /data/in s3gw://datamart/etl</code>” and you’re done - new data is available to <code class="language-plaintext highlighter-rouge">ofs</code> clients!</li>
+  <li>Look, Kubernetes! As I’ve been saying all along - you <em>don’t need</em> NetApp Trident to support E-Series in a Kubernetes environment. Why? Because Ozone has Erasure Coding, so PV failover isn’t critical.Host and worker reboots (and Ozone container restarts) can be handled transparently to S3 users. <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#e-series-with-unprotected-media">Like with MinIO</a>, you can run Ozone on RAID 0 (which E-Series supports) and protect data exclusively with Ozone. Or you can do a combination (wide DDP on E-Series plus EC on Ozone on top of that).</li>
   <li>If you prefer to use S3 such as MinIO, <a href="https://community.cloudera.com/t5/Community-Articles/Working-with-S3-Compatible-Data-Stores-via-Apache-NiFi/ta-p/244584">that seems to work as well</a>. You can read about MinIO Erasure Coding with E-Series <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">here</a>.</li>
 </ul>
 
-<p>If you wonder about CSI drivers for E-Series, read <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">this post</a>.</p>
-
-<p>Uploads to S3 can be buffered with <code class="language-plaintext highlighter-rouge">fs.s3a.fast.upload.buffer=disk</code> inside of worker nodes to cut on memory used.</p>
+<p>If you still wonder about CSI drivers for E-Series, read <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">this post</a>.</p>
 
 <h2 id="deployment-topology">Deployment topology</h2>
 
@@ -463,7 +467,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-04-16 15:41 </p>
+    <p>2025-04-16 15:50 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
