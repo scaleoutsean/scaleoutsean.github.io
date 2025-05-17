@@ -347,11 +347,11 @@ zd2@third    19K      -  22.6M  -
 
 <p>For anti-ransomware and anti-virus, we could run a scanner, but we could also build own detection of suspicious file-system activity. More on that in the next section. Here I’ll just say <a href="/2024/01/29/antivirus-scanning-for-on-premises-s3.html">I blogged</a> about AV scanning and getting an up-to-date list of objects required external services (Elasticsearch, Kafka, etc).</p>
 
-<p>The watcher example from the documentation can be easily adjusted to initiate data pipeline processing along the lines of what I mentioned above: depending on document extension (and/or additional criteria such as path matching, owner and similar), new files can be processed as soon as they’re created.</p>
+<p>The watcher example from the documentation can be easily adjusted to initiate data pipeline processing along the lines of what I mentioned above: depending on document extension (and/or additional criteria such as path matching, owner and similar), new files can be processed as soon as last writer is done writing to the file.</p>
 
 <p><img src="/assets/images/beegfs-8-events-03-decider.gif" alt="Legacy file-system events for data pipeline processing" /></p>
 
-<p>While using the modern (gRPC) service would be more robust, even this basic processor would suffice for many use cases and can be created in minutes.</p>
+<p>While the modern (gRPC) BeeGFS file-system event listener service is robust, even this basic event processor would suffice for many use cases and can be created in minutes.</p>
 
 <p>You may wonder where are these tasks and steps scheduled. Unlike on some highly-integrated storage systems (e.g. Vast Data), there’s no built-in generic message queue so we’d need to run our own service on BeeGFS or non-BeeGFS volumes - some extra work is required in exchange for flexibility and openness. Such services could run <a href="/2022/08/11/nomad-pack-influxdb-beegfs.html">on BeeGFS</a> or elsewhere (e.g. services in <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">Kubernetes on non-BeeGFS volumes</a>).</p>
 
@@ -367,7 +367,7 @@ zd2@third    19K      -  22.6M  -
   <li>SQL qeueries can be issued against this DB. They’re much faster than doing the same thing against file-system.</li>
 </ul>
 
-<p>BeeGFS Hive database(s) are SQLite3 databases and index path and other details are configured in /etc/beegfs/index/config. For example, my BeeGFS file-system has just one directory (/mnt/beegfs/archive) and accordingly there are only 2 databases (one for “root” and another for the archive directory).</p>
+<p>BeeGFS Hive database(s) are SQLite3 databases and the index path and other details are configured in /etc/beegfs/index/config. For example, my BeeGFS file-system has just one directory (/mnt/beegfs/archive) and accordingly there are only 2 index databases (one for file-system “root” and another for the archive directory).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-laR</span> /work/index
 /work/index:
@@ -388,7 +388,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
 <p>You may wonder if these are populated on-the-fly by BeeGFS Watch service. Not yet. It’s planned, though.</p>
 
-<p>Because there may be billions of files and directories, that could represent a significant burden for the filesystem. Currently you need to create (or refresh) an index. Refreshes can be done overnight, for example.</p>
+<p>Because there may be billions of files and directories, that could represent a significant burden for the file-system. Currently you need to create (or refresh) an index. Refreshes can be done overnight, for example.</p>
 
 <p>This screenshot shows index creation and a way to query entries.</p>
 
@@ -401,7 +401,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 <p>For example, let’s say we want to index content of text files to be able to perform full text and vector similarity search:</p>
 <ul>
   <li>For SIEM use cases, we’d want it done with Watch service because it’s important to spot problems quickly</li>
-  <li>For RAG, maybe it’s not essential to have content indexed in near real-time and so overnight (or hourly) recursive refresh of a bunch of directories may be a better approach</li>
+  <li>For RAG, maybe it’s not essential to have content indexed in near real-time and so overnight (or hourly) recursive refresh of a bunch of directories followed by a SQL query may be a better approach</li>
 </ul>
 
 <p>One popular use case for Hive index is deletion of files not accessed for more than X days from Tier 1 when Tier 1 is used exclusively for scratch space.</p>
@@ -416,13 +416,16 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
 <p>BeeGFS version 8 contains some great improvements that I haven’t even covered in this blog post. Some other features, added in recent years, have been integrated and improved, and yet others (monitoring) practically resurrected due to the appearance of InfluxDB 3 OSS.</p>
 
-<p>BeeGFS Watch (file-system event monitoring) and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS name spaces are fully open to integrations <em>across file-systems, locations and storage environments</em>:</p>
+<p>BeeGFS Watch (file-system event monitoring) and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS name spaces are fully open to integrations <em>across file-systems, storage environments and locations</em>:</p>
 
 <ul>
   <li>place indexes on non-BeeGFS file-systems or NFS shares</li>
   <li>send file-system modifications updates to external gRPC listeners or process updates in own scripts/services</li>
   <li>push BeeGFS files or directory trees to any standard S3-like RST</li>
+  <li>process files on BeeGFS or on S3 (on-premises or in the cloud)</li>
 </ul>
+
+<p>Note that files <strong>do not</strong> necessarily need to be uploaded or copied to S3 for processing via S3. You may use <a href="/2023/09/20/versity-gw-s3-posix-gateway-beegfs-eseries.html">Versity S3 Gateway</a> to access BeeGFS files via S3 as soon as they’re written.</p>
 
 <p>ZFS - after <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">improved deduplication</a> that I blogged about in early 2024 - deserves another look, especially since E-Series arrays have recently (finally) added QLC flash media support (if only in EF300C and EF600C), so ZFS and non-ZFS pools have become an attractive option for anyone with compressible, duplicate or other data suitable for special handling (e.g. placement based on file age or access time).</p>
 
@@ -468,7 +471,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 05:26 </p>
+    <p>2025-05-18 05:49 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
