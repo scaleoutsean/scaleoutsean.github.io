@@ -129,7 +129,7 @@
 
   
   
-    12 minute read
+    14 minute read
   
 
     </span>
@@ -255,6 +255,35 @@ PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE
 <p>Is ZFS dedupe super-smart? Not really, but it’s good enough for Tier 3. Identical files will be deduplicated. Partial matches should be as well, but “it depends”. The compression was and is legitimate, and you can pick any of several methods. I used ZSTD and LZ4 with BeeGFS but didn’t compare (savings shouldn’t be BeeGFS-specific).</p>
 
 <p>We could have several archives with different (combinations of) settings, but it’s better to not fragment your storage pools unless your data is very predictable in terms of data types and capacity.</p>
+
+<p>Snapshots are possible, but likely impractical. There’s no way to “quiesce” a live BeeGFS filesystem, so the only sure way would be to stop services (mostly <code class="language-plaintext highlighter-rouge">beegfs-client</code>, but preferrably all others as well) and then take a snapshot. This is how E-Series (SANtricity) snapshots could work as well, of course.</p>
+
+<p>It’s usually not possible to stop services, which is why I say snapshots without BeeGFS cooperation aren’t practical, but you may be able to do that on some filesystems (e.g. filesystem used for home directories at 6am). Once snapshots are taken, they can be restored when BeeGFS is stopped.</p>
+
+<p><img src="/assets/images/beegfs-8-zfs-01-snapshot.png" alt="BeeGFS with ZFS snapshots" /></p>
+
+<ul>
+  <li>(1) we delete files to simulate damage</li>
+  <li>(2) we make sure the file and directory are gone</li>
+  <li>(3) we rollback to last ZFS snapshot for all constituent volumes</li>
+  <li>(4) BeeGFS services are started and all files from the third snapshot are back</li>
+</ul>
+
+<p>The third snapshot is the one that was restored.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zfs list <span class="nt">-t</span> snapshot
+NAME        USED  AVAIL  REFER  MOUNTPOINT
+md1@first   230K      -  5.10M  -
+md1@third   210K      -  5.10M  -
+zd1@first    20K      -  38.7M  -
+zd1@third  20.5K      -  38.7M  -
+zd2@first    19K      -  22.6M  -
+zd2@third    19K      -  22.6M  -
+
+</code></pre></div></div>
+<p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and filesystem notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
+
+<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with “simple” ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0”), they need to be “re-assembled” and imported into a BeeGFS cluster at the destination. Because that’s not trivial and beecause I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
 
 <h2 id="remote-storage">Remote storage</h2>
 
@@ -425,7 +454,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 02:49 </p>
+    <p>2025-05-18 03:51 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
