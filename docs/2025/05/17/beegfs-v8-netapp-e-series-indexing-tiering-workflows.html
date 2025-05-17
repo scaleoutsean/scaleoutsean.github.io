@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-05-17T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"How to get most out of BeeGFS v8 with NetApp E-Series","@type":"BlogPosting","headline":"ThinkParQ BeeGFS v8 with NetApp E-Series","dateModified":"2025-05-17T00:00:00+08:00","datePublished":"2025-05-17T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/beegfs-8-pools.svg","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html"},"url":"https://scaleoutsean.github.io/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html","@context":"https://schema.org"}</script>
+{"image":"https://scaleoutsean.github.io/assets/images/beegfs-8-pools.svg","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"How to get most out of BeeGFS v8 with NetApp E-Series","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html","headline":"ThinkParQ BeeGFS v8 with NetApp E-Series","dateModified":"2025-05-17T00:00:00+08:00","datePublished":"2025-05-17T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    11 minute read
+    12 minute read
   
 
     </span>
@@ -178,22 +178,36 @@
 
 <p><img src="/assets/images/beegfs-8-pools-01-storage.png" alt="BeeGFS and E-Series Pools" /></p>
 
-<p>By default, new files are placed on <code class="language-plaintext highlighter-rouge">storage_pool_default</code> constituents (target_0-6826D866-1 here, as I have just one disk in default pool, but normally we’d have 4 or more).</p>
+<p>After giving the storage targets proer aliases:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs target list
+ID     TYPE     ALIAS           NODE  STORAGE_POOL  
+s:101  storage  s101_default_0  s:1   s:1           
+s:102  storage  s102_archive_0  s:1   s:2           
+m:1    meta     target_meta_1   m:1   <span class="o">(</span>n/a<span class="o">)</span>         
+
+<span class="nv">$ </span><span class="nb">sudo </span>beegfs pool list
+ID   ALIAS                 TARGETS  MIRRORS  
+s:1  storage_pool_default  s:101             
+s:2  archive               s:102  
+</code></pre></div></div>
+
+<p>By default, new files land on <code class="language-plaintext highlighter-rouge">storage_pool_default</code> constituents (target_0-6826D866-1 before, now s101_default_0, as I have just one storage target in the default pool, but normally we’d have 4 or more).</p>
 
 <p>If I examine this new file, I can see its location is as expected.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@aio:/mnt/beegfs<span class="nv">$ </span><span class="nb">sudo </span>beegfs entry info /mnt/beegfs/archive/flights-1m_v2.csv 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs entry info /mnt/beegfs/archive/flights-1m_v2.csv 
 PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE_POOL              STRIPE_PATTERN  STORAGE_TARGETS  STORAGE_MIRRORS  REMOTE_TARGETS  
 /archive/flights-1m_v2.csv  4-68289A9B-1  file  m:1        <span class="o">(</span>unmirrored<span class="o">)</span>  storage_pool_default <span class="o">(</span>1<span class="o">)</span>  RAID0 <span class="o">(</span>4x512K<span class="o">)</span>  s:101            <span class="o">(</span>unmirrored<span class="o">)</span>     <span class="o">(</span>none<span class="o">)</span>          
 </code></pre></div></div>
 
 <p>When the file is no longer actively used (more on that later), I can move it to archive tier.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@aio:/mnt/beegfs<span class="nv">$ </span><span class="nb">sudo </span>beegfs entry migrate <span class="nt">--from-pools</span><span class="o">=</span>storage_pool_default <span class="nt">--pool</span><span class="o">=</span>archive /mnt/beegfs/archive/flights-1m_v3.csv 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs entry migrate <span class="nt">--from-pools</span><span class="o">=</span>storage_pool_default <span class="nt">--pool</span><span class="o">=</span>archive /mnt/beegfs/archive/flights-1m_v3.csv 
 Summary: <span class="o">{</span>MigrationStatusUnknown:0 MigrationErrors:0 MigrationNotSupported:0 MigrationSkippedDirs:0 MigrationNotNeeded:0 MigrationNeeded:0 MigratedFiles:1 MigrationUpdatedDirs:0<span class="o">}</span>
 </code></pre></div></div>
 
-<p>Don’t be confused by its path (/mnt/beegfs/archive/), which doesn’t change throughout. I could have had the file in /mnt/beegfs/, and later move it to /mnt/beegfs/archive/ - that <em>still</em> wouldn’t move it to archive tier. What moves it to another tier (pool) is the above command.</p>
+<p>Don’t be confused by its path (/mnt/beegfs/archive/), which doesn’t change throughout. I could have had the file in /mnt/beegfs/, and later move it to /mnt/beegfs/archive/ - that <em>still</em> wouldn’t move it to the archive tier. What moves it to another tier (pool) is the <code class="language-plaintext highlighter-rouge">entry migrate</code> command.</p>
 
 <p>If it’d be less confusing this way, imagine having a workflow like this (recursive options are possible as well):</p>
 
@@ -201,7 +215,10 @@ Summary: <span class="o">{</span>MigrationStatusUnknown:0 MigrationErrors:0 Migr
 <span class="c"># Gets relative path of a file, moves it to /mnt/beegfs/archive/ and tiers to archive pool</span>
 <span class="nb">read </span>myfile
 <span class="nb">mv</span> /mnt/beegfs/<span class="k">${</span><span class="nv">myfile</span><span class="k">}</span> /mnt/beegfs/archive/<span class="k">${</span><span class="nv">myfile</span><span class="k">}</span>
-<span class="nb">sudo </span>beegfs entry migrate <span class="nt">--from-pools</span><span class="o">=</span>storage_pool_default <span class="nt">--pool</span><span class="o">=</span>archive /mnt/beegfs/archive/<span class="k">${</span><span class="nv">myfile</span><span class="k">}</span>
+<span class="nb">sudo </span>beegfs entry migrate <span class="se">\</span>
+    <span class="nt">--from-pools</span><span class="o">=</span>storage_pool_default <span class="se">\</span>
+    <span class="nt">--pool</span><span class="o">=</span>archive <span class="se">\</span>
+    /mnt/beegfs/archive/<span class="k">${</span><span class="nv">myfile</span><span class="k">}</span>
 </code></pre></div></div>
 
 <p>Of course, you wouldn’t <em>really</em> have scripts like these; you’d have this in your workflows, job scripts or some other place that runs them automatically.</p>
@@ -210,7 +227,7 @@ Summary: <span class="o">{</span>MigrationStatusUnknown:0 MigrationErrors:0 Migr
 
 <p>After entry migration, we can see that STORAGE_POOL is now <code class="language-plaintext highlighter-rouge">archive</code>.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@aio:/mnt/beegfs<span class="nv">$ </span><span class="nb">sudo </span>beegfs entry info /mnt/beegfs/archive/flights-1m_v3.csv 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs entry info /mnt/beegfs/archive/flights-1m_v3.csv 
 PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE_POOL  STRIPE_PATTERN  STORAGE_TARGETS  STORAGE_MIRRORS  REMOTE_TARGETS  
 /archive/flights-1m_v3.csv  1-68289D0B-1  file  m:1        <span class="o">(</span>unmirrored<span class="o">)</span>  archive <span class="o">(</span>2<span class="o">)</span>   RAID0 <span class="o">(</span>4x512K<span class="o">)</span>  s:102            <span class="o">(</span>unmirrored<span class="o">)</span>     <span class="o">(</span>none<span class="o">)</span>    
 </code></pre></div></div>
@@ -250,6 +267,8 @@ PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE
 <p>Originally I had hoped one would be able to delete pushed data from the source and pull it back if and when needed, but that doesn’t seem to be a use case here. It’s more like pull/push in <a href="https://github.com/NetApp/netapp-dataops-toolkit/tree/main/netapp_dataops_traditional#cli-push-to-s3-directory">NetApp DataOps Toolkit</a> except that it should be much faster.</p>
 
 <p>In terms of RST support, NetApp StorageGRID and other S3-like services (MinIO, Versity S3 Gateway) can use E-Series storage (I’ve blogged about them in several <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">posts</a>). MinIO and Versity can run in Kubernetes with E-Series as well. I think <a href="/2022/07/06/apache-ozone-netapp-eseries.html">Apache Ozone</a> should work just fine. You could have any of these on a server (or three, especially with K8s and/or EC) attached to EF600 with NL-SAS. PBs of S3 at a low cost and headache-free management.</p>
+
+<p>Note that for ZFS, <code class="language-plaintext highlighter-rouge">beegfs entry refresh</code> must be executed before <code class="language-plaintext highlighter-rouge">beegfs remote push</code>, so that ZFS updates sizes of new and modified files.</p>
 
 <h2 id="filesystem-events">Filesystem events</h2>
 
@@ -342,9 +361,11 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
   <li>For RAG, maybe it’s not essential to have content indexed in near real-time and so overnight (or hourly) recursive refresh of a bunch of directories may be a better approach</li>
 </ul>
 
+<p>One popular use case for Hive index is deletion of files not accessed for more than X days from Tier 1 when Tier 1 is used exclusively for scratch space.</p>
+
 <h2 id="monitoring">Monitoring</h2>
 
-<p>This isn’t new, but is improved. InfluxDB version 1.x is supported, and - as I said <a href="/2025/01/24/influxdb-3-core-alpha.html">here</a> - that means version 3 is supported as well.</p>
+<p>This isn’t new, but it’s been improved. InfluxDB version 1.x is one of two supported InfluxDB editions and - as I said <a href="/2025/01/24/influxdb-3-core-alpha.html">here</a> - that means version 3 is supported as well.</p>
 
 <p>My advice would be to use InfluxDB 3 OSS and configure BeeGFS v8 for InfluxDB version 1.x as per <a href="https://doc.beegfs.io/8.0/advanced_topics/mon.html#configuration">TFM</a>. I haven’t tried this myself (it’s on my TODO list), but there’s no reason this wouldn’t work.</p>
 
@@ -352,7 +373,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
 <p>BeeGFS version 8 contains some great improvements that I haven’t even covered in this blog post. Some other features, added in recent years, have been integrated and improved, and yet others (monitoring) practically resurrected due to the appearance of InfluxDB 3 OSS.</p>
 
-<p>BeeGFS Watch and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS namespaces are fully open to integrations <em>across locations and storage environments</em>:</p>
+<p>BeeGFS Watch (filesystem event monitoring) and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS namespaces are fully open to integrations <em>across locations and storage environments</em>:</p>
 
 <ul>
   <li>place indexes on non-BeeGFS filesystems or NFS shares</li>
@@ -360,8 +381,9 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
   <li>push BeeGFS files or directory trees to any standard S3-like RST</li>
 </ul>
 
-<p>ZFS - after <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">improved deduplication</a> that I blogged about in early 2024 - deserves another look, especially since E-Series arrays have recently (finally) added QLC support (in EF300C and EF600C), so ZFS and non-ZFS pools have become an attractive option for anyone with compressible or duplicate data.</p>
+<p>ZFS - after <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">improved deduplication</a> that I blogged about in early 2024 - deserves another look, especially since E-Series arrays have recently (finally) added QLC flash media support (if only in EF300C and EF600C), so ZFS and non-ZFS pools have become an attractive option for anyone with compressible, duplicate or other data suitable for special handling (e.g. placement based on file age or access time).</p>
 
+<p>Keep in mind that the license for pools require Enterprise Edition. Support for ACLs was considered an enterprise feature in version 7, but thankfully it’s been moved to Community Edition in version 8.</p>
 
       </article>
     </div>
@@ -403,7 +425,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 01:46 </p>
+    <p>2025-05-18 02:49 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
