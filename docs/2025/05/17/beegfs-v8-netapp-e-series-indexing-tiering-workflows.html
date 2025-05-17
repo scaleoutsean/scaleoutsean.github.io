@@ -279,6 +279,8 @@ PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE
   <li>(4) BeeGFS services are started and all files from the third snapshot are back</li>
 </ul>
 
+<p>Following these steps I also executed BeeGFS <code class="language-plaintext highlighter-rouge">fsck</code> which found 0 errors on the restored filesystem.</p>
+
 <p>The snapshot “third” is the one that was restored. (In the case you’re wondering where’s “second”; it was disappeared earlier when, having taken snapshot “second”, I rolled back to “first”.)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zfs list <span class="nt">-t</span> snapshot
@@ -294,13 +296,15 @@ zd2@third    19K      -  22.6M  -
 
 <p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and file-system notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
 
-<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with regular ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0” zpools), they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
+<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike in regular stand-alone ZFS pools, here each metadata and storage target are stand-alone practically “R0-style” zpools and at the same time mutually dependent because they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
 
 <h4 id="cognitive-overhead-of-snapshots">Cognitive overhead of snapshots</h4>
 
 <p>As an aside and something that I may revisit in a future post: recently, I’ve been thinking about the applicability of snapshots to modern data services. Assuming one can rollback a snapshot of metadata and data targets as well as any index, vector and other databases, that would seem useful only in limited and isolated cases such as small scale prototyping. Any data that has been fed or “propagated” to other systems is “spilled milk”.</p>
 
-<p>It may be useful to restore a mistakenly deleted file or directory, but potentially at the cost of losing updates or new files created since the time of snapshot creation. In rare cases it may be possible to take a pre-recovery snapshot and use that to update a restored snapshot, but as I’ve mentioned earlier - is that really practical on large file-systems? How many administrators are capable of understanding what rolling back a snapshot on a 10 PB file-system means and how that impacts various Hive indexes, external databases and downstream consumers?</p>
+<p>It may be useful to restore a mistakenly deleted file or directory, but potentially at the cost of losing updates or new files created since the time of snapshot creation. In rare cases it may be possible to take a pre-recovery snapshot and use that to update a restored snapshot, but as I’ve mentioned earlier - is that really practical on large file-systems?</p>
+
+<p>How many administrators are capable of understanding what rolling back a snapshot on a 10 PB file-system means and how that impacts various Hive indexes, external databases and downstream data consumers?</p>
 
 <p>If I needed to design a snapshottable BeeGFS file-system attached to E-Series, I’d create a file-system out of single-array LUNs so that I can take (and restore) snapshots using SANtricty Consistency Groups. In that way, snapshots of small (few TB) to medium sized (hundred TB) file-systems could be created regardless of file-system type on data targets. They would be limited by the performance of single E-Series array, but given their size and nature (prototyping, etc.), that could suffice for most basic rollbacks.</p>
 
@@ -486,7 +490,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 06:14 </p>
+    <p>2025-05-18 06:22 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
