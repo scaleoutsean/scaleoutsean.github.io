@@ -129,7 +129,7 @@
 
   
   
-    15 minute read
+    17 minute read
   
 
     </span>
@@ -140,7 +140,11 @@
   <li><a href="#data-tiering-with-pools">Data tiering with pools</a></li>
   <li><a href="#zfs">ZFS</a>
     <ul>
-      <li><a href="#beegfs-snapshots">BeeGFS snapshots</a></li>
+      <li><a href="#beegfs-snapshots">BeeGFS snapshots</a>
+        <ul>
+          <li><a href="#cognitive-overhead-of-snapshots">Cognitive overhead of snapshots</a></li>
+        </ul>
+      </li>
     </ul>
   </li>
   <li><a href="#remote-storage">Remote storage</a></li>
@@ -287,9 +291,20 @@ zd2@first    19K      -  22.6M  -
 zd2@third    19K      -  22.6M  -
 
 </code></pre></div></div>
+
 <p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and file-system notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
 
-<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with regular ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0”), they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
+<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with regular ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0” zpools), they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
+
+<h4 id="cognitive-overhead-of-snapshots">Cognitive overhead of snapshots</h4>
+
+<p>As an aside and something that I may revisit in a future post: recently, I’ve been thinking about the applicability of snapshots to modern data services. Assuming one can rollback a snapshot of metadata and data targets as well as any index, vector and other databases, that would seem useful only in limited and isolated cases such as small scale prototyping. Any data that has been fed or “propagated” to other systems is “spilled milk”.</p>
+
+<p>It may be useful to restore a mistakenly deleted file or directory, but potentially at the cost of losing updates or new files created since the time of snapshot creation. In rare cases it may be possible to take a pre-recovery snapshot and use that to update a restored snapshot, but as I’ve mentioned earlier - is that really practical on large file-systems? How many administrators are capable of understanding what rolling back a snapshot on a 10 PB file-system means and how that impacts various Hive indexes, external databases and downstream consumers?</p>
+
+<p>If I needed to design a snapshottable BeeGFS file-system attached to E-Series, I’d create a file-system out of single-array LUNs so that I can take (and restore) snapshots using SANtricty Consistency Groups. In that way, snapshots of small (few TB) to medium sized (hundred TB) file-systems could be created regardless of file-system type on data targets. They would be limited by the performance of single E-Series array, but given their size and nature (prototyping, etc.), that could suffice for most basic rollbacks.</p>
+
+<p>Periodic BeeGFS sync to S3 with S3 versioning may sometimes be a better choice: there’s no need for file-system and storage administrator intervention, and all uploaded versions are accessible to the user. (BeeGFS sync in v8.0 doesn’t have the ability to use object versions, but if they bucket has them enabled, they should be available.)</p>
 
 <h2 id="remote-storage">Remote storage</h2>
 
@@ -471,7 +486,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 05:49 </p>
+    <p>2025-05-18 06:14 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
