@@ -136,9 +136,13 @@
   </div>
   
         <ul>
-  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#introducti">Introducti</a></li>
   <li><a href="#data-tiering-with-pools">Data tiering with pools</a></li>
-  <li><a href="#zfs">ZFS</a></li>
+  <li><a href="#zfs">ZFS</a>
+    <ul>
+      <li><a href="#beegfs-snapshots">BeeGFS snapshots</a></li>
+    </ul>
+  </li>
   <li><a href="#remote-storage">Remote storage</a></li>
   <li><a href="#filesystem-events">Filesystem events</a></li>
   <li><a href="#file-index">File index</a></li>
@@ -146,7 +150,7 @@
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
-<h2 id="introduction">Introduction</h2>
+<h2 id="introducti">Introducti</h2>
 
 <h2 id="data-tiering-with-pools">Data tiering with pools</h2>
 
@@ -156,29 +160,29 @@
 
 <ul>
   <li>A BeeGFS pool is one or more storage target (aka LUN) tagged for specific property (cost, performance, location, etc.)</li>
-  <li>One can have a BeeGFS filesystem with more than one pool</li>
+  <li>One can have a BeeGFS file-system with more than one pool</li>
   <li>Furthermore, one can easily move data (files or entire directory trees) between any two pools without stubs, shortcuts or other major inconveniences for users</li>
 </ul>
 
-<p>As you guess, that allows us to mix different disk types or even arrays in the same BeeGFS filesystem.</p>
+<p>As you guess, that allows us to mix different disk types or even arrays in the same BeeGFS file-system.</p>
 
-<p>As an example, we could use high performance arrays (or media) in with R10 (for metadata) or R6 (for data) volumes and lower-cost QLC-based DDP-based LUNs in the same BeeGFS filesystem.</p>
+<p>As an example, we could use high performance arrays (or media) in with R10 (for metadata) or R6 (for data) volumes and lower-cost QLC-based DDP-based LUNs in the same BeeGFS file-system.</p>
 
 <p>Tiering is performed with a simple command that moves files from source-tagged LUNs to target-tagged LUNs (copy data from source to destination, redirect metadata to destination, delete source data when done).</p>
 
 <p><img src="/assets/images/beegfs-8-pools.svg" alt="BeeGFS pools with EF600 and EF600C" /></p>
 
-<p>BeeGFS filesystem is literally (and in the schematic) a black box; file (chunk) location is obfuscated from the user. Lateral movement (tiering) moves files from one pool to another, but their filesystem path remains the same.</p>
+<p>BeeGFS file-system is literally (and in the schematic) a black box; file (chunk) location is obfuscated from the user. Lateral movement (tiering) moves files from one pool to another, but their file-system path remains the same.</p>
 
 <p>We can get as fancy as we want - we could use one hybrid array (e.g. EF300) for everything (R10 TLC NVMe for MD, R6 TLC NVMe for Hot Data, R6 HDD for Cold Data), for example.</p>
 
 <p>Just remember to watch pool and target fullness in order to avoid blowing up a pool. You also don’t want to be too stingy and having to waste IO on moving data back and forth all day long.</p>
 
-<p>This example below shows a BeeGFS filesystem with 2 data disks: target_0-6826D866-1 (Tier 1) and target_1-6826D866-1 (Tier 2). When creating pools (<code class="language-plaintext highlighter-rouge">beegfs pool create</code>), target_1-6826D866-1 was assigned to <code class="language-plaintext highlighter-rouge">archive</code> tier. (I should have aliased the targets better…)</p>
+<p>This example below shows a BeeGFS file-system with 2 data disks: target_0-6826D866-1 (Tier 1) and target_1-6826D866-1 (Tier 2). When creating pools (<code class="language-plaintext highlighter-rouge">beegfs pool create</code>), target_1-6826D866-1 was assigned to <code class="language-plaintext highlighter-rouge">archive</code> tier. (I should have aliased the targets better…)</p>
 
 <p><img src="/assets/images/beegfs-8-pools-01-storage.png" alt="BeeGFS and E-Series Pools" /></p>
 
-<p>After giving the storage targets proer aliases:</p>
+<p>After giving the storage targets proper aliases:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs target list
 ID     TYPE     ALIAS           NODE  STORAGE_POOL  
@@ -256,9 +260,11 @@ PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE
 
 <p>We could have several archives with different (combinations of) settings, but it’s better to not fragment your storage pools unless your data is very predictable in terms of data types and capacity.</p>
 
-<p>Snapshots are possible, but likely impractical. There’s no way to “quiesce” a live BeeGFS filesystem, so the only sure way would be to stop services (mostly <code class="language-plaintext highlighter-rouge">beegfs-client</code>, but preferrably all others as well) and then take a snapshot. This is how E-Series (SANtricity) snapshots could work as well, of course.</p>
+<h3 id="beegfs-snapshots">BeeGFS snapshots</h3>
 
-<p>It’s usually not possible to stop services, which is why I say snapshots without BeeGFS cooperation aren’t practical, but you may be able to do that on some filesystems (e.g. filesystem used for home directories at 6am). Once snapshots are taken, they can be restored when BeeGFS is stopped.</p>
+<p>Snapshots with ZFS are possible, but likely impractical. There’s no way to “quiesce” a live BeeGFS file-system, so the only sure way would be to stop services (mostly <code class="language-plaintext highlighter-rouge">beegfs-client</code>, but preferrably all others as well) and then take a snapshot. This is how E-Series (SANtricity) snapshots could work as well, of course.</p>
+
+<p>It’s usually not possible to stop services, which is why I say snapshots without BeeGFS cooperation aren’t practical, but you may be able to do that on some file-systems (e.g. file-system used for home directories at 6am). Once snapshots are taken, they can be restored when BeeGFS is stopped.</p>
 
 <p><img src="/assets/images/beegfs-8-zfs-01-snapshot.png" alt="BeeGFS with ZFS snapshots" /></p>
 
@@ -281,9 +287,9 @@ zd2@first    19K      -  22.6M  -
 zd2@third    19K      -  22.6M  -
 
 </code></pre></div></div>
-<p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and filesystem notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
+<p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and file-system notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
 
-<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with “simple” ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0”), they need to be “re-assembled” and imported into a BeeGFS cluster at the destination. Because that’s not trivial and beecause I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
+<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike with “simple” ZFS pools, while here each metadata and storage target are stand-alone ZFS pools (practically “R0”), they need to be “re-assembled” and imported into a BeeGFS cluster at the destination. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
 
 <h2 id="remote-storage">Remote storage</h2>
 
@@ -305,41 +311,41 @@ zd2@third    19K      -  22.6M  -
 
 <p>Why should we care?</p>
 
-<p>You may have heard of AI. Or ransomware. Or workflows. These are some situations where filesystem events can be useful. For the ONTAP people, FPolicy may come to mind. Or inotify in the world of Linux.</p>
+<p>You may have heard of AI. Or ransomware. Or workflows. These are some situations where file-system events can be useful. For the ONTAP people, FPolicy may come to mind. Or inotify, in the world of Linux.</p>
 
 <p>In essence, BeeGFS can send them to two places: a gRPC listener (new) and UNIX socket (legacy).</p>
 
-<p>Using the legacy approach, use run beegfs-event-listener on the socket “file” <code class="language-plaintext highlighter-rouge">beegfs-watch</code> service sends data to.</p>
+<p>Using the legacy approach, run beegfs-event-listener on the socket “file” <code class="language-plaintext highlighter-rouge">beegfs-watch</code> service sends data to. Example:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/opt/beegfs/sbin/beegfs-event-listener /run/beegfs/eventlog
 </code></pre></div></div>
 
-<p>Then, as stuff happens, the listener spits out FS events it reads from the socket.</p>
+<p>Then, as stuff happens on file-system, event listener spits out FS events it reads from the socket.</p>
 
 <p><img src="/assets/images/beegfs-8-events-01-legacy.png" alt="Legacy filesystem events " /></p>
 
-<p>Obviously, this is cool. Now we just need to decide what we want to do with this.</p>
+<p>Now we just need to decide what we want to do with this.</p>
 
 <p>For example, <code class="language-plaintext highlighter-rouge">LastWriterClosed</code> on <code class="language-plaintext highlighter-rouge">/mnt/beegfs/incoming/*.mp4</code> may be the thing we’re looking for. Then we kick off <code class="language-plaintext highlighter-rouge">ffmpeg</code> and let it do its thing on the file and use RST to push processed videos out to an S3 bucket.</p>
 
-<p>The BeeGFS 8 documentation gives an example of piping those events:</p>
+<p>The BeeGFS 8 documentation gives an example of piping those events to a user script:</p>
 
-<p><img src="/assets/images/beegfs-8-events-02-legacy-pipe.png" alt="Legacy filesystem events piped to a script" /></p>
+<p><img src="/assets/images/beegfs-8-events-02-legacy-pipe.png" alt="Legacy file-system events piped to a script" /></p>
 
-<p>This is a basic example, though. Normally we’d filter by event type and do stuff:</p>
+<p>This is a basic example, though. Normally we’d filter by event type and do things with that:</p>
 
 <ul>
   <li>Run anti-virus scanner (ClamAV, for example)</li>
-  <li>Run data processing</li>
+  <li>Run various data processing</li>
 </ul>
 
-<p>For media, a data processing step could be format conversion (I <a href="/2022/04/05/nomad-beegfs-eseries.html">blogged about that</a> in 2022)</p>
+<p>For media, a data processing step could be format conversion (I <a href="/2022/04/05/nomad-beegfs-eseries.html">blogged about that</a> in 2022).</p>
 
 <p>For AI, data processing steps could be frame-by-frame analysis and tagging. Or you could automatically create file embeddings in a (vector) database.</p>
 
 <p>For SIEM, data processing steps could be parsing and ingress of <code class="language-plaintext highlighter-rouge">.log</code> files to Elasticsearch.</p>
 
-<p>For anti-ransomware and anti-virus, we could run a scanner, but we could also build own detection of suspicious filesystem activity. More on that in the next section. Here I’ll just say <a href="/2024/01/29/antivirus-scanning-for-on-premises-s3.html">I blogged</a> about AV scanning and getting an up-to-date list of objects required external services (Elasticsearch, Kafka, etc).</p>
+<p>For anti-ransomware and anti-virus, we could run a scanner, but we could also build own detection of suspicious file-system activity. More on that in the next section. Here I’ll just say <a href="/2024/01/29/antivirus-scanning-for-on-premises-s3.html">I blogged</a> about AV scanning and getting an up-to-date list of objects required external services (Elasticsearch, Kafka, etc).</p>
 
 <p>Supported FS events are: flush, close, trunc, setattr, link-op, open-read, open-write, open-readwrite.</p>
 
@@ -350,10 +356,10 @@ zd2@third    19K      -  22.6M  -
 <ul>
   <li>Scans MD and stores file metadata into a database file</li>
   <li>BeeGFS Hive Index can be stored in-tree or out-of-tree (i.e. you can keep it on some NFS share or a non-BeeGFS FS on R10)</li>
-  <li>SQL qeueries can be issued against this DB. They’re much faster than doing the same thing against filesystem.</li>
+  <li>SQL qeueries can be issued against this DB. They’re much faster than doing the same thing against file-system.</li>
 </ul>
 
-<p>BeeGFS Hive database(s) are SQLite3 databases and index path and other details are configured in /etc/beegfs/index/config. For example, my BeeGFS filesystem has just one directory (/mnt/beegfs/archive) and accordingly there are only 2 databases (one for “root” and another for the archive directory).</p>
+<p>BeeGFS Hive database(s) are SQLite3 databases and index path and other details are configured in /etc/beegfs/index/config. For example, my BeeGFS file-system has just one directory (/mnt/beegfs/archive) and accordingly there are only 2 databases (one for “root” and another for the archive directory).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-laR</span> /work/index
 /work/index:
@@ -402,7 +408,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
 <p>BeeGFS version 8 contains some great improvements that I haven’t even covered in this blog post. Some other features, added in recent years, have been integrated and improved, and yet others (monitoring) practically resurrected due to the appearance of InfluxDB 3 OSS.</p>
 
-<p>BeeGFS Watch (filesystem event monitoring) and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS namespaces are fully open to integrations <em>across locations and storage environments</em>:</p>
+<p>BeeGFS Watch (file-system event monitoring) and Hive Index are very relevant in the world of AI and analytics, so I gave more space to these features. From the examples you can see there are multiple ways to process new data using these two features. Support for out-of-tree indexes, an open DB format and RST means BeeGFS name spaces are fully open to integrations <em>across file-systems, locations and storage environments</em>:</p>
 
 <ul>
   <li>place indexes on non-BeeGFS filesystems or NFS shares</li>
@@ -438,15 +444,15 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
       <h3>Related Posts</h3>
       <ul>
       
+        <li><a href="/2022/09/24/low-hanging-storage-efficiency-fruit-beegfs.html">Low-hanging BeeGFS efficiency fruit</a></li>
+      
         <li><a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">Postgres, pgvector, E-Series and Instaclustr</a></li>
       
+        <li><a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">ZFS deduplication with NetApp E-Series</a></li>
+      
+        <li><a href="/2022/07/05/kafka-solidfire-efficiency.html">Storage efficiency with Kafka 3.2 and NetApp SolidFire 12</a></li>
+      
         <li><a href="/2024/04/11/netapp-eseries-containerized-beegfs-nfs-s3-all-in-one.html">NetApp E-Series with containerized BeeGFS, NFS, S3</a></li>
-      
-        <li><a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">Snapshots and ILM with Elasticsearch 8</a></li>
-      
-        <li><a href="/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html">FSCrawler for basic filesystem analytics in Elasticsearch</a></li>
-      
-        <li><a href="/2023/11/22/genai-with-netapp-solidfire.html">NetApp SolidFire with GenAI and inferencing workloads</a></li>
       
       </ul>
     </div>
@@ -454,7 +460,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 03:51 </p>
+    <p>2025-05-18 04:16 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
