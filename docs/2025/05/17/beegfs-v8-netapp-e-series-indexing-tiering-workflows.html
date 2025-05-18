@@ -129,7 +129,7 @@
 
   
   
-    24 minute read
+    25 minute read
   
 
     </span>
@@ -145,6 +145,7 @@
       <li><a href="#cognitive-overhead-of-zfs">Cognitive overhead of ZFS</a></li>
     </ul>
   </li>
+  <li><a href="#beegfs-copy-tool">BeeGFS copy tool</a></li>
   <li><a href="#remote-storage">Remote storage</a></li>
   <li><a href="#file-system-events">File-system events</a></li>
   <li><a href="#file-index">File index</a></li>
@@ -368,6 +369,22 @@ zd2@third    19K      -  22.6M  -
 
 <p>Unless you want to spend some time figuring all this out, it’s best to enable compression on Tier 2 and Tier 3, and enable deduplication only if justified. If you want to prototype on a small scale BeeGFS cluster, consider using VMs on <a href="/2023/12/02/containerized-beegfs-with-netapp-eseries.html">ESXi</a> or KVM (it’s much easier than containers!).</p>
 
+<h2 id="beegfs-copy-tool">BeeGFS copy tool</h2>
+
+<p>Earlier I’ve mentioned BeeOND and the ability to resync-on-demand with <code class="language-plaintext highlighter-rouge">beegfs copy</code>. The command works on regular BeeGFS as well.</p>
+
+<p>Let’s say we build a smaller, temporary system for job processing and our job needs data from <code class="language-plaintext highlighter-rouge">inbound</code> and <code class="language-plaintext highlighter-rouge">logs</code> to this new file-system. Our machine file has a list of BeeGFS cluster members we’ll use. A total of 32 threads will copy files in 4 MB chunks. You may set up passwordless SSH among the machines involved in copying if you don’t want to authenticate in console.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># start beeond on machinese in beeond-file.txt, use /zd3 on each, and mount filesystem at /mnt/beeond</span>
+beeond start <span class="nt">-n</span> /mnt/beegfs/config/beeond-file.txt <span class="nt">-d</span> /zd3-c /mnt/beeond
+<span class="c"># copy two source directories to /mnt/beeond</span>
+beegfs copy <span class="nt">-m</span> /mnt/beegfs/config/machine-file.txt /mnt/beegfs1/archive/inbound /mnt/beegfs2/archive/logs /mnt/beeond <span class="nt">-t</span> 32 <span class="nt">-c</span> 4
+</code></pre></div></div>
+
+<p>Source (and especially target) directories shouldn’t be modified during copying, but as we said at 10 GB/s it’d take only 90 seconds to copy 1TB of data, so in many cases it will happen in a minutes at most - usually a fraction of the time required to run compute jobs.</p>
+
+<p>Since our sources above come from /mnt/beegfs1/archive/, one has to wonder: could we use <code class="language-plaintext highlighter-rouge">beegfs copy</code>to copy data from a deduplicated archive to BeeOND? Or should we use <code class="language-plaintext highlighter-rouge">entry migrate</code>? Or work directly on Tier 2? I guess “it depends”, but <code class="language-plaintext highlighter-rouge">beegfs copy</code> could often be the right answer. If your data set is too large to copy (not enough destination capacity or time), then copying is out of question, but it usually won’t be. You could also copy from a deduplicated pool to Tier 1 on the same BeeGFS filesystem, of course.</p>
+
 <h2 id="remote-storage">Remote storage</h2>
 
 <p>This feature allows us to define Remote Storage Targets (RSTs) which are generally S3 buckets.</p>
@@ -554,7 +571,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 23:05 </p>
+    <p>2025-05-18 23:37 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
