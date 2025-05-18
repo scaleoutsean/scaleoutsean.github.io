@@ -129,7 +129,7 @@
 
   
   
-    17 minute read
+    23 minute read
   
 
     </span>
@@ -140,11 +140,9 @@
   <li><a href="#data-tiering-with-pools">Data tiering with pools</a></li>
   <li><a href="#zfs">ZFS</a>
     <ul>
-      <li><a href="#beegfs-snapshots">BeeGFS snapshots</a>
-        <ul>
-          <li><a href="#cognitive-overhead-of-snapshots">Cognitive overhead of snapshots</a></li>
-        </ul>
-      </li>
+      <li><a href="#beegfs-snapshots">BeeGFS snapshots</a></li>
+      <li><a href="#role-of-snapshots">Role of snapshots</a></li>
+      <li><a href="#cognitive-overhead-of-zfs">Cognitive overhead of ZFS</a></li>
     </ul>
   </li>
   <li><a href="#remote-storage">Remote storage</a></li>
@@ -298,19 +296,73 @@ zd2@third    19K      -  22.6M  -
 
 <p>Note that stopping services in order to snapshot and/or rollback snapshots may have unpredictable consequences, e.g. on Hive indexes and file-system notifications. Some of these potential issues aren’t even necessarily related to snapshots (e.g. some notifications may fail to be delivered).</p>
 
-<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike in regular stand-alone ZFS pools, here each metadata and storage target are stand-alone practically “R0-style” zpools and at the same time mutually dependent because they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
+<p>If these compromises and risks are acceptable, ZFS replication can also be used once we have snapshots to work with. Note that - unlike in regular stand-alone ZFS pools, here each metadata and storage target are stand-alone, practically “single disk” zpools and at the same time mutually dependent because they need to be “re-assembled” and imported into a BeeGFS cluster on destination BeeGFS cluster. Because that’s not trivial and because I don’t think many people would want to do this, I won’t attempt to do that in this post.</p>
 
-<h4 id="cognitive-overhead-of-snapshots">Cognitive overhead of snapshots</h4>
-
-<p>As an aside and something that I may revisit in a future post: recently, I’ve been thinking about the applicability of snapshots to modern data services. Assuming one can rollback a snapshot of metadata and data targets as well as any index, vector and other databases, that would seem useful only in limited and isolated cases such as small scale prototyping. Any data that has been fed or “propagated” to other systems is “spilled milk”.</p>
-
-<p>It may be useful to restore a mistakenly deleted file or directory, but potentially at the cost of losing updates or new files created since the time of snapshot creation. In rare cases it may be possible to take a pre-recovery snapshot and use that to update a restored snapshot, but as I’ve mentioned earlier - is that really practical on large file-systems?</p>
+<h3 id="role-of-snapshots">Role of snapshots</h3>
 
 <p>How many administrators are capable of understanding what rolling back a snapshot on a 10 PB file-system means and how that impacts various Hive indexes, external databases and downstream data consumers?</p>
 
-<p>If I needed to design a snapshottable BeeGFS file-system attached to E-Series, I’d create a file-system out of single-array LUNs so that I can take (and restore) snapshots using SANtricty Consistency Groups. In that way, snapshots of small (few TB) to medium sized (hundred TB) file-systems could be created regardless of file-system type on data targets. They would be limited by the performance of single E-Series array, but given their size and nature (prototyping, etc.), that could suffice for most basic rollbacks.</p>
+<p>My guess would be: not many. In very insular, “data island” style environments with one or two applications it may be possible to understand what’s going on. In an environment with many applications or where events and data cross cluster boundaries, it may not. If you roll a snapshot here, what happens to data that left the cluster but has been rolled back on your own cluster?</p>
 
-<p>Periodic BeeGFS sync to S3 with S3 versioning may sometimes be a better choice: there’s no need for file-system and storage administrator intervention, and all uploaded versions are accessible to the user. (BeeGFS sync in v8.0 doesn’t have the ability to use object versions, but if they bucket has them enabled, they should be available.)</p>
+<p>If I needed to design a snapshottable BeeGFS file-system attached to E-Series, I’d create a file-system from single array LUNs, so that I can take (and restore) snapshots using SANtricty Consistency Groups. In that way, snapshots of small (few TB) to medium sized (up to a few hundred TB) file-systems could be created regardless of file-system type on data targets. They would be limited by the performance of single E-Series array, but given their size and nature (prototyping, etc.), that could suffice for most basic rollbacks.</p>
+
+<p>BeeGFS snapshots can be useful, but like SANtricity snapshots, they’re unlikely to be viable cluster-wide. If you have the need for snapshots, consider one of these workarounds:</p>
+
+<ul>
+  <li>Create smaller BeeGFS filesystems which can be taken offline and snapshot. As long as the restart cycles can be done faster than copying or rsync-ing data from a golden copy, this can be a good approach.</li>
+  <li>Create temporary file-systems for experimentation and prototyping and copy data to those with BeeGFS copy (see <a href="https://doc.beegfs.io/latest/advanced_topics/beeond.html">BeeOND</a>). These can be made of R0 disks for lowest cost and highest performance. Although copying is inefficient, in a fast environment copying 5 or 10 TBs can take just several minutes. Even if done 10 times a day, it’s only 30 minutes of copying.</li>
+  <li>Periodic BeeGFS sync to S3 with S3 versioning may sometimes be a better choice: there’s no need for file-system and storage administrator intervention, and all uploaded versions are accessible to the user. (BeeGFS sync in v8.0 doesn’t have the ability to use object versions, but if they bucket has them enabled, they should be available.)</li>
+  <li>If rapid prototyping can be done better on a non-BeeGFS ZFS (or non-ZFS) NAS system in the same environment, NFS and ZFS can be HA-clustered with Pacemaker and Corosync (note: the NetApp BeeGFS solution with E-Series also uses Pacemaker and Corosync for HA of BeeGFS server pairs) to give you ZFS features in a compact environment that’s easier to manage.</li>
+</ul>
+
+<h3 id="cognitive-overhead-of-zfs">Cognitive overhead of ZFS</h3>
+
+<p>I say this only half-jokingly because unlike the default storage and file-system configuration in the NetApp BeeGFS solution for E-Series, ZFS isn’t trivial to get right, especially if deduplication is enabled.</p>
+
+<p>I won’t deep-dive into this since my first-hand experience isn’t deep enough, but you can find about it on the Internet. Some notes:</p>
+
+<ul>
+  <li>Deduplication
+    <ul>
+      <li>Deduplication complicates things a lot, so don’t even try unless you have plenty (2/3 or more) duplicate data.</li>
+      <li>Deduplication needs a lot of RAM (anywhere between 0.5-2 % of usable “dedupe pool” (sum of storage targets) capacity), so a dedupe pool with 1PB usable may need ~10TB of RAM (which, spread over several servers may cost more in extra software, servers, and RAM than deduplication can save).</li>
+      <li>Deduplication tables require lots of tiny reads and writes. That means that in the cluster depicted at the top we’d want to use special deduplication vdevs on the leftmost E-Series used for metadata. To physically segregate dedupe tables from regular MD disks used for BeeGFS, consider using dedicated R10 devices for that. That could still cause some interference on the controller level depending on situation (workload).</li>
+      <li>Because deduplication overheads are so significant, tiering data back and forth should be minimized. If unsure, implement 3 pools (Tier 1 with no dedupe, Tier 2 with compression, Tier 3 with compression and dedupe, for example).</li>
+      <li>Deduplication effectiveness with BeeGFS on ZFS will be lower than deduplication on individual ZFS systems because many duplicate blocks may land each on a different ZFS target, resulting in less (or no) deduplication.</li>
+      <li>Deduplication cannot be disabled without destroying a pool, so don’t enable it without testing and making sure it’s worth the trouble and extra resources.</li>
+    </ul>
+  </li>
+  <li>Compression
+    <ul>
+      <li>Compression is easy. Test some or all of the available algorithms and pick one for each filesystem (or device, if you are willing to break filesystem into several archive pools)</li>
+      <li>CPU is the main concern here. Don’t use ridiculous GZIP compression levels for data that doesn’t compress well, for example.</li>
+    </ul>
+  </li>
+  <li>E-Series-related notes
+    <ul>
+      <li>ZIL - intent log which must be protected - LUNs should be created on a R10 group based on NVMe SSDs</li>
+      <li>L2ARC (“L2” read cache) - I suspect we mostly don’t need it too large for truly archived data. I think we’d want to have one device per one NL-SAS LUN, so that a Tier 3 pool has N L2ARC (~5% of storage capacity) and N storage vdevs. For example, a 1PB Tier 3 pool could have 16 x 64 TB NL-SAS storage vdevs and 16 x 3.2 TB SSDs (R0 or R10 on E-Series TLC). If archive data is expected to be slow or access to data is very random, you don’t need almost any L2ARC for it (we may want to allocate ~1% for metadata read cache, though).</li>
+      <li>Special dedupe vdev - as mentioned earlier, R10 (2, 4, 8 NVMe SSDs for example) can be sliced into N LUNs for N stand-alone ZFS targets. Capacity requirement can be cut by using larger record sizes in ZFS</li>
+      <li>BeeGFS metadata - several LUNs on R10 group of NVMe SSDs as a RAID group completely separate from ZFS-related special vdevs. Note that in an all-ZFS BeeGFS these would still be used for ZFS, but as single-device zpools (1 LUN = 1 metadata target). Or we could use ext4 for MD targets and avoid ZFS on these LUNs.</li>
+      <li>EF600 (NVMe) can provide ~1 million 4kB IOPS. Not knowing the precise breakdown between each use case for R10 LUNs makes the option of using a single big R10 group for everything interesting, but I’d consider this only if I could populate EF600 with at least 20 disks, to max out IOPS</li>
+      <li>For “all in one” R10 group consider underprivisioning NVMe LUN capacity by 30% (i.e. leave &gt;=30% of usable unused) to leave space for garbage collection and accommodate &gt;3 DWPD. I’ve blogged about DWPD before, so I won’t repeat that. E-Series documentation refers to this as under-provisioning (of LUN capacity). I call it over-provisioning (of raw disk capacity, related to used LUN capacity).</li>
+    </ul>
+  </li>
+</ul>
+
+<p>To illustrate these comments about E-Series: after requirements analysis and storage design, the leftmost array (MD) might look like this:</p>
+
+<p><img src="/assets/images/beegfs-8-e-series-ssd.png" alt="E-Series device and LUN layout" /></p>
+
+<p>But if we weren’t sure, we could just build a 24-wide R10. If lucky, we’d have enough IOPS and bandwidth for everything without squeezing any particular workload. If unlucky, one or two particularly busy types of storage targets could slow down the rest.</p>
+
+<p>Using those flash storage-based LUNs on the first E-Series array and R6-based NL-SAS or SSD devices on other arrays, we’d assemble larger BeeGFS file-systems. For the sake of simplicity, this image shows a single-tier BeeGFS-on-ZFS filesystem that has metadata on a R10 LUN and data spread across four ZFS pools - each single storage dev pool with its own ZIL, L2ARC, Dedupe devices.</p>
+
+<p><img src="/assets/images/beegfs-8-e-series-ssd.png" alt="BeeGFS, ZFS and E-Series SSD layout" /></p>
+
+<p>This isn’t a recipe, but a starting point for further investigation. Because of large discrepancies in “real life” data and the many options in the entire stack, actual “optimal” configuration would probably differ from cases to case (but hopefully within an order of magnitude).</p>
+
+<p>Unless you want to spend some time figuring all this out, it’s best to enable compression on Tier 2 and Tier 3, and enable deduplication only if justified. If you want to prototype on a small scale BeeGFS cluster, consider using VMs on <a href="/2023/12/02/containerized-beegfs-with-netapp-eseries.html">ESXi</a> or KVM (it’s much easier than containers!).</p>
 
 <h2 id="remote-storage">Remote storage</h2>
 
@@ -498,7 +550,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 15:03 </p>
+    <p>2025-05-18 22:50 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
