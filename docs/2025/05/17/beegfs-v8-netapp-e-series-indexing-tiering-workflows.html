@@ -129,7 +129,7 @@
 
   
   
-    26 minute read
+    27 minute read
   
 
     </span>
@@ -351,7 +351,7 @@ zd2@third    19K      -  22.6M  -
   </li>
 </ul>
 
-<p>To illustrate these comments about E-Series: after requirements analysis and storage design, the leftmost array (MD) might look like this:</p>
+<p>To illustrate these comments about E-Series: after requirements analysis and storage design, the leftmost array (MD) might look like this: LUNs easier to size can be on smaller R1(0) disk groups while those with uncertain sizing or capacity requirements could be pooled on a larger R10 group.</p>
 
 <p><img src="/assets/images/beegfs-8-e-series-ssd.png" alt="E-Series device and LUN layout" /></p>
 
@@ -359,11 +359,13 @@ zd2@third    19K      -  22.6M  -
 
 <p>Among the bad scenarios, one or two particularly busy SSD storage targets (e.g. dedupe vdev(s)) could slow down the other SSD-based LUNs and you’d be in trouble.</p>
 
-<p>Using those flash storage-based LUNs on the first E-Series array and R6-based NL-SAS or SSD devices on other arrays, we’d assemble larger BeeGFS file-systems. For the sake of simplicity, this image shows a single-tier BeeGFS-on-ZFS filesystem that has metadata on a R10 LUN and data spread across four ZFS pools - each single storage dev pool with its own ZIL, L2ARC, Dedupe devices.</p>
+<p>Using those flash storage-based LUNs on the first E-Series array and R6-based NL-SAS or SSD devices on other arrays, we’d assemble larger BeeGFS file-systems.</p>
+
+<p>For the sake of simplicity, this image shows a single-tier BeeGFS-on-ZFS filesystem that has metadata on a R10 LUN and data spread across four ZFS pools - each single storage dev pool with its own ZIL, L2ARC, Dedupe devices.</p>
 
 <p><img src="/assets/images/beegfs-8-e-series-on-zfs.png" alt="BeeGFS, ZFS and E-Series SSD layout" /></p>
 
-<p>This isn’t a recipe, but a starting point for further investigation.</p>
+<p>This isn’t a recipe, but a starting point for further investigation. (In the easy “all in one” scenario this could be an entire BeeGFS cluster on a single EF600 Hybrid array.)</p>
 
 <p>Because of large discrepancies in “real life” data and the many options throughout the entire stack (BeeGFS, ZFS, OS, storage), actual “optimal” configuration would probably differ from cases to case (but hopefully within an order of magnitude).</p>
 
@@ -393,7 +395,20 @@ beegfs copy <span class="nt">-m</span> /mnt/beegfs/config/machine-file.txt <span
 
 <p>If you plan to run multiple jobs on same source data, use beegfs copy to re-sync instead of starting over. One use case for this would be data cleansing or ETL prototyping. At the end of a successful run, we could use <code class="language-plaintext highlighter-rouge">beegfs copy</code> to copy data to the “main” BeeGFS file-system before deleting the temporary filesystem.</p>
 
-<p>Since our sources above come from /mnt/beegfs1/archive/, one has to wonder: could we use <code class="language-plaintext highlighter-rouge">beegfs copy</code>to copy data from a deduplicated archive to BeeOND? Or should we use <code class="language-plaintext highlighter-rouge">entry migrate</code>? Or work directly on Tier 2? I guess “it depends”, but <code class="language-plaintext highlighter-rouge">beegfs copy</code> could often be the right answer. If your data set is too large to copy (not enough destination capacity or time), then copying is out of question, but it usually won’t be. You could also copy from a deduplicated pool to Tier 1 on the same BeeGFS filesystem, of course.</p>
+<p>Since our sources above come from /mnt/beegfs1/archive/, one has to wonder: could we use <code class="language-plaintext highlighter-rouge">beegfs copy</code>to copy data from a deduplicated archive to BeeOND? Or should we use <code class="language-plaintext highlighter-rouge">beegfs entry migrate</code> and work on Tier 1 (without <code class="language-plaintext highlighter-rouge">beeond</code>)? Or work directly on Tier 2 (also without <code class="language-plaintext highlighter-rouge">beeond</code>)?</p>
+
+<p>As almost always, “it depends”. But <code class="language-plaintext highlighter-rouge">beegfs copy</code> (with or without <code class="language-plaintext highlighter-rouge">beeond</code>) should often be the right answer. If data sets are too large to copy (not enough destination capacity or time to copy) then copying is out of question, but it usually won’t be. You could also copy from a deduplicated pool to Tier 1 on the same BeeGFS file-system (rather than to a new temporary file-system), of course.</p>
+
+<p>This 90 second animation shows the entire process from this and previous section:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">beeond start|stop</code> (previous section) - create and destroy a temporary BeeGFS file-system</li>
+  <li><code class="language-plaintext highlighter-rouge">beegfs copy</code> - copy data from “main” BeeGFS file-system to temporary file-system for processing</li>
+</ul>
+
+<p><img src="/assets/images/beegfs-beeond-setup-teardown.gif" alt="Beeond and beegfs copy animated demo" /></p>
+
+<p>Beeond doesn’t <em>have to</em> use shared storage. Compute nodes with fast internal media could use <code class="language-plaintext highlighter-rouge">beeond</code> to copy inputs to fast local storage for faster or lower-latency access. Whether <code class="language-plaintext highlighter-rouge">beeond</code> uses shared or local storage, <code class="language-plaintext highlighter-rouge">beegfs copy</code> is the recommended way to copy data from one BeeGFS filesystem to another.</p>
 
 <h2 id="remote-storage">Remote storage</h2>
 
@@ -581,7 +596,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 23:54 </p>
+    <p>2025-05-19 03:39 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
