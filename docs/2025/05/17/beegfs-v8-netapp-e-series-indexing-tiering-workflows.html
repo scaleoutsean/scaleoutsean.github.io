@@ -129,7 +129,7 @@
 
   
   
-    23 minute read
+    24 minute read
   
 
     </span>
@@ -253,7 +253,7 @@ PATH                        ENTRY_ID      TYPE  META_NODE  META_MIRROR   STORAGE
 <p>Back to the screnshot:</p>
 
 <ul>
-  <li>I used Ubuntu 24.04 with self-built ZFS 2.3.0 which is the version with smart(er) deduplication (I blogged about it with E-Series before it was released, so I won’t repeat any of that)</li>
+  <li>I used Ubuntu 24.04 with self-built OpenZFS 2.3.0 which is the version with smart(er) deduplication (I blogged about it with E-Series before it was released, so I won’t repeat any of that)</li>
   <li><code class="language-plaintext highlighter-rouge">storage_pool_default</code> pool: as this is my Tier 1 I have no compression, no dedupe set</li>
   <li><code class="language-plaintext highlighter-rouge">archive</code> pool: this is Tier 2 and both compression and dedupe are enabled</li>
 </ul>
@@ -335,7 +335,7 @@ zd2@third    19K      -  22.6M  -
   <li>Compression
     <ul>
       <li>Compression is easy. Test some or all of the available algorithms and pick one for each filesystem (or device, if you are willing to break filesystem into several archive pools)</li>
-      <li>CPU is the main concern here. Don’t use ridiculous GZIP compression levels for data that doesn’t compress well, for example.</li>
+      <li>CPU is the main concern here. Don’t use ridiculous GZIP compression levels for data that doesn’t compress well, for example. Data is either compressible or not. Use lowest levels of LZ4 or ZSDT for starters, or get some sample data to pick an optimal algo and setting.</li>
     </ul>
   </li>
   <li>E-Series-related notes
@@ -354,13 +354,17 @@ zd2@third    19K      -  22.6M  -
 
 <p><img src="/assets/images/beegfs-8-e-series-ssd.png" alt="E-Series device and LUN layout" /></p>
 
-<p>But if we weren’t sure, we could just build a 24-wide R10. If lucky, we’d have enough IOPS and bandwidth for everything without squeezing any particular workload. If unlucky, one or two particularly busy types of storage targets could slow down the rest.</p>
+<p>But if we weren’t sure, we could just build a 24-wide R10. If lucky, we’d have enough IOPS and bandwidth for everything without squeezing any particular workload - it would be Kumbaya all day long. Another easy scenario is a simple low-cost, low-performance data dump area where we could use a single EF600 Hybrid (controller shelf full of NVMe flash in R10, expansion shelves with NL-SAS) and it’d all just work: 2.7 PB in NL-SAS (post RAID6) could be helped by 135 TB (5%) in R10 capacity for BeeGFS metadata and special ZFS disks. Need 10 PB? Add three more “pods”.</p>
+
+<p>Among the bad scenarios, one or two particularly busy SSD storage targets (e.g. dedupe vdev(s)) could slow down the other SSD-based LUNs and you’d be in trouble.</p>
 
 <p>Using those flash storage-based LUNs on the first E-Series array and R6-based NL-SAS or SSD devices on other arrays, we’d assemble larger BeeGFS file-systems. For the sake of simplicity, this image shows a single-tier BeeGFS-on-ZFS filesystem that has metadata on a R10 LUN and data spread across four ZFS pools - each single storage dev pool with its own ZIL, L2ARC, Dedupe devices.</p>
 
-<p><img src="/assets/images/beegfs-8-e-series-ssd.png" alt="BeeGFS, ZFS and E-Series SSD layout" /></p>
+<p><img src="/assets/images/beegfs-8-e-series-on-zfs.png" alt="BeeGFS, ZFS and E-Series SSD layout" /></p>
 
-<p>This isn’t a recipe, but a starting point for further investigation. Because of large discrepancies in “real life” data and the many options in the entire stack, actual “optimal” configuration would probably differ from cases to case (but hopefully within an order of magnitude).</p>
+<p>This isn’t a recipe, but a starting point for further investigation.</p>
+
+<p>Because of large discrepancies in “real life” data and the many options throughout the entire stack (BeeGFS, ZFS, OS, storage), actual “optimal” configuration would probably differ from cases to case (but hopefully within an order of magnitude).</p>
 
 <p>Unless you want to spend some time figuring all this out, it’s best to enable compression on Tier 2 and Tier 3, and enable deduplication only if justified. If you want to prototype on a small scale BeeGFS cluster, consider using VMs on <a href="/2023/12/02/containerized-beegfs-with-netapp-eseries.html">ESXi</a> or KVM (it’s much easier than containers!).</p>
 
@@ -550,7 +554,7 @@ drwxrwxrwx 3 root root  4096 May 17 14:43 ..
 
     
   </div><footer class= "footer">
-    <p>2025-05-18 22:50 </p>
+    <p>2025-05-18 23:01 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
