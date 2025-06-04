@@ -151,6 +151,7 @@
       <li><a href="#example-s3-usage-reporting">Example: S3 usage reporting</a></li>
     </ul>
   </li>
+  <li><a href="#combined-file-and-object-shares">Combined file and object shares</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 
@@ -322,9 +323,16 @@ TOTAL: 2,048,000 files in 128 directories
 
 <p><img src="/assets/images/filesystem-analytics-ai-mcp-06-s3-service-performance-event-monitoring.png" alt="S3 service monitoring for projects" /></p>
 
-<p>For more “free form” data querying, we could simply put those CSV (or other) database files on S3 and let people query them with <a href="/2022/03/04/storagegrid-s3-select.html">S3 Select</a>. ONTAP S3 can’t do S3 SELECT, but StorageGRID can. Also, there are good flat file databases that can be queried directly from S3 without downloading them.</p>
+<p>For more “free form” data querying, we could simply put those CSV (or other) database files on S3 and let people query them with <a href="/2022/03/04/storagegrid-s3-select.html">S3 Select</a>. ONTAP S3 can’t provide S3 SELECT, but StorageGRID can. Also, there are good flat file databases that can be queried directly from S3 without downloading them. One simply queries a URL and it works!</p>
 
-<p>Finally, it’s time for the obligatory AI crap!</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_objects</span><span class="p">,</span> <span class="k">SUM</span><span class="p">(</span><span class="k">size</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_size_mb</span> 
+  <span class="k">FROM</span> <span class="n">objects</span> <span class="k">WHERE</span> <span class="k">key</span> <span class="k">LIKE</span> <span class="s1">'top_level_1/%'</span><span class="nv">"
+# total_objects = 480039
+# total_size_mb = 1940.2514181137085
+
+</span></code></pre></div></div>
+
+<p>And finally, it’s time for the obligatory AI crap!</p>
 
 <p>I’m not sure if that’s a thing - I wouldn’t use it since I already know how to query data and would prefer to just do it from shell scripts - but we have to assume maybe there are users who don’t deal with this stuff often and may want an easy way to find their way through all the various information. Enter MCP.</p>
 
@@ -363,6 +371,12 @@ TOTAL: 2,048,000 files in 128 directories
 
 <p>Similarly to the SMB approach above, once we work out a query we work out a way to make it parallel, multi-threaded or whatever it takes, and mid-sized buckets in low-risk environments can be handled with these DIY approaches.</p>
 
+<h2 id="combined-file-and-object-shares">Combined file and object shares</h2>
+
+<p>During above experimentation I realized that one of the customers could expose their SMB shares via multiple protocols (File/Object).</p>
+
+<p>The advantage of that - mentioned earlier - is that any migration, scanning or archiving can be performed via S3, making it possible to use generic, robust S3 clients and greatly simplify the problem. For example, a 300-lines long shell script that deals with file shares can be replaced by a 30 line script that deals with objects without losing, or perhaps while gaining robustness and performance.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>These recent challenges have been interesting and reminded me that “you’re not Google” post from more than a decade ago.</p>
@@ -379,6 +393,7 @@ TOTAL: 2,048,000 files in 128 directories
 
 <p>Using simple object list commands - when it’s feasible, as it was in this case - plus some modern scripting tools works very well with both StorageGRID and ONTAP S3 and means I can use it with either without any modifications.</p>
 
+<p>Lastly, for very high file count or high data volume environments, BeeGFS with E-Series has very good scanning and reporting features built-in. I blogged about them <a href="/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html">here</a> and <a href="/2025/05/23/beegfs-data-pipeline.html">here</a>.</p>
 
       </article>
     </div>
@@ -424,7 +439,7 @@ TOTAL: 2,048,000 files in 128 directories
 
     
   </div><footer class= "footer">
-    <p>2025-06-05 02:57 </p>
+    <p>2025-06-05 03:16 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
