@@ -60,7 +60,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-01-24T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"InfluxDB 3 Core is out for early testing","@type":"BlogPosting","headline":"InfluxDB 3 Core Alpha available for testing","dateModified":"2025-01-24T00:00:00+08:00","datePublished":"2025-01-24T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/01/24/influxdb-3-core-alpha.html"},"url":"https://scaleoutsean.github.io/2025/01/24/influxdb-3-core-alpha.html","@context":"https://schema.org"}</script>
+{"mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/01/24/influxdb-3-core-alpha.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"InfluxDB 3 Core is out for early testing","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/01/24/influxdb-3-core-alpha.html","headline":"InfluxDB 3 Core Alpha available for testing","dateModified":"2025-01-24T00:00:00+08:00","datePublished":"2025-01-24T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +128,7 @@
 
   
   
-    13 minute read
+    14 minute read
   
 
     </span>
@@ -140,7 +140,8 @@
   <li><a href="#evaluate-with-e-series-performance-analyzer">Evaluate with E-Series Performance Analyzer</a></li>
   <li><a href="#other-details">Other details</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
-  <li><a href="#appendix-a---example">Appendix A - Example</a></li>
+  <li><a href="#appendix-a-example">Appendix A: Example</a></li>
+  <li><a href="#appendix-b-admin-token-reset">Appendix B: Admin token reset</a></li>
   <li><a href="#update-202504">Update (2025/04)</a></li>
 </ul>
 
@@ -251,26 +252,28 @@ Options:
 
 <p>EPA and SFC users may be able to switch to InfluxDB 3 early because EPA and SFC are almost trivial workloads and backward compatibility has been preserved. InfluxDB 3 could be ready for casual production with EPA or SFC in just 2-3 months.</p>
 
-<h2 id="appendix-a---example">Appendix A - Example</h2>
+<h2 id="appendix-a-example">Appendix A: Example</h2>
 
 <p>So, I didn’t get access to anything, but I did find some old JSON files from E-Series API, and then I used the EPA collector code to remind myself what the heck I’m supposed to do…</p>
 
-<p>First - continuing from <code class="language-plaintext highlighter-rouge">show databases</code> above - you can export main key variables to save typing time. Note the API token is the other API token, not the first one that InfluxDB spits out when started.</p>
+<p>First - continuing from <code class="language-plaintext highlighter-rouge">show databases</code> above - you can export main key variables to save typing time. Note the API token is the other API token, not the first one that InfluxDB spits out when started. (Note: this host runs HTTP!)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">INFLUXDB3_DATABASE_NAME</span><span class="o">=</span><span class="s1">'epa'</span>
 <span class="nb">export </span><span class="nv">INFLUXDB3_HOST_URL</span><span class="o">=</span>http://127.0.0.1:8181
 <span class="nb">export </span><span class="nv">INFLUXDB3_AUTH_TOKEN</span><span class="o">=</span>apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ
+<span class="c"># landmine alert - you may use http as per above (that's the "default"), but I set https for myself</span>
+
 </code></pre></div></div>
 
 <p>Then there are problems, such as, the “simple” getting started guide quickly gets you in trouble, because InfluxDB 3 defaults to http (as you can see from the link above), but its new Python library does not.</p>
 
 <p>To work around that you’d have to restart InfluxDB with them “advanced options”. And there’s dozens of them.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>influxdb3 serve <span class="nt">-h</span> | <span class="nb">grep</span> <span class="s1">'      --'</span> | <span class="nb">wc</span> <span class="nt">-l</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>influxdb3 serve <span class="nt">-h</span> | <span class="nb">wc</span> <span class="nt">-l</span>
 64
 </code></pre></div></div>
 
-<p>Hard pass!</p>
+<p>64 lines? Hard pass!</p>
 
 <p>Next, since their <a href="https://github.com/InfluxCommunity/influxdb3-python">Python thing</a> can’t work with HTTP, I had to use a two-step workaround:</p>
 <ul>
@@ -351,6 +354,7 @@ Options:
     <span class="nv">tray_id_1_power</span><span class="o">=</span>350,
     <span class="nv">tray_id_2_power</span><span class="o">=</span>350,
     <span class="nv">total_system_power</span><span class="o">=</span>1112
+
 </code></pre></div></div>
 
 <p>With that:</p>
@@ -366,12 +370,22 @@ Options:
 success
 </code></pre></div></div>
 
+<p>You may need extra options if the stuff’s missing from environment variables, etc. This also works</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">echo</span> <span class="s1">'power,sys_id=array_blah,sys_name=wwn_something tray_id_0_power=412,tray_id_1_power=350,tray_id_2_power=350,total_system_power=1112'</span> <span class="se">\</span>
+<span class="o">&gt;</span> server_data.txt 
+
+<span class="nv">$ </span><span class="nb">cat </span>server_data.txt | influxdb3 write <span class="nt">--database</span> <span class="s1">'epa'</span>
+success
+</code></pre></div></div>
+
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>influxdb3 query <span class="nt">--database</span><span class="o">=</span>epa <span class="s2">"SELECT * FROM power"</span>
 +------------+---------------+-------------------------------+--------------------+-----------------+-----------------+-----------------+
 | sys_id     | sys_name      | <span class="nb">time</span>                          | total_system_power | tray_id_0_power | tray_id_1_power | tray_id_2_power |
 +------------+---------------+-------------------------------+--------------------+-----------------+-----------------+-----------------+
 | array_blah | wwn_something | 2025-01-24T17:41:02.042586723 | 1112.0             | 412.0           | 350.0           | 350.0           |
 +------------+---------------+-------------------------------+--------------------+-----------------+-----------------+-----------------+
+
 </code></pre></div></div>
 
 <p>We can do that ourselves with <code class="language-plaintext highlighter-rouge">curl</code> or Python <code class="language-plaintext highlighter-rouge">requests</code> and it’s the same way it’s done in SFC (EPA uses Python Influx v1 library, that’s how it was when I forked it).</p>
@@ -382,16 +396,18 @@ success
   <p>InfluxDB 3 Core provides the /write and /api/v2/write endpoints for backward compatibility with clients that can write data to previous versions of InfluxDB.</p>
 </blockquote>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-v</span> <span class="nt">-XPOST</span> <span class="s2">"localhost:8181/api/v3/write_lp?db=epa&amp;precision=auto&amp;accept_partial=false"</span> <span class="se">\</span>
-    <span class="nt">--data-raw</span> <span class="s2">"power,sys_id=array_blah,sys_name=wwn_something tray_id_0_power=390,tray_id_1_power=300,tray_id_2_power=300,total_system_power=990"</span> <span class="se">\</span>
-    <span class="nt">--Header</span> <span class="s2">"Authorization: Bearer apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ"</span>
-</code></pre></div></div>
+<p>Again, be careful about your authorization header and HTTP vs HTTPS. And we’re writing to the DB called <code class="language-plaintext highlighter-rouge">epa</code> (in the URL).</p>
 
-<p>This header thing is a token you get when you start InfluxDB 3 Core. I assume there’s a way to generate multiple tokens for multiple users, but I don’t care about this because in my EPA and SFC approach it’s “one array, one database” specifically to avoid having to deal with user management.</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-vk</span> <span class="nt">-X</span> POST <span class="se">\</span>
+  <span class="nt">-data-raw</span> <span class="s2">"power,sys_id=array_blah,sys_name=wwn_something tray_id_0_power=390,tray_id_1_power=300,tray_id_2_power=300,total_system_power=990"</span> <span class="se">\</span>
+  <span class="nt">--Header</span> <span class="s2">"Authorization: Bearer apiv3_OvwR_DVe6P_j-pH8azw6PzTxpn5aYsLK8J4_cKammUrjO4ENGzAEAsBRdJnewMs-mN4RdL7k9A2ap9jSQXmGzQ"</span> <span class="se">\</span>
+  <span class="s2">"https://localhost:8181/api/v3/write_lp?db=epa&amp;precision=auto&amp;accept_partial=false"</span>
+
+</code></pre></div></div>
 
 <p>If you consolidate databases in one InfluxDB server, please read the InfluxDB docs and modify the code that affects DB instantiation (or remove it and handle instantiation, user and token management externally).</p>
 
-<p>The second point is notice that I used <code class="language-plaintext highlighter-rouge">precision=auto</code>, because <code class="language-plaintext highlighter-rouge">influx3db</code> used <code class="language-plaintext highlighter-rouge">auto</code> as well. But EPA uses second-level precision - there’s nothing to gain from timestamping like this is a space-ship.</p>
+<p>The second point is notice that I used <code class="language-plaintext highlighter-rouge">precision=auto</code>, because <code class="language-plaintext highlighter-rouge">influx3db</code> used <code class="language-plaintext highlighter-rouge">auto</code> as well. But EPA uses second-level precision - there’s nothing to gain from timestamping like we’re instrumenting a rocket.</p>
 
 <p>After that, we see two records in the table named “power”:</p>
 
@@ -402,6 +418,7 @@ success
 | array_blah | wwn_something | 2025-01-24T18:11:04.150552050 | 990.0              | 390.0           | 300.0           | 300.0           |
 | array_blah | wwn_something | 2025-01-24T17:41:02.042586723 | 1112.0             | 412.0           | 350.0           | 350.0           |
 +------------+---------------+-------------------------------+--------------------+-----------------+-----------------+-----------------+
+
 </code></pre></div></div>
 
 <p>My conclusion is InfluxDB 3 Core meets my technical expectations (which is, I don’t have to do almost anything to use it, coming from InfluxDB v1).</p>
@@ -425,9 +442,25 @@ success
   <li>Extra MinIO container and basic documentation for convenient tiering to S3 from Day 1</li>
 </ul>
 
+<h2 id="appendix-b-admin-token-reset">Appendix B: Admin token reset</h2>
+
+<p>It’s stupid, but as of 3.1 there’s still no way to do that (issue <a href="https://github.com/influxdata/influxdb/issues/26330">here</a>).</p>
+
+<p>As per the above, my node ID is writer0, data is in the below folder, etc. To nuke it, I stop server and then:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">rm</span> <span class="nt">-rf</span> /home/sean/.influxdb/data/writer0/<span class="k">*</span>
+</code></pre></div></div>
+
+<p>Then I restart InfluxDB and - because I’m using TLS - I have to remember to specify <code class="language-plaintext highlighter-rouge">--host</code> either here or in environment variables.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>influxdb3 create token  <span class="nt">--admin</span> <span class="nt">--host</span> https://s146:8181 
+</code></pre></div></div>
+
+<p>Now I just save the token in <code class="language-plaintext highlighter-rouge">.bashrc</code> and <code class="language-plaintext highlighter-rouge">export INFLUXDB3_AUTH_TOKEN=$AUTH_TOKEN</code>, so that I don’t have to deal with this nonsense again.</p>
+
 <h2 id="update-202504">Update (2025/04)</h2>
 
-<p>InfluxDB 3 OSS has been released and now we can start looking into modifying E-Series Performance Analyzer and SolidFire Collector for it…</p>
+<p>InfluxDB 3 Core has been released and now we can start looking into modifying E-Series Performance Analyzer and SolidFire Collector for it…</p>
 
 <p>In line with SFC’s approach to security, I think TLS by default should be the only option. InfluxDB 3.0 Core added certificate related arguments, so we can try that out.</p>
 
@@ -438,6 +471,7 @@ success
   <span class="nt">--http-bind</span><span class="o">=</span><span class="s1">'s146:8181'</span> <span class="se">\</span>
   <span class="nt">--object-store</span> file <span class="nt">--data-dir</span> /home/sean/.influxdb/data <span class="se">\</span>
   <span class="nt">--tls-cert</span> /home/sean/.influxdb/certs/server.crt <span class="nt">--tls-key</span> /home/sean/.influxdb/certs/server.key
+
 </code></pre></div></div>
 
 <p>(In EPA and SFC I would use S3 and not filesystem to store InfluxDB data.)</p>
@@ -570,7 +604,7 @@ success
 
     
   </div><footer class= "footer">
-    <p>2025-06-07 18:21 </p>
+    <p>2025-06-08 02:53 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
