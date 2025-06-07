@@ -155,15 +155,15 @@
 
 <p>Well, today I was using a very “light” script and it <em>still</em> took a very long time. So I took a look.</p>
 
-<pre><code class="language-pwsh">$ pwsh
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pwsh
 PowerShell 7.4.6
 
    A new PowerShell stable release is available: v7.5.1 
    Upgrade now, or check out the release page at:       
-     https://aka.ms/PowerShell-Release?tag=v7.5.1       
+     https://aka.ms/PowerShell-Release?tag<span class="o">=</span>v7.5.1       
 
 Loading personal and system profiles took 15017ms.
-</code></pre>
+</code></pre></div></div>
 
 <p><img src="/assets/images/powershell-on-linux-env-vars-mess-slow-start.png" alt="15s to start PowerShell" /></p>
 
@@ -173,19 +173,19 @@ Loading personal and system profiles took 15017ms.
 
 <p>After some fiddling, it turned out it <em>was</em> Flatpak. Just not the way I thought.</p>
 
-<pre><code class="language-raw">Error reading or writing history file '/var/lib/flatpak/exports/share...'
-Access to the path '/var/lib/flatpak/exports/share:' is denied.
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Error reading or writing <span class="nb">history </span>file <span class="s1">'/var/lib/flatpak/exports/share...'</span>
+Access to the path <span class="s1">'/var/lib/flatpak/exports/share:'</span> is denied.
+</code></pre></div></div>
 
 <p>Flatpak is the new DNS!</p>
 
 <p>I thought my PowerShell was a Flatpak package, but it wasn’t. Then when exiting I also saw this.</p>
 
-<pre><code class="language-pwsh">This error will not be reported again in this session. Consider using a different path with:
-    Set-PSReadLineOption -HistorySavePath &lt;Path&gt;
-Or not saving history with:
-    Set-PSReadLineOption -HistorySaveStyle SaveNothing
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>This error will not be reported again <span class="k">in </span>this session. Consider using a different path with:
+    Set-PSReadLineOption <span class="nt">-HistorySavePath</span> &lt;Path&gt;
+Or not saving <span class="nb">history </span>with:
+    Set-PSReadLineOption <span class="nt">-HistorySaveStyle</span> SaveNothing
+</code></pre></div></div>
 
 <p>Oh, okay… So PowerShell was set to save history to some Flatpak location. Why would it do that?</p>
 
@@ -221,44 +221,44 @@ Error reading or writing <span class="nb">history </span>file
 
 <p>Then, like they said above, set it and forget it. PS creates the full path by itself, it appears.</p>
 
-<pre><code class="language-pwsh">$choice="SaveIncrementally" # or SaveNothing or SaveAtExit
-$path="/home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt"
-Set-PSReadLineOption -HistorySaveStyle $choice
-Set-PSReadLineOption -HistorySavePath $path
-$(Get-PSReadLineOption).HistorySavePath
-# /home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$choice</span><span class="o">=</span><span class="s2">"SaveIncrementally"</span> <span class="c"># or SaveNothing or SaveAtExit</span>
+<span class="nv">$path</span><span class="o">=</span><span class="s2">"/home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt"</span>
+Set-PSReadLineOption <span class="nt">-HistorySaveStyle</span> <span class="nv">$choice</span>
+Set-PSReadLineOption <span class="nt">-HistorySavePath</span> <span class="nv">$path</span>
+<span class="si">$(</span>Get-PSReadLineOption<span class="si">)</span>.HistorySavePath
+<span class="c"># /home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt</span>
+</code></pre></div></div>
 
 <p>Another funny thing was I <em>already had this history file</em> on the “15s wonder” machine! 
 It simply got messed up by Flatpak or snapd or something at one point, and that’s when problems started.</p>
 
 <p>I expected that would be it. But:</p>
 
-<pre><code class="language-pwsh"> pwsh
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code> pwsh
 PowerShell 7.5.1
 Loading personal and system profiles took 13863ms.
-</code></pre>
+</code></pre></div></div>
 
 <p>Yep, 13s. Much better! And I still get the stupid Flatpak error about access denied to path /var/lib/flatpak/exports/share.</p>
 
-<p>The Flatpak junk paths are still loading!</p>
+<p>The Flatpak junk paths are still there!</p>
 
-<pre><code class="language-pwsh">HistorySavePath : /var/lib/flatpak/exports/share:/usr/share/xfce4:/home/sean/.local/share/flatpak/exports/share:/var/lib/
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HistorySavePath : /var/lib/flatpak/exports/share:/usr/share/xfce4:/home/sean/.local/share/flatpak/exports/share:/var/lib/
                 flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop:/usr/share/powershell/PSReadLi
                 ne/ConsoleHost_history.txt
 
-</code></pre>
+</code></pre></div></div>
 
 <p>I thought to check if there are multiple PS profiles. <a href="https://stackoverflow.com/questions/55560413/what-are-powershell-profile-locations-on-linux">This SO post</a> said to do this:</p>
 
-<pre><code class="language-pwsh">PS&gt; $PROFILE | select * 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PS&gt; <span class="nv">$PROFILE</span> | <span class="k">select</span> <span class="k">*</span> 
 
 AllUsersAllHosts       : /opt/microsoft/powershell/7/profile.ps1
 AllUsersCurrentHost    : /opt/microsoft/powershell/7/Microsoft.PowerShell_profile.ps1
 CurrentUserAllHosts    : /home/sean/.config/powershell/profile.ps1
 CurrentUserCurrentHost : /home/sean/.config/powershell/Microsoft.PowerShell_profile.ps1
 Length                 : 62
-</code></pre>
+</code></pre></div></div>
 
 <p>I have only the last one. Nothing in it.</p>
 
@@ -266,12 +266,12 @@ Length                 : 62
 
 <p>Let’s do this in <code class="language-plaintext highlighter-rouge">CurrentUserAllHosts</code> profile, shall we?</p>
 
-<pre><code class="language-pwsh">Set-PSReadLineOption -HistorySaveStyle SaveNothing
-$path="/home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt"
-Set-PSReadLineOption -HistorySavePath $path
-Get-PSReadLineOption # confirm
-Set-PSReadLineOption -HistorySaveStyle SaveIncrementally # re-enable history
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Set-PSReadLineOption <span class="nt">-HistorySaveStyle</span> SaveNothing
+<span class="nv">$path</span><span class="o">=</span><span class="s2">"/home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt"</span>
+Set-PSReadLineOption <span class="nt">-HistorySavePath</span> <span class="nv">$path</span>
+Get-PSReadLineOption <span class="c"># confirm</span>
+Set-PSReadLineOption <span class="nt">-HistorySaveStyle</span> SaveIncrementally <span class="c"># re-enable history</span>
+</code></pre></div></div>
 
 <p>After a restart, it’s back to the Flatpak-infested HistorySavePath.</p>
 
@@ -281,8 +281,8 @@ Set-PSReadLineOption -HistorySaveStyle SaveIncrementally # re-enable history
 
 <p>Here’s how to list all PS env values:</p>
 
-<pre><code class="language-pwsh">Get-ChildItem env:* | Sort-Object name
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Get-ChildItem <span class="nb">env</span>:<span class="k">*</span> | Sort-Object name
+</code></pre></div></div>
 
 <h2 id="epilogue">Epilogue</h2>
 
@@ -290,11 +290,14 @@ Set-PSReadLineOption -HistorySaveStyle SaveIncrementally # re-enable history
 
 <p>On the “more complicated”, Flatpak-infested box, the only way I could get history to work was to edit ~/.config/powershell/Microsoft.PowerShell_profile.ps1 and use the minimum viable options.</p>
 
-<pre><code class="language-pwsh">$env:XDG_DATA_HOME = "/home/sean/.local/share/powershell"
-$env:XDG_DATA_DIRS = "/usr/local/share:/usr/share"
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$env</span>:XDG_DATA_HOME <span class="o">=</span> <span class="s2">"/home/sean/.local/share/powershell"</span>
+<span class="nv">$env</span>:XDG_DATA_DIRS <span class="o">=</span> <span class="s2">"/usr/local/share:/usr/share"</span>
 
-<p>With this, I no longer get “access denied” when I set PS shell history or start/exit PowerShell.</p>
+</code></pre></div></div>
+
+<p>Even removing Flatpak env variables from Bash didn’t help! I would have preferred to remove Flatpak from my system, but I have some Flatpak apps that aren’t packaged for Linux, so…</p>
+
+<p>With this “minimal setup”, I no longer get “access denied” when I set PS shell history or start/exit PowerShell.</p>
 
 <p>I may have added <code class="language-plaintext highlighter-rouge">/var/lib/flatpak/exports/share</code> to my Bash $XDG_DATA_DIRS at some point in the past (maybe last year?). Bad idea.</p>
 
@@ -302,14 +305,15 @@ $env:XDG_DATA_DIRS = "/usr/local/share:/usr/share"
 
 <p>A little something about PS history files:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll /home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt
-<span class="nt">-rw-rw-r--</span> 1 sean sean 158 Jun  7 04:37 /home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt
-</code></pre></div></div>
+<pre><code class="language-raw">$ ll /home/`whoami`/.local/share/powershell/PSReadLine/ConsoleHost_history.txt
+-rw-rw-r-- 1 sean sean 158 Jun  7 04:37 /home/sean/.local/share/powershell/PSReadLine/ConsoleHost_history.txt
+
+</code></pre>
 
 <p>I also spotted <code class="language-plaintext highlighter-rouge">'Visual Studio Code Host_history.txt'</code> in that directory. Nice..</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll /home/sean/.local/share/powershell/PSReadLine/Visual<span class="se">\ </span>Studio<span class="se">\ </span>Code<span class="se">\ </span>Host_history.txt
-</code></pre></div></div>
+<pre><code class="language-raw">$ ll /home/`whoami`/.local/share/powershell/PSReadLine/Visual\ Studio\ Code\ Host_history.txtxt
+</code></pre>
 
 <p>Grepping is left as an exercise for the reader, as they say…</p>
 
@@ -350,7 +354,7 @@ $env:XDG_DATA_DIRS = "/usr/local/share:/usr/share"
 
     
   </div><footer class= "footer">
-    <p>2025-06-07 17:50 </p>
+    <p>2025-06-07 17:56 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
