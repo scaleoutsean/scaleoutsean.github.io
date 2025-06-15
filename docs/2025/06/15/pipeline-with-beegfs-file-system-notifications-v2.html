@@ -57,10 +57,11 @@
 <link rel="canonical" href="https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html" />
 <meta property="og:url" content="https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html" />
 <meta property="og:site_name" content="Acting Technologist" />
+<meta property="og:image" content="https://scaleoutsean.github.io/assets/images/grpc_python.png" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-06-15T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"More on improvements in BeeGFS file-system event notifications","@type":"BlogPosting","headline":"Improved pipelines with BeeGFS FS Event Notifications in v8","dateModified":"2025-06-15T00:00:00+08:00","datePublished":"2025-06-15T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html"},"url":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html","@context":"https://schema.org"}</script>
+{"image":"https://scaleoutsean.github.io/assets/images/grpc_python.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"More on improvements in BeeGFS file-system event notifications","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html","headline":"Improved pipelines with BeeGFS FS Event Notifications in v8","dateModified":"2025-06-15T00:00:00+08:00","datePublished":"2025-06-15T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -128,7 +129,7 @@
 
   
   
-    9 minute read
+    10 minute read
   
 
     </span>
@@ -150,7 +151,7 @@
     </ul>
   </li>
   <li><a href="#performance-and-security">Performance (and security)</a></li>
-  <li><a href="#conclusion-and-ideas-for-future-work">Conclusion and ideas for future work</a></li>
+  <li><a href="#conclusion-and-ideas-for-future-work-with-beegfs-fs-event-notifications">Conclusion and ideas for future work with BeeGFS FS event notifications</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -214,7 +215,7 @@ v2 {
 
 <p>This was an example from the StorageGRID virus and malware scanning post linked at the top.</p>
 
-<p><img src="/assets/images/s3-av-scan-example.png" alt="" /></p>
+<p><img src="/assets/images/s3-av-scan-example.png" alt="StorageGRID AV scanner architecture" /></p>
 
 <p>There’s nothing wrong with it, it’s as good or as bad as any other. But, since I already ranted about data pipelines and “reference architectures” <strong>and</strong> I’ve always wanted to revisit S3 AV scanning (if you skim through that older post, I did a “PoC” but it was a simple Python script), I thought to use that example in this post.</p>
 
@@ -228,13 +229,19 @@ v2 {
 
 <p>The “new” element - compared to the earlier approach - is that because we have a <em>very fast</em> cluster file-system and S3 happens to contain large objects, we can achieve excellent performance and scalability by downloading objects to BeeGFS (can be of BeeOND).</p>
 
-<p>To do that, in Step 3 we dispatch S3 GET (download) jobs to all or a group of “download containers” which download objects to (say) /mnt/beegfs/av/BUCKET_NAME/.</p>
+<p>I don’t have concrete proof for that except second-hand knowledge of gRPC and a bit of first hand experience (I didn’t <em>do</em> anything with BeeGFS Watcher events, I just acknowledged them, but in any case those are just external overheads and even that ack-ing messages is enough to see several messages can be exchanged within the same millisecond.)</p>
 
-<p>BeeGFS file-system notifications are useful here because we can learn of new objects from Watch service, in Step 4.</p>
+<p><img src="/assets/images/grpc_python_resp.png" alt="gRPC receive and send with BeeGFS Watch and gRPC server in Python" /></p>
+
+<p>After receiving a FS event and making sure it’s of interest (i.e. PUT rather than GET or DELETE) in Step 3 we dispatch S3 GET (download) jobs to all or a group of “download containers” which download objects to (say) /mnt/beegfs/av/BUCKET_NAME/.</p>
+
+<p>BeeGFS file-system notifications are useful because we can learn of new objects from Watch service quickly and economically (Step 4). It is important to know the file has fully landed onto shared file-system (and not just committed to cache) which is when it’s ready to be used (accessed for scanning).</p>
 
 <p>Once we receive these notifications, we know downloaded files are visible to all containers (in the “AV scanning” group, if we run a dedicated job queue for that) so we can fire AV scan jobs immediately.</p>
 
-<p>Scan results are sent to another Kafka topic (e.g. BUCKETNAME-scan-results) or elsewhere (Loki, etc.).</p>
+<p>Scan results are later sent to another Kafka topic (e.g. BUCKETNAME-scan-results) or elsewhere (Loki, etc.).</p>
+
+<p>If we’re worried some jobs may fail silently, we could log successful completions using a gRPC sequence number so that we can easily query all submissions for which no successful jobs referencing the same sequence ID can be found. But, to be honest, I wouldn’t expect anyone to run a DIY AV service that’s mission critical - if it’s very important, it’s better to use a commercial solution (and get latest and greatest detection engines).</p>
 
 <p>We already mentioned that the main disadvantage is now you have a small cluster to run, which isn’t hard with BeeOND. Let’s take a look at the main advantages (as I see them).</p>
 
@@ -256,7 +263,9 @@ v2 {
 
 <p>Those who seek to scan for viruses and malware <em>before</em> files get uploaded to S3 can do that in a Web front-end (which could also use BeeGFS) or client application.</p>
 
-<p>I think it’s appropriate enough, and also much easier to do, to just scan and notify.</p>
+<p>I’ve also seen some approaches that update S3 object metadata to mark it “clean” but that, too, seems too complicated. As if it’s not bad enough to have a place that can download all your objects, now we want to be able to update its tags?</p>
+
+<p>I think it’s appropriate enough, and also much easier to do, to just scan and notify. If you need a mission-critical AV scanning service, I would definitively not suggest a DIY approach with ClamAV.</p>
 
 <h2 id="performance-and-security">Performance (and security)</h2>
 
@@ -278,13 +287,15 @@ v2 {
 
 <p>Lastly, one interesting thing is that with ClamAV using containers is an interesting way to at least partially segregate scanners from host OS and it may be better for performance as well. I <em>haven’t tested that on BeeGFS</em>, but sending files from scanners to ClamAV server goes over TCP network, whereas - when every file is visible to all containers on all BeeGFS nodes - here I can use UNIX sockets and completely avoid TCP. No need for TCP and (even more) HTTPS!</p>
 
-<h2 id="conclusion-and-ideas-for-future-work">Conclusion and ideas for future work</h2>
+<h2 id="conclusion-and-ideas-for-future-work-with-beegfs-fs-event-notifications">Conclusion and ideas for future work with BeeGFS FS event notifications</h2>
 
 <p>New BeeGFS file-system notifications in version 8 are greatly improved compared to previous implementation in version 7.</p>
 
 <p>We get more performance, more reliabile delivery, and an easier data format (gRPC events vs. DIY parsing) to work with.</p>
 
 <p>Combined with BeeOND, it opens possibilities for secure, high-performance processing steps that require a POSIX filesystem. Antivirus scanning is one such case, but there are others.</p>
+
+<p>Using a DIY recipe with ClamAV is good enough for basic checking - it probably can stop Tier 2+ attackers. Mission-critical use in environments with compliance requirements should consider a commercial offering which could start after Step 1 (that is, you’d just have to send notifications to Kafka, and they’d take it from there).</p>
 
 <p>When I find time I’d like to evaluate performance on low-end hardware (i.e. my home lab) to get a worst-case performance baseline for BeeGFS gRPC notifications. I’d also look at the details of Step 5 (gRPC -&gt; Kubernetes scan jobs) - Hashicorp Nomad is <a href="/2022/04/24/nomad-batch-job-scale-out-parallel-filesystem-beegfs-e-netapp-series.html">absolutely great for that</a>, but I don’t have a favorite for Kubernetes yet.</p>
 
@@ -333,7 +344,7 @@ v2 {
 
     
   </div><footer class= "footer">
-    <p>2025-06-15 19:32 </p>
+    <p>2025-06-16 00:12 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
