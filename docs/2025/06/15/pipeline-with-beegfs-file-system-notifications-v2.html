@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-06-15T00:00:00+08:00" />
 <script type="application/ld+json">
-{"image":"https://scaleoutsean.github.io/assets/images/grpc_python.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"More on improvements in BeeGFS file-system event notifications","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html","headline":"Improved pipelines with BeeGFS FS Event Notifications in v8","dateModified":"2025-06-15T00:00:00+08:00","datePublished":"2025-06-15T00:00:00+08:00","@context":"https://schema.org"}</script>
+{"author":{"@type":"Person","name":"scaleoutSean"},"description":"More on improvements in BeeGFS file-system event notifications","@type":"BlogPosting","headline":"Improved pipelines with BeeGFS FS Event Notifications in v8","dateModified":"2025-06-15T00:00:00+08:00","datePublished":"2025-06-15T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/grpc_python.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html"},"url":"https://scaleoutsean.github.io/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    12 minute read
+    15 minute read
   
 
     </span>
@@ -144,7 +144,8 @@
       <li><a href="#file-system-notification-messages">File-system notification messages</a></li>
     </ul>
   </li>
-  <li><a href="#use-case-data-pipeline-for-storagegrid">Use case: data pipeline for StorageGRID</a>
+  <li><a href="#use-case-data-pipeline-for-storagegrid">Use case: data pipeline for StorageGRID</a></li>
+  <li><a href="#use-case-data-pipeline-for-the-versity-s3-gateway">Use case: data pipeline for the Versity S3 Gateway</a>
     <ul>
       <li><a href="#advantages">Advantages</a></li>
       <li><a href="#limitations">Limitations</a></li>
@@ -153,6 +154,7 @@
   </li>
   <li><a href="#performance-and-security">Performance (and security)</a></li>
   <li><a href="#conclusion-and-ideas-for-future-work-with-beegfs-fs-event-notifications">Conclusion and ideas for future work with BeeGFS FS event notifications</a></li>
+  <li><a href="#appendix-a-batching-and-filtering">Appendix A: batching and filtering</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -222,11 +224,11 @@ v2 {
 
 <p>But, since I already ranted about data pipelines and “reference architectures” <strong>and</strong> I’ve always wanted to revisit S3 bucket AV scanning (if you skim through that older post, I did a “PoC” but it was a simple Python script), I thought to use that example as a use case in this post.</p>
 
-<p>Of course, it should also not be a fake example - it should be superior in some aspects, including the reason that BeeGFS may be slightly more complicated to run than single-host filesystems (although I found <a href="/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#beegfs-copy-tool">BeeGFS on-demand file-systems</a> very easy to setup and tear down). Here’s an example:</p>
+<p>Of course, it should also not be a fake example - it should be superior in some aspects, including the reason that BeeGFS may be slightly more complicated to run than single-host file-systems (although I found <a href="/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#beegfs-copy-tool">BeeGFS on-demand file-systems</a> very easy to setup and tear down). Here’s an example:</p>
 
 <p><img src="/assets/images/storagegrid-s3-scanner-beegfs.png" alt="S3 AV and malware scanning on BeeGFS" /></p>
 
-<p>S3 service sends notifications or uses Webhooks to let us know of changes. That can go to Kafka, although I’d use something less nightmarish but compatible (StorageGRID supports Kafka and Elasticsearch endpoints, remember?).</p>
+<p>S3 service sends notifications or uses Web hooks to let us know of changes. That can go to Kafka, although I’d use something less nightmarish but compatible (StorageGRID supports Kafka and Elasticsearch endpoints, remember?).</p>
 
 <p>There’s a Kafka consumer to subscribe/poll these topics named after StorageGRID buckets that those notifications originate from.</p>
 
@@ -236,7 +238,7 @@ v2 {
 
 <p><img src="/assets/images/grpc_python_resp.png" alt="gRPC receive and send with BeeGFS Watch and gRPC server in Python" /></p>
 
-<p>To be sure, time saved with gRPC shouldn’t play a big role in overall scanning performance, but there’s one Watch server per BeeGFS filesystem, so I want the fastest one to make sure notifications themselves aren’t bottlenecked at the FS level. I can scale downloading and scanning by adding more containers, but I can’t scale Watch Service (which is why it’s great that in version 8 it’s gRPC based - at least they do the best they can).</p>
+<p>To be sure, time saved with gRPC shouldn’t play a big role in overall scanning performance, but there’s one Watch server per BeeGFS file-system, so I want the fastest one to make sure notifications themselves aren’t bottlenecked at the FS level. I can scale downloading and scanning by adding more containers, but I can’t scale Watch Service (which is why it’s great that in version 8 it’s gRPC based - at least they do the best they can).</p>
 
 <p>After receiving a bucket notification event and making sure it’s of interest (i.e. it’s an S3 PUT rather than GET or DELETE) in Step 3 we dispatch S3 GET (download) jobs to all or a group of “download containers” which download objects to (say) <code class="language-plaintext highlighter-rouge">/mnt/beegfs/av/BUCKET_NAME/</code>.</p>
 
@@ -253,6 +255,14 @@ v2 {
 <p>To be honest, I wouldn’t expect anyone to run a DIY AV service that’s mission critical - if it’s very important, it’s better to use a commercial solution (and get latest and greatest virus definitions and detection engines).</p>
 
 <p>We already mentioned that the main disadvantage is now we have a small cluster to run, but that isn’t hard with BeeOND. Let’s take a look at the main advantages (as I see them).</p>
+
+<h2 id="use-case-data-pipeline-for-the-versity-s3-gateway">Use case: data pipeline for the Versity S3 Gateway</h2>
+
+<p>I came up with this only after I wrote this post (when I finished adding Appendix A) - I guess writing about MinIO’s <a href="/2025/06/06/whats-minio-up-to.html">erratic behavior</a> got my S3-related brainstorming algorithms working overtime in recent days…</p>
+
+<p>As objects land on the Versity S3 Gateway server, BeeGFS events kick off automatically. This is wild!</p>
+
+<p>There’s no step 2 here: this sucker goes straight to “<strong>Profit!</strong>”, folks. It seems to me this deserves its own post.</p>
 
 <h3 id="advantages">Advantages</h3>
 
@@ -314,6 +324,76 @@ v2 {
 
 <p>When I find time I’d like to evaluate performance on low-end hardware (i.e. my home lab) to get a worst-case performance baseline for BeeGFS gRPC notifications. I’d also look at the details of Step 5 (gRPC -&gt; Kubernetes scan jobs) - Hashicorp Nomad is <a href="/2022/04/24/nomad-batch-job-scale-out-parallel-filesystem-beegfs-e-netapp-series.html">absolutely great for that</a>, but I don’t have a favorite for Kubernetes yet.</p>
 
+<h2 id="appendix-a-batching-and-filtering">Appendix A: batching and filtering</h2>
+
+<p>Days after writing this post I revisited this and added batching and filtering.</p>
+
+<p>How many events to batch? I guess “that depends” is the right answer. I used 8 while prototyping.</p>
+
+<p><img src="/assets/images/grpc_python_batching.png" alt="gRPC event batching in Python" /></p>
+
+<p>After batches of desired size are gathered, I process them like so:</p>
+
+<ul>
+  <li>Filtering (based on criteria such as file extension, event type, path, user ID, etc - along the lines demonstrated in the post with notifications from BeeGFS version 7)</li>
+  <li>After filtering, events are sent to process files in intended way (such as AV scanning on LAST_WRITER_CLOSED). This I currently do in the same script, but like I said in the older demo, these events could be immediately sent to a message queue or job scheduler and let other services deal with them later.</li>
+</ul>
+
+<p>Another reason to “hoard” events or file lists is that scanning can be batched and/or delayed, for example. That can sometimes be useful.</p>
+
+<p>For example, files/objects in certain buckets may be overwritten multiple times (so maybe there’s no point of scanning them multiple times), or deleted quickly so there’s no point of scanning them.</p>
+
+<p>Knowing <code class="language-plaintext highlighter-rouge">path</code> to each file, we can develop filters and criteria that allow us to implement a variety of approaches in gRPC server or downstream by message queue subscribers.</p>
+
+<p>While playing with batching I realized gRPC works much faster than I can write files to BeeGFS, so I probably won’t be able to find any gRPC bottlenecks that way. Not unexpected.</p>
+
+<p>I did a test with <code class="language-plaintext highlighter-rouge">OPEN_READ</code> (faster than writing) which:</p>
+
+<ul>
+  <li>Finds all files in a directory tree and loops through the list (8192 files)</li>
+  <li>Reads and discards each file (1kB)</li>
+  <li>Track gRPC server events</li>
+</ul>
+
+<p>It’s fast.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Timestamp (UTC)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Enumeration and <code class="language-plaintext highlighter-rouge">cat</code> start</td>
+      <td>Sat Jun 21 16:59:38 2025</td>
+    </tr>
+    <tr>
+      <td>Completed</td>
+      <td>Sat Jun 21 16:59:51 2025</td>
+    </tr>
+    <tr>
+      <td>Last event seen by gRPC</td>
+      <td>2025-06-21T16:59:51Z</td>
+    </tr>
+    <tr>
+      <td>Time between Last event and Completed</td>
+      <td>0 seconds</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This didn’t give me much and I found some of the files were larger, so I focused on just the smallest files (1024 of them). Elapsed time: 1.434 seconds.</p>
+
+<pre><code class="language-raw">Bash script end time:   1750526463.384
+gRPC server last event: 1750526463.384
+</code></pre>
+
+<p>Well, even milliseconds aren’t granular enough. It’s safe to say “there’s practically no delay under moderate load” (few hundred events per second). As I guesstimated early on.</p>
+
+<p>This doesn’t include processing, but that doesn’t necessarily need to happen in gRPC server. If I do additional experiments with processing (AV scanning, primarily), I’ll add those notes in Appendix B.</p>
+
 
       </article>
     </div>
@@ -359,7 +439,7 @@ v2 {
 
     
   </div><footer class= "footer">
-    <p>2025-06-18 16:53 </p>
+    <p>2025-06-22 01:37 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
