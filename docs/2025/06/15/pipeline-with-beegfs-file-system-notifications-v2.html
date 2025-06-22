@@ -129,7 +129,7 @@
 
   
   
-    15 minute read
+    16 minute read
   
 
     </span>
@@ -155,6 +155,7 @@
   <li><a href="#bonus-use-case-data-pipeline-for-the-versity-s3-gateway">Bonus use case: data pipeline for the Versity S3 Gateway</a></li>
   <li><a href="#conclusion-and-ideas-for-future-work-with-beegfs-fs-event-notifications">Conclusion and ideas for future work with BeeGFS FS event notifications</a></li>
   <li><a href="#appendix-a-batching-and-filtering">Appendix A: batching and filtering</a></li>
+  <li><a href="#appendix-a-scanning">Appendix A: scanning</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -394,6 +395,29 @@ gRPC server last event: 1750526463.384
 
 <p>This doesn’t include processing, but that doesn’t necessarily need to happen in gRPC server. If I do additional experiments with processing (AV scanning, primarily), I’ll add those notes in Appendix B.</p>
 
+<h2 id="appendix-a-scanning">Appendix A: scanning</h2>
+
+<p>This is the last step in our antivirus pipeline, where events are gathered in batches (3), then type <code class="language-plaintext highlighter-rouge">LAST_WRITER_CLOSED</code> (2) is filtered and scanned using Clam AV. Infected files (3) are detected, while clean files (not shown) are not.</p>
+
+<p><img src="/assets/images/grpc_python_actions.png" alt="gRPC file scanning in Python" /></p>
+
+<p>I don’t think I can precisely estimate “real life” performance, but there’s effectively no delay and scans complete within the same second (0.001-0.002 seconds per small file). That time would be longer for larger files, but multiple ClamAV workers can be used.</p>
+
+<p>A better test is needed for precise measurement, but what I looked at was when my shell script finished running and when the last event from the last batch was processed.</p>
+
+<pre><code class="language-raw">Last file event on FS: 1750566483.692
+Last file scanned    : 1750566501.383
+</code></pre>
+
+<p>We can see (501-483) seconds have passed. This isn’t too bad for 1,000 files and a single queue on a small VM.</p>
+
+<p>gRPC events come in, get queued, and files (that have been written) are then scanned asynchronously, so nothing is being blocked. Millions can be queued in several GB of RAM. Or we could use Redis to queue them up and persist to disk.</p>
+
+<p>As I’ve mentioned earlier, N BeeGFS clients can scan 1/N files each. If we can scan 50 files per second, ten 2vCPU VMs *(2 vCPU, 8GB RAM) may give us aggregate scanning performance of 500 files (or S3 objects) per second for files already on file-system.</p>
+
+<p>For S3 AV scanning (StorageGRID use case) we’d first have to download objects and then scan, so it’d be slower. For Versity S3 Gateway, no “download-from-S3” would be necessary.</p>
+
+<p>To scale even further we could have M gRPC servers and make every server process 1/M of all events.</p>
 
       </article>
     </div>
@@ -439,7 +463,7 @@ gRPC server last event: 1750526463.384
 
     
   </div><footer class= "footer">
-    <p>2025-06-22 01:57 </p>
+    <p>2025-06-22 12:59 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
