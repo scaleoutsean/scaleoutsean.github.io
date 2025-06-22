@@ -415,6 +415,14 @@ Last file scanned    : 1750566501.383
 
 <p>As I’ve mentioned earlier, N BeeGFS clients can scan 1/N files each. If we can scan 50 files per second, ten VMs *(2 vCPU, 8GB RAM) may give us aggregate scanning performance of 500 files (or S3 objects) per second for files already on file-system.</p>
 
+<p>I created another test, same files and everything, but removed ClamAV from the loop so that there’s only async sleep for each event processed. This took 9 seconds.</p>
+
+<pre><code class="language-raw">Last file event on FS: 1750571129.416
+Last file scanned    : 1750571138.230
+</code></pre>
+
+<p>I should mention there’s more events than 1,000 when 1,000 files are being overwritten (as in this case). There’s <code class="language-plaintext highlighter-rouge">TRUNCATE</code>, followed by <code class="language-plaintext highlighter-rouge">FLUSH</code> and then <code class="language-plaintext highlighter-rouge">LAST_WRITER_CLOSED</code>. Also, if I removed the numerous print statements from gRPC server it should be faster still.</p>
+
 <p>For S3 AV scanning (StorageGRID use case) we’d first have to download objects and then scan, so it’d be slower. For Versity S3 Gateway, no “download-from-S3” would be necessary. I assume in real life we wouldn’t scan objects with extensions known to be safe (.json, .mp4…) which could translate into very few scan-able objects per second.</p>
 
 <p>To scale even further we could have M gRPC servers and make every server process 1/M of all events.</p>
@@ -463,7 +471,7 @@ Last file scanned    : 1750566501.383
 
     
   </div><footer class= "footer">
-    <p>2025-06-22 13:31 </p>
+    <p>2025-06-22 13:48 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
