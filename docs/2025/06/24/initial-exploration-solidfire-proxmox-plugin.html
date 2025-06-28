@@ -128,7 +128,7 @@
 
   
   
-    4 minute read
+    12 minute read
   
 
     </span>
@@ -139,6 +139,9 @@
   <li><a href="#perl-for-the-win">Perl for the win!</a></li>
   <li><a href="#features">Features</a></li>
   <li><a href="#effort">Effort</a></li>
+  <li><a href="#appendix-a-what-works-and-how">Appendix A: what works and how</a></li>
+  <li><a href="#appendix-b-observations-problems-solutions">Appendix B: observations, problems, solutions</a></li>
+  <li><a href="#appendix-c-why-i-dont-want-a-solidfire-plugin-for-pve">Appendix C: why I don’t want a SolidFire plugin for PVE</a></li>
 </ul>
 
 <blockquote>
@@ -220,6 +223,174 @@
 
 <p>Since now one is asking and there are other pressing things to do (and where Perl isn’t required), I doubt I’ll try to make that happen. But, if I do it, I’ll update this post!</p>
 
+<h2 id="appendix-a-what-works-and-how">Appendix A: what works and how</h2>
+
+<p>I blogged about this last year, but briefly: every SolidFire volume needs to be added like this: in Datacenter aka “vCenter”, add iSCSI storage.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-01-add-iscsi-target.png" alt="Configure iSCSI Target" /></p>
+
+<p>IDs should probably follow some convention like “clusterName-volumeName-volumeID” which in this particular case would be <code class="language-plaintext highlighter-rouge">DR-pve01-99</code>. Notice how <code class="language-plaintext highlighter-rouge">Nodes</code> is empty - like with vSphere, you could create a SolidFire VAG and simply add all PVE nodes’ initiators to it the same way NetApp HCI did with vSphere ESXi servers.</p>
+
+<p>Once that’s done, you may have one or more such iSCSI targets aka “pools”.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-02-added-iscsi-target.png" alt="Configured iSCSI Target" /></p>
+
+<p>Now you can create LVM on this iSCSI target and use it.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-03-add-lvm-on-iscsi-target.png" alt="Configure LVM on SolidFire iSCSI Target" /></p>
+
+<p>You might do something like this. I tried “Wipe Removed Volumes” and it didn’t do anything obvious, but this probably isn’t a smart option for most SolidFire users (more on that later).</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-05-lvm-on-solidfire-lun.png" alt="LVM on SolidFire LUN in PVE" /></p>
+
+<p>LXC containers:</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-06-lxc-vm-on-lvm-iscsi.png" alt="LXC on SolidFire-backed LXC in PVE" /></p>
+
+<p>Now  you may wonder: if we had a PVE storage plugin for SolidFire, would SolidFire appear on that list? Not necessarily. More on that later.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-07-lxc-lv-creation.png" alt="LXC LV disk on SolidFire-backed LVM in PVE" /></p>
+
+<p>This creates a LV for the container. Use <code class="language-plaintext highlighter-rouge">discard</code> to keep it slim.</p>
+
+<p>For VMs (and containers) you can put boot disk on LVM backed by shared storage (here, SolidFire iSCSI, of course.) This creates more workload on storage, but OS is “movable” together with any extra disks with data which is good for HA and DR since you don’t have to think where the OS is going to come from.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-08-boot-disk-creation.png" alt="VM boot disk on SolidFire-backed VM in PVE" /></p>
+
+<p>Still, there’s no value in having OS data on shared storage if one can use stateless OS, provision workload in containers and mount data volumes as Docker volumes. This is also useful with LXC containers.</p>
+
+<p>Either way, LVM can host containers, VMs, boot and data disks. But in both cases you need to do your homework regarding HA with LVM on shared storage to make sure HA works the way you need.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-09-vms-and-lxc-on-lvm-with-solidfire-iscsi.png" alt="VM resources overview with Disk on LVM/iSCSI " /></p>
+
+<p>After playing a bit I checked Account Efficiency for the user <code class="language-plaintext highlighter-rouge">pve</code>. Compression was high, dedupe fine.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-10-pve-lvm-solidfire-efficiency.png" alt="Proxmox PVE and SolidFire storage efficiency " /></p>
+
+<p>This isn’t representative, and there’s no reason why you’d get more than with VMware or KVM or Trident, but as I mentioned in the old Proxmox post, blocks dedupe and decompress globally, which means across LVMs.</p>
+
+<p>I checked in order to see if my storage efficiency was alarmingly low. It wasn’t, so this is fine.</p>
+
+<h2 id="appendix-b-observations-problems-solutions">Appendix B: observations, problems, solutions</h2>
+
+<p>Some extra thoughts related to Proxmox PVE and/or SolidFire…</p>
+
+<p>When you create LVM, Proxmox offers to expand existing LVM groups.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-11-proxmox-storage-ui.png" alt="Promox PVE Storage UI" /></p>
+
+<p>I don’t think that’s what we should do with SolidFire, except in very special circumstances. Most users want 1-iSCSI-LUN = 1 LVM and then create LVs on that LUN. The default approach seems like VMware datastores that are spread over multiple extents or something like that… I would create a new LVM for every iSCSI volume.</p>
+
+<p>Number (2) below: it’s also not <em>easy</em> to achieve consistency in naming. iSCSI targets and LVMs can be observed, but VGs cannot, so I often had to leave that dialog box, go see what I have in terms of VG names, and then go back.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-12-proxmox-storage-naming-conventions.png" alt="Promox PVE Storage naming conventions" /></p>
+
+<p>Number (1) above: even for SolidFire LUNs, I didn’t start with <code class="language-plaintext highlighter-rouge">DR-volName-volID</code> but with just <code class="language-plaintext highlighter-rouge">DR</code>, so LUNs and LVMs aren’t consistently named either. (LUN names can’t be edited, so you can’t fix it later if you don’t want to remove anything you have on LVMs, and LVMs themselves.)</p>
+
+<p>Number (3): it seems “Wipe Removed Volumes” activates a “shred-like” feature that senselessly overwrites LVs which creates a lot of workload on SolidFire. I can’t say that’s “unnecessary”, but it often probably is unless you’re in hosting business.</p>
+
+<p>Also, near number (3) you can see cloning (copying) from one LVM to another can be done. It’s not smart like VMware Storage vMotion,but it helps avoid the finding</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-13-proxmox-clone-from-local-to-shared.png" alt="LXC moved from local to shared PVE storage" /></p>
+
+<p>You may want to give a higher bust setting to iSCSI volumes to handle these cases. While thinking about this, see top right corner - I created very small iSCSI volumes, which is why moving/rebalancing was necessary. Clone + delete (old) is one way to do it. I didn’t see a “move” command, but even if there is it can’t offload that from storage any better than cloning can.</p>
+
+<h2 id="appendix-c-why-i-dont-want-a-solidfire-plugin-for-pve">Appendix C: why I don’t want a SolidFire plugin for PVE</h2>
+
+<p>Maybe it’s because it’s very hard to create one. But I actually got a very basic version working this weekend. It’s not easy, but it’s not super-hard, either.</p>
+
+<p>The biggest reason is SolidFire is so easy to use, it’s hard for me to see much value in creating a storage plugin that only saves the <em>easiest</em> step. Yes, I now need to do “three steps” instead of two or maybe one:</p>
+
+<ul>
+  <li>Create volume on SolidFire</li>
+  <li>Create iSCSI storage “pool” (iSCSI target rescan is in this step)</li>
+  <li>Create LVM</li>
+</ul>
+
+<p>With a SolidFire plugin, I would have two steps, or maybe one. And the SolidFire step (1) is the easiest one, so why create a plugin for SolidFire?</p>
+
+<p>Considering how confusing the Proxmox UI is (see next Appendix), I honestly don’t see value in having a SolidFire plugin for PVE. I just have to update and patch the thing and the confusing and difficult steps all remain (the other two).</p>
+
+<p>I thought how I’d <em>want</em> this to work and my conclusion was: I’d prefer a good CLI that I could run on my management workstation or on a PVE node.</p>
+
+<p>From that CLI, I’d like to automate all those steps, but especially the ones I now do in the Proxmox UI because that’s the part that sucks.</p>
+
+<p>I first created a basic SolidFirePlugin.pm which seemed useless to me (more on that later). Then I took some content from it and created what I’d like to have. The result was this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>perl ./perl-utils.pl  <span class="nt">-h</span>
+Usage: ./perl-utils.pl &lt;subroutine&gt; <span class="o">[</span>args...]
+Available subroutines:
+  solidfire_cluster_info
+  solidfire_volume_name_to_id &lt;volume_name&gt;
+  solidfire_volume_id_to_name &lt;volume_id&gt;
+  solidfire_create_volume &lt;volume_name&gt; &lt;size_gib&gt; <span class="o">[</span>qos_policy_id]
+  solidfire_modify_volume &lt;volume_id&gt; &lt;new_size_gib&gt;
+  solidfire_modify_volume_qos_policy &lt;volume_id&gt; &lt;new_qos_policy_id&gt;
+  solidfire_delete_volume &lt;volume_id&gt;
+  solidfire_create_qos_policy &lt;policy_name&gt; &lt;burst_iops&gt; &lt;min_iops&gt; &lt;max_iops&gt;
+  solidfire_list_qos_policy <span class="o">[</span>policy_name]
+  solidfire_modify_qos_policy &lt;policy_id&gt; &lt;new_burst_iops&gt; &lt;new_min_iops&gt; &lt;new_max_iops&gt;
+  solidfire_print_volumes_for_account <span class="o">[</span>account_id]
+
+<span class="nv">$ </span>perl ./perl-utils.pl solidfire_cluster_info
+Property  Value                               
+Name      DR                                  
+Unique ID xh67                                
+SVIP VLAN 0                                   
+SVIP IP   192.168.105.34                      
+UUID      2da5c99a-3cd1-46bc-abef-cadebec27bea
+
+</code></pre></div></div>
+
+<p>I get cluster name, iSCSI target IP, volume names, QoS and accounts, so entire back-end information PVE needs is available and can be piped to PVE CLI commands or API functions.</p>
+
+<p>I created even more “subroutines” later, that were out of scope for Proxmox integration, but very much needed.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-04-prime-back-end-solidfire-for-proxmox-pve.png" alt="Prime SolidFire cluster for PVE" /></p>
+
+<p>For example, let’s say you tend to use these VM QoS settings. Fine.</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-14-proxmox-pve-vm-qos.png" alt="Proxmox VM storage QoS" /></p>
+
+<p>We create a 1 TiB iSCSI LUN, give it 10K/50K/150K QoS and split it among 10 VMs, so each can get a fraction of that.</p>
+
+<p>But, how do I really control and monitor that end-to-end? I can’t. Or maybe I need a very complicated plugin.</p>
+
+<p>Instead of that, I can solve this in my CLI with 10% of the effort:</p>
+
+<ul>
+  <li>Assign storage QoS tags to VMs (gold, silver, bronze)</li>
+  <li>Use PVE API to query them</li>
+  <li>Use my CLI to create the right number of SolidFire volumes with appropriate QoS settings</li>
+</ul>
+
+<p>Or maybe in the opposite direction, where I know I have 500K IOPS in my cluster with 5 HC610S nodes, so I create X LUNs with 400K IOPS for VMs and leave the rest to containers, and then create PVE storage QoS tags and decide individual VM’s IO settings based on my resources.</p>
+
+<p>No matter how I’d do it, it’d be always 10 times easier in my CLI than in a plugin.</p>
+
+<p>Earlier I mentioned how writing SolidFire-specific function is not even half of the effort required to do this. It’s even worse than that. As I worked on this I realized there are additional parts (and this also answers the earlier Storage Plugin UI question):</p>
+
+<ul>
+  <li>Storage Plugin itself</li>
+  <li>Extra commands if one wishes to “piggyback” on one of existing plugins</li>
+  <li>Patches to the UI (to get your storage plugin exposed in the UI) - of course, this is the worst because every update breaks it, and then you have to patch again</li>
+</ul>
+
+<p>This one is probably the easiest to piggyback on - it takes a new “back-end” module in the plugin and enough patching to show SolidFire in the drop-down list as well as expose any options that other, existing back-ends don’t have (say, QoS).</p>
+
+<p><img src="/assets/images/proxmox-pve-solidfire-15-proxmox-piggyback-storage-plugin.png" alt="ZFS over iSCSI" /></p>
+
+<p>So even this “easiest” approach involves constant patching of the JS-based UI every time PVE is updated. It’s ridiculous.</p>
+
+<p>I’m still thinking if I should try to release the SolidFire CLI tool for PVE. Even that seems unnecessary.</p>
+
+<p>If you create a SolidFire Volume Access Group and add PVE cluster members to it, all there is to do on SolidFire is create 1 or 2 TB volumes with one of 2-3 QoS policies you choose. That takes seconds. The rest of the problems are all on PVE.</p>
+
+<p>The CLI tool I wrote can do most of SolidFire-related workflow (including SolidFire Storage Account and VAG creation), but I’d like it to have just one key feature for PVE: scan &amp; create <em>consistently named</em> iSCSI volumes, LVMs and LGs so that it’s easy to tell which VG is which LVM is which SolidFire volume.</p>
+
+<p>End-to-end QoS monitoring and enforcement would be nice, but it’s less important.</p>
+
+<p>Those who want a good UI, better check <a href="/2024/02/28/incus-zfs-netapp-eseries.html">LXC</a> than spend time fiddling with PVE’s 20 year old UI. Or wait until they fix it, then give it a try again.</p>
 
       </article>
     </div>
@@ -261,7 +432,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-06-26 12:13 </p>
+    <p>2025-06-28 17:23 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

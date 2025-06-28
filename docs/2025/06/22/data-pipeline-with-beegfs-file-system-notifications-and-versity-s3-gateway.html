@@ -208,15 +208,17 @@
 
 <p>This isn’t a big deal for most cases as each “bucket” on BeeGFS, as the smallest unit of metadata allocation, can’t go beyond a few GB/s. But that is plenty for a bucket and would be limiting to very few users.</p>
 
-<p>Another workaround - also not great, but may be acceptable, is to start several Versity S3 Gateway instances each on own subdirectory below the BeeGFS data path we want to “scale-out”. Also, consider the “classic”” approach where everything has to be downloaded from S3 to a filesystem - that’s far from “free” and scalable. If your S3 can ingest at 5GB/s, you need the same on your NAS or other storage for AV scanning, etc.</p>
+<p>Another workaround - also not great, but may be acceptable, is to start several Versity S3 Gateway instances each on own sub-directory below the BeeGFS data path we want to “scale-out”. Also, consider the “classic” approach where everything has to be downloaded from S3 to a file-system - that’s far from “free” and scalable. If your “classic” external S3 object store ingests at 5GB/s, you’d’ need the same throughput on your NAS or other storage used to download and AV-scan new objects from S3, so other ways wouldn’t necessarily be easier or cheaper.</p>
 
-<p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity’s temporary files (used during S3 PUT operations). I modified my gRPC server to drop events related to that path, and that fixed it.</p>
+<p>In fact, even without BeeGFS your Versity S3 Gateway’s metadata would be single-instance only, unless you had a file-system that supported “shared metadata volumes” (I don’t know of any, and “metadata volume” feature of Versity S3 Gateway is experimental in any case, so it’s great enough that it works as-is at this time).</p>
+
+<p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity’s temporary files (used during S3 PUT and “housekeeping” Versity S3 Gateway operations). I modified my gRPC server to drop events related to that path, and that fixed it.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Versity S3 Gateway on BeeGFS is a good stack for scanning incoming data for viruses and malware before you process it.</p>
 
-<p>Unlike AV scanning with “external” S3 storage, any S3 PUT is a BeeGFS write which automatically drives gRPC notifications, eliminates at least one layer of complexity, eliminates the downloading of S3 data to a filesystem for scanning, and allows scale-out in AV scanning.</p>
+<p>Unlike AV scanning with “external” S3 storage, any S3 PUT is a BeeGFS write which automatically drives gRPC notifications, eliminates at least one layer of complexity, eliminates the downloading of S3 data to a file-system for scanning, and allows scale-out in AV scanning.</p>
 
 <h2 id="demo">Demo</h2>
 
@@ -269,7 +271,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-06-26 12:13 </p>
+    <p>2025-06-28 17:23 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 

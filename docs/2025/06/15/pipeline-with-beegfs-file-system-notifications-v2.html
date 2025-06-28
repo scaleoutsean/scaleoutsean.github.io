@@ -129,7 +129,7 @@
 
   
   
-    19 minute read
+    20 minute read
   
 
     </span>
@@ -157,6 +157,7 @@
   <li><a href="#conclusion-and-ideas-for-future-work-with-beegfs-fs-event-notifications">Conclusion and ideas for future work with BeeGFS FS event notifications</a></li>
   <li><a href="#appendix-a-batching-and-filtering">Appendix A: batching and filtering</a></li>
   <li><a href="#appendix-b-scanning">Appendix B: scanning</a></li>
+  <li><a href="#appendix-c-likely-bottlenecks">Appendix C: likely bottlenecks</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -462,6 +463,20 @@ Last file scanned    : 1750571138.230
 
 <p>To scale even further we could have M gRPC servers and make every server process 1/M of all events.</p>
 
+<h2 id="appendix-c-likely-bottlenecks">Appendix C: likely bottlenecks</h2>
+
+<p>I expect that S3 object download would be the slowest part (e.g. 10 seconds), followed by ClamAV (&lt; 1 second). Both of these would require multiple BeeGFS (or non-BeeGFS, if you use something else) clients (VMs, containers), but can be done by simply adding more.</p>
+
+<p>Web hooks are lightweight and not a problem.</p>
+
+<p>At some point, the gRPC server may become a bottleneck itself.</p>
+
+<p>With my Python-based gRPC server I receive gRPC requests, parse and filter events, and finally dispatch scan jobs. This happens in parallel, but maybe around 100 objects (which could be 1,000 BeeGFS events) per second, I would need to improve it.</p>
+
+<p>That, too, should not be hard - we could simply use gRPC server(s) (as BeeGFS can send to multiple) to receive requests and pass them to a message server, and have the rest done by clients of that message server (e.g. NATS, Kafka). That way we could probably scale out by 10x to 1,000 objects per second (and by that time we’d need a bunch of BeeGFS/ClamAV nodes!)</p>
+
+<p>At some even larger scale, it would be helpful to rewrite the gRPC server in Go and scale it even further, but I don’t know of anyone who has that many new objects created every second in an on-premises environment. Even if they do, different buckets could send event notifications to different Webhooks or message stores, so there are plenty of chances to parallelize AV scanning.</p>
+
       </article>
     </div>
     
@@ -506,7 +521,7 @@ Last file scanned    : 1750571138.230
 
     
   </div><footer class= "footer">
-    <p>2025-06-26 12:13 </p>
+    <p>2025-06-28 17:23 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
