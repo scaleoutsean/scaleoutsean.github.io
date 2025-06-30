@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-06-22T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"Make use of BeeGFS 8 file-system event notifications with Versity S3 Gateway","@type":"BlogPosting","headline":"Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway","dateModified":"2025-06-22T00:00:00+08:00","datePublished":"2025-06-22T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/versity-s3-gw-av-scanner.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html"},"url":"https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html","@context":"https://schema.org"}</script>
+{"image":"https://scaleoutsean.github.io/assets/images/versity-s3-gw-av-scanner.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"Make use of BeeGFS 8 file-system event notifications with Versity S3 Gateway","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html","headline":"Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway","dateModified":"2025-06-22T00:00:00+08:00","datePublished":"2025-06-22T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,13 +129,22 @@
 
   
   
-    6 minute read
+    8 minute read
   
 
     </span>
   </div>
   
-        <h2 id="background">Background</h2>
+        <ul>
+  <li><a href="#background">Background</a></li>
+  <li><a href="#why-this-is-cool">Why this is cool</a></li>
+  <li><a href="#catches">Catches</a></li>
+  <li><a href="#fileobject-duality-considerations">File/object duality considerations</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="background">Background</h2>
 
 <p>For the context, see <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html">“Improved pipelines with BeeGFS FS Event Notifications in v8”</a> where I build on top of an earlier approach to scalable S3 anti-virus scanning from some time ago, and discover that BeeGFS file-system event notifications in version 8 are very fast, useful and convenient.</p>
 
@@ -184,15 +193,22 @@
 <p>This has advantages and disadvantages, depending on the situation, but notice that even if Versity S3 Gateway sends Web-hook notifications to NATS, the advantages of being able to scan objects as files remains and step (4) can remain unchanged: it should be advantageous to scan S3 PUTs as file-system objects, even if we got notified about it by a Versity Web hook notification.</p>
 
 <ul>
-  <li>Web hook: https://s3/bucket/obj.ect - when we are about AV-scan this, we know that object can be found at /mnt/beegfs/bucket/obj.ect and can “translate &amp; scan” on file-system</li>
+  <li>Web hook: https://s3/bucket/obj.ect - when we are about AV-scan this, we know that object can be found at /mnt/beegfs/bucket/obj.ect and can “translate to POSIX path &amp; scan” on file-system</li>
   <li>FS event: we’d get notified about LAST_WRITER_CLOSED on bucket/obj.ect and we’d prefix those with the BeeGFS mount point such as ‘/mnt/beegfs/’</li>
 </ul>
 
-<p>Either way, we can scan the file/object on BeeGFS.</p>
+<p>Either way, regardless of where notifiations are coming from we can scan the file/object on BeeGFS - there’s no need to “download” it.</p>
 
-<p>We’d just need to be careful to avoid scanning the same file twice.</p>
+<p>We’d just need to be careful to avoid scanning the same file twice if both gRPC and S3 Web hook notifications are active.</p>
 
 <p>We can’t “exclude” certain file-system paths on BeeGFS gRPC client in 8.0.1, so we should build “drop duplicates” and similar rules in our job scheduler, for example, or drop bucket paths in Step (2) or (4) above.</p>
+
+<p>A simplified depiction of a setup that uses both Versity S3 Gateway and BeeGFS gRPC notifications.</p>
+
+<p><img src="/assets/images/versity-s3-gw-av-scanner-dual-event-pipeline.png" alt="Dual event pipeline with Versity S3 GW and BeeGFS gRPC notifications" /></p>
+
+<p>These event sources could also “cross-pollinate”, so to speak, as we could (for example) use S3 web hooks to initiate non-AV on-file-system processing.
+Or we could use BeeGFS gRPC notifications to kick off data pipelines processing on file-system level (e.g. update embeddings for the “file”) and “touch” the object over S3 (e.g. update object’s metadata as embeddings in a Vector DB have been refreshed) to trigger S3 Web hook.</p>
 
 <h2 id="catches">Catches</h2>
 
@@ -214,6 +230,23 @@
 
 <p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity’s temporary files (used during S3 PUT and “housekeeping” Versity S3 Gateway operations). I modified my gRPC server to drop events related to that path, and that fixed it.</p>
 
+<h2 id="fileobject-duality-considerations">File/object duality considerations</h2>
+
+<p>I’ve mentioned this in other posts, but I’ll say it again because it’s necessary.</p>
+
+<p>The user needs to consider what to do with infected objects/files.</p>
+
+<p>I’ve mentioned before: in “classic” (no file/object duality) scenarios some approaches include moving infected object to a quarantine, in others deleting it, and there’s also a “temp bucket” approach in which objects first go to a temporary bucket and only get moved to the intended destination if they are clean.</p>
+
+<p>I think the right way is to send AV scan results to a message store and let bucket owners figure it out. As long as they have access (and as owners, they should) to the bucket, they can wipe the objects or squirrel them away seconds later. There’s no need for storage layer to get involved here.</p>
+
+<p>But, if you do get involved, work on infected files through S3 gateway: that’s where it came from, and that’s how it should be (re)moved. Messing with objects from file-system side may be risky:</p>
+
+<ul>
+  <li>Risky for S3 gateway cache and metadata (I’m not saying it is, but it could be)</li>
+  <li>Risky for S3 users who may count on S3 web hooks to track what’s going on with the object. It’s nicer to tag the object with “<code class="language-plaintext highlighter-rouge">infected: true</code>” than just yank it or “<code class="language-plaintext highlighter-rouge">chown 0400</code>” it from BeeGFS side.</li>
+</ul>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Versity S3 Gateway on BeeGFS is a good stack for scanning incoming data for viruses and malware before you process it.</p>
@@ -223,7 +256,7 @@
 <h2 id="demo">Demo</h2>
 
 <ul>
-  <li>To be posted soon</li>
+  <li><a href="https://rumble.com/v6vimvh-event-processing-with-versity-s3-gateway-and-beegfs-grpc-event-notification.html">Event processing with Versity S3 Gateway and BeeGFS gRPC event notifications</a> (2m46s)</li>
 </ul>
 
 
@@ -271,7 +304,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-06-30 14:18 </p>
+    <p>2025-06-30 17:27 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
