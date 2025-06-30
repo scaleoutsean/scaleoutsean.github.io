@@ -129,7 +129,7 @@
 
   
   
-    12 minute read
+    14 minute read
   
 
     </span>
@@ -365,33 +365,74 @@ UUID      2da5c99a-3cd1-46bc-abef-cadebec27bea
   <li>Use my CLI to create the right number of SolidFire volumes with appropriate QoS settings</li>
 </ul>
 
-<p>Or maybe in the opposite direction, where I know I have 500K IOPS in my cluster with 5 HC610S nodes, so I create X LUNs with 400K IOPS for VMs and leave the rest to containers, and then create PVE storage QoS tags and decide individual VM’s IO settings based on my resources.</p>
+<p>Or maybe in the opposite direction, where I know I have 500K IOPS in my cluster with 5 SolidFire H610S nodes, so I create X LUNs with 400K IOPS (MinIOPS commitment) for VMs and leave the rest to LXC containers, and then create PVE storage QoS tags and decide individual VM’s IO settings based on my resources.</p>
 
-<p>No matter how I’d do it, it’d be always 10 times easier in my CLI than in a plugin.</p>
+<p>No matter how I’d do it, it’d be always 10 times easier in my CLI than in a plugin because I can connect and use both APIs (SolidFire and Proxmox VE) and avoid the hassle of SSH-ing into a Proxmox box.</p>
 
 <p>Earlier I mentioned how writing SolidFire-specific function is not even half of the effort required to do this. It’s even worse than that. As I worked on this I realized there are additional parts (and this also answers the earlier Storage Plugin UI question):</p>
 
 <ul>
-  <li>Storage Plugin with CLI commands</li>
+  <li>Storage Plugin module with CLI commands</li>
   <li>Extra Perl module with SolidFire-specific logic, if one wishes to “piggyback” on one of existing plugins (and not have that module clobbered every time Proxmox is updated)</li>
-  <li>Patches to the Proxmox UI (to get your storage exposed in the UI) - of course, this is the worst because every update breaks it, and then you have to patch again</li>
+  <li>Patches to the Proxmox UI (to get your storage exposed in the UI) - of course, this is the worst because every update breaks it, and then you have to patch, test and deploy again</li>
 </ul>
 
-<p>This one is probably the easiest to piggyback on - it takes a new “back-end” module in the plugin and enough patching to show SolidFire in the drop-down list as well as expose any options that other, existing back-ends don’t have (say, QoS).</p>
+<p>This one below is probably the easiest to piggyback on - it takes a new “back-end” module in the plugin and enough patching to show SolidFire in the drop-down list as well as expose any options that other, existing back-ends don’t have (say, QoS).</p>
 
 <p><img src="/assets/images/proxmox-pve-solidfire-15-proxmox-piggyback-storage-plugin.png" alt="ZFS over iSCSI" /></p>
 
-<p>So even this “easiest” approach involves constant patching of the JS-based UI every time PVE is updated. It’s ridiculous.</p>
+<p>So even this “easiest” approach involves constant patching of the JS-based Proxmox Web UI every time PVE is updated. It’s ridiculous. They can’t “load” plugins like vCenter does - the experience is more consistent with having a vSphere storage plugin that invariably breaks every time unless you can get it included in Proxmox ISO (they have ZFS and Ceph included, for example, so Ceph with E-Series may be the easiest built-in approach as far as NetApp storage arrays are concerned.)</p>
 
 <p>I’m still thinking if I should try to release the SolidFire CLI tool for PVE. Even that seems unnecessary.</p>
 
-<p>If you create a SolidFire Volume Access Group and add PVE cluster members to it, all there is to do on SolidFire is create 1 or 2 TB volumes with one of 2-3 QoS policies you choose. That takes seconds. The rest of the problems are all on PVE.</p>
+<p>If you create a SolidFire Volume Access Group and add PVE cluster members to it, all there is to do on SolidFire is create 1 or 2 TB volumes with one of 2-3 QoS policies you choose. That takes seconds. The rest of the problems and challenges are all on PVE side.</p>
 
 <p>The CLI tool I wrote can do most of SolidFire-related workflow (including SolidFire Storage Account and VAG creation), but I’d like it to have just one key feature for PVE: scan &amp; create <em>consistently named</em> iSCSI volumes, LVMs and LGs so that it’s easy to tell which VG is which LVM is which SolidFire volume.</p>
 
 <p>End-to-end QoS monitoring and enforcement would be nice, but it’s less important.</p>
 
-<p>Those who want a good UI, better check <a href="/2024/02/28/incus-zfs-netapp-eseries.html">LXC</a> than spend time fiddling with PVE’s 20 year old UI. Or wait until they fix it, then give it a try again.</p>
+<p>Two more observations related to Proxmox storage configuration file:</p>
+
+<ul>
+  <li>Of course, it uses a proprietary format…</li>
+  <li>Secondly, only the first <code class="language-plaintext highlighter-rouge">iscsi</code> entry (<code class="language-plaintext highlighter-rouge">iscsi: DR</code>) was manually created. The rest of them are simply done by adding more iSCSI devices in the Proxmox Web UI. Because iscsid.conf is already capable of accessing the same SolidFire iSCSI Portal, you don’t have to add or remove LUNs to this configuration file.</li>
+  <li>LVMs are also added and removed by interacting in the UI, e.g. <code class="language-plaintext highlighter-rouge">base DR-pve02-101</code> is an LVM that uses another iSCSI pool (which is volume ID 101 and volume name <code class="language-plaintext highlighter-rouge">pve02</code> on SolidFire).</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /etc/pve/storage.cfg 
+<span class="nb">dir</span>: <span class="nb">local
+	</span>path /var/lib/vz
+	content backup,vztmpl,iso
+
+iscsi: DR
+	portal 192.168.105.34
+	target iqn.2010-01.com.solidfire:xh67.pve01.99
+	content none
+
+lvmthin: local-lvm
+	thinpool data
+	vgname pve
+	content images,rootdir
+
+iscsi: DR-pve02-101
+	portal 192.168.105.34
+	target iqn.2010-01.com.solidfire:xh67.pve02.101
+	content images
+
+lvm: pve02-101-lvm
+	vgname pve02-vg
+	base DR-pve02-101:0.0.0.scsi-36f47acc1000000007868363700000065
+	content rootdir,images
+	saferemove 0
+	shared 1
+
+</code></pre></div></div>
+
+<p>What’s even funnier is when you use the Proxmox API, you get the same data structure in API response. Happy parsing!</p>
+
+<p>If you have a CLI tool that takes care of adding and removing iSCSI devices and LVMs while giving things reasonable name, the rest is just creating LVs when you create VMs or LXC containers.</p>
+
+<p>Speaking of which: those who want a good, modern UI should check <a href="/2024/02/28/incus-zfs-netapp-eseries.html">“native” LXC</a> on Ubuntu or <a href="/2022/07/10/xcp-ng-with-netapp-solidfire-iscsi.html">XCP-ng</a> than spend time fiddling with PVE’s 20 year old UI. Or wait until they fix it, then give it a try again.</p>
 
       </article>
     </div>
@@ -433,7 +474,7 @@ UUID      2da5c99a-3cd1-46bc-abef-cadebec27bea
 
     
   </div><footer class= "footer">
-    <p>2025-06-28 17:29 </p>
+    <p>2025-06-30 14:18 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
