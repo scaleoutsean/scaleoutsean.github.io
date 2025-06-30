@@ -207,8 +207,16 @@
 
 <p><img src="/assets/images/versity-s3-gw-av-scanner-dual-event-pipeline.png" alt="Dual event pipeline with Versity S3 GW and BeeGFS gRPC notifications" /></p>
 
-<p>These event sources could also “cross-pollinate”, so to speak, as we could (for example) use S3 web hooks to initiate non-AV on-file-system processing.
-Or we could use BeeGFS gRPC notifications to kick off data pipelines processing on file-system level (e.g. update embeddings for the “file”) and “touch” the object over S3 (e.g. update object’s metadata as embeddings in a Vector DB have been refreshed) to trigger S3 Web hook.</p>
+<p>These event sources could also “cross-pollinate”, so to speak, as we could (for example) use S3 web hooks to initiate non-AV on-file-system processing.</p>
+
+<p>Or we could use BeeGFS gRPC notifications to kick off data pipelines processing on file-system level. Example:</p>
+
+<ul>
+  <li>On new S3 PUT, we receive gRPC notification and update embeddings for the “object-file” in a vector DB</li>
+  <li>We then “touch” the object over S3 (new tag: <code class="language-plaintext highlighter-rouge">embeddings=ok</code>)</li>
+  <li>That triggers a new S3 Web hook notification</li>
+  <li>Some Web hook event subscriber out there sees that vector DB has embeddings for latest version of the documents and selectively prunes outdated KV cache for an AI chat bot</li>
+</ul>
 
 <h2 id="catches">Catches</h2>
 
@@ -228,7 +236,7 @@ Or we could use BeeGFS gRPC notifications to kick off data pipelines processing 
 
 <p>In fact, even without BeeGFS your Versity S3 Gateway’s metadata would be single-instance only, unless you had a file-system that supported “shared metadata volumes” (I don’t know of any, and “metadata volume” feature of Versity S3 Gateway is experimental in any case, so it’s great enough that it works as-is at this time).</p>
 
-<p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity’s temporary files (used during S3 PUT and “housekeeping” Versity S3 Gateway operations). I modified my gRPC server to drop events related to that path, and that fixed it.</p>
+<p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity’s temporary files (used during S3 PUT and “housekeeping” Versity S3 Gateway operations). I modified my gRPC server to ignore events related to temporary files, and that fixed it.</p>
 
 <h2 id="fileobject-duality-considerations">File/object duality considerations</h2>
 
@@ -304,7 +312,7 @@ Or we could use BeeGFS gRPC notifications to kick off data pipelines processing 
 
     
   </div><footer class= "footer">
-    <p>2025-06-30 17:27 </p>
+    <p>2025-06-30 17:37 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
