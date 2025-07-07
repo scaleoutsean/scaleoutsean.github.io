@@ -138,8 +138,11 @@
         <ul>
   <li><a href="#background">Background</a></li>
   <li><a href="#firemox">Firemox</a></li>
-  <li><a href="#what-it-does-and-doesnt">What it does, and doesn’t</a></li>
-  <li><a href="#scope-creep">Scope creep</a></li>
+  <li><a href="#what-it-does-and-doesnt">What it does, and doesn’t</a>
+    <ul>
+      <li><a href="#stopping-scope-creep">(Stopping) scope creep</a></li>
+    </ul>
+  </li>
   <li><a href="#known-issues">Known issues</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
 </ul>
@@ -196,9 +199,9 @@
 
 <p>And yes, it is possible to have 4 iSCSI pools and just 1 LVM, which is why the first view has a different purpose: it lets us see which VG and LVM configuration maps to which LUN, whereas in the iSCSI/LVM screenshot we could have three iSCSI LUNs and one LVM configuration.</p>
 
-<h2 id="scope-creep">Scope creep</h2>
+<h3 id="stopping-scope-creep">(Stopping) scope creep</h3>
 
-<p>As I’ve started, I just wanted one-two features, then three and so on. This (possibly) explains the messy way I coded it - the lack of planning is obvious (and that’s why cleaning it up will take days).</p>
+<p>As I’ve started, I just wanted two basic features (present and un-present LUNs), then three and so on. This (possibly) explains the messy way I coded it - the lack of planning is obvious (and that’s why cleaning it up will take days).</p>
 
 <p>But having an external “not plugin” allowed me to do whatever I wanted.</p>
 
@@ -218,9 +221,11 @@
 
 <p>From a user’s perspective, it’d be nice if I could - similarly to how SolidFire and VMware storage policies worke - where I can automatically re-type QoS of my storage volumes depending on how individual VMs and containers were configured. Okay, that can be done.</p>
 
-<p>But why do it when my array makes it easy (it’s in Firemox) to retype a volume, while PVE has absolutely no tools or APIs for that? There’s nothing. I know how to add up the various storage QoS settings from VMs and LXC containers, but why? Let them figure it out and write a proper API, then I’ll think about using it. (Or not, since by then SolidFire will enter end-of-support.)</p>
+<p>But why do it when my array makes it easy (it’s in Firemox) to retype a volume, while PVE has absolutely no tools or APIs for that? There’s nothing. I know how to add up the various storage QoS settings from VMs and LXC containers, but why? Let’s let Proxmox figure it out on their side and write a proper API first, then I’ll think about using that. (Or not, since by then SolidFire will enter end-of-support.)</p>
 
-<p>In Firemox, I can retype SolidFire volumes, “up” or “down”, which is the same users can do with SolidFire plugin for vCenter (and still remains elusive to Trident users - I <a href="/2024/06/19/trident-policy-sucker-for-solidfire-backends.html">would have taken care of that</a> for SolidFire if I knew anyone who needed it, but I never did.)</p>
+<p>In Firemox, I can retype SolidFire volumes, turn the dial “up” or “down”, which is the same users can do with SolidFire plugin for vCenter (and that still remains elusive to Trident users - I <a href="/2024/06/19/trident-policy-sucker-for-solidfire-backends.html">would have taken care of that</a> for SolidFire if I knew anyone who needed it, but I never did.)</p>
+
+<p>Another part that I’d like to have, but decided to <em>not</em> add, was a storage efficiency-related report. I’d like to have it in the same CLI, but really - anyone who needs that information should use <a href="/2025/06/18/sfc-2-dot-1.html">SFC</a> or a similar approach to gather both PVE and SolidFire metrics in a place that can be used to properly visualize these things.</p>
 
 <h2 id="known-issues">Known issues</h2>
 
@@ -228,9 +233,9 @@
 
 <p>I’ve seen this on the Internet with PVE and other shared storage, and I’ve seen it on PVE with SolidFire as well. Rescanning storage doesn’t help, but a rolling-reboot of other nodes (the one used to add storage doesn’t have that issue) does.</p>
 
-<p>It’s not a huge issue for non-mission critical environments, especially since (unlike VMFS) in PVE one host uses one LVM which has one VG, but PVE should fix that. But it may be Corosync or whatever-related, and they’ll probably just wait until others fix their own code.</p>
+<p>It’s not a huge issue for non-mission critical environments, especially since (unlike VMFS) in PVE one host uses one LVM which has one VG, but PVE should fix that. But it may be Corosync- (or whatever) related, and they’ll probably just wait until others fix their own code. (Otherwise, if they wanted to fix it, they would have fixed it by now.)</p>
 
-<p>A rolling-reboot affects existing VMs and CTs, so those have to be live- (or cold-, if live doesn’t work) migrated before rolling reboot. To minimize that, add two or more volumes at a time, I guess, since SolidFire by default creates thin volumes - it doesn’t cost anything.</p>
+<p>A rolling-reboot affects running VMs and CTs so those have to be live- (or cold-, if live doesn’t work) migrated before a rolling reboot of PVE hosts. To minimize that, we can add two or more iSCSI pools and LVMs at a time, I guess, since SolidFire by default creates thin volumes - it doesn’t cost us anything.</p>
 
 <p>Other than that, I suppose I didn’t use PVE long enough to find more problems. At the same time I don’t expect that there would be “SolidFire-only” problems.</p>
 
@@ -288,7 +293,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-07 11:54 </p>
+    <p>2025-07-07 12:08 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
