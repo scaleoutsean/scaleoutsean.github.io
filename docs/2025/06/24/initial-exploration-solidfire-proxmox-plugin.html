@@ -129,7 +129,7 @@
 
   
   
-    14 minute read
+    16 minute read
   
 
     </span>
@@ -143,6 +143,7 @@
   <li><a href="#appendix-a-what-works-and-how">Appendix A: what works and how</a></li>
   <li><a href="#appendix-b-observations-problems-solutions">Appendix B: observations, problems, solutions</a></li>
   <li><a href="#appendix-c-why-i-dont-want-a-solidfire-plugin-for-pve">Appendix C: why I don’t want a SolidFire plugin for PVE</a></li>
+  <li><a href="#appendix-d-corosync-101-for-casual-users">Appendix D: Corosync 101 for casual users</a></li>
 </ul>
 
 <blockquote>
@@ -434,6 +435,52 @@ lvm: pve02-101-lvm
 
 <p>Speaking of which: those who want a good, modern UI should check <a href="/2024/02/28/incus-zfs-netapp-eseries.html">“native” LXC</a> on Ubuntu or <a href="/2022/07/10/xcp-ng-with-netapp-solidfire-iscsi.html">XCP-ng</a> than spend time fiddling with PVE’s 20 year old UI. Or wait until they fix it, then give it a try again.</p>
 
+<h2 id="appendix-d-corosync-101-for-casual-users">Appendix D: Corosync 101 for casual users</h2>
+
+<p>As I tried to add the 2nd node to the cluster, I hit what seems to be a common Proxmox landmine.</p>
+
+<blockquote>
+  <p>I have a question that I tried many times and search over the Internet and got no answer. Well, I have 2 Proxmox machines fresh install. But when I join the cluster it had the pve-ssl.pem not exist error.
+<a href="https://forum.proxmox.com/threads/joining-cluster-pve-ssl-pem-error.131263/">source</a></p>
+</blockquote>
+
+<blockquote>
+  <p>I’ve spent all week trying to get clustering working but I’m having problems. 
+<a href="https://forum.proxmox.com/threads/create-cluster-problem-possibly-ssl-related.130309/">source</a></p>
+</blockquote>
+
+<p>I’ve definitively seen this as well.</p>
+
+<p>Corosync config after failed cluster expansion:</p>
+
+<pre><code class="language-raw">nodelist {
+  node {
+    name: pve
+    nodeid: 1
+    quorum_votes: 1
+    ring0_addr: 192.168.105.194
+  }
+  node {
+    name: s195
+    nodeid: 2
+    quorum_votes: 1
+    ring0_addr: 192.168.1.195
+  }
+}
+</code></pre>
+
+<p>Long story short, I suspect that PVE “smartly” picked “Private” (actually it’s my iSCSI network, so I wouldn’t have picked it if I noticed) network 192.168.105.0/24 for cluster traffic.</p>
+
+<p>It also tried to pick a gateway on that network (I normally wouldn’t have it on a iSCSI network, but I have some DHCP clients on it that need to get package updates). I noticed that and stopped DHCP server and gateway on that network.</p>
+
+<p>Then later, when I rebooted the first single-node cluster, I realized my <code class="language-plaintext highlighter-rouge">ring0_addr</code> was down. Why would anyone go out of their way to pick a cluster interface that has DHCP address is beyond belief.</p>
+
+<p>The second node did NOT get an IP address on that network and I tried adding it to the cluster before I configured fixed IP on iSCSI network and that was the end, I suspect…</p>
+
+<p>Proxmox allows you to pick a “secondary” network for cluster traffic, but the UI is poor so I didn’t even notice that until I reinstalled everything and paid close attention.</p>
+
+<p>All right, fair enough - it works, but it’s lame.</p>
+
       </article>
     </div>
     
@@ -460,13 +507,13 @@ lvm: pve02-101-lvm
       
         <li><a href="/2022/04/05/proxmox-solidfire.html">Consume SolidFire storage from Proxmox hosts</a></li>
       
+        <li><a href="/2025/07/07/firemox.html">Firemox - an anti-plugin for Proxmox PVE with NetApp SolidFire</a></li>
+      
         <li><a href="/2024/02/11/add-solidfire-storage-from-kvm.html">Add NetApp SolidFire iSCSI storage to KVM</a></li>
       
         <li><a href="/2024/02/07/migrate-netapp-hci-from-vmware.html">How to change NetApp HCI from VMware to alternatives</a></li>
       
         <li><a href="/2025/05/22/windows-2025-netapp-solidfire.html">Windows Server 2025 with NetApp SolidFire</a></li>
-      
-        <li><a href="/2024/07/31/openshift-ocp-416-iscsi-boot-solidfire.html">Boot OpenShift RCOS from NetApp SolidFire iSCSI target</a></li>
       
       </ul>
     </div>
@@ -474,7 +521,7 @@ lvm: pve02-101-lvm
 
     
   </div><footer class= "footer">
-    <p>2025-06-30 17:37 </p>
+    <p>2025-07-07 11:54 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
