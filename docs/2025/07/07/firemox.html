@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-07-07T00:00:00+08:00" />
 <script type="application/ld+json">
-{"image":"https://scaleoutsean.github.io/assets/images/firemox-04-utilities.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/07/firemox.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"It works, kind of","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/07/07/firemox.html","headline":"Firemox - an anti-plugin for Proxmox PVE with NetApp SolidFire","dateModified":"2025-07-07T00:00:00+08:00","datePublished":"2025-07-07T00:00:00+08:00","@context":"https://schema.org"}</script>
+{"author":{"@type":"Person","name":"scaleoutSean"},"description":"It works, kind of","@type":"BlogPosting","headline":"Firemox - an anti-plugin for Proxmox PVE with NetApp SolidFire","dateModified":"2025-07-07T00:00:00+08:00","datePublished":"2025-07-07T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/firemox-04-utilities.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/07/firemox.html"},"url":"https://scaleoutsean.github.io/2025/07/07/firemox.html","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    8 minute read
+    11 minute read
   
 
     </span>
@@ -146,6 +146,7 @@
   <li><a href="#known-issues-and-limitations">Known issues and limitations</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#demo">Demo</a></li>
+  <li><a href="#appendix-a-feature-creep-continues-20250709">Appendix A: Feature creep continues (2025/07/09)</a></li>
 </ul>
 
 <h2 id="background">Background</h2>
@@ -168,7 +169,7 @@
 
 <p>“Firemox” reminds me of Firefox: it works, but has its fair share of annoyances.</p>
 
-<p>So I picked Firemox over other alternatives.</p>
+<p>So I picked Firemox over other alternatives. (Of course, there <em>is</em> a Firemox project… It’s a game. I don’t care.)</p>
 
 <p>Unlike Firefox, Firemox does not spy on its users and is probably more secure in many ways. One dependency, zero junk. More about it in the README once I get it on Github.</p>
 
@@ -228,6 +229,8 @@
 
 <p>I know how to add up the various storage QoS settings from VMs and LXC containers and it works, but really - we should let Proxmox figure it out on their end and write a proper API first, then I’ll think about using that. (Or not, since by then SolidFire will enter end-of-support.)</p>
 
+<p><img src="/assets/images/firemox-04-pve-api.png" alt="PVE - pick your delimiter adventure" /></p>
+
 <p>Currently we can retype SolidFire volumes from Firemox (turn the dial “up” or “down”) which is the same users can do with SolidFire plugin for vCenter (and that still remains elusive to Trident users - I <a href="/2024/06/19/trident-policy-sucker-for-solidfire-backends.html">would have taken care of that</a> for SolidFire if I knew anyone who needed it, but I never did.)</p>
 
 <p>Another part that I’d like to have, but decided to <em>not</em> add, was a storage efficiency-related report. I’d like to have it in the same CLI, but really - anyone who needs that information should use <a href="/2025/06/18/sfc-2-dot-1.html">SFC</a> or a similar approach to gather both PVE and SolidFire metrics in a place that can be used to properly visualize these things.</p>
@@ -240,7 +243,7 @@
 
 <p>It’s not a huge issue for non-mission critical environments, especially since (unlike VMFS) in PVE one host uses one LVM which has one VG, but PVE should fix that. But it may be Corosync- (or whatever) related, and they’ll probably just wait until others fix their own code. (Otherwise, if they wanted to fix it, they would have fixed it by now.)</p>
 
-<p>A rolling-reboot affects running VMs and CTs so those have to be live- (or cold-, if live doesn’t work) migrated before a rolling reboot of PVE hosts. To minimize that, we can add two or more iSCSI pools and LVMs at a time, I guess, since SolidFire by default creates thin volumes - it doesn’t cost us anything.</p>
+<p>Rolling-reboot affects running VMs and CTs so those have to be live- (or cold-, if live doesn’t work) migrated before a rolling reboot of PVE hosts. To minimize that, we can add two or more iSCSI pools and LVMs at a time, I guess, since SolidFire by default creates thin volumes - it doesn’t cost us anything.</p>
 
 <p>Other than that, I suppose I didn’t use PVE long enough to find more problems. At the same time I don’t expect that there would be “SolidFire-only” problems.</p>
 
@@ -265,6 +268,27 @@
 <ul>
   <li><a href="https://rumble.com/v6vu287-firemox-cli-client-for-promox-pve-with-netapp-solidfire.html">Quick demo of Firemox</a> - 6m48s</li>
 </ul>
+
+<h2 id="appendix-a-feature-creep-continues-20250709">Appendix A: Feature creep continues (2025/07/09)</h2>
+
+<p>After posting the above, I saw some people asking about snapshots.</p>
+
+<p>So I’ve added snapshots today. To be exact: I’ve added the ability to add and remove PVE-exposed SolidFire volumes to any existing (SolidFire) snapshot schedule.</p>
+
+<p>The way it works - as you might imagine - is Firemox lists snapshot schedules and PVE-exposed volumes, and the user picks one of the former and one or more of the latter. When removing, the user views the former and removes one or more of the latter (volume IDs, that is).</p>
+
+<p>I don’t like the idea, by the way. If you’re in a CLI client like Firemox, you probably don’t quite know what’s where in terms of VMs and CTs, unless you’re a well-organized person. So the ability to add or remove volumes from snapshot schedules is unlikely to help.</p>
+
+<p>I deliberately did not add an option to restore a snapshot, because that could be potentially destructive to VMs and CTs on volumes where snapshots are recovered. I think enough users would make a mistake or typo in that situation. If something is screwed up to the extent that you need to restore a snapshot, you’d better check the situation in PVE and SolidFire UI and while there, perform all the actions in those two browser tabs is what I think is a good approach. I may be wrong, of course.</p>
+
+<p>I think a better way would be a separate snapshotter service unrelated to Firemox, which would work along the line of my old <a href="https://github.com/scaleoutsean/solidbackup">Solidbackup</a> script, where there’s a service that lets you configure volumes that need to be protected and the service takes care of snapshots and other things (such as backup to S3). I may revisit this idea if I encounter anyone who actually needs that stuff.</p>
+
+<p>For PVE I’d slightly change the approach and start with VMs and CTs, rather than SolidFire volumes, because I now can use VI’s API. Each VM/CT can tell me what volumes are used, and then hardware snapshots can be created without the user knowing where’s what. Or I would only create a lookup script that takes a list of VM and CT IDs and spits out a list of volume IDs that can be fed to a snapshot schedule, which would eliminate the need to add/remove volumes in Firemox.</p>
+
+<p>But even in that case, one would also have to figure out how to create clones from snapshots and mount them for recovery of individual CTs, QCOW disk files and whatnot. I also know it may be easier to examine how Proxmox Backup could be used than reinvent the wheel. I haven’t had time to do that.</p>
+
+<p>For now, at least basic snapshots can be created while restores may be destructive. In the worst case (if you need to restore but just one VM or CT) it would be possible to clone a LUN for a PVE VM (with a different tenant ID), import the LUN there and scp the file(s) across.</p>
+
 
       </article>
     </div>
@@ -310,7 +334,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-07 17:31 </p>
+    <p>2025-07-09 01:49 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
