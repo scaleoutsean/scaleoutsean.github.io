@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-07-23T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"How many experts does it take … never mind","@type":"BlogPosting","headline":"S3 GO NATS!","dateModified":"2025-07-23T00:00:00+08:00","datePublished":"2025-07-23T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/s3-go-nats.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/23/s3-vector-search-02-diy.html"},"url":"https://scaleoutsean.github.io/2025/07/23/s3-vector-search-02-diy.html","@context":"https://schema.org"}</script>
+{"image":"https://scaleoutsean.github.io/assets/images/s3-go-nats.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/23/s3-vector-search-02-diy.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"How many experts does it take … never mind","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/07/23/s3-vector-search-02-diy.html","headline":"S3 GO NATS!","dateModified":"2025-07-23T00:00:00+08:00","datePublished":"2025-07-23T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -129,7 +129,7 @@
 
   
   
-    16 minute read
+    18 minute read
   
 
     </span>
@@ -151,8 +151,9 @@
       <li><a href="#versity-s3-gateway-and-beegfs-options">Versity S3 Gateway and BeeGFS options</a></li>
     </ul>
   </li>
+  <li><a href="#we-dont-do-diy">“We don’t do DIY”</a></li>
   <li><a href="#conclusion">Conclusion</a></li>
-  <li><a href="#appendix-a-s3-go-nats-screenshots">Appendix A: S3-GO-NATS screenshots</a></li>
+  <li><a href="#appendix-a-s3-go-nats-screenshots">Appendix A: S3 GO NATS screenshots</a></li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -305,6 +306,28 @@
 
 <p>If we replace “gRPC-driven AV scanning” with “gRPC-driven embeddings with Faiss”, that’s 90% of what needs to be done to make this work faster than both S3 Vectors or regular S3-only approach for creating embeddings for large files/objects. And - look ma, no additional services! - we could easily use flat files for both warm and cold indexes.</p>
 
+<h2 id="we-dont-do-diy">“We don’t do DIY”</h2>
+
+<p>Well, AWS S3 Vectors (and AWS OpenSearch Service) have enough limitations that, if vector search is important for your workloads, eventually you will have do <em>something</em>.</p>
+
+<p>But that aside, I’d be remiss if I didn’t point out that it’s easy to derisk the tiny amount of work required to make this better. For example, say you wanted to evacuate “the hard part” and give it to the pros.</p>
+
+<p>Let’s say, Kafka and the database such as OpenSearch or PostreSQL (with <a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">pgvector</a> extension). That could be done easily with <a href="https://www.instaclustr.com/platform/">Instaclustr</a>: you could be up and running in hours.</p>
+
+<p>I’m not trying to do their homework here (you could run this by one of the Instaclustr dudes) - this just is an example of how S3 GO NATS could be “professionalizated”: what’s left on-premises isn’t much and the embedding-generating services could be from NVIDIA or <a href="/2025/05/21/opean-ai-with-netapp-eseries.html">OPEA</a>. You’d just need a dispatcher or not even that (if you implemented it in Kafka).</p>
+
+<p><img src="/assets/images/s3-go-nats-instaclustr.png" alt="S3 go Instaclustr" /></p>
+
+<p>This way “S3 GO NATS” becomes “S3 goes enterprise”, with key “data” services taken care of by Instaclustr and at scale I think this would work better than AWS S3 Vectors. And at scale Instaclustr can manage these services <a href="https://www.instaclustr.com/blog/understanding-netapp-instaclustr-architectures-part-3-running-instaclustr-workloads-on-premises/">on your premises</a> as well - right next to your S3 “storages”).</p>
+
+<p>But even in cloud or hybrid cloud scenarios, you can squeeze a lot of extra juice this way. How does “any cloud with local read-only OpenSearch database replicas” sound like?</p>
+
+<p><img src="/assets/images/s3-go-instaclustr-global-vector-search.svg" alt="S3 Go Instaclustr Global S3 vector search" /></p>
+
+<p>It sounds good to me. Somebody should check with Instaclustr if that’s at all possible, but I asked an AI and it told me “of course”.</p>
+
+<p>Notice that almost all of this works as-is today, out of the box! I mean, StorageGRID to Kafka to OpenSearch (or PostgreSQL, if Instaclustr or you process Kafka notifications differently). The only missing piece is a watcher (step 4 in my diagram) that dispatches embeddings-building tasks (embeddings can be crated in any AI stack).</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>In Part 1 I talked about the struggling AWS S3 and the supposed need for various “solutions” or “product stacks” that we see in AWS S3 Vectors (S3-side, cold vector search) and on-premises S3 storage-tethered database-side (hot vector search).</p>
@@ -320,11 +343,11 @@
 
 <p>Both of these approaches leave a lot to be desired.</p>
 
-<p>If vector search (and S3 search in general) is important for your business, you should do it yourself, and do it well. Even if I liked specific database offered by the object storage vendfor, I’d buy and deploy it separately and wouldn’t tether it to object storage or compromise in terms which applications can use it and how, what version it uses, how it’s configured and so on.</p>
+<p>If vector search (and S3 search in general) is important for your business, you should do it yourself, and do it well. Even if I liked specific database offered by the object storage vendor, I’d buy and deploy it separately and wouldn’t tether it to object storage or compromise in terms which applications can use it and how, what version it uses, how it’s configured and so on.</p>
 
-<p>Vector search for power users is one of those potentially high-value services that aren’t hard to get right. Whether you buy or build, getting one tethered to your S3 object store is often a bad idea.</p>
+<p>Vector search for power users is one of those potentially high-value services that aren’t hard to get right. Whether you buy or build, getting one tethered to your S3 object store should probably be the last alternative to consider.</p>
 
-<h2 id="appendix-a-s3-go-nats-screenshots">Appendix A: S3-GO-NATS screenshots</h2>
+<h2 id="appendix-a-s3-go-nats-screenshots">Appendix A: S3 GO NATS screenshots</h2>
 
 <p>You may open these in new browser tab or window.</p>
 
@@ -402,7 +425,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-23 20:52 </p>
+    <p>2025-07-23 22:50 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
