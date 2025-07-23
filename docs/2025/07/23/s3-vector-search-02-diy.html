@@ -129,7 +129,7 @@
 
   
   
-    11 minute read
+    16 minute read
   
 
     </span>
@@ -140,7 +140,7 @@
   <li><strong>Part 2 - S3 vector search: S3 GO NATS!</strong> (this post)</li>
 </ul>
 
-<p>The first part was a rant against current approaches. This part attempts to demonstrate why not all but <em>many</em> S3 users shouldn’t use AWS S3 Vectors or their on-premises S3 vendor’s vector DB integration.</p>
+<p>The first part was a rant against the current (or you might say emerging) approaches. This part attempts to demonstrate why not all but <em>many</em> S3 users shouldn’t use AWS S3 Vectors or their on-premises S3 vendor’s vector DB integration.</p>
 
 <ul>
   <li><a href="#introduction">Introduction</a></li>
@@ -160,31 +160,31 @@
 <p>Continuing from the rant in Part 1, this post aims to demonstrate:</p>
 
 <ul>
-  <li>how AWS S3 could have “solved” this better for S3 users</li>
-  <li>how on-premises S3 vendors could do vector search right rather than redundantly productize stuff with weak value proposition</li>
+  <li>how AWS S3 could have “solved” this better for its S3 users</li>
+  <li>how on-premises S3 vendors could do vector search right rather than redundantly productize open source stuff with little-to-no value added</li>
 </ul>
 
-<p>As for AWS S3 Vectors, it could have been done</p>
+<p>What you see in this post took me a few evenings and a full (last) weekend to create and it’s similar (mostly better) than what some S3 vendors sell as products.</p>
 
-<p>This took me a few evenings and a full (last) weekend to create.</p>
-
-<p>In other words, in my book this doesn’t qualify as a “product” and shouldn’t be tightly tethered to another product or service (AWS S3 or on-premises S3 storage).</p>
+<p>In other words, in my book that doesn’t qualify as a “product” and shouldn’t be tightly tethered to a storage product or service (AWS S3 or on-premises S3 storage).</p>
 
 <h2 id="poor-mans-s3-vectors">Poor man’s S3 Vectors</h2>
 
-<p>This idea originated after I started looking various “stacks” that everyone is marketing these days, which was in the post about BeeGFS gRPC event notifications in version 8 (of BeeGFS). As I mentioned <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html">here</a> and <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">here</a>, that gives me a good tool to do “my own thing” in terms of building data pipelines that includes AI pipelines.</p>
+<p>This idea originated before S3 Vectors was announced and after I started looking various “stacks” that many storage vendors are marketing these days, which was in the post about BeeGFS gRPC event notifications in version 8 (of BeeGFS). As I mentioned <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html">here</a> and <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">here</a>, we have all the tools to do “our own thing” in terms of building data pipelines (including those for AI and therefore vector search).</p>
 
-<p>I spent free time in late June and early July working on another thing (<a href="/2025/07/07/firemox.html">Firemox</a>), so AWS S3 Vectors got released before I managed to do my own take on “vector search for on-prem S3 users”, but after I saw the announcement it also gave me the opportunity to reflect on S3 in general and their take on it.</p>
+<p>More importantly, when “rolling your own”, you don’t have to come up with a highly proprietary, complex solution. You can use open source software and stick to established approaches while not without making compromises.</p>
 
-<p>One of the scenarios in S3-related data pipeline posts is creating and updating vector indices for directories and/or buckets.</p>
+<p>I spent most of my free time in late June and early July working on another thing (<a href="/2025/07/07/firemox.html">Firemox</a>), so AWS S3 Vectors got released before I managed to create my own take on “vector search for on-prem S3 users”, but seeing the S3 Vectors announcement also gave me the opportunity to reflect on S3 in general and their take on S3 vector search.</p>
+
+<p>One of the scenarios in my S3-related data pipeline posts is creating and updating vector indices for directories and/or buckets.</p>
 
 <p>I actually toyed with this idea last year in the post about <a href="/2024/02/23/storagegrid-notifications-kafka.html">StorageGRID Kafka notifications</a> when I observed that notifications don’t contain metadata or tags, but let’s move on.</p>
 
 <h2 id="bring-your-own-vectors-with-s3-go-nats">Bring your own vectors with “S3 GO NATS”</h2>
 
-<p>As I said in the first post, when it comes to vector search most on-premises S3 vendors spent half a decade totally asleep at the wheel and are now over-compensating with bloat and “solution stacks”.</p>
+<p>As I said in the first post of this “Vector search for S3” series, when it comes to vector search most on-premises S3 vendors spent half a decade totally asleep at the wheel and are now over-compensating with unnecessary bloat and productized “solution stacks”.</p>
 
-<p>When I started working with BeeGFS and Versity S3 Gateway, it didn’t take long to see it:</p>
+<p>When I started working with Versity S3 Gateway and BeeGFS anti-virus scanning solution, it didn’t take me long to see it:</p>
 
 <ul>
   <li>most S3 storage has Webhooks or some other notifications for object events (and now BeeGFS has great notifications for FS events as well - see those posts)</li>
@@ -194,105 +194,125 @@
 
 <p>That doesn’t seem to equal “I need a $200K S3 vector search solution stack”, but it depends on whom you ask.</p>
 
-<p>So over several evenings I had approximately 1.5 iterations on this 2+2=4 thing before I got to work on it.</p>
+<p>So over several evenings I did approximately 1.5 iterations on this 2+2=4 thing before I started working on PoC/code. I call it “S3 GO NATS” because it uses S3, Go and NATS. (There’s also Python, but I use that all the time.)</p>
 
-<p>Half-way through developing it I had to change some things so it took approximately 3 iterations to get here:</p>
+<p>Half-way through I had to change some things, so it took me approximately 3 iterations to get here:</p>
 
 <p><img src="/assets/images/s3-go-nats.png" alt="S3 Go NATS diagram" /></p>
 
+<p>How it works:</p>
+
 <ul>
-  <li>Step 1: configure Kafka (or Kafka-to-message store) notifications on your S3 storage</li>
-  <li>Step 2: send them to some persistent storage (can be a DB or Kafka or message queue). I used the last one which is the same what I used with the S3 anti-virus posts, and why I call this “S3 GO NATS”</li>
-  <li>Step 3: a dispatcher watches these and creates jobs per configuration file</li>
-  <li>Step 4: index manager or manager<em>s</em> (if you want to completely prevent one index manager service from accessing buckets or indexes that belong to other users) watches index tasks, gets object metadata and tags, and triggers vectorizer jobs</li>
-  <li>Step 5: I have “2.5 kinds” of these jobs (one for plain search, and 1.5 for vector search)
+  <li>Step 1: configure S3 bucket(s) to send notifications to Kafka (or Kafka-to-message store)</li>
+  <li>Step 2: store S3 notifications in some persistent storage (can be a DB or Kafka or a message queue). I used the last one which is the same what I used in the recent S3 anti-virus posts</li>
+  <li>Step 3: dispatcher service monitors “per-bucket” queue and creates “indexing” jobs as per configuration/settings/preferences</li>
+  <li>Step 4: index manager (or manager<em>s</em>, if you want to completely prevent one index manager service from accessing buckets or indexes that belong to other users) watches indexing jobs, gets object metadata and tags from S3, and triggers vectorizer jobs</li>
+  <li>Step 5: I have “2 and 1/2 kinds” of these jobs (one for plain search, and 1.5 for vector search)
     <ul>
       <li>“Lite” vector embeddings are those where vectorizer service simply creates embeddings for object metadata and tags passed on to it by index manager service</li>
-      <li>“Heavy” vector embeddings are those where vectorizer service <em>also</em> reads the object from S3 to create embeddings for it. This needs document segmentation, image analysis, etc.</li>
-      <li>“Search-only” - <strong>without</strong> vector embeddings; this is done directly by index manager without dispatching to vectorizer</li>
-      <li>When S3 event name is <code class="language-plaintext highlighter-rouge">s3:ObjectRemoved:*</code>, there’s no indexing - we then delete object from ElasticSearch indexes configured for the bucket</li>
+      <li>“Heavy” vector embeddings are those where vectorizer service <em>also</em> reads the object from S3 to create embeddings for it. This needs document/object segmentation and language (text) or image (images) analysis which are both implemented, so there are two kinds of “engines” used for “heavy” embeddings. More could be added (specialized OCR for PDF, or specialized vectorizer for video, for example)</li>
+      <li>“Search-only” index - <strong>without</strong> vector embeddings; this is lightweight and done directly by index manager without dispatching jobs to vectorizer job queues</li>
+      <li>When an S3 event name is <code class="language-plaintext highlighter-rouge">s3:ObjectRemoved:*</code>, there’s no indexing either - instead we delete key/object entry from ElasticSearch indexes configured for the bucket</li>
     </ul>
   </li>
-  <li>Step 6: index entries - whether it’s just search, or heavy embedings, or lite embeddings, or all three (depends on configuration, I can do all them, or even none) - are sent to <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_search</code> or <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_vector</code></li>
+  <li>Step 6: push created or deleted index entries to your search DB - whether those are for simple search, heavy embedings, lite embeddings, or all three (depends on configuration, I can do “all of the above” or even none). Depending on per-bucket and per-object-type configuration, entries are sent to <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_search</code> or <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_vector</code>.</li>
 </ul>
 
-<p>Obviously, none of this <em>has</em> to work this way. And I don’t think AWS S3 Vectors should work like this at all.</p>
+<p>Obviously, none of this <em>has</em> to work this way. And I don’t think AWS S3 Vectors should work like this at all (it should work better/smarter and use plain S3).</p>
 
-<p>The point is that it <em>does</em> work, it took me just a few days to get it done <em>properly</em> (it not production-ready, but it doesn’t need a re-write or a change of architecture).</p>
+<p>My point, rather, is that it <em>does</em> work. It took me just a few days to get it done <em>properly</em>. It is not production-ready, but a lot of details are handled and it doesn’t need a re-write or a change of components or architecture.</p>
 
-<p>Containers and services as implemented so far:</p>
+<p>Containers and services as implemented in S3 GO NATS:</p>
 
 <ul>
-  <li>HTTPS reverse proxy (Caddy)</li>
-  <li>Persistent message store (3 NATS containers with filesystem-based message store; RF2; can be scaled out)</li>
-  <li>DIY Webhook service (could be scaled-out for HA; scale-out is not needed here (I <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html#appendix-a-batching-and-filtering">evaluated</a> that while working with BeeGFS file-system notifications)</li>
-  <li>DIY Dispatcher service</li>
-  <li>DIY API gateway which also runs watcher and vectorizer tasks (could be split in 3-4 services for scale-out)</li>
-  <li>DIY CLI client (some are own, some S3 Vectors APIs, e.g. <code class="language-plaintext highlighter-rouge">CreateEmbeddings</code>, <code class="language-plaintext highlighter-rouge">PutVectors</code>)</li>
-  <li>DIY utilities container with tools</li>
-  <li>ElasticSearch 9 (1 container, can be scaled out)</li>
+  <li>HTTPS reverse proxy (Caddy) for API and Webhook service</li>
+  <li>Persistent message store (3 NATS containers with file-system-based message store and RF2; can be scaled out)</li>
+  <li>DIY Webhook service (in Go; could be scaled out for HA; scale-out for performance is not needed (I <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html#appendix-a-batching-and-filtering">evaluated</a> that while working with BeeGFS file-system notifications), but by scaling out for HA you’d get scale out for performance as well)</li>
+  <li>DIY Dispatcher service (also in Go, to keep up with hundreds of events per second)</li>
+  <li>DIY API gateway which also runs watcher and vectorizer tasks (Python; async &amp; multi-threaded; could be split in 3-4 services for scale-out). Some API calls are own (e.g. <code class="language-plaintext highlighter-rouge">CreateEmbeddings</code>), others emulate S3 Vector service (<code class="language-plaintext highlighter-rouge">PutVectors</code>) which you can see in a screenshot further below</li>
+  <li>DIY CLI client for checks and testing</li>
+  <li>DIY utilities container with tools, almost like a “management node”</li>
+  <li>ElasticSearch 9 (just one container with RF1, but this is a well understood service that can be scaled out)</li>
 </ul>
 
 <h2 id="how-is-that-better">How is that better?</h2>
 
-<p>I don’t think Amazon S3 Vectors is bad or worse than my PoC, but it seems to me in the early 20s they’ve discovered that “regular” S3 simply can’t work the way they wanted it to work, so things like S3 Select are out, and bolt-on “sidecars” like S3 Tables and S3 Vectors are in. This is a problem.</p>
+<p>I don’t think Amazon S3 Vectors is bad or worse than my PoC, but it seems to me in the early 20s they’ve discovered that “regular” S3 simply can’t work the way they wanted it to work, so now things like S3 Select are out, and bolt-on “sidecars” like S3 Tables and S3 Vectors are in. This is a problem.</p>
 
 <p>In my own area of concern (say, NetApp StorageGRID or Versity S3 Gateway on BeeGFS), I can implement this (not even “poor man’s”) version that’s not so bad and works well enough - worse in some ways, and much better in others:</p>
 
 <ul>
   <li><em>Consistent</em> AWS S3 Vectors API for hot and cold vectors
     <ul>
-      <li>I implemented 2-3 S3 Vectors API methods in this PoC (more on that below). While AWS S3 Vectors users can use S3 Vectors APIs, once they expert data to OpenSearch Service they need to switch to OpenSearch API. My fake S3 Vectors API proxies selected S3 Vectors API to Elasticsearch, so your “hot” vector index data is already in Elasticsearch while cold can be tiered to S3 by Elasticsearch. And you can use Elasticsearch API as well - same data with two APIs</li>
+      <li>I implemented 2-3 S3 Vectors API methods in this PoC (more on that below)</li>
+      <li>While AWS S3 Vectors users must use S3 Vectors APIs, once they expert data to OpenSearch Service they need to switch to using OpenSearch API</li>
+      <li>My fake S3 Vectors API proxies selected S3 Vectors API calls to ElasticSearch, so my “hot” vector index data is already in a (fast) ElasticSearch database while cold data can be tiered to S3 by ElasticSearch (or I can keep those indexes on E-Series NL-SAS storage). And we can bypass my API and use ElasticSearch API as well - same data with two APIs</li>
     </ul>
   </li>
-  <li>Front-end is Webhooks- or Kafka-based, so it’s easy to get notifications from any S3 service. My prototype receives StorageGRID Kafka notifications which use the standard AWS S3 SNS format, but its contents are slightly different between S3 vendors. The same approach can support Versity S3 Gateway notifications</li>
-  <li>Back-end design is modular, so I could use OpenSearch or Qdrant or <em>whatever I like</em> (flat files, for example)</li>
-  <li>It’s possible to overcome AWS S3 Vectors service limitations (which exist to not overload S3, and force you to export “hot” data to OpenSearch, or build your own indexer)</li>
+  <li>Front-end is Webhooks- or Kafka-based, so it’s easy to get notifications from any S3 product. My prototype receives StorageGRID Kafka notifications which use the standard AWS S3 SNS format, but its contents slightly differ between different on-premises S3 vendors. The same approach needs only minor changes to support Versity S3 Gateway notifications, which means I can use multiple S3 providers without any issues</li>
+  <li>Back-end design is modular as well. I can use OpenSearch or Qdrant or <em>whatever I like</em> (flat files, for example)</li>
+  <li>Thanks to this simple, scalable and flexible design it is possible to overcome AWS S3 Vectors service limitations (which exist to play nicely with AWS S3, but force you to export “hot” data to OpenSearch or build your own index server as a workaround)</li>
 </ul>
 
-<p>Regarding the claim (see the first post in vector search series) that keeping cold S3 Vectors data costs much less than keeping cold vector indexes in OpenSearch: that’s obviously true, but these savings apply to cold vector data only and could be done with standard S3 APIs: store vector indexes in Parquet files on flash-based S3 storage instead of, or <em>in addition to</em>, using a non-serverless vector database service like OpenSearch or Qdrant.</p>
+<p>Regarding the AWS claim (see the first post in this “vector search for S3” series) that keeping cold S3 Vectors data costs much less than keeping cold vector indexes in OpenSearch: that’s obviously true, but these savings apply to cold vector data only and could be done with standard S3 APIs:</p>
+<ul>
+  <li>store vector indexes on premium AWS S3 storage instead of adding novel “S3” API methods</li>
+  <li>store data in flat files that are easy to download and bulk-import anywhere (in addition to OpenSearch) for use with any vector database that can support S3 Vectors embeddings</li>
+</ul>
 
-<p>If we want to stick to the AWS approach, we can store S3 Vectors’ “non-filterable metadata” as objects in regular S3 buckets. If we store non-filterable data in regular S3 buckets, we can access it with standard S3 clients and to make that easier, we can emulate the same S3 Vectors API. Now you may think: “you can access non-filterable data in S3 Vectors with standard S3 clients, too”, but I think that’s not the same:</p>
+<p>They chose not to do that.</p>
+
+<p>If we wanted to avoid S3 Vectors APIs and stick to the general AWS S3 APIs we could store S3 Vectors’ “non-filterable metadata” as objects in regular S3 buckets. Then we can access it <em>directly</em> with standard S3 clients and to make that easier, we can emulate the same S3 Vectors API in our API server (which is what I did) to emulate it for applications written for S3 Vectors API.</p>
+
+<p>Now you may think: “but you can access non-filterable data in S3 Vectors with standard S3 Vectors client, too”, but I think that’s not the same:</p>
 
 <ul>
-  <li>S3 Vectors: S3 clients need to specifically store, and request, non-filterable metadata (maybe at a higher price compared to standard S3 storage, too). It’s an AWS S3 Vectors-only API.</li>
-  <li>Regular S3 API: if you don’t code your application to AWS S3 Vectors API, you would use standard AWS S3 API and can get that extended data as any other S3 object. This works anywhere - StorageGRID, GCP Cloud Storage, Versity, etc.</li>
+  <li>S3 Vectors: S3 clients need to specifically store, and request, non-filterable metadata (maybe at a higher price compared to standard S3 storage, too). Those are AWS S3 Vectors-only API methods.</li>
+  <li>Regular S3 API: you don’t develop your application to AWS S3 Vectors API. You use the standard AWS S3 APIs and can get that extended (meta)data as any other other S3 object. This can works anywhere - StorageGRID, GCP Cloud Storage, Versity S3 Gateway - and <em>be replicated together with data</em> in hybrid cloud environments</li>
 </ul>
 
-<p>And this is even without trying to emulate AWS S3 Vectors API for “non-filterable metadata”, which is another option (I didn’t emulate that option in my PoC, because it seems like Amazon’s workaround, rather than something we should follow).</p>
+<p>When “plain S3” is not possible we can emulate AWS S3 Vectors API methods (this includes “non-filterable metadata”), which is another option. I chose to not emulate non-filterable metadata in API server of my PoC because that seems like a workaround rather than something we should follow. I think S3 Vectors APIs (especially non-filterable metadata) should be rejected by users who have a choice.</p>
 
-<p>Regarding AWS S3 Vector service limits: they can be found <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-vectors-limitations.html">here</a>, if you’re curious. With a DIY approach you could easily work around all of them by changing whatever “limit” bothered you.</p>
+<p>Regarding AWS S3 Vector service limits: they can be found <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-vectors-limitations.html">here</a>, if you’re curious. With the DIY approach you could easily work around them by changing whatever “limit” or step in that embeddings-creating process outlined above bothered you.</p>
 
-<p>With AWS S3 Vectors you not only have to work within those limits, but also have to worry about OpenSearch limits (as long as they won’t let you export vector data elsewhere). Of course, you can read S3 Vectors directly and do it by yourself, but that’s exactly what I’ve been arguing for in these posts.</p>
+<p>With AWS S3 Vectors you not only have to work within those limits, but also have to worry about OpenSearch limits (as long as they won’t let you export vector data elsewhere). Of course, you can read S3 Vectors data directly via its S3 Vectors APIs and import that data to own database, but in that case you may as well skip S3 Vectors and do everything on your own.</p>
+
+<p>But even that approach can’t work very well because some S3 Vectors’ limits are related to how embeddings are created.</p>
+
+<p>You can’t  create or store more dimensions than S3 Vectors supports, so even with direct API lookup you may still need to access S3 objects on your own and create embeddings in a DIY fashion. Or alternatively remain stuck in whatever limits S3 Vectors has.</p>
+
+<p>I’d rather create my own hot indexes and export cold index data as Parquet files to S3 for cold/slow lookup.</p>
 
 <h3 id="versity-s3-gateway-and-beegfs-options">Versity S3 Gateway and BeeGFS options</h3>
 
-<p>With Versity S3 Gateway on BeeGFS I can read and write that “metadata blob” (S3 Vectors’ “non-filterable metadata”) on file-system level - without ever downloading it over HTTPS.</p>
+<p>With Versity S3 Gateway on BeeGFS we can read and write that “metadata blob” (S3 Vectors’ “non-filterable metadata”) on file-system, without ever downloading it over HTTPS.</p>
 
-<p>If you wan <em>fast</em> access to vector data, GDS reads on BeeGFS are likely to be faster than OpenSearch or ElasticSearch.</p>
+<p>If you want <em>fast</em> access to vector data, GDS reads on BeeGFS are likely to be faster than OpenSearch or ElasticSearch and faster than fancy S3 over RDMA as well.</p>
 
-<p>Also with Versity S3 Gateway: we could use the BeeGFS file-system notifications feature explored in recent posts and trigger indexing, segmentation and embeddings for S3 PUTs on BeeGFS file-system level while completely avoid using S3 Vectors-like approach.</p>
+<p>We could also use BeeGFS file-system notifications (explored in recent posts) and trigger indexing, segmentation and embeddings for S3 PUTs on BeeGFS file-system level while completely avoiding S3 Vectors-like approach.</p>
 
 <ul>
-  <li>S3 PUT triggers BeeGFS file-system notification</li>
-  <li>Job reads object metadata and tags from Versity S3 Gateway API, but the object itself is accessed via GDS/BeeGFS</li>
-  <li>Indexes can be created in a database, or as Parquet files, etc.</li>
+  <li>S3 PUT on Versity S3 Gateway triggers BeeGFS file-system notification</li>
+  <li>This creates an indexing job which reads object metadata and tags from Versity S3 Gateway API, but the object itself is accessed from GDS/BeeGFS so embeddings can be created much faster</li>
+  <li>Vector indexes can be stored in a vector database, Parquet files,or PUT back to Versity S3 Gateway (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_vector</code>)</li>
 </ul>
+
+<p>At most notifications, messaging, metadata and tags would use HTTPS, while data (BeeGFS) could be accessed over IB or ultra-fast Ethernet.</p>
 
 <p>From the Versity S3 Gateway/BeeGFS <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">post</a> related to anti-virus scanning:</p>
 
 <p><img src="/assets/images/versity-s3-gw-av-scanner-dual-event-pipeline.png" alt="Vector indexing with Versity S3 GW and BeeGFS" /></p>
 
-<p>If we replace “gRPC-driven AV scanning” with “gRPC-driven embeddings with Faiss”, we may be 90% done for your purpose). Look ma, no additional services!</p>
+<p>If we replace “gRPC-driven AV scanning” with “gRPC-driven embeddings with Faiss”, that’s 90% of what needs to be done to make this work faster than both S3 Vectors or regular S3-only approach for creating embeddings for large files/objects. And - look ma, no additional services! - we could easily use flat files for both warm and cold indexes.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>In Part 1 I talked about the struggling AWS S3 and the supposed need for various “solutions” or “stacks” that we see in AWS S3 Vectors (S3-side, cold vector search) and on-premises S3 storage-tethered database-side (hot vector search).</p>
+<p>In Part 1 I talked about the struggling AWS S3 and the supposed need for various “solutions” or “product stacks” that we see in AWS S3 Vectors (S3-side, cold vector search) and on-premises S3 storage-tethered database-side (hot vector search).</p>
 
-<p>There’s <em>some</em> value in that, but these seem to be wrong:</p>
+<p>There’s <em>some</em> value in that, but these approaches seem to be wrong. Specifically:</p>
 
 <ul>
-  <li>AWS S3 Vectors: workarounds around S3 limitations and established vector database vendors’ defensive licenses</li>
+  <li>AWS S3 Vectors: it’s a workaround around S3 limitations and established vector database vendors’ defensive licenses</li>
   <li>On-premises S3 storage: technically bad over-reaction after years of “ignorance is bliss”</li>
 </ul>
 
@@ -300,31 +320,47 @@
 
 <p>Both of these approaches leave a lot to be desired.</p>
 
-<p>If vector search (and S3 search in general) is important, you should do it yourself and do it well. I wouldn’t tether it to storage or unnecessarily compromise.</p>
+<p>If vector search (and S3 search in general) is important for your business, you should do it yourself, and do it well. Even if I liked specific database offered by the object storage vendfor, I’d buy and deploy it separately and wouldn’t tether it to object storage or compromise in terms which applications can use it and how, what version it uses, how it’s configured and so on.</p>
 
-<p>It’s one of those potentially high-value services that aren’t hard to get right.</p>
+<p>Vector search for power users is one of those potentially high-value services that aren’t hard to get right. Whether you buy or build, getting one tethered to your S3 object store is often a bad idea.</p>
 
 <h2 id="appendix-a-s3-go-nats-screenshots">Appendix A: S3-GO-NATS screenshots</h2>
 
-<p>You may open these in a new tab or window.</p>
+<p>You may open these in new browser tab or window.</p>
 
-<p>The first shows S3 Go NATS in action: events are coming in through Webhook service, they land to a bucket-specific “topic”, dispatcher service reads them and sends them to a “job queue topic” where watcher service decides processes them accordingly (as per the first diagram in this post).</p>
+<p>The first shows S3 GO NATS in action: events are coming in through Webhook service, they land to a bucket-specific “topic”, dispatcher service reads them and sends them to a “job queue topic” where watcher service decides processes them accordingly (as per the first diagram in this post).</p>
 
 <p><img src="/assets/images/s3-go-nats-elasticsearch-9-01.png" alt="S3 Go NATS in action" /></p>
 
-<p>I chose to use ElasticSearch - which is roughly comparable to the sole AWS S3 Vectors’ export target (AWS OpenSearch Service).</p>
+<p>I chose to use ElasticSearch - which is roughly comparable to the sole AWS S3 Vectors’ export target (AWS OpenSearch Service) - but the real reason is StorageGRID already has search integration with ElasticSearch, so this works fine.</p>
 
-<p>This screenshot shows a regular ElasticSearch search index (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_search</code>).</p>
+<p>I build search index the same way (despite the fact that Kafka notifications have different - I make an extra API call to S3 to get all the data needed), so anyone who uses Elasticsearch for StorageGRID search can use these indexes the same way.</p>
+
+<p>(As I’ve mentioned earlier, one may say “but I prefer another database”. That’s fine, we can easily store data in another if we want to, but how is S3 Vectors/OpenSearch going to handle the same objection?)</p>
+
+<p>This screenshot below shows the usual ElasticSearch search index StorageGRID users may be familiar with (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_search</code>) which I built so in order to emulate StorageGRID-ElasticSearch search integration for general purpose search.</p>
 
 <p><img src="/assets/images/s3-go-nats-elasticsearch-9-02-search.png" alt="S3 Go NATS in action" /></p>
 
-<p>This screenshot shows a vector index, named <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_vector</code>.</p>
+<p>First, you may notice the content of the tags’ KVs is garbage. That’s because I create these documents automatically - the content, metadata and tags are all random junk. But they contain everything I need to test that it all works.</p>
+
+<p>Second, you may wonder about the purpose of this index if all we want is vector search? Well, one rarely needs vector-only search, which is obvious if one looks at how eagerly vector database vendors have been implementing non-vector search features. The other reason is, with this “slim” index, I can easily find all objects that I want to create embeddings for using any other method.</p>
+
+<p>This screenshot below shows a vector index, named <code class="language-plaintext highlighter-rouge">&lt;bucket&gt;_vector</code>.</p>
 
 <p><img src="/assets/images/s3-go-nats-elasticsearch-9-03-vectors.png" alt="S3 Go NATS in action" /></p>
 
 <p>I’ve since added <code class="language-plaintext highlighter-rouge">bucket_name</code> to index fields and a configuration option (default: off) to add S3 metadata and tags in this index. That is off by default as I don’t want to bloat this already bloated index.</p>
 
 <p>But if someone’s use case involves searching both indexes, including S3 metadata and tags to it may be worth it.</p>
+
+<p>It’s not obvious from the screenshot, but I create embeddings for both text and images, based on what I configure in S3 GO NATS settings for the bucket.</p>
+
+<p>For example, currently I have <code class="language-plaintext highlighter-rouge">.pdf</code>, <code class="language-plaintext highlighter-rouge">.html</code>, <code class="language-plaintext highlighter-rouge">.htm</code>, <code class="language-plaintext highlighter-rouge">.md</code>, <code class="language-plaintext highlighter-rouge">.sql</code> for text embeddings, and <code class="language-plaintext highlighter-rouge">.gif</code>, <code class="language-plaintext highlighter-rouge">.png</code>, <code class="language-plaintext highlighter-rouge">.jpeg</code>, <code class="language-plaintext highlighter-rouge">.jpg</code> and <code class="language-plaintext highlighter-rouge">.tiff</code> for images.</p>
+
+<p>S3 GO NATS can have a different model configured for each kind (text, images).</p>
+
+<p>Different models could be be used for different buckets. I didn’t implement that due to lack of VRAM, but it would be trivial to add.</p>
 
       </article>
     </div>
@@ -366,7 +402,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-23 17:50 </p>
+    <p>2025-07-23 20:52 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
