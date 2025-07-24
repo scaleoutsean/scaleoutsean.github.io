@@ -229,7 +229,7 @@
   <li>HTTPS reverse proxy (Caddy) for API and Webhook service</li>
   <li>Persistent message store (3 NATS containers with file-system-based message store and RF2; can be scaled out)</li>
   <li>DIY Webhook service (in Go; could be scaled out for HA; scale-out for performance is not needed (I <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html#appendix-a-batching-and-filtering">evaluated</a> that while working with BeeGFS file-system notifications), but by scaling out for HA you’d get scale out for performance as well)</li>
-  <li>DIY Dispatcher service (also in Go, to keep up with hundreds of events per second)</li>
+  <li>DIY Dispatcher service (also in Go, to keep up with hundreds (and probably thousands) of events per second; can scale by deploying one per each bucket)</li>
   <li>DIY API gateway which also runs watcher and vectorizer tasks (Python; async &amp; multi-threaded; could be split in 3-4 services for scale-out). Some API calls are own (e.g. <code class="language-plaintext highlighter-rouge">CreateEmbeddings</code>), others emulate S3 Vector service (<code class="language-plaintext highlighter-rouge">PutVectors</code>) which you can see in a screenshot further below</li>
   <li>DIY CLI client for checks and testing</li>
   <li>DIY utilities container with tools, almost like a “management node”</li>
@@ -247,7 +247,7 @@
     <ul>
       <li>I implemented 2-3 S3 Vectors API methods in this PoC (more on that below)</li>
       <li>While AWS S3 Vectors users must use S3 Vectors APIs, once they expert data to OpenSearch Service they need to switch to using OpenSearch API</li>
-      <li>My fake S3 Vectors API proxies selected S3 Vectors API calls to ElasticSearch, so my “hot” vector index data is already in a (fast) ElasticSearch database while cold data can be tiered to S3 by ElasticSearch (or I can keep those indexes on E-Series NL-SAS storage). And we can bypass my API and use ElasticSearch API as well - same data with two APIs</li>
+      <li>My fake S3 Vectors API service proxies selected S3 Vectors API calls to ElasticSearch, so my “hot” vector index data is already in a (fast) ElasticSearch database while cold data can be tiered to S3 by ElasticSearch (or I can keep those indexes on E-Series NL-SAS storage). And we can bypass my API gateway and use ElasticSearch API as well - same data is accessible via both APIs</li>
     </ul>
   </li>
   <li>Front-end is Webhooks- or Kafka-based, so it’s easy to get notifications from any S3 product. My prototype receives StorageGRID Kafka notifications which use the standard AWS S3 SNS format, but its contents slightly differ between different on-premises S3 vendors. The same approach needs only minor changes to support Versity S3 Gateway notifications, which means I can use multiple S3 providers without any issues</li>
@@ -314,7 +314,7 @@
 
 <p>Let’s say, Kafka and the database such as OpenSearch or PostreSQL (with <a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">pgvector</a> extension). That could be done easily with <a href="https://www.instaclustr.com/platform/">Instaclustr</a>: you could be up and running in hours.</p>
 
-<p>I’m not trying to do their homework here (you could run this by one of the Instaclustr dudes) - this just is an example of how S3 GO NATS could be “professionalized”: what’s left on-premises isn’t much and the embedding-generating services could be from NVIDIA or <a href="/2025/05/21/opean-ai-with-netapp-eseries.html">OPEA</a>. You’d just need a dispatcher or not even that (if you implemented it in Kafka).</p>
+<p>I’m not trying to do their homework here (you could run this by one of the Instaclustr dudes) - this just is an example of how S3 GO NATS could be “professionalized”: what’s left on-premises isn’t much and the embedding-generating services could be from NVIDIA or <a href="/2025/05/21/opean-ai-with-netapp-eseries.html">OPEA</a>. You’d just need a dispatcher or not even that (if Instaclustr helps you implement that in Kafka).</p>
 
 <p><img src="/assets/images/s3-go-nats-instaclustr.png" alt="S3 go Instaclustr" /></p>
 
@@ -429,7 +429,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-24 01:20 </p>
+    <p>2025-07-24 10:27 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
