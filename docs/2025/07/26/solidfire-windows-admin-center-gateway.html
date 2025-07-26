@@ -61,7 +61,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2025-07-26T00:00:00+08:00" />
 <script type="application/ld+json">
-{"author":{"@type":"Person","name":"scaleoutSean"},"description":"SolidFire behind ASP-NET app server","@type":"BlogPosting","headline":"SolidFire gateway for Windows Admin Center 2025","dateModified":"2025-07-26T00:00:00+08:00","datePublished":"2025-07-26T00:00:00+08:00","image":"https://scaleoutsean.github.io/assets/images/dumb-and-dumber-extra-pair-of-gloves.jpg","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/26/solidfire-windows-admin-center-gateway.html"},"url":"https://scaleoutsean.github.io/2025/07/26/solidfire-windows-admin-center-gateway.html","@context":"https://schema.org"}</script>
+{"image":"https://scaleoutsean.github.io/assets/images/dumb-and-dumber-extra-pair-of-gloves.jpg","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2025/07/26/solidfire-windows-admin-center-gateway.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"SolidFire behind ASP-NET app server","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2025/07/26/solidfire-windows-admin-center-gateway.html","headline":"SolidFire gateway for Windows Admin Center 2025","dateModified":"2025-07-26T00:00:00+08:00","datePublished":"2025-07-26T00:00:00+08:00","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   </head>
@@ -165,7 +165,7 @@
 
 <p>I already mentioned it acts as a proxy. That’s nothing special, I agree.</p>
 
-<p>But it does a few other things and can do more.</p>
+<p>But it does a few other things and can do even more.</p>
 
 <p>Here I use the gateway API to get to SolidFire API.</p>
 
@@ -176,23 +176,23 @@
 <ul>
   <li>clusterinfo.html is served from static Web server without authentication</li>
   <li>I can show status of multiple SolidFire clusters and their details this way</li>
-  <li>JavaScript reloads status every few minutes</li>
+  <li>JavaScript reloads status every few minutes, so I get the same effect I did years ago <a href="/2023/01/17/automation-with-powershell-server.html">in this post</a></li>
 </ul>
 
-<p>Already a bit useful.</p>
+<p>Already a bit useful!</p>
 
 <p>As an example, here’s a list of volumes owned by an account.</p>
 
 <p><img src="/assets/images/solidfire-wac-02-static-volumes.png" alt="SolidFire List Volumes for Account" /></p>
 
-<p>This is already more interesting. Not because we can see volume info, but because:</p>
+<p>This is already interesting. Not because we can see volume info, but because:</p>
 
 <ul>
-  <li>SolidFire volume info is stripped off various verbose junk on SolidFire WAC Gateway</li>
-  <li>Response I get (in JavaScript) is all usable content</li>
+  <li>SolidFire volume info is stripped of detailed junk on SolidFire WAC Gateway</li>
+  <li>Responses I get (in JavaScript) is just usable content</li>
 </ul>
 
-<p>Why is that interesting?</p>
+<p>Why is that useful?</p>
 
 <p>Because this is a static server with JavaScript <strong>that calls the gateway’s API endpoint</strong>.</p>
 
@@ -202,9 +202,13 @@
 
 <p>That’s what SolidFire WAC Gateway - with simple static Web server - can do for now. Additional objects (Accounts, etc.) and methods (especially actions) can be added easily.</p>
 
-<p>And - since I already view multiple clusters (one of which is down, in the Web screenshots) - that also means I may be able to add actions that instruct SolidFire clusters fail-over from A to B by promoting one of them to “active”. Isn’t that interesting?</p>
+<p>And - since I already view multiple clusters (one of which (<code class="language-plaintext highlighter-rouge">PROD</code>) is down, as you can see in the screenshots) - that also means I may be able to add actions that instruct SolidFire clusters fail-over from A to B by promoting one of them to “active”. Isn’t that interesting?</p>
 
-<p>This gateway (application) can run on IIS Server. But it can be tricky. Took me three hours to get this to work (2 hours with Kestrel, 1 with IIS).</p>
+<p>One issue with this setup is this is a static server with JavaScript and I have no authentication and authorization. It’s JavaScript-to-API gateway.</p>
+
+<p>But the gateway (application) can run on IIS Server. And then we can put some safeguards in place to use this from authenticated and authorized clients.</p>
+
+<p>But it can be tricky. Took me three hours to get this to work (2 hours with Kestrel, 1 with IIS).</p>
 
 <h2 id="iis-setup">IIS Setup</h2>
 
@@ -212,11 +216,11 @@
 
 <p><img src="/assets/images/solidfire-wac-03-wac-gateway-app.png" alt="SolidFire WAC GW at https://win25:5000" /></p>
 
-<p>The application should be set to “No Managed Code”.</p>
+<p>The gateway application should be set to “No Managed Code”.</p>
 
 <p><img src="/assets/images/solidfire-wac-04-wac-application-server.png" alt="SolidFire WAC Application" /></p>
 
-<p>I had major problems getting this non-default site to work. Anonymous and Windows both had to be enabled on IIS server core configuration, which would override these defaults.</p>
+<p>I had major problems getting this non-default site to work. Anonymous and Windows authentication both had to be enabled on IIS server core configuration, which overrode the first (and wrong) default value.</p>
 
 <p><img src="/assets/images/solidfire-wac-06-iis-site-allow-anonymous-and-windows-auth.png" alt="IIS - couldn't disable Anonymous Disabled" /></p>
 
@@ -226,7 +230,7 @@
 
 <h2 id="why-this-matters">Why this matters</h2>
 
-<p>Once IIS is working, SolidFire WAC Gateway works like this:</p>
+<p>Once IIS works as it’s supposed to work with ASP NET applications that have Windows authentication enabled, SolidFire WAC Gateway works like this:</p>
 
 <ul>
   <li>Non-authenticated or unauthorized users can’t access gateway’s API</li>
@@ -237,7 +241,9 @@
 
 <p>Related to RBAC, I’ve revisited this in the context of Linux a number of times, e.g. in <a href="/2023/12/07/solidfire-rbac-for-json-rpc-api.html">RBAC and delegation for SolidFire JSON-RPC API with Lua</a>.</p>
 
-<p>I’d never tried it on Windows until today. Ages ago, when I last looked at Windows Admin Center, I couldn’t do much because TypeScript was too hard for me.</p>
+<p>In the context of Windows, the “static PowerShell server” post from early 2023 <a href="/2023/01/17/automation-with-powershell-server.html#provide-rbac-to-powershell-automation">gave me the idea</a> (“provide RBAC to PowerShell automation”) and I knew it wasn’t difficult.</p>
+
+<p>But I’d never tried it on Windows until today. Ages ago, when I last looked at Windows Admin Center, I couldn’t do much because TypeScript was too hard for me.</p>
 
 <h2 id="what-about-it">What about it?</h2>
 
@@ -248,26 +254,25 @@
 
 <p>Once the remaining steps have been finished, I’ll be able to have ABAC for storage operations down to SolidFire volume level.</p>
 
-<p>I’ll be able to provision CSVs on Hyper-V with 3-4 clicks.</p>
+<p>I’ll be able to provision CSVs on Hyper-V clusters with 3-4 clicks.</p>
 
 <p>I’ll be able to fail over one SolidFire cluster to another in seconds.</p>
 
-<p>I’ll have nice lil charts with relevant SolidFire storage details.</p>
+<p>I’ll have nice li’l charts with all relevant SolidFire storage details.</p>
 
-<p>Everything that we should have had eight years ago. That’s the goal.</p>
+<p>Everything that we should have had ages years ago. That’s the goal.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Sigh… So the second pair of gloves has been there all this time (and this reminds me of the S3 vector indexing blog post from the other day).</p>
+<p>So the second pair of gloves has been there all this time (and this reminds me of the S3 vector indexing blog post from the other day).</p>
 
 <p>“Who could have known?”</p>
 
 <p>Right.</p>
 
-<p>SolidFire Windows Admin Center Gateway will be posted to Gihub when I tidy up the code and complete the documents. After that, I hope we can finish the additional steps (Tools/Extension).</p>
+<p>Source code for SolidFire Windows Admin Center Gateway will be posted to Gihub when I tidy up the code and complete the documents. After that, I hope we can finish the additional steps (SolidFire WAC Tools/Extension).</p>
 
-<p>Something speculative for the end: could this gateway be used to manage SolidFire attached to Azure Local clusters using Windows Admin Center in Azure? Use your imagination!</p>
-
+<p>Something speculative for the end: could this gateway be used to manage SolidFire attached to Azure Local clusters using Windows Admin Center in Azure?</p>
 
       </article>
     </div>
@@ -309,7 +314,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-07-27 01:02 </p>
+    <p>2025-07-27 01:33 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
