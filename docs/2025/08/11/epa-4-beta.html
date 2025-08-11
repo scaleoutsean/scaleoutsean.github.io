@@ -192,19 +192,23 @@
 
 <p><img src="/assets/images/epa_v4_03_epa-core-services.png" alt="EPA 4 - core services" /></p>
 
-<p>I aim to do it for <a href="/2023/06/14/versity-s3-posix-gateway.html">Versity S3 Gateway</a> as well as the stumbling “default on-premises S3 object store” <a href="/2025/06/06/whats-minio-up-to.html">Minio</a>.</p>
+<p>I aim to do it for <a href="/2023/06/14/versity-s3-posix-gateway.html">Versity S3 Gateway</a> as well as the stumbling “default on-premises S3 object store” <a href="/2025/06/06/whats-minio-up-to.html">MinIO</a>.</p>
 
 <p>I started with MinIO first as I had been working on the same thing for SolidFire Collector (before the recent MinIO shenanigans), and it’s not easy - believe it or not, there are bugs in InfluxDB. But I have InfluxDB 3 and Versity S3 Gateway working in an SFC test environment, and want to make that the default in EPA v4.</p>
 
 <p>The other “easy but hard” area is security. I did the same for SFC: no longer trying to make it easy to get started while sacrificing security.</p>
 
-<p>That, too, is more work than it seems. Long story short, if you have TLS certificates well automated, you’ll be able to quickly and easily create all the “local” TLS certificates (CA in yellow square, local TLS shown as yellow shields). Everything is cordoned off and hidden behind a reverse HTTPS proxy which should use your internal CA (the green square) although it could use the self-signed one as well (as long as you import that root CA to your browser, you can end up with end-to-end trusted TLS connections). And that reverse proxy has Quantum Computer-resistant TLS ciphers today!</p>
+<p>That, too, is more work than it seems. Long story short, if you have TLS certificates well automated, you’ll be able to quickly and easily create all the “local” TLS certificates (CA in yellow square, local TLS shown as yellow shields).</p>
+
+<p>Everything is cordoned off and hidden behind a reverse HTTPS proxy which should use your “proper” CA (the green square) although it could use the self-signed one as well (as long as you import that root CA to your browser, you can end up with end-to-end trusted TLS connections).</p>
 
 <p><img src="/assets/images/epa-v4-tls-diagram.svg" alt="EPA 4 - TLS everywhere" /></p>
 
+<p>And that reverse proxy has Quantum Computer-resistant TLS ciphers today!</p>
+
 <p>Of course, the best case is all TLS are issued by your own CA, but inside of Docker you won’t use FQDNs anyway.</p>
 
-<p>The little “UI-like” icons are UIs for InfluxDB (InfluxDB Explorer, screenshot below) and S3 (MinIO Console, in case MinIO is used).</p>
+<p>The little “UI-like” icons are UIs for InfluxDB (InfluxDB Explorer, screenshot at the bottom) and S3 (MinIO Console, in case MinIO is used).</p>
 
 <p>The thick, non-dashed, non-animated green lines in the image above indicate the proxy could also serve as QRC API and UI gateway to E-Series:</p>
 <ul>
@@ -218,14 +222,14 @@
 
 <p>So that’s where a lot of effort went into. Not directly related, but quite important and required.</p>
 
-<p>And of course there are bugs, such as - to give one of the stupidest examples - after you’ve suffered for days and seemingly got it all to work, after hours of troubleshooting you realize Grafana 12 has a bug that prevents it to connect to InfluxDB over HTTPS when own root CA is used. That’s with Grafana correctly configured. I had to temporarily create a HTTP-to-HTTPS proxy for that.</p>
+<p>And of course there are bugs, such as - to give one of the stupidest examples - after you’ve suffered for days and seemingly got it all to work, after hours of troubleshooting “everything but” you realize Grafana 12 has a bug that prevents it from connecting to InfluxDB over HTTPS when own root CA is used. That’s with Grafana correctly configured. I had to temporarily create a HTTP-to-HTTPS proxy on NGINX for that. That and some feature creep is how your 3 day update fest becomes a multi-week marathon.</p>
 
 <p>Okay, so we’re we at now? In terms of CLI, EPA 4 collector is complete. The rest is integration and documentation:</p>
 
 <ul>
   <li>End-to-end TLS is working, but setup and configuration documentation needs to be created.</li>
   <li>InfluxDB 3 is HTTPS-only (tiering to S3 is a TODO item) is working. EPA 4 connects to it only via HTTPS.</li>
-  <li>MinIO S3 is also HTTPS-only is working but not yet used by InfluxDb. S3 console is also working as HTTPS-only behind the HTTPS-only proxy.</li>
+  <li>MinIO S3 is also HTTPS-only is working but not yet used by InfluxDB. S3 console is also working as HTTPS-only behind the HTTPS-only proxy.</li>
   <li>InfluxDB Explorer is HTTPS only, working behind the HTTPS proxy and connects to InfluxDB via HTTPS</li>
   <li>TLS 1.3-only for everything</li>
 </ul>
@@ -323,7 +327,7 @@
 
     
   </div><footer class= "footer">
-    <p>2025-08-11 23:30 </p>
+    <p>2025-08-12 01:53 </p>
     <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
 </footer>
 
