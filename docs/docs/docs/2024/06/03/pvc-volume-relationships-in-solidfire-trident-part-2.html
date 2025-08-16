@@ -1,0 +1,980 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Kubernetes, Trident and SolidFire configuration - part 2 | Acting Technologist</title>
+<meta name="description" content="Use Kubernetes-Trident-SolidFire mapping information">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Kubernetes, Trident and SolidFire configuration - part 2">
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">
+
+
+  <meta property="og:description" content="Use Kubernetes-Trident-SolidFire mapping information">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Kubernetes, Trident and SolidFire configuration - part 2">
+  <meta name="twitter:description" content="Use Kubernetes-Trident-SolidFire mapping information">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2024-06-03T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Kubernetes, Trident and SolidFire configuration - part 2">
+    <meta itemprop="description" content="  Introduction  Use cases          Feed Trident volume list to Velero      Create backup-to-S3 jobs on SolidFire      Set up cross-site replication for PVCs      Manage QoS settings        Conclusion">
+    <meta itemprop="datePublished" content="2024-06-03T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html" itemprop="url">Kubernetes, Trident and SolidFire configuration - part 2
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2024-06-03T00:00:00+08:00">2024-06-03 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#use-cases">Use cases</a>
+    <ul>
+      <li><a href="#feed-trident-volume-list-to-velero">Feed Trident volume list to Velero</a></li>
+      <li><a href="#create-backup-to-s3-jobs-on-solidfire">Create backup-to-S3 jobs on SolidFire</a></li>
+      <li><a href="#set-up-cross-site-replication-for-pvcs">Set up cross-site replication for PVCs</a></li>
+      <li><a href="#manage-qos-settings">Manage QoS settings</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<p>This series of posts has several parts:</p>
+
+<ul>
+  <li>Part 1 - <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">Kubernetes, Trident and SolidFire configuration visibility</a></li>
+  <li><strong>Part 2</strong> - this post</li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In part 1 of this series, I went through various inputs and outputs and got to a point where I have a mapping between Kubernetes, Trident and SolidFire.</p>
+
+<p>Now for every Trident volume, I have this at my disposal.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>   <span class="sh">'</span><span class="s">name</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">pvc-d793176f-2484-48ea-9255-f70215a7c5f7</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">internalName</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">pvc-d793176f-2484-48ea-9255-f70215a7c5f7</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">accessInformation</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>   <span class="sh">'</span><span class="s">iscsiTargetPortal</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">192.168.105.30:3260</span><span class="sh">'</span><span class="p">,</span>
+                             <span class="sh">'</span><span class="s">iscsiTargetIqn</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">iqn.2010-01.com.solidfire:wcwb.pvc-d793176f-2484-48ea-9255-f70215a7c5f7.139</span><span class="sh">'</span><span class="p">,</span>
+                             <span class="sh">'</span><span class="s">iscsiInterface</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">default</span><span class="sh">'</span><span class="p">,</span>
+                             <span class="sh">'</span><span class="s">iscsiUsername</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">tridentk2</span><span class="sh">'</span><span class="p">},</span>
+    <span class="sh">'</span><span class="s">sf_vol_id</span><span class="sh">'</span><span class="p">:</span> <span class="mi">139</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_vol_name</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">pvc-d793176f-2484-48ea-9255-f70215a7c5f7</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_iqn</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">iqn.2010-01.com.solidfire:wcwb.pvc-d793176f-2484-48ea-9255-f70215a7c5f7.139</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_fifo_min</span><span class="sh">'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_fifo</span><span class="sh">'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_size</span><span class="sh">'</span><span class="p">:</span> <span class="mi">2147483648</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">sf_account</span><span class="sh">'</span><span class="p">:</span> <span class="mi">11</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p><img src="/assets/images/kubernetes_to_trident_to_solidfire.png" alt="Kubernetes-to-Trident-to-SolidFire" /></p>
+
+<p>What can we do with that?</p>
+
+<p>Well, originally (see part 1) the idea was pretty generic - make Kubernetes-on-SolidFire easier to observe and monitor.</p>
+
+<p>This post will talk about some use cases that I can think of. I've had these ideas for a while and some of them were mentioned in the post related to <a href="/2024/05/29/sfc-v2.html">SFC v2</a>, but now that I've made progress I can think about the details.</p>
+
+<h2 id="use-cases">Use cases</h2>
+
+<h3 id="feed-trident-volume-list-to-velero">Feed Trident volume list to Velero</h3>
+
+<p>As new PVCs appear, I can that information to automatically create Velero (or other) backup jobs on Kubernetes.</p>
+
+<p>That's fantastic! But wait, that must be hard!</p>
+
+<p>How can we know how/where/when I want to backup each volume (or whether I want to backup all Trident volumes)? There are different kinds of backup jobs, with different backup schedules, etc.</p>
+
+<p>That's right! Read on.</p>
+
+<h3 id="create-backup-to-s3-jobs-on-solidfire">Create backup-to-S3 jobs on SolidFire</h3>
+
+<p>As SolidFire users know, SolidFire has a basic built-in "backup-to-S3" (also "restore-from-S3") feature.</p>
+
+<p>It's basic, but free and good for simple use cases.</p>
+
+<p>Assuming unique volume names, all we need is a volume name and if the rest is fixed for the entire cluster, we just loop through the volumes every day and dispatch jobs. If they fail, we log it and move on - we'll do it again tomorrow.</p>
+
+<p>Where do we log it? Wherever you log stuff.</p>
+
+<p>I could send it to SFC, but you can send it to Splunk, Elasticsearch or other syslog destination.</p>
+
+<p><a href="/2024/04/24/netapp-solidfire-monitor-backup-influx-grafana-11.html">This post</a> shows how I send logs to InfluxDB and use Grafana to visualize and alert.</p>
+
+<p><img src="/assets/images/solidfire-backup-job-monitoring-influxdb-13-grafana-backup-binary-field-values.png" alt="SoliFire backup-to-S3 log in InfluxDB" /></p>
+
+<p>The post has an example for alerting as well.</p>
+
+<p>All that was missing was a way to get the list of Trident volumes (as far as backup-to-S3 for Trident volumes is concerned).</p>
+
+<p>As those familiar with SolidFire know, restores from S3 also must be done by SolidFire admin user. Because a volume may be destroyed, he'd need to create the same sized volume and restore that backup into that new volume.</p>
+
+<p>Where does he get that info? From SFC (see SQL queries in part 1), Splunk or Elastic. Just search for the destroyed volume ID or internal Trident name, check the size and create a new volume with the same volume and block size and with the same QoS settings.</p>
+
+<p>Then restore S3 backup to it, re-assign volume ownership to the Trident account and let Trident/Kubernetes admin know they can import volume into Kubernetes.</p>
+
+<h3 id="set-up-cross-site-replication-for-pvcs">Set up cross-site replication for PVCs</h3>
+
+<p>This seems trivial. Let's say we get a list of PVCs from K8s #1 on Site #1.</p>
+
+<ul>
+  <li>Get a list of volumes, connect to SolidFire on remote Site #2</li>
+  <li>Create volumes (same name as on Site #1, but it's not essential, same size, QoS settings, etc), and assign new volumes to Trident account in K8s #2, but set them to replicationTarget (i.e. read-only access)</li>
+  <li>Set up replication relationships between site #1 and site #2</li>
+  <li>Modify FIFO and snapshot retention settings on source volumes (site #1) and target volumes (site #2)</li>
+</ul>
+
+<p>Now when we want to failover, we already have a list of volumes to loop through:</p>
+
+<ul>
+  <li>Make volumes on site #1 replicationTarget (if the site is reachable)</li>
+  <li>Stop replication relationship on SolidFire on site #2</li>
+  <li>Make all SolidFire PVC volumes involved readWrite</li>
+  <li>Import volumes into K8s #2</li>
+  <li>When site #1 is reachable, consider
+    <ul>
+      <li>Taking a snapshot of all PVCs on site #1, just in case</li>
+      <li>Set up reverse replication relationship (site #2-&gt; site #1)</li>
+      <li>Before failing back, stop K8s on site #2 as volumes will go read-only (once we set them to the usual replicationTarget mode)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>We have all the information required for failover and failback, except (as mentioned in part 1), on failback we may have to nuke Trident, install it again and import volumes as all traces of them will disappear when we uninstall Trident.</p>
+
+<p>I went through this workflow <a href="/2021/03/20/kubernetes-solidfire-failover-failback.html">back in 2021</a>, but semi-manually and I forgot to tidy up and publish those scripts.</p>
+
+<p>Because setting up SolidFire site replication, failover and failback is extremely easy and can be used with anything (Kubernetes, Docker, Hyper-V, KVM, etc.) I think I will write and publish at least that script at a later time (Edit: 2024/06/11 - done, see Project Longhorny). As for the Trident part, because for SolidFire and free Trident the requirement to re-install was ugly then and it's ugly now, I'm not too eager to touch it.</p>
+
+<h3 id="manage-qos-settings">Manage QoS settings</h3>
+
+<p>Earlier we mentioned the complexity of scheduling Velero backup jobs without knowing any details about data, business requirements, etc.</p>
+
+<p>How can we address that?</p>
+
+<p>Well, it just occurred to me that we may have an easy solution for that!</p>
+
+<p>Consider this:</p>
+
+<ul>
+  <li>NetApp Trident does not support volume retyping. That means you can't use use a command to change a volume's Storage Class from "silver" to "gold"</li>
+  <li>The Trident API (see in part 1) in fact offers a patch method for tridentStorageClass object, but it's not exposed through <code class="language-plaintext highlighter-rouge">tridentctl</code> (or maybe it's not even functional, not just exposed)</li>
+</ul>
+
+<p>Might the following be true?</p>
+
+<p><strong>Existing SolidFire volumes used and managed by Trident will never have their QoS settings changed by Trident.</strong> I think this is very likely, especially for SolidFire (Trident's <code class="language-plaintext highlighter-rouge">solidfire-san</code> driver).</p>
+
+<p>This sounds 99% likely to me. But just in case, let's also watch release notes every time we upgrade NetApp Trident. If that statement changes one day, that would be <em>even better</em> for SolidFire! We'd just need to spot it before it changes, and slightly modify our approach.</p>
+
+<p>What approach?</p>
+
+<p>Oh, yes.</p>
+
+<p>If you look at <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html#appendix-a---tridentctl-output-for-volumes-and-backends">Appendix A</a>, Trident's "<code class="language-plaintext highlighter-rouge">tridentctl get backend</code>" shows SCs in its output.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w"> </span><span class="nl">"silver"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"silver"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"storageAttributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"IOPS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"max"</span><span class="p">:</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"min"</span><span class="p">:</span><span class="w"> </span><span class="mi">601</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>When a volume is created by Trident, Trident does not use a QoS policy ID. Instead, it uses a different volume keyword, <code class="language-plaintext highlighter-rouge">qos</code>, to set custom settings on the volume (rather than <code class="language-plaintext highlighter-rouge">qos_policy_id</code>).</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"qos"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"burstIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"maxIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">800</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"minIOPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">601</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Since Storage Class settings won't be changed by Trident, would it be useful to replicate them on SolidFire?</p>
+
+<p>For example, create <code class="language-plaintext highlighter-rouge">silver</code> QoS policy like this.</p>
+
+<p><img src="/assets/images/kubernetes_to_trident_to_solidfire_replicate_qos_on_solidfire.png" alt="SolidFire - set volume QoS policy" /></p>
+
+<p>Now I can apply this QoS policy ID (say, this is QoS Policy ID 5) to the Trident volume.</p>
+
+<p>What good does that do???</p>
+
+<p>Well, for one, I can also retype this volume to QoS Policy ID 10, to retype a PVC myself. Yay!</p>
+
+<p>Would Trident "crash"? I doubt, but we could check the source code or verify experimentally.</p>
+
+<p>Compare the approaches:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Item</th>
+      <th style="text-align: left">QoS setting</th>
+      <th style="text-align: center">Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
+      <td style="text-align: left">Trident "silver" SC</td>
+      <td style="text-align: center">601/800/1000 (set in Trident's config file and K8s SC)</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2</td>
+      <td style="text-align: left">SolidFire QoS (no QosId)</td>
+      <td style="text-align: center">601/800/1000 (set by Trident at volume creation)</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">3</td>
+      <td style="text-align: left">SolidFIre QosId 5</td>
+      <td style="text-align: center">601/800/100 (set by SolidFire admin initially)</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">4</td>
+      <td style="text-align: left">SolidFIre QosId 10</td>
+      <td style="text-align: center">601/15000/100000 (set by SolidFire admin on-demand)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When Trident is configured, SC is set in Trident configuration and Kubernetes (item 1).</p>
+
+<p>When a PVC is created, Trident uses that to configure storage QoS in item 2.</p>
+
+<p>We create a QoS policy (item 3) based on that - which is no change for K8s - but we can flip the volume to other QoS policy ID and back as we see fit.</p>
+
+<p>Now, when we need that extra boost which Trident can't provide, we can do it on our own.</p>
+
+<p>If you didn't know, <a href="/2020/11/28/powershell-set-sfqosexception.html">there's a script for that</a>. I'd just test this to make sure Trident doesn't complain (I doubt it checks at all, since it's set-and-forget).</p>
+
+<p>And finally, in the area of the less intrusive tricks, let's say we have no intention of actually changing any volume's QoS settings by bypassing Trident.</p>
+
+<p>One way we could address the Velero question from the top of this post is we'd simply create specific SCs on Trident.</p>
+
+<p>Before:</p>
+
+<ul>
+  <li>bronze</li>
+  <li>silver</li>
+  <li>gold</li>
+</ul>
+
+<p>After:</p>
+
+<ul>
+  <li>bronze</li>
+  <li>bronze2s3</li>
+  <li>bronze2velero</li>
+  <li>silver</li>
+  <li>silver2s3</li>
+  <li>silver2velero</li>
+  <li>gold</li>
+  <li>gold2dr</li>
+  <li>gold2velero</li>
+</ul>
+
+<p>Can existing volumes be moved? I think we could clone, retype, and then import as managed Trident volumes. Or simply introduce this as a new feature for the environment.</p>
+
+<p>Yes, that bloats SCs a bit, but consider the benefits - now we have a direct way to figure out what to do with which volume based on Trident's <code class="language-plaintext highlighter-rouge">get backend</code>:</p>
+
+<ul>
+  <li>if .Config.Types.Type = bronze2s3
+    <ul>
+      <li>kick off a backup to S3 job</li>
+    </ul>
+  </li>
+  <li>elif .Config.Types.Type = silver2velero
+    <ul>
+      <li>create a Velero backup job</li>
+    </ul>
+  </li>
+  <li>elif .Config.Types.Type = gold2dr OR .Config.Types.Type = gold2velero
+    <ul>
+      <li>create a velero backup job and setup cross-site SolidFire volume replication</li>
+    </ul>
+  </li>
+  <li>…</li>
+</ul>
+
+<p>Optionally, if change of QoS was possible without Trident going nuts, we could set the volume to a high performance QoS policy before backup to S3, and restore the Trident QoS setting after that.</p>
+
+<p>In my original script (<code class="language-plaintext highlighter-rouge">Set-SFQosException</code>, the source is in Awesome SolidFire), that script refuses to run if the volume isn't currently using a QoS policy ID. The reason is I'd have to remember those settings and store them somewhere in the case my script crashes or something like that.</p>
+
+<p>But with Trident output in InfluxDB or some other place (Trident configuration file, Kubernetes SC, etc.), we need just <em>one</em> occurrence of <code class="language-plaintext highlighter-rouge">tridentctl get backend</code> - because Trident SC Type never changes - in it to be able to find and reset the volume to its original Trident setting.</p>
+
+<p>Just in case, I'd fetch that info hourly, and wouldn't use these tricks in hectic environments because it increases the risk. On the other hand, if backup is a requirement, you have to find a way and automate, because doing it manually is even more likely to result in a disaster.</p>
+
+<p>Alternatively you could do it in a supervised way, where a script offers a list of changes, and a person "approves" or matches it against some Git file with what corporate policies demand.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Getting Trident configuration out - for which we have a sample script now - opens up a bunch of use cases to SolidFire users of Kubernetes (and even Docker).</p>
+
+<p>If develop these scenarios further, I may create additional parts or blog about it in new posts.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/api" class="page__taxonomy-item p-category" rel="tag">api</a><span class="sep">, </span>
+    
+      <a href="/tags/automation" class="page__taxonomy-item p-category" rel="tag">automation</a><span class="sep">, </span>
+    
+      <a href="/tags/replication" class="page__taxonomy-item p-category" rel="tag">replication</a><span class="sep">, </span>
+    
+      <a href="/tags/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/projects" class="page__taxonomy-item p-category" rel="tag">projects</a><span class="sep">, </span>
+    
+      <a href="/categories/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2024-06-03T00:00:00+08:00">2024-06-03 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Kubernetes%2C+Trident+and+SolidFire+configuration+-+part+2%20https%3A%2F%2Fscaleoutsean.github.io%2F2024%2F06%2F03%2Fpvc-volume-relationships-in-solidfire-trident-part-2.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2024/06/03/pvc-volume-relationships-in-solidfire-trident-part-2.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html" class="pagination--pager" title="Kubernetes, Trident and SolidFire configuration visibility">Previous</a>
+    
+    
+      <a href="/2024/06/11/introducing-project-longhorny.html" class="pagination--pager" title="Project Longhorny">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

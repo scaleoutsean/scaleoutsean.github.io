@@ -1,0 +1,891 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Nomad batch jobs with BeeGFS and E-Series | Acting Technologist</title>
+<meta name="description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Nomad batch jobs with BeeGFS and E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
+
+
+  <meta property="og:description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Nomad batch jobs with BeeGFS and E-Series">
+  <meta name="twitter:description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-04-05T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Nomad batch jobs with BeeGFS and E-Series">
+    <meta itemprop="description" content="  Introduction  Setup  Generic batch job with I/O to parallel filesystem  File format conversion  Summary  Demo">
+    <meta itemprop="datePublished" content="2022-04-05T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" itemprop="url">Nomad batch jobs with BeeGFS and E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-04-05T00:00:00+08:00">2022-04-05 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#setup">Setup</a></li>
+  <li><a href="#generic-batch-job-with-io-to-parallel-filesystem">Generic batch job with I/O to parallel filesystem</a></li>
+  <li><a href="#file-format-conversion">File format conversion</a></li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>When I wrote about <a href="/2022/03/23/nomad-solidfire-hostpath-volumes.html">HashiCorp Nomad with NetApp SolidFire</a> last week I mentioned how BeeGFS CSI with NetApp E-Series is of to-do items.</p>
+
+<p>This post isn't about CSI, but an intermediate step.</p>
+
+<p>Now, there are many batch job schedulers out there. Some are HPC-focused and extremely good for that use case.</p>
+
+<p>But there are non-HPC use cases for BeeGFS, such as - for the sake of an example - data cleansing, video conversion and even backups (we could run <a href="/2022/04/03/restic-server-netapp-eseries.html">Restic backup</a> jobs for generic hosts and containers using Nomad).</p>
+
+<p>Some folks must use workflows specific to their organization or solution, but sometimes they can be initiated from another system, and other times they're still executed the old way (crontab-driven shell scripts?).</p>
+
+<p>BeeGFS with E-Series provides extreme scale-out in terms of performance and number of files.</p>
+
+<p>As noted in the first Nomad post, HashiCorp Nomad can schedule batch jobs, containers, VMs and more. It can also allocate desired resources to each job.</p>
+
+<p>The other point I made is we don't always need CSI storage (and I am not saying this because I haven't done it yet!).</p>
+
+<h2 id="setup">Setup</h2>
+
+<p>These simple example is about running such jobs at a high speed. Normally we'd have multiple clients, but here I have just one.</p>
+
+<ul>
+  <li>BeeGFS cluster (VMs)
+    <ul>
+      <li>b1 - manager</li>
+      <li>b2 - metadata server</li>
+      <li>b3 - storage node 1</li>
+      <li>b4 - storage node 2</li>
+      <li>b5 - BeeGFS and Nomad client</li>
+    </ul>
+  </li>
+  <li>Nomad servers (VM)
+    <ul>
+      <li>es1</li>
+    </ul>
+  </li>
+  <li>Parallel filesystem
+    <ul>
+      <li>BeeGFS mounted at /mnt/beegfs on BeeGFS client (b5)</li>
+    </ul>
+  </li>
+  <li>Block storage
+    <ul>
+      <li>NetApp E-Series 5760</li>
+    </ul>
+  </li>
+</ul>
+
+<p>On Nomad client with BeeGFS, configure Host Volume that points to a BeeGFS mount point or its subdirectory (e.g. /mnt/beegfs/nomad-mysql). beegfs-ctl gives us a view of our BeeGFS cluster.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>meta
+b2 <span class="o">[</span>ID: 1]
+<span class="nv">$ </span><span class="nb">sudo </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>storage
+b3 <span class="o">[</span>ID: 3]
+b4 <span class="o">[</span>ID: 4]
+<span class="nv">$ </span>beegfs-ctl <span class="nt">--listnodes</span> <span class="nt">--nodetype</span><span class="o">=</span>client
+A83C-624BAFAC-b5 <span class="o">[</span>ID: 101]
+</code></pre></div></div>
+
+<p>Visually:</p>
+
+<p><img src="/assets/images/nomad-batch-beegfs-eseries.png" alt="Nomad with BeeGFS and E-Series" /></p>
+
+<h2 id="generic-batch-job-with-io-to-parallel-filesystem">Generic batch job with I/O to parallel filesystem</h2>
+
+<p>On Nomad server, create a batch task such as this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    task <span class="s2">"script"</span><span class="o">{</span>
+    driver <span class="o">=</span> <span class="s2">"raw_exec"</span>
+    config <span class="o">{</span>
+      <span class="nb">command</span> <span class="o">=</span> <span class="s2">"/usr/bin/fio"</span>
+      args <span class="o">=</span> <span class="o">[</span><span class="s2">"/mnt/beegfs/nomad-mysql/fio.txt"</span><span class="o">]</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>I currently have just one BeeGFS client, but with multiple BeeGFS/Nomad clients this job would be scheduled <em>to any</em> BeeGFS client with the same Host Volume. In fact - because BeeGFS is a <em>parallel</em> file system - you could schedule jobs on several clients at once (for example, N jobs that process 1/N-th of the input file each).</p>
+
+<p>And - as demonstrated in the <a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html#performance">post about NetApp HCI with BeeGFS VMs on EF280 array</a> - this gives you the ability to run such jobs at multiple <a href="https://www.beegfs.io/c/beegfs-now-supports-nvidia-magnum-io-gpu/">GB/s per second per job</a>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nomad job run batch.nomad 
+<span class="o">==&gt;</span> 2022-04-05T05:09:55Z: Monitoring evaluation <span class="s2">"17e84b74"</span>
+    2022-04-05T05:09:55Z: Evaluation triggered by job <span class="s2">"batch"</span>
+    2022-04-05T05:09:55Z: Allocation <span class="s2">"4293eab4"</span> created: node <span class="s2">"71a25827"</span>, group <span class="s2">"example"</span>
+<span class="o">==&gt;</span> 2022-04-05T05:09:56Z: Monitoring evaluation <span class="s2">"17e84b74"</span>
+    2022-04-05T05:09:56Z: Allocation <span class="s2">"4293eab4"</span> status changed: <span class="s2">"pending"</span> -&gt; <span class="s2">"running"</span> <span class="o">(</span>Tasks are running<span class="o">)</span>
+    2022-04-05T05:09:56Z: Evaluation status changed: <span class="s2">"pending"</span> -&gt; <span class="s2">"complete"</span>
+<span class="o">==&gt;</span> 2022-04-05T05:09:56Z: Evaluation <span class="s2">"17e84b74"</span> finished with status <span class="s2">"complete"</span>
+</code></pre></div></div>
+
+<p>It took 1 second to complete this job.</p>
+
+<p>Job output is a 500 MiB file (rand-read.0.0). Although the workload was read-only, the file was created anew when the job executed.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo dir</span> <span class="nt">-lat</span> /mnt/beegfs/nomad-mysql/
+total 512002
+<span class="nt">-rw-r--r--</span> 1 nomad nomad 524288000 Apr  5 05:09 rand-read.0.0
+drwxrwxr-x 2 nomad nomad         2 Apr  5 05:09 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 root  root        202 Apr  5 04:39 fio.txt
+drwxrwxrwx 3 root  root          7 Apr  5 03:33 ..
+</code></pre></div></div>
+
+<p>BeeGFS client (b5) with a successfully completed batch job:</p>
+
+<p><img src="/assets/images/nomad-batch-beegfs-eseries-client.png" alt="BeeGFS/Nomad client" /></p>
+
+<p>Job overview:</p>
+
+<p><img src="/assets/images/nomad-batch-beegfs-eseries-job.png" alt="Completed batch job" /></p>
+
+<h2 id="file-format-conversion">File format conversion</h2>
+
+<p>Another example is video conversion - because recently somebody asked me about this. Our input is a video we want to convert to MP4.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll
+total 540906
+drwxrwxr-x 2 nomad nomad         3 Apr  5 05:36 ./
+drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
+<span class="nt">-rw-r--r--</span> 1 root  root        202 Apr  5 04:39 fio.txt
+<span class="nt">-rw-r--r--</span> 1 nomad nomad 524288000 Apr  5 05:09 rand-read.0.0
+<span class="nt">-rw-r--r--</span> 1 nomad nomad  29597941 Mar 29 16:13 sample_1280x720_surfing_with_audio.m2v
+</code></pre></div></div>
+
+<p>When job gets allocated to b5, it consumes CPU (as expected), but very little IO (because it's CPU-constrained).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>dstat <span class="nt">-tcn</span>
+<span class="nt">----system----</span> <span class="nt">--total-cpu-usage--</span> <span class="nt">-net</span>/total-
+     <span class="nb">time</span>     |usr sys idl wai stl| recv  send
+05-04 05:39:46|  1   1  98   0   0|   0     0 
+05-04 05:39:47|100   0   0   0   0|1034k  261k
+05-04 05:39:48|100   0   0   0   0| 868B  514k
+05-04 05:39:49|100   0   0   0   0| 516k  958B
+05-04 05:39:50| 99   1   0   0   0| 517k  514k
+05-04 05:39:51| 99   0   1   0   0| 163k  514k
+05-04 05:39:52|100   0   0   0   0| 517k 2658B
+05-04 05:39:53| 99   1   0   0   0| 804B  514k
+05-04 05:39:54|100   0   0   0   0| 516k  760B
+</code></pre></div></div>
+
+<p>Because this BeeGFS filesystem uses storage devices on both storage nodes (b3,b4), each has 50% of that IO activity.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">----system----</span> <span class="nt">--total-cpu-usage--</span> <span class="nt">-net</span>/total- <span class="nt">-dsk</span>/total-
+     <span class="nb">time</span>     |usr sys idl wai stl| recv  send| <span class="nb">read  </span>writ
+05-04 05:39:33|  1   0  99   0   0| 130B  110B|   0     0 
+05-04 05:39:34|  0   0  99   1   0|  66B  118B|   0    20k
+05-04 05:39:35|  1   0  99   0   0|1406B  513k|   0     0 
+05-04 05:39:36|  0   0 100   0   0| 514k  161k|   0     0 
+05-04 05:39:37|  0   0 100   0   0| 130B  110B|   0     0 
+05-04 05:39:38|  0   0 100   0   0| 434B  282B|   0     0 
+05-04 05:39:39|  0   0 100   0   0| 514k  513k|   0     0 
+05-04 05:39:40|  0   0 100   0   0| 345B  110B|   0    20k
+</code></pre></div></div>
+
+<p>Output (MP4 file sample_1280x720_surfing_with_audio.mp4):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll
+total 547563
+drwxrwxr-x 2 nomad nomad         3 Apr  5 05:39 ./
+drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
+<span class="nt">-rw-r--r--</span> 1 root  root        202 Apr  5 04:39 fio.txt
+<span class="nt">-rw-r--r--</span> 1 nomad nomad 524288000 Apr  5 05:09 rand-read.0.0
+<span class="nt">-rw-r--r--</span> 1 nomad nomad  29597941 Mar 29 16:13 sample_1280x720_surfing_with_audio.m2v
+<span class="nt">-rw-r--r--</span> 1 nomad nomad   6815792 Apr  5 05:39 sample_1280x720_surfing_with_audio.mp4
+</code></pre></div></div>
+
+<p>I hard-coded video conversion parameters in the job (target resolution was smaller so the file name should have been sample_640x480…) - it's not something to write home about but it worked for the purpose of this demonstration.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>Nomad makes it easy to schedule all sorts of jobs on various platforms. Some may even be jobs that run in (say) DB VMs and require complex steps that can benefit from other Nomad features such as the ability to integrate with Vault to avoid hard-coded passwords in your scripts.</p>
+
+<p>If you have a workflow that can benefit from a better scheduler, you could dispatch jobs to Nomad which would schedule them for you.</p>
+
+<p>You may be tempted to try Kubernetes and that's fine, but from a job scheduling perspective all you need is a single binary (nomad) that runs as server and client depending on its role. The entire setup for a VM-based cluster (provision and configure VMs, BeeGFS, Nomad clients and servers) - can be done in less than 20 minutes.</p>
+
+<p>BeeGFS with E-Series gives you the ability to access data from any client - whether it's a VM, container, physical host - at a very high speed. Jobs in this post did not use Docker - I used the simplest approach, Nomad's generic exec driver (which has "isolate" option for better security if you need it).</p>
+
+<p>BeeGFS CSI - a CSI-compatible driver for BeeGFS maintained by NetApp - is our next stop on this journey. BeeGFS CSI doesn't officially support Nomad (as of April 2022), but BeeGFS CSI driver should be able to work with Nomad CSI. More on that in next Nomad-related post. Until then, you may be interested in <a href="/2022/04/09/beegfs-csi-introduction.html">BeeGFS CSI with Kubernetes</a>.</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/vzrphv-hashicorp-nomad-batch-jobs-with-beegfs-and-netapp-e-series.html">IO-intensive batch jobs with HashiCorp Nomad, ThinkParQ BeeGFS, and NetApp E-Series</a> - 3m6s</li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/hashicorp" class="page__taxonomy-item p-category" rel="tag">hashicorp</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/nomad" class="page__taxonomy-item p-category" rel="tag">nomad</a><span class="sep">, </span>
+    
+      <a href="/tags/workflow" class="page__taxonomy-item p-category" rel="tag">workflow</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/containers" class="page__taxonomy-item p-category" rel="tag">containers</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-04-05T00:00:00+08:00">2022-04-05 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Nomad+batch+jobs+with+BeeGFS+and+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F04%2F05%2Fnomad-beegfs-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/04/03/restic-server-netapp-eseries.html" class="pagination--pager" title="Rest Server with NetApp E-Series">Previous</a>
+    
+    
+      <a href="/2022/04/05/proxmox-solidfire.html" class="pagination--pager" title="Consume SolidFire storage from Proxmox hosts">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

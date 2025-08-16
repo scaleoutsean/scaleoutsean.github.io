@@ -1,0 +1,961 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Nomad pack for InfluxDB with BeeGFS filesystem | Acting Technologist</title>
+<meta name="description" content="Simplify containerized InfluxDB deployment with Nomad Pack and BeeGFS">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Nomad pack for InfluxDB with BeeGFS filesystem">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/08/11/nomad-pack-influxdb-beegfs.html">
+
+
+  <meta property="og:description" content="Simplify containerized InfluxDB deployment with Nomad Pack and BeeGFS">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Nomad pack for InfluxDB with BeeGFS filesystem">
+  <meta name="twitter:description" content="Simplify containerized InfluxDB deployment with Nomad Pack and BeeGFS">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/08/11/nomad-pack-influxdb-beegfs.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-08-11T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/08/11/nomad-pack-influxdb-beegfs.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Nomad pack for InfluxDB with BeeGFS filesystem">
+    <meta itemprop="description" content="  Nomad Pack and Nomad  BeeGFS  Nomad Pack for InfluxDB on Nomad with BeeGFS  Backup \&amp; restore          Using influx backup        Conclusion">
+    <meta itemprop="datePublished" content="2022-08-11T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/08/11/nomad-pack-influxdb-beegfs.html" itemprop="url">Nomad pack for InfluxDB with BeeGFS filesystem
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-08-11T00:00:00+08:00">2022-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#nomad-pack-and-nomad">Nomad Pack and Nomad</a></li>
+  <li><a href="#beegfs">BeeGFS</a></li>
+  <li><a href="#nomad-pack-for-influxdb-on-nomad-with-beegfs">Nomad Pack for InfluxDB on Nomad with BeeGFS</a></li>
+  <li><a href="#backup--restore">Backup \&amp; restore</a>
+    <ul>
+      <li><a href="#using-influx-backup">Using influx backup</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="nomad-pack-and-nomad">Nomad Pack and Nomad</h2>
+
+<p>Nomad Pack is a little bit like "Helm for Nomad". It's very new so not yet as powerful as Helm, but considering how much simpler and easier to use Nomad is compared to Kubernetes, Nomad Pack v0.0.1 already provide plenty of advantages over Helm v3.</p>
+
+<p>To start, you need just two files. Compared to Kubernetes, this sounds almost unbelievable.</p>
+
+<ul>
+  <li>Nomad - single file, &lt; 100 MB, no installation. Copy the same file to server(s) and clients, configure and start Nomad service to get clients and servers going</li>
+  <li>Nomad Pack - single file, no installation. Use Nomad Pack to download community registry examples to have the InfluxDB pack ready to go</li>
+  <li>Docker Community Edition (if you want to run containers; if you want to run services on bare metal host or in VMs, you don't need it)</li>
+</ul>
+
+<p>The Nomad pack I intend to use is InfluxDB and it deploys a container image, so I've installed Docker and configured Nomad clients to expose Docker engine to server, so that server can detect this resource and allocate jobs to the Nomad client with Docker engine.</p>
+
+<h2 id="beegfs">BeeGFS</h2>
+
+<p>Why do we have BeeGFS here?</p>
+
+<p>You don't <em>have to</em> use BeeGFS, but you may want to. BeeGFS is an Open Source parallel filesystem that runs on-premises and in the cloud, and users in the fields of HPC, DL/ML, and Big Data tend to use parallel filesystems.</p>
+
+<p>Infrastructure services usually don't run on BeeGFS (they run on a "management cluster"), but there's no reason why you can't run an infrastructure service backed by BeeGFS, as long as there are no compatibility issues.</p>
+
+<p>In terms of InfluxDB, one of the advantages of BeeGFS is all Nomad clients can be BeeGFS clients as well, and Nomad just needs to ensure InfluxDB service runs at no more than one Nomad client at the same time, and that takes care of High Availability for service. No disk fail-over is required during service fail-over, and BeeGFS is fast so performance won't be an issue.</p>
+
+<p>I have BeeGFS in my environment because it's one of two main components of NetApp's BeeGFS &amp; E-Series solution.</p>
+
+<p>While we wouldn't go out of our way to run management services and monitoring databases on BeeGFS, it can be done.</p>
+
+<h2 id="nomad-pack-for-influxdb-on-nomad-with-beegfs">Nomad Pack for InfluxDB on Nomad with BeeGFS</h2>
+
+<p>All Nomad clients have one BeeGFS filesystem mounted at /mnt/beegfs (usual default).</p>
+
+<p>Nomad pack for InfluxDB requires host volumes at this time, so we create two directories under a subdirectory which we'll use for these purposes, /mnt/beegfs/hostpath:</p>
+
+<ul>
+  <li>/mnt/beegfs/hostpath/influxdb_config</li>
+  <li>/mnt/beegfs/hostpath/influxdb_data</li>
+</ul>
+
+<p>After that edit nomad.hcl on clients to add two host volumes, influxdb_config and influxdb_data, and restart the client(s). This screenshot of Nomad Web UI shows a client that's ready for deployment of our InfluxDB pack:</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-01.png" alt="Nomad client with Docker Engine and two Host volumes" /></p>
+
+<p>Run Nomad Pack for InfluxDB (using some basic options):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nomad-pack run influxdb <span class="se">\</span>
+  <span class="nt">--var</span> <span class="nv">config_volume_name</span><span class="o">=</span><span class="s2">"influxdb_config"</span> <span class="se">\</span>
+  <span class="nt">--var</span> <span class="nv">register_consul_service</span><span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
+  <span class="nt">--var</span> <span class="nv">data_volume_name</span><span class="o">=</span><span class="s2">"influxdb_data"</span> <span class="se">\</span>
+  <span class="nt">--var</span> <span class="nv">data_volume_type</span><span class="o">=</span><span class="s2">"host"</span> <span class="se">\</span>
+  <span class="nt">--var</span> <span class="nv">config_volume_type</span><span class="o">=</span><span class="s2">"host"</span>
+</code></pre></div></div>
+
+<p>Nomad server evaluated my job and deployed InfluxDB:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Evaluation ID: 2ab15a9b-c1e4-0617-9abf-9fba4ece8428
+  Job
+   <span class="s1">'influxdb'</span> <span class="k">in </span>pack deployment <span class="s1">'influxdb@latest'</span> registered successfully
+Pack successfully deployed. Use influxdb with <span class="nt">--ref</span><span class="o">=</span>latest to manage this deployed instance with plan, stop, destroy, or info
+
+Congrats on deploying influxdb.
+</code></pre></div></div>
+
+<p>Check job status - is it running?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nomad job status
+ID                            Type                 Priority  Status   Submit Date
+beegfs-csi-plugin-controller  service              50        running  2022-08-10T15:47:39Z
+beegfs-csi-plugin-node        system               50        running  2022-08-10T15:47:55Z
+files                         batch/parameterized  50        running  2022-08-10T15:51:31Z
+influxdb                      service              50        running  2022-08-11T04:49:16Z
+</code></pre></div></div>
+
+<p>Where did it go?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nomad job status influxdb
+ID            <span class="o">=</span> influxdb
+Name          <span class="o">=</span> influxdb
+Submit Date   <span class="o">=</span> 2022-08-11T04:49:16Z
+Type          <span class="o">=</span> service
+Priority      <span class="o">=</span> 50
+Datacenters   <span class="o">=</span> dc1
+Namespace     <span class="o">=</span> default
+Status        <span class="o">=</span> running
+Periodic      <span class="o">=</span> <span class="nb">false
+</span>Parameterized <span class="o">=</span> <span class="nb">false
+
+</span>Summary
+Task Group  Queued  Starting  Running  Failed  Complete  Lost  Unknown
+influxdb    0       0         1        0       0         0     0
+
+Latest Deployment
+ID          <span class="o">=</span> da88162b
+Status      <span class="o">=</span> successful
+Description <span class="o">=</span> Deployment completed successfully
+
+Deployed
+Task Group  Desired  Placed  Healthy  Unhealthy  Progress Deadline
+influxdb    1        1       1        0          2022-08-11T04:59:45Z
+
+Allocations
+ID        Node ID   Task Group  Version  Desired  Status   Created     Modified
+526ef5db  70d83013  influxdb    0        run      running  33m46s ago  33m17s ago
+</code></pre></div></div>
+
+<p>Node ID 70d83013 is my client <code class="language-plaintext highlighter-rouge">b6</code> (192.168.1.196). I know that without checking because only on that client I've created host type volumes so there's no other place InfluxDB could run now. I could have registered the same path on all Nomad/BeeGFS clients (and would have, for production) but a single eligible Nomad client is enough for this demo. We can also see the same Node ID in the first screenshot at the top.</p>
+
+<p>Now when we look at Nomad jobs, we see that InfluxDB has been installed as Nomad pack:</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-02.png" alt="InfluxDB job details" /></p>
+
+<p>Go to client <code class="language-plaintext highlighter-rouge">b6</code> to see this service running:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ docker ps -a
+CONTAINER ID   9d4352119d8f
+IMAGE          influxdb:2.0.9
+COMMAND        "/entrypoint.sh infl…"
+CREATED        7 minutes ago
+STATUS         Up 7 minutes
+PORTS          192.168.1.196:23373-&gt;8086/tcp, 192.168.1.196:23373-&gt;8086/udp
+NAMES          influxdb-526ef5db-692f-def4-b99a-efb96aa69356
+</code></pre></div></div>
+
+<p>InfluxDB service endpoints are running on main (external) network interface, but if we had a complex networking or wanted to run this service on a non-default network, we would have executed nomad-pack with a InfluxDB variables file.</p>
+
+<p>Visit service address (http://192.168.1.196:23373) in the browser:</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-03.png" alt="Onboarding page of InfluxDB" /></p>
+
+<p>We see the onboarding page because we didn't pass on environment variables related to InfluxDB configuration, but Nomad Pack does provide such options.</p>
+
+<p>Configure InfluxDB:</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-04.png" alt="Configure InfluxDB" /></p>
+
+<p>Skip this optional step if you want to:</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-05.png" alt="Skip optional step" /></p>
+
+<p>InfluxDB is ready to use!</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-06.png" alt="Ready-to-use InfluxDB" /></p>
+
+<p>By now our BeeGFS data and configuration directories might have something in them…</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-laR</span> /mnt/beegfs/hostpath/
+/mnt/beegfs/hostpath/:
+total 2
+drwxrwxr-x  4 vagrant vagrant  2 Aug 11 04:43 <span class="nb">.</span>
+drwxrwxrwx 10 root    root    10 Aug 11 04:39 ..
+drwxrwxr-x  2 vagrant vagrant  0 Aug 11 04:43 influxdb_config
+drwx------  3 vagrant vagrant  2 Aug 11 04:49 influxdb_data
+
+/mnt/beegfs/hostpath/influxdb_config:
+total 1
+drwxrwxr-x 2 vagrant vagrant 0 Aug 11 04:43 <span class="nb">.</span>
+drwxrwxr-x 4 vagrant vagrant 2 Aug 11 04:43 ..
+
+/mnt/beegfs/hostpath/influxdb_data:
+total 46
+drwx------ 3 vagrant vagrant     2 Aug 11 04:49 <span class="nb">.</span>
+drwxrwxr-x 4 vagrant vagrant     2 Aug 11 04:43 ..
+drwx------ 3 vagrant root        1 Aug 11 04:49 engine
+<span class="nt">-rw-------</span> 1 vagrant vagrant 65536 Aug 11 05:28 influxd.bolt
+
+/mnt/beegfs/hostpath/influxdb_data/engine:
+total 1
+drwx------ 3 vagrant root    1 Aug 11 04:49 <span class="nb">.</span>
+drwx------ 3 vagrant vagrant 2 Aug 11 04:49 ..
+drwxr-xr-x 2 vagrant vagrant 0 Aug 11 04:49 data
+
+/mnt/beegfs/hostpath/influxdb_data/engine/data:
+total 1
+drwxr-xr-x 2 vagrant vagrant 0 Aug 11 04:49 <span class="nb">.</span>
+drwx------ 3 vagrant root    1 Aug 11 04:49 ..
+
+</code></pre></div></div>
+
+<p>We can now load data from files or services. For example, folks who monitor SolidFire with Telegraf could follow <a href="/2021/08/13/solidfire-snmp-v3-grafana.html">this</a> post to gather SNMPv3 data from SolidFire and send it to InfluxDB (just change Prometheus to InfluxDB in <code class="language-plaintext highlighter-rouge">outputs</code> section). Other combinations and approaches are left as an exercise for the reader.</p>
+
+<p><img src="/assets/images/nomad-pack-influxdb-beegfs-07.png" alt="Configure Telegraf client" /></p>
+
+<p>How to do the rest here is a longer story, but I put some high level notes into another post <a href="/2022/08/15/monitoring-beegfs-and-netapp-eseries-grafana.html">here</a>.</p>
+
+<h2 id="backup--restore">Backup &amp; restore</h2>
+
+<p>I haven't done much testing, but I can't imagine why either of the following wouldn't work:</p>
+
+<ul>
+  <li>Stop (do not destroy) the container and copy volumes (self-explanatory)</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">influx backup</code> on live InfluxDB database (more on that below)</li>
+</ul>
+
+<h3 id="using-influx-backup">Using influx backup</h3>
+
+<p>First decide what and how you want to backup. I'm making a backup of sean-bucket (rather than all data) and for that I need a <code class="language-plaintext highlighter-rouge">bucket-id</code>, while <code class="language-plaintext highlighter-rouge">token</code> (get it from the InfluxDB UI) is required for authorization/access.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> 9d4352119d8f influx backup <span class="se">\</span>
+  <span class="nt">--json</span> <span class="se">\</span>
+  <span class="nt">--bucket-id</span> 15b0c2437ef13622 <span class="se">\</span>
+  <span class="nt">--token</span> <span class="s2">"iVrJYEF4TQ7MTrqN-RDknnCa_g9CgHIYUlYkmG02mk_5qTU0v2RtCXe_9DcPXOQRkkTq533nlfHuwDy6dBsKVg=="</span> <span class="se">\</span>
+  /etc/influxdb2/influx-backup-<span class="si">$(</span><span class="nb">date</span> <span class="s2">"+%Y-%m-%d"</span> <span class="nt">-u</span><span class="si">)</span>
+
+2022-08-11T06:31:06.587047Z	info	Backing up KV store	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"path"</span>: <span class="s2">"/etc/influxdb2/influx-backup-2022-08-11/20220811T063106Z.bolt"</span><span class="o">}</span>
+2022-08-11T06:31:06.593835Z	info	Resources opened	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"path"</span>: <span class="s2">"/etc/influxdb2/influx-backup-2022-08-11/20220811T063106Z.bolt"</span><span class="o">}</span>
+2022-08-11T06:31:06.594310Z	info	Backing up organization	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"id"</span>: <span class="s2">"e9ce405040ba152e"</span>, <span class="s2">"name"</span>: <span class="s2">"scaleoutSean"</span><span class="o">}</span>
+2022-08-11T06:31:06.594490Z	info	Backing up bucket	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"id"</span>: <span class="s2">"15b0c2437ef13622"</span>, <span class="s2">"name"</span>: <span class="s2">"sean-bucket"</span><span class="o">}</span>
+2022-08-11T06:31:06.594507Z	info	Writing manifest	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"path"</span>: <span class="s2">"/etc/influxdb2/influx-backup-2022-08-11/20220811T063106Z.manifest"</span><span class="o">}</span>
+2022-08-11T06:31:06.595410Z	info	Backup <span class="nb">complete</span>	<span class="o">{</span><span class="s2">"log_id"</span>: <span class="s2">"0cEuRQMW000"</span>, <span class="s2">"path"</span>: <span class="s2">"/etc/influxdb2/influx-backup-2022-08-11"</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>I got the path by checking BeeGFS mount paths in the container. <code class="language-plaintext highlighter-rouge">/etc/influxdb2</code> is where Influx stores configs, but both InfluxDB data and configs are on the same BeeGFS filesystem. Not having a directory quota, nothing prevents me from using any mounted BeeGFS volume including influxdb_config, to dump this backup to the config directory. (This pack mounts data directory to <code class="language-plaintext highlighter-rouge">/var/lib/influxdb2</code>.)</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-laR</span> /mnt/beegfs/hostpath/
+/mnt/beegfs/hostpath/:
+total 2
+drwxrwxr-x  4 vagrant vagrant  2 Aug 11 04:43 <span class="nb">.</span>
+drwxrwxrwx 10 root    root    10 Aug 11 04:39 ..
+drwxrwxr-x  3 vagrant vagrant  1 Aug 11 06:30 influxdb_config
+drwx------  3 vagrant vagrant  2 Aug 11 04:49 influxdb_data
+
+/mnt/beegfs/hostpath/influxdb_config:
+total 2
+drwxrwxr-x 3 vagrant vagrant 1 Aug 11 06:30 <span class="nb">.</span>
+drwxrwxr-x 4 vagrant vagrant 2 Aug 11 04:43 ..
+drwxr-xr-x 2 root    root    3 Aug 11 06:31 influx-backup-2022-08-11
+
+/mnt/beegfs/hostpath/influxdb_config/influx-backup-2022-08-11:
+total 46
+drwxr-xr-x 2 root    root        3 Aug 11 06:31 <span class="nb">.</span>
+drwxrwxr-x 3 vagrant vagrant     1 Aug 11 06:30 ..
+<span class="nt">-rw-r--r--</span> 1 root    root        0 Aug 11 06:30 20220811T063023Z.bolt
+<span class="nt">-rw-r--r--</span> 1 root    root    45056 Aug 11 06:31 20220811T063106Z.bolt
+<span class="nt">-rw-------</span> 1 root    root       94 Aug 11 06:31 20220811T063106Z.manifest
+...
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">influx restore</code> works in reverse. You may want to stop the InfluxDB Nomad job before restoring system backups. Restores of user data should work online, but I haven't RTFM (of InfluxDB).</p>
+
+<p><code class="language-plaintext highlighter-rouge">influx backup</code> (and <code class="language-plaintext highlighter-rouge">restore</code>) would be nice candidates for another Nomad job (consider using <code class="language-plaintext highlighter-rouge">batch</code> job with <code class="language-plaintext highlighter-rouge">raw_exec</code> driver). To backup, we could have three tasks, such as these:</p>
+
+<ul>
+  <li>Task 1: backup InfluxDB (params: bucket ID, token; path would be fixed)</li>
+  <li>Task 2: upload backed up files to S3 (params: S3 API endpoint, keys, bucket)</li>
+  <li>Task 3: delete backup files/directories older than 3 weeks</li>
+</ul>
+
+<p>This example could take advantage of Hashicorp Vault features, where we would store our InfluxDB token(s), and Consul (which would help us <em>find</em> the IP and port of a service as services tend to move around the cluster). In a CSI configuration, <code class="language-plaintext highlighter-rouge">multi-node-single-writer</code> attachment mode would let us run Task 2 from another Nomad/BeeGFS client and thereby offload backup-to-S3 network traffic.</p>
+
+<p>I've blogged about Nomad batch jobs before, so I won't do it again here.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Nomad Pack with Nomad offer the simplicity of Docker Swarm with the power of Kubernetes.</p>
+
+<p>For an even more complete experience from a networking and service management perspective, use Nomad with Consul and potentially Vault (for secrets management).</p>
+
+<p>Instead of running, maintaining and updating hundreds of containers (Kubernetes), Nomad &amp; friends give you everything you need in 5-6 executable files that require no installer.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/influxdb" class="page__taxonomy-item p-category" rel="tag">influxdb</a><span class="sep">, </span>
+    
+      <a href="/tags/monitoring" class="page__taxonomy-item p-category" rel="tag">monitoring</a><span class="sep">, </span>
+    
+      <a href="/tags/visualize" class="page__taxonomy-item p-category" rel="tag">visualize</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/containers" class="page__taxonomy-item p-category" rel="tag">containers</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-08-11T00:00:00+08:00">2022-08-11 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Nomad+pack+for+InfluxDB+with+BeeGFS+filesystem%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F08%2F11%2Fnomad-pack-influxdb-beegfs.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/08/11/nomad-pack-influxdb-beegfs.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/08/11/leverage-beegfs-nextflow.html" class="pagination--pager" title="Leverage BeeGFS in Nextflow to avoid unnecessary data movement">Previous</a>
+    
+    
+      <a href="/2022/08/15/monitoring-beegfs-and-netapp-eseries-grafana.html" class="pagination--pager" title="Send BeeGFS and NetApp E-Series performance metrics to InfluxDB v2 or scrape them form Prometheus">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

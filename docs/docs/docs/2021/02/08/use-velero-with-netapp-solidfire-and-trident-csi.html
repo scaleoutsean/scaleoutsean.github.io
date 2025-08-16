@@ -1,0 +1,928 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01 | Acting Technologist</title>
+<meta name="description" content="Backup your K8s apps and data on NetApp HCI and SolidFire with Velero">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01">
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">
+
+
+  <meta property="og:description" content="Backup your K8s apps and data on NetApp HCI and SolidFire with Velero">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01">
+  <meta name="twitter:description" content="Backup your K8s apps and data on NetApp HCI and SolidFire with Velero">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-02-08T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01">
+    <meta itemprop="description" content="tldr">
+    <meta itemprop="datePublished" content="2021-02-08T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html" itemprop="url">Use Velero CSI Plugin with NetApp SolidFire and NetApp Trident 21.01
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2021-02-08T00:00:00+08:00">2021-02-08 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="tldr">tldr</h2>
+
+<p>Using CSI Plugin (currently still in beta) Velero v1.5.3 can help protect Kubernetes apps and data on NetApp HCI or SolidFire (meaning, it can schedule and take Trident/SolidFire snapshots as well as backup application settings and data to a S3-compatible provider such as NetApp StorageGRID).</p>
+
+<p>Since this support is currently in beta, on its own Velero is not suitable for enterprise use with SolidFire, but combined with native Trident/SolidFire snapshots it makes manual data protection tasks easier. If you're looking for a non-CSI approach with SolidFire, see <a href="/2021/02/02/use-velero-with-netapp-storagegrid.html">this brief post</a> for Velero with Restic and SolidFire.</p>
+
+<h2 id="install-velero-with-csi-feature">Install Velero with CSI feature</h2>
+
+<p>Check the Trident, Velero, and AWS Provider (for S3-related stuff) documentation. If you're running a more recent Trident CSI, you'll probably need newer versions of various components including, but not limited to, Kubernetes external snapshotter.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero <span class="nb">install</span> <span class="se">\</span>
+    <span class="nt">--features</span><span class="o">=</span>EnableCSI <span class="se">\</span>
+    <span class="nt">--plugins</span> velero/velero-plugin-for-csi:v0.1.2 <span class="se">\</span>
+    ...
+</code></pre></div></div>
+
+<p>I also used AWS S3 plugin and configured <code class="language-plaintext highlighter-rouge">--backup-location-config</code> to point to a NetApp StorageGRID bucket. I blogged about that in a <a href="/2021/02/02/use-velero-with-netapp-storagegrid">recent post</a> so I won't repeat those details in this post.</p>
+
+<p>Significant differences compared to the earlier backup-related post featuring snapshots (that one was about <a href="/2020/12/21/kasten-rancher-netapp-hci-solidfire-k8s-backup">Kasten K10</a>):</p>
+
+<ul>
+  <li>Kubernetes Volume Snapshot v1 (backward compatible with v1beta1)</li>
+  <li>Velero v1.5.3 with CSI plugin (currently still in beta) v0.1.2</li>
+</ul>
+
+<h2 id="backup">Backup</h2>
+
+<p>Velero CSI plugin can create SolidFire snapshots for you. You can see stuff like this in Velero logs:</p>
+
+<pre><code class="language-raw">time="2021-02-08T06:42:08Z" level=info msg="volumesnapshot class=csi-trident" backup=velero/nginx-backup cmd=/plugins/velero-plugin-for-csi logSource="/go/src/velero-plugin-for-csi/internal/backup/pvc_action.go:112" pluginName=velero-plugin-for-csi
+time="2021-02-08T06:42:08Z" level=info msg="Created volumesnapshot nginx-example/velero-nginx-logs-59hqz" backup=velero/nginx-backup cmd=/plugins/velero-plugin-for-csi logSource="/go/src/velero-plugin-for-csi/internal/backup/pvc_action.go:142" pluginName=velero-plugin-for-csi
+time="2021-02-08T06:42:08Z" level=info msg="Backing up item" backup=velero/nginx-backup logSource="pkg/backup/item_backupper.go:121" name=velero-nginx-logs-59hqz namespace=nginx-example resource=volumesnapshots.snapshot.storage.k8s.io
+time="2021-02-08T06:42:08Z" level=info msg="Executing custom action" backup=velero/nginx-backup logSource="pkg/backup/item_backupper.go:327" name=velero-nginx-logs-59hqz namespace=nginx-example resource=volumesnapshots.snapshot.storage.k8s.io
+time="2021-02-08T06:42:08Z" level=info msg="Executing VolumeSnapshotBackupItemAction" backup=velero/nginx-backup cmd=/plugins/velero-plugin-for-csi logSource="/go/src/velero-plugin-for-csi/internal/backup/volumesnapshot_action.go:58" pluginName=velero-plugin-for-csi
+</code></pre>
+
+<p>Seen from kubectl (not necessarily from the same run):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get volumesnapshot <span class="nt">-n</span> nginx-example
+NAME                      READYTOUSE   SOURCEPVC    SOURCESNAPSHOTCONTENT   RESTORESIZE   SNAPSHOTCLASS   SNAPSHOTCONTENT                                    CREATIONTIME   AGE
+velero-nginx-logs-59hqz   <span class="nb">true         </span>nginx-logs                           1Gi           csi-trident     snapcontent-1f2caa8a-543a-42fd-bcaf-a38c0e713faf   18m            18m
+</code></pre></div></div>
+
+<p>And also on SolidFire:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFSnapshot</span><span class="w">
+
+</span><span class="n">SnapshotID</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">408</span><span class="w">
+</span><span class="n">VolumeID</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">192</span><span class="w">
+</span><span class="n">Name</span><span class="w">                    </span><span class="p">:</span><span class="w"> </span><span class="nx">snapshot-1f2caa8a-543a-42fd-bcaf-a38c0e713faf</span><span class="w">
+</span><span class="n">Checksum</span><span class="w">                </span><span class="p">:</span><span class="w"> </span><span class="nx">0xf2a1e04b664428f8</span><span class="w">
+</span><span class="n">EnableRemoteReplication</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">False</span><span class="w">
+</span><span class="n">ExpirationReason</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">None</span><span class="w">
+</span><span class="n">ExpirationTime</span><span class="w">          </span><span class="p">:</span><span class="w"> 
+</span><span class="n">RemoteStatuses</span><span class="w">          </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Status</span><span class="w">                  </span><span class="p">:</span><span class="w"> </span><span class="nx">done</span><span class="w">
+</span><span class="n">SnapshotUUID</span><span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="nx">b122e0e9-8a47-4697-b74b-3f636dce00b8</span><span class="w">
+</span><span class="n">TotalSize</span><span class="w">               </span><span class="p">:</span><span class="w"> </span><span class="nx">1073741824</span><span class="w">
+</span><span class="n">GroupID</span><span class="w">                 </span><span class="p">:</span><span class="w"> </span><span class="nx">0</span><span class="w">
+</span><span class="n">GroupSnapshotUUID</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="nx">00000000-0000-0000-0000-000000000000</span><span class="w">
+</span><span class="n">CreateTime</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">2021-02-08T06:42:08Z</span><span class="w">
+</span><span class="n">InstanceCreateTime</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">2021-02-08T06:42:08Z</span><span class="w">
+</span><span class="n">VolumeName</span><span class="w">              </span><span class="p">:</span><span class="w"> </span><span class="nx">pvc-2f361c68-cfef-41ae-83b3-01990187d061</span><span class="w">
+</span><span class="n">InstanceSnapshotUUID</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">b122e0e9-8a47-4697-b74b-3f636dce00b8</span><span class="w">
+</span><span class="n">VirtualVolumeID</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+</span><span class="n">Attributes</span><span class="w">              </span><span class="p">:</span><span class="w"> 
+</span><span class="n">SnapMirrorLabel</span><span class="w">         </span><span class="p">:</span><span class="w"> 
+</span></code></pre></div></div>
+
+<p>Application backup according to Velero:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup describe nginx-backup
+Name:         nginx-backup
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.19.7
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>19
+
+Phase:  Completed
+
+Errors:    0
+Warnings:  0
+
+Namespaces:
+  Included:  <span class="k">*</span>
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included:        <span class="k">*</span>
+  Excluded:        &lt;none&gt;
+  Cluster-scoped:  auto
+
+Label selector:  <span class="nv">app</span><span class="o">=</span>nginx
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:  auto
+
+TTL:  720h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2021-02-08 06:42:03 +0000 UTC
+Completed:  2021-02-08 06:42:13 +0000 UTC
+
+Expiration:  2021-03-10 06:42:03 +0000 UTC
+
+Total items to be backed up:  10
+Items backed up:              10
+
+Velero-Native Snapshots: &lt;none included&gt;
+
+CSI Volume Snapshots:  2 included <span class="o">(</span>specify <span class="nt">--details</span> <span class="k">for </span>more information<span class="o">)</span>
+</code></pre></div></div>
+
+<p>If we get the details of those CSI snapshots, we might see something like this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CSI Volume Snapshots:
+Snapshot Content Name: snapcontent-17c33032-f85c-4ad0-b0cd-6b77ecc75bc1
+  Storage Snapshot ID: pvc-b2d964f9-dbb5-414a-bb7d-7033d099ce27/snapshot-17c33032-f85c-4ad0-b0cd-6b77ecc75bc1
+  Snapshot Size (bytes): 1073741824
+  Ready to use: true
+Snapshot Content Name: snapcontent-1f2caa8a-543a-42fd-bcaf-a38c0e713faf
+  Storage Snapshot ID: pvc-2f361c68-cfef-41ae-83b3-01990187d061/snapshot-1f2caa8a-543a-42fd-bcaf-a38c0e713faf
+  Snapshot Size (bytes): 1073741824
+  Ready to use: true
+</code></pre></div></div>
+
+<p>I haven't discovered a way to use snapshot information (or data) from Velero backups. It could be that Velero expects they're available (to read or mount) which is not the case with SolidFire snapshots (they need to be cloned before they can be used), or it could be that it simply isn't smart about non-vSAN snapshots. Either way, it's not a deal breaker for non-enterprise users as we shall see later.</p>
+
+<h2 id="restore">Restore</h2>
+
+<p>If you nuke an app (or the namespace that contains it) but the volume remains, on restore volume and its snapshot causes a warning like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero restore describe nginx-backup-20210208063937
+Name:         nginx-backup-20210208063937
+Namespace:    velero
+Labels:       &lt;none&gt;
+Annotations:  &lt;none&gt;
+
+Phase:  Completed
+
+Started:    2021-02-08 06:39:37 +0000 UTC
+Completed:  2021-02-08 06:39:40 +0000 UTC
+
+Warnings:
+  Velero:     &lt;none&gt;
+  Cluster:  could not restore, volumesnapshotcontents.snapshot.storage.k8s.io <span class="s2">"snapcontent-bcd021f1-0ce2-412b-8324-efad9ede4598"</span> already exists. Warning: the <span class="k">in</span><span class="nt">-cluster</span> version is different than the backed-up version.
+            could not restore, persistentvolumes <span class="s2">"pvc-0b51d0a1-5028-41b9-9773-885bf59ea2c4"</span> already exists. Warning: the <span class="k">in</span><span class="nt">-cluster</span> version is different than the backed-up version.
+</code></pre></div></div>
+
+<p>If you delete an app, Velero 1.5.3 with CSI plugin recreates resources such as namespace, service, PVC, and Trident CSI responds to that by assigning a new PV (although the old one remains, in the <code class="language-plaintext highlighter-rouge">Released</code> state). <code class="language-plaintext highlighter-rouge">velero restore</code> allows you to <code class="language-plaintext highlighter-rouge">--exclude-resources</code> such as <code class="language-plaintext highlighter-rouge">persistentvolumes,volumesnapshotcontents</code> but I couldn't get this to behave the way I expected and/or consistently.</p>
+
+<p>Some of these problems are known issues and I noticed consistency in certain problems (some of which I could duplicate and find in Velero issues on Github).</p>
+
+<p>If an app, PVC and PV are all deleted, <code class="language-plaintext highlighter-rouge">velero restore</code> can re-create everything from scratch, but I did not make sure if the backup content from PV was properly restored to new PV. It's supposed to be, but obviously we'd want to know that before using it in production. In some cases <code class="language-plaintext highlighter-rouge">kubectl</code> reported the PVC was <code class="language-plaintext highlighter-rouge">Bound</code> but the PV wasn't even created.</p>
+
+<p>One of the reasons I didn't verify restores was if we delete an app and its PVC, Trident CSI leaves the PV in <code class="language-plaintext highlighter-rouge">Released</code> state, and it should have at least one snapshot, too (assuming we used CSI snapshots). That means we can always get to our data (either reuse the volume, or clone the snapshot and import it to Kubernetes): if Velero correctly restored only service, deployment and other resources excluding PV data, that in itself should be quite helpful because SolidFire snapshots, clones and remote replicas deliver good data protection.</p>
+
+<p>In fact we can download Velero backup manifest and see what's in it.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">tar </span>fzvx nginx-backup-data.tar.gz 
+metadata/version
+resources/persistentvolumes/v1-preferredversion/cluster/pvc-bff0a51f-1430-4beb-96d4-1fe668031b66.json
+resources/persistentvolumes/cluster/pvc-bff0a51f-1430-4beb-96d4-1fe668031b66.json
+resources/persistentvolumeclaims/v1-preferredversion/namespaces/nginx-example/nginx-logs.json
+resources/persistentvolumeclaims/namespaces/nginx-example/nginx-logs.json
+resources/pods/v1-preferredversion/namespaces/nginx-example/nginx-deployment-66689547d-7k26g.json
+resources/pods/namespaces/nginx-example/nginx-deployment-66689547d-7k26g.json
+resources/services/v1-preferredversion/namespaces/nginx-example/my-nginx.json
+resources/services/namespaces/nginx-example/my-nginx.json
+resources/endpoints/v1-preferredversion/namespaces/nginx-example/my-nginx.json
+resources/endpoints/namespaces/nginx-example/my-nginx.json
+resources/namespaces/v1-preferredversion/cluster/nginx-example.json
+resources/namespaces/cluster/nginx-example.json
+resources/replicasets.apps/v1-preferredversion/namespaces/nginx-example/nginx-deployment-66689547d.json
+resources/replicasets.apps/namespaces/nginx-example/nginx-deployment-66689547d.json
+</code></pre></div></div>
+
+<p>From file names (pvc-bff0a51f-1430-4beb-96d4-1fe668031b66.json) it's easy to tell PV name, and if we look inside of these files we can find other useful details:</p>
+
+<pre><code class="language-raw">"resources":{"requests":{"storage":"1Gi"}},
+"storageClassName":"solidfire-silver",
+"volumeMode":"Filesystem",
+"volumeName":"pvc-bff0a51f-1430-4beb-96d4-1fe668031b66"},
+"status":{"accessModes":["ReadWriteOnce"],"capacity":{"storage":"1Gi"},"phase":"Bound"}}
+</code></pre>
+
+<p>With that we can easily find which volume (or snapshot) can be used to restore data from a storage-side backup (SolidFire snapshot or existing volume, which can be cloned).</p>
+
+<p>This approach is currently used by some users who have similar problems (example: create a PVC first, followed by a Velero restore).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Velero's CSI feature, even in beta, is useful because it can schedule your Trident CSI snapshots and at the same time backup application settings to a remote location (similar to Rancher snapshots I wrote about <a href="/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html">here</a>).</p>
+
+<p>While Velero currently isn't production-ready for use with CSI storage (at least not with NetApp SolidFire), there may be situations where division of labor (or automation, as the case may be) can be put in place so that both Velero and NetApp Trident/SolidFire (snapshot, clone, import) features are used to make the job of data protection easier.</p>
+
+<p>Additional investigation is required to better understand (or maybe TFM is clear and it's just me?) backup and restore behavior in various situations:</p>
+
+<ul>
+  <li>Backup with and without CSI support</li>
+  <li>Backup with and without Restic support</li>
+  <li>Restore with CSI support when PVC is, and is not, deleted</li>
+  <li>Restore with CSI support when PVC and PV are, and aren't, deleted</li>
+  <li>The use of Velero exclude and include options</li>
+  <li>The effect of "freeze" (quiesce) options</li>
+  <li>The use of other Velero options and optimal approaches for various backup and restore scenarios</li>
+</ul>
+
+<h2 id="video-demo">Video demo</h2>
+
+<p>Find it <a href="https://www.youtube.com/watch?v=6RrlK2rmk24">here</a>.</p>
+
+<h2 id="notes">Notes</h2>
+
+<ul>
+  <li>Kubernetes v1.19.7
+    <ul>
+      <li>Kubernetes Volume Snapshot v1</li>
+    </ul>
+  </li>
+  <li>NetApp Trident 21.01</li>
+  <li>NetApp SolidFire 12.2 as Trident back-end</li>
+  <li>Velero 1.5.3
+    <ul>
+      <li>Velero CSI v0.1.2 (beta)</li>
+      <li>Velero AWS plugin v1.1.0</li>
+    </ul>
+  </li>
+  <li>NetApp StorageGRID 11.4</li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/backup" class="page__taxonomy-item p-category" rel="tag">backup</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/data-protection" class="page__taxonomy-item p-category" rel="tag">data protection</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/trident" class="page__taxonomy-item p-category" rel="tag">trident</a><span class="sep">, </span>
+    
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2021-02-08T00:00:00+08:00">2021-02-08 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Use+Velero+CSI+Plugin+with+NetApp+SolidFire+and+NetApp+Trident+21.01%20https%3A%2F%2Fscaleoutsean.github.io%2F2021%2F02%2F08%2Fuse-velero-with-netapp-solidfire-and-trident-csi.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2021/02/05/get-solidfire-volume-efficiency-with-powershell.html" class="pagination--pager" title="Use SolidFire PowerShell Tools to find low efficiency volumes">Previous</a>
+    
+    
+      <a href="/2021/02/09/kasten-netapp-storagegrid-cloud-storage-s3-provider.html" class="pagination--pager" title="StorageGRID as Cloud Storage (S3) Provider for Kasten K10">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

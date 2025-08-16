@@ -1,0 +1,813 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>S3 Select vs. remote SQL access to CSV over FUSE | Acting Technologist</title>
+<meta name="description" content="S3 Select vs. remote SQL CSV access over FUSE">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="S3 Select vs. remote SQL access to CSV over FUSE">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/03/10/s3-select-vs-remote-csv-over-fuse.html">
+
+
+  <meta property="og:description" content="S3 Select vs. remote SQL CSV access over FUSE">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="S3 Select vs. remote SQL access to CSV over FUSE">
+  <meta name="twitter:description" content="S3 Select vs. remote SQL CSV access over FUSE">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/03/10/s3-select-vs-remote-csv-over-fuse.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-03-10T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/03/10/s3-select-vs-remote-csv-over-fuse.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="S3 Select vs. remote SQL access to CSV over FUSE">
+    <meta itemprop="description" content="In a recent post I wrote about S3 Select in StorageGRID 11.6.">
+    <meta itemprop="datePublished" content="2022-03-10T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/03/10/s3-select-vs-remote-csv-over-fuse.html" itemprop="url">S3 Select vs. remote SQL access to CSV over FUSE
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-03-10T00:00:00+08:00">2022-03-10 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>In a <a href="/2022/03/04/storagegrid-s3-select.html#s3-select">recent post</a> I wrote about S3 Select in StorageGRID 11.6.</p>
+
+<p>From that post - and various AWS S3 Select material out there which is pretty abundant - you'll see that best approach to querying flat files on S3 almost always "depends" on multiple factors.</p>
+
+<p>There are many ways analytics applications can access CSV files (and other formats) on S3, so a comprehensive comparison across applications, formats and workloads would be very time consuming. But I thought to give one special case a try, namely Virtual Table with CSV files in SQLite.</p>
+
+<p>As the name implies, this feature lets you work with "external" CSV tables which are of temporary nature.</p>
+
+<p>To access S3 files from SQLite we need something like S3FS or Goofys. I used the latter.</p>
+
+<p>I create the same file I used in Example 3 of the previous S3 select post - which is a CSV file with all possible SolidFire configurations, but enlarged to 100 nodes (so that file size becomes bigger) - and upload it to a remote StorageGRID.</p>
+
+<p>Then I mount that <code class="language-plaintext highlighter-rouge">data</code> bucket to /tmp/junk on my client.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>sgpub/data/
+<span class="o">[</span>2022-03-10 12:00:29 CST] 9.2MiB bruteForceSizingSolidFire.txt
+
+<span class="nv">$ </span><span class="nb">df</span> | <span class="nb">grep </span>junk
+data                      1099511627776         0 1099511627776   0% /tmp/junk
+
+<span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /tmp/junk
+total 9526
+drwxrwxrwt 63 root root   61440 Mar 10 12:05 ..
+drwxr-xr-x  2 sean sean    4096 Mar 10 12:02 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span>  1 sean sean 9684195 Mar 10 12:00 bruteForceSizingSolidFire.txt
+</code></pre></div></div>
+
+<p>Finally, I used SQLite to create a <a href="https://www.sqlite.org/csv.html">virtual table</a> from that CSV file.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="n">VIRTUAL</span> <span class="k">TABLE</span> <span class="k">temp</span><span class="p">.</span><span class="n">t2</span>
+ <span class="k">USING</span> <span class="n">csv</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">'/tmp/junk/bruteForceSizingSolidFire.txt'</span><span class="p">,</span> <span class="n">headers</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>I did two simple tests:</p>
+
+<ul>
+  <li>select all rows (non-cached)</li>
+  <li>select some or all rows (cached access)</li>
+</ul>
+
+<p>As expected, selecting all rows from a non-cached CSV file on S3 this way requires a full read. Even selecting just some rows would be the same, as SQLite has no idea what's in the file. Everything has to be read.</p>
+
+<p>In the second test - also as expected - the CSV file was already cached so query was very fast (faster than S3 Select).</p>
+
+<p>But there were some interesting details, too.</p>
+
+<p>First, <code class="language-plaintext highlighter-rouge">'SELECT * FROM'</code> wasn't as smooth as expected. It took over 50 seconds to run this query, which was much slower than regular S3 read (12 seconds). Similar test outside of SQLite (copy FUSE-mounted file to /tmp/) over Goofys took 50 seconds as well, which made me think this was Goofys' behavior (15 seconds of idling, 3 seconds of slow network activity, followed by 30 seconds of idling, followed by 10 seconds of slow network activity).</p>
+
+<p>I also tried S3FS which worked a better; it did more reads on mount (as if it was pre-caching the first 1-2 MB) and <code class="language-plaintext highlighter-rouge">'SELECT * FROM'</code> took 50% less time than over Goofys.</p>
+
+<p>This isn't a lab benchmark, but just a result from querying that 9MB file from a StorageGRID on another continent to give you an idea:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Approach</th>
+      <th>Full Table Scan</th>
+      <th>Cached Select</th>
+      <th>Remote (S3 Select)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">SQLite + Goofys</td>
+      <td>50s</td>
+      <td>1s</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SQLite + S3FS</td>
+      <td>25s</td>
+      <td>1s</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">S3 Select</td>
+      <td>05s</td>
+      <td>-</td>
+      <td>2s</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Additionally, the first S3 Select figure is an estimate based on <a href="/2022/03/04/storagegrid-s3-select.html#example-3-brute-force-sizer-for-solidfire">querying a smaller CSV file the other day</a> (I couldn't repeat that test here because this StorageGRID is version 11.5).</p>
+
+<p>Second, query results were a bit strange. That's probably due to the lack of DB schema, but it shows that it's not easy to change tools on a short notice and expect it will all just work. Queries did "work", but incorrectly or strangely (for example <code class="language-plaintext highlighter-rouge">WHERE</code> and <code class="language-plaintext highlighter-rouge">'SORT BY'</code> didn't work correctly, I suspect because SQLite assumed that integers were strings). This isn't to say that S3 Select is better, just that you need to use your tools properly (which I didn't do). I did spot the problem, at least, although I didn't care to correct it for this test.</p>
+
+<p>Some high level conclusions:</p>
+
+<ul>
+  <li>S3FS, Goofys and similar tools may be very suitable for one workload and not so suitable for another, whereas S3 Select is predictable for the workload of querying S3 based objects without downloading entire objects</li>
+  <li>SQLite is much more popular and very feature-rich, so for some use cases it makes sense to use SQLite than the spartan S3 Select. For example, existing applications that work with SQLite, when migrating SQLite read-only databases to S3, when integrating SQL from S3 objects with other database systems, complex SQL queries and reports… In such cases it makes sense to use SQLite</li>
+  <li>Different workloads benefit from different approaches; even the same workload may benefit from different approaches if it's executed once vs. more than once (in which case it can benefit from local cache)</li>
+</ul>
+
+<p>There's probably more than 10 ways to do this… Some of them:</p>
+
+<ul>
+  <li>download objects, import local files to SQLite and run queries</li>
+  <li>use SQLite virtual tables over FUSE</li>
+  <li>use specialized wrappers such as <a href="https://pypi.org/project/sqlite-s3-query/">sqlite-s3-query</a></li>
+  <li>use Parquet or other specialized database formats to be queried by specialized application(s)</li>
+  <li>use S3 Select for simplicity and basic SQL features</li>
+  <li>use SQLite with FUSE to create indexes and PUT them back to the bucket, so that SQLite CSV queries over FUSE take advantage of indexes. To fully optimize, don't even use CSV files (if you can) - just keep SQLite DB on S3</li>
+</ul>
+
+<p>Years ago I knew of a customer who was doing lots of Microsoft Access reporting. This involved updating and copying databases from storage in branch offices to very big disk array at the HQs where 4-way servers ran reporting, and it was still very time consuming and slow. Eventually they refreshed their existing architecture and retained the old workflow so I didn't learn how complex their SQL queries were. While I couldn't tell whether I'd suggest one of "enhanced" SQLite approaches from the list above or perhaps just S3 Select, but it's hard to imagine how either way with data on StorageGRID could be worse than what they had.</p>
+
+<p>I was surprised that Goofys didn't work well for this test: <code class="language-plaintext highlighter-rouge">'SELECT * FROM'</code> should be just one big sequential read. Last week I tested file upload with Goofys and StorageGRID S3 and it achieved a better performance than my regular <em>native</em> S3 client. For this workload it set a low bar, and S3FS outperformed it by a large margin.</p>
+
+<p>But it's a made up use case anyway, so there's no need to find the fastest way to do this one thing.</p>
+
+<p>It's enough to know that small differences can translate into unpredictable outcomes and that we have a number of client-side tools at our disposal. Most of them free to use so optimizations can be made as necessary.</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/vwzvqt-sqlite-virtual-table-with-goofys-and-s3fs.html">SQLite Virtual Table (CSV) over Goofys and S3FS</a> - 2m24s</li>
+  <li>An S3 Select example can be seen in the demo section of the <a href="/2022/03/04/storagegrid-s3-select.html#example-3-brute-force-sizer-for-solidfire">S3 Select post</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/csv" class="page__taxonomy-item p-category" rel="tag">csv</a><span class="sep">, </span>
+    
+      <a href="/tags/parquet" class="page__taxonomy-item p-category" rel="tag">parquet</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/sql" class="page__taxonomy-item p-category" rel="tag">sql</a><span class="sep">, </span>
+    
+      <a href="/tags/sql-select" class="page__taxonomy-item p-category" rel="tag">sql select</a><span class="sep">, </span>
+    
+      <a href="/tags/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-03-10T00:00:00+08:00">2022-03-10 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=S3+Select+vs.+remote+SQL+access+to+CSV+over+FUSE%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F03%2F10%2Fs3-select-vs-remote-csv-over-fuse.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/03/10/s3-select-vs-remote-csv-over-fuse.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/03/06/elastic-elk-stack-on-netapp.html" class="pagination--pager" title="Elasticsearch 8 with NetApp storage">Previous</a>
+    
+    
+      <a href="/2022/03/11/solidfire-mnode-active-iq-connectivity.html" class="pagination--pager" title="Check Active IQ connectivity from HCC on SolidFire mNode">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

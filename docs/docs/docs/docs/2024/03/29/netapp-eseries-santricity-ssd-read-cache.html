@@ -1,0 +1,1211 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>SSD Cache feature on NetApp SANtricity E-Series | Acting Technologist</title>
+<meta name="description" content="How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="SSD Cache feature on NetApp SANtricity E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html">
+
+
+  <meta property="og:description" content="How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="SSD Cache feature on NetApp SANtricity E-Series">
+  <meta name="twitter:description" content="How to configure SSD Cache, enable HDD volumes to use it, and monitor its performance">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2024-03-29T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="SSD Cache feature on NetApp SANtricity E-Series">
+    <meta itemprop="description" content="  WTH is "SSD Cache"  Create SSD cache  Configure HDD-based volumes to use SSD Cache  Summary  API for monitoring">
+    <meta itemprop="datePublished" content="2024-03-29T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html" itemprop="url">SSD Cache feature on NetApp SANtricity E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2024-03-29T00:00:00+08:00">2024-03-29 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#wth-is-ssd-cache">WTH is "SSD Cache"</a></li>
+  <li><a href="#create-ssd-cache">Create SSD cache</a></li>
+  <li><a href="#configure-hdd-based-volumes-to-use-ssd-cache">Configure HDD-based volumes to use SSD Cache</a></li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#api-for-monitoring">API for monitoring</a></li>
+</ul>
+
+<h2 id="wth-is-ssd-cache">WTH is "SSD Cache"</h2>
+
+<p>It's a feature that makes E-Series arrays store frequently accessed data from HDDs on faster flash disk drives.</p>
+
+<p>The documentation isn't very clear so I'm putting this post together.</p>
+
+<p>The use cases for SSD Cache are read-intensive workloads such as reporting or analytics. SSD cache is read-only (from client perspective), so constant invalidation or eviction would render it useless. Generally we want to use SSD Cache with working sets of up to few TB (per array) when we have constant or at least long-lasting read-dominant activity on volumes enabled to use SSD Cache.</p>
+
+<p>To use this feature on an E-Series array, you'll need:</p>
+<ul>
+  <li>A hybrid array (you can't use SSD to cache SAS SSD data on SAS or NVMe SSDs)</li>
+  <li>One or more non-QLC SSDs for cache (not too many - each array has a limit and the biggest array can cache 8TB of data)</li>
+  <li>One or more volumes (clone volumes included) created on HDDs</li>
+</ul>
+
+<p>SSD cache - even when comprised of multiple SSDs - is not protected because it has no unique data.</p>
+
+<p>Even if you used 4 drives, they'd be like RAID0 - if a drive fails, SSD cache capacity drops, and nothing else happens. If the drive is replaced, SSD Cache will recover to its original size.</p>
+
+<p><img src="/assets/images/santricity_ssd_cache_eseries_04_ssd_cache_suspend_resume.png" alt="" /></p>
+
+<p>There can be only one SSD cache. If you decide to add more disks, select SSD Cache and "Add Capacity" to add additional SSDs. Just remember (before buying additional SSDs) that each array has a maximum and currently no array can use more than 8TB.</p>
+
+<h2 id="create-ssd-cache">Create SSD cache</h2>
+
+<p>In the same place where we create RAID groups, pick "Create SSD cache" and pick up to the maximum your array supports.</p>
+
+<p>When creating SSD Cache you may be prompted to enable it for all qualified (HDD-based) volumes. If you have many such volumes and don't want to enable each one manually, agree. If you don't want many volumes to use this feature, then don't agree.</p>
+
+<p>After that SSD Cache will appear in the list of volume groups and DDP (pools).</p>
+
+<p><img src="/assets/images/santricity_ssd_cache_eseries_01_ssd_cache.png" alt="" /></p>
+
+<h2 id="configure-hdd-based-volumes-to-use-ssd-cache">Configure HDD-based volumes to use SSD Cache</h2>
+
+<p>I didn't want SSD Cache to be enabled across the board, so I had to enable my volume manually.</p>
+
+<p>Go to Volumes, find your volume, check on "Enable SSD Cache".</p>
+
+<p><img src="/assets/images/santricity_ssd_cache_eseries_02_volume_cache_settings.png" alt="" /></p>
+
+<p>After a while you can go back to VGs/Pools to find your SSD Cache, select it, and in the same drop down list (see it at the very top), select to View SSD Cache statistics.</p>
+
+<p><img src="/assets/images/santricity_ssd_cache_eseries_03_ssd_cache_performance_stats.png" alt="" /></p>
+
+<p>From this modal you can download that report as CSV file:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Statistic</th>
+      <th style="text-align: right">Controller A</th>
+      <th style="text-align: right">Controller B</th>
+      <th style="text-align: right">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Reads</td>
+      <td style="text-align: right">45827</td>
+      <td style="text-align: right">40800</td>
+      <td style="text-align: right">86627</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Writes</td>
+      <td style="text-align: right">34573</td>
+      <td style="text-align: right">61200</td>
+      <td style="text-align: right">95773</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache hits</td>
+      <td style="text-align: right">57084</td>
+      <td style="text-align: right">27540</td>
+      <td style="text-align: right">84624</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache hits (%)</td>
+      <td style="text-align: right">71</td>
+      <td style="text-align: right">27</td>
+      <td style="text-align: right">46.4</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache allocation (%)</td>
+      <td style="text-align: right">63.9</td>
+      <td style="text-align: right">92.3</td>
+      <td style="text-align: right">77</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache utilization (%)</td>
+      <td style="text-align: right">77</td>
+      <td style="text-align: right">71</td>
+      <td style="text-align: right">73.7</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Read blocks</td>
+      <td style="text-align: right">45827</td>
+      <td style="text-align: right">40800</td>
+      <td style="text-align: right">86627</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Write blocks</td>
+      <td style="text-align: right">34573</td>
+      <td style="text-align: right">61200</td>
+      <td style="text-align: right">95773</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Partial cache hits</td>
+      <td style="text-align: right">22512</td>
+      <td style="text-align: right">21420</td>
+      <td style="text-align: right">43932</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Partial cache hits blocks</td>
+      <td style="text-align: right">22512</td>
+      <td style="text-align: right">21420</td>
+      <td style="text-align: right">43932</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache misses</td>
+      <td style="text-align: right">8844</td>
+      <td style="text-align: right">17340</td>
+      <td style="text-align: right">26184</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Cache miss blocks</td>
+      <td style="text-align: right">8844</td>
+      <td style="text-align: right">17340</td>
+      <td style="text-align: right">26184</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Populate actions(Host Reads))</td>
+      <td style="text-align: right">3207</td>
+      <td style="text-align: right">2856</td>
+      <td style="text-align: right">6063</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Populate actions(Host Reads) - Blocks)</td>
+      <td style="text-align: right">3207</td>
+      <td style="text-align: right">2856</td>
+      <td style="text-align: right">6063</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Populate actions(Host Writes))</td>
+      <td style="text-align: right">2420</td>
+      <td style="text-align: right">4284</td>
+      <td style="text-align: right">6704</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Populate actions(Host Writes) - Blocks)</td>
+      <td style="text-align: right">2420</td>
+      <td style="text-align: right">4284</td>
+      <td style="text-align: right">6704</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Invalidate actions</td>
+      <td style="text-align: right">1206</td>
+      <td style="text-align: right">1530</td>
+      <td style="text-align: right">2736</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Recycle actions</td>
+      <td style="text-align: right">402</td>
+      <td style="text-align: right">510</td>
+      <td style="text-align: right">912</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Available bytes</td>
+      <td style="text-align: right">2336317935289</td>
+      <td style="text-align: right">1991615289099</td>
+      <td style="text-align: right">4327933224388</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Allocated bytes</td>
+      <td style="text-align: right">1493711466823</td>
+      <td style="text-align: right">1838414113013</td>
+      <td style="text-align: right">3332125579836</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Populated dirty bytes</td>
+      <td style="text-align: right">59748458672</td>
+      <td style="text-align: right">294146258082</td>
+      <td style="text-align: right">353894716754</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">User data bytes</td>
+      <td style="text-align: right">1090409370780</td>
+      <td style="text-align: right">1011127762157</td>
+      <td style="text-align: right">2101537132937</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When interpreting these statistics, we need to remember SSD Cache is read-only. It appears at least some of these figures are general controller statistics.
+It could be that writes refer to pass-through writes that go directly to volumes cached by SSD Cache, or it could be that those are controller statistics. I think it's the former.</p>
+
+<p>These stats shown here came from SANtricity simulator - they were randomly generated. For example, "Available bytes" is 4327933224388 bytes which is 4,030 GiB, but my SSD Cache is 3,566 GiB, which is obviously less. That's all right, it's a simulator, but don't try analyzing its data.</p>
+
+<p>Generally, on a real system with active SSD Cache, we'd like to see relatively low values in cache misses and dirty bytes, and on the volumes that use it, low write % (&lt;5% when running ready-heavy analytics workloads).</p>
+
+<p>The documentation has the details on these metrics <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-storage/how-do-i-view-and-interpret-all-ssd-cache-statistics.html">here</a>.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>If you have data on HDD volumes but the workload can benefit from read-only cache (that is to say, it's &gt;80% read) and some space for at least one SSD disk drive, perhaps this feature can help you with reporting and such.</p>
+
+<p>If your workload is write-heavy, but you have to create periodic reports that can benefit from SSD cache, you can enable and disable cache just prior to running such workloads. That can be done in the UI as shown above, or via the API.</p>
+
+<h2 id="api-for-monitoring">API for monitoring</h2>
+
+<p>I may add this to E-Series Performance Analyzer at some point, but here's what I've been able to find in the API.</p>
+
+<p>To view SSD cache:</p>
+
+<pre><code class="language-raw">GET
+​/storage-systems​/{system-id}​/flash-cache
+Retrieve the FlashCache, if it exists.
+</code></pre>
+
+<p>Query:</p>
+
+<pre><code class="language-raw">curl -X GET "https://127.0.0.1/devmgr/v2/storage-systems/1/flash-cache" -H  "accept: application/json"
+</code></pre>
+
+<p>Response when it's configured:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"wwn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343000000000000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"flashCacheRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"flashCacheBase"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"optimal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"configType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"analyticsStatus"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"analyticsCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"statusCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"fcDriveInfo"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"flashCacheType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"readOnlyCache"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"fcWithDrives"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"securityType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"enabled"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"protectionInformationCapabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"protectionInformationCapable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"protectionType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type2Protection"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"usedCapacity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3830029402112"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"securityLevel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"cachedVolumes"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+  </span><span class="nl">"driveRefs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"01000000343932304D2007020025384500000004"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"01000000343932304D2008070025384500000004"</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>There's also a POST function to create it, but I need only GET for monitoring so I won't provide those examples.</p>
+
+<p>Next, let's see some SSD Cache statistics.</p>
+
+<pre><code class="language-raw">GET
+​/storage-systems​/{system-id}​/flash-cache
+Retrieve the FlashCache, if it exists.
+</code></pre>
+
+<p>Request:</p>
+
+<pre><code class="language-raw">curl -X GET "https://127.0.0.1/devmgr/v2/storage-systems/1/flash-cache" -H  "accept: application/json"
+</code></pre>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"wwn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343000000000000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"flashCacheRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"flashCacheBase"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"optimal"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"configType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"analyticsStatus"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"analyticsCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"statusCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"fcDriveInfo"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"flashCacheType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"readOnlyCache"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"fcWithDrives"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"securityType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"enabled"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"protectionInformationCapabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"protectionInformationCapable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"protectionType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type2Protection"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"usedCapacity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3830029402112"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"securityLevel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"cachedVolumes"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+  </span><span class="nl">"driveRefs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"01000000343932304D2007020025384500000004"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"01000000343932304D2008070025384500000004"</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Notice <code class="language-plaintext highlighter-rouge">cachedVolumes</code> is empty.</p>
+
+<p>Update your configuration to enable SSD Cache on a on volume (3233343536373839303134343300000000000000). Now <code class="language-plaintext highlighter-rouge">cachedVolumes</code> reflects that.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">  
+</span><span class="nl">"wwn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343000000000000000"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"flashCacheRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"flashCacheBase"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"optimal"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"configType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"analyticsStatus"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"analyticsCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"statusCause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="w">
+</span><span class="p">},</span><span class="w">
+</span><span class="nl">"fcDriveInfo"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"flashCacheType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"readOnlyCache"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"fcWithDrives"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"securityType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"enabled"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"protectionInformationCapabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"protectionInformationCapable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"protectionType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type2Protection"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"usedCapacity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3830029402112"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"securityLevel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">},</span><span class="w">
+</span><span class="nl">"cachedVolumes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="s2">"3233343536373839303134343300000000000000"</span><span class="w">
+</span><span class="p">],</span><span class="w">
+</span><span class="nl">"driveRefs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="s2">"01000000343932304D2007020025384500000004"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"01000000343932304D2008070025384500000004"</span><span class="w">
+</span><span class="p">],</span><span class="w">
+</span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SSD_Cache"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343100000000000000"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>View averaged volume statistics for a volume w/o SSD Cache (3233343536373839303134343800000000000000). (<strong>NOTE</strong>: ignore returned values here, both volumes are were completely idle!)</li>
+</ul>
+
+<pre><code class="language-raw">curl -X GET "https://127.0.0.1/devmgr/v2/storage-systems/1/analysed-volume-statistics/3233343536373839303134343800000000000000" -H  "accept: application/json"
+</code></pre>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"observedTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-03-29T09:41:28.000+00:00"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"observedTimeInMS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1711705288000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"sourceController"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000001"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0011210679860913066</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0001862318252065831</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"otherIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.002626461477637265</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0013072998112978898</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">20555.157674309175</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0000022038310851775423</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">20555.15767651301</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.590637093017075</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.5904477047645624</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.4837644161694494</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.4837536139265914</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.717867840008008</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.7177152369041442</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageReadOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">19225992786258.152</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageWriteOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">12408.64380407436</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">1918938</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">318774</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343800000000000000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"poolId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"040000006D039EA00044C2530000957960828C91"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"controllerId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000001"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"workLoadId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4200000001000000000000000000000000000000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"mapped"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">394516</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.070696549696336</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.0706461801095735</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">36893488143733430000</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">840660226</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">67346</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.4682958750334096</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.4682958750334096</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.545415673945897</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.5453685734760985</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readCacheUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">99.99999999581709</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeCacheUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">21.252659786115068</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">190</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">2269690</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readPhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00023048126495009105</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writePhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00003934438975688903</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"queueDepthTotal"</span><span class="p">:</span><span class="w"> </span><span class="mi">2614860</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"queueDepthMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readTimeMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">134540</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeTimeMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">116900</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageQueueDepth"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1685417962633262</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"randomIosPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">84.67300528396862</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"randomBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.9776774913674366e-8</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cacheWriteWaitOpsPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cacheWriteWaitBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prefetchHitPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"fullStripeWritesBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.2645547538929502e-9</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.240157894736842</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheHitPct"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9999009869000458</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>View averaged volume statistics for a volume <strong>with</strong> SSD Cache (3233343536373839303134343300000000000000). (<strong>NOTE</strong>: ignore returned values here, both volumes were completely idle!)</li>
+</ul>
+
+<pre><code class="language-raw">curl -X GET "https://127.0.0.1/devmgr/v2/storage-systems/1/analysed-volume-statistics/3233343536373839303134343300000000000000" -H  "accept: application/json")
+</code></pre>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"observedTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-03-29T09:41:28.000+00:00"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"observedTimeInMS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1711705288000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"sourceController"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000001"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">1916.5761904761905</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">851.2142857142857</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"otherIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">3292.4238095238097</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">2767.790476190476</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">13.379674498240153</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">7.341724445706322</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">20.721398943946475</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.231222139678644</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.23116795986525</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.52132302313222</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.5213194684025897</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.705354821449463</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.705312293243358</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageReadOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">7320.139755665485</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageWriteOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">9043.96951693659</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">804962</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">357510</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3233343536373839303134343300000000000000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"poolId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"040000006D039EA00044BBAC0000AAD460828D52"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"controllerId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000002"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"workLoadId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4200000001000000000000000000000000000000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"mapped"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">124254</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.183369291934264</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.183309213153392</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">930219910</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">406945632</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">33924</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.128929135715128</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.128929135715128</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.742759170048933</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.742707591830926</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readCacheUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">15.78668266188493</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeCacheUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">12.586039991342096</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadHitOps"</span><span class="p">:</span><span class="w"> </span><span class="mi">5908</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadHitBytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">36374998</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readPhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">295.8428571428572</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writePhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">80.77142857142859</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"queueDepthTotal"</span><span class="p">:</span><span class="w"> </span><span class="mi">702552</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"queueDepthMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readTimeMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">134540</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeTimeMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">116900</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageQueueDepth"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.6043603630883152</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"randomIosPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">25.296265200366115</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"randomBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">57.58927685355991</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cacheWriteWaitOpsPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.8725386157292773</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cacheWriteWaitBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.29283911812573526</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prefetchHitPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"fullStripeWritesBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.08259500321887789</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheReadResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.461655721056195</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"flashCacheHitPct"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9926605231054385</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Getting SSD Cache performance metrics (after 30 mins of digging around, I think I've found it in SYMbol v1 API!):</li>
+</ul>
+
+<pre><code class="language-raw">curl -X POST "https://127.0.0.1/devmgr/v2/storage-systems/1/symbol/createFlashCacheAnalytics?controller=auto&amp;verboseErrorResponse=true" -H  "accept: application/json" -H  "authorization: Basic YWRtaW46aW5maW5pdGk=" -H  "Content-Type: application/json" -d "{  \"flashCacheType\": \"readOnlyCache\",  \"flashCacheLabel\": \"SSD_Cache\"}"
+</code></pre>
+
+<p>Note that  you'll need to use the correct Authorization header for your own environment and a JSON object that reflects properties of your SSD Cache:</p>
+
+<pre><code class="language-raw">{
+  "flashCacheType": "readOnlyCache",
+  "flashCacheLabel": "SSD_Cache"
+}
+</code></pre>
+
+<p>Yeah, nah.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"errorMessage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Processing struct 'devmgr.api.symbol.ObjectBundle'"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"developerMessage"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"localizedMessage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Processing struct 'devmgr.api.symbol.ObjectBundle'"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"retcode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unexpectedError"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"codeType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"devicemgrerror"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"invalidFieldsIfKnown"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/caching" class="page__taxonomy-item p-category" rel="tag">caching</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/ssd" class="page__taxonomy-item p-category" rel="tag">ssd</a><span class="sep">, </span>
+    
+      <a href="/tags/ssd-cache" class="page__taxonomy-item p-category" rel="tag">ssd cache</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2024-03-29T00:00:00+08:00">2024-03-29 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=SSD+Cache+feature+on+NetApp+SANtricity+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2024%2F03%2F29%2Fnetapp-eseries-santricity-ssd-read-cache.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/03/28/netapp-santricity-powershell-module.html" class="pagination--pager" title="NetApp SANtricity PowerShell module for E-Series">Previous</a>
+    
+    
+      <a href="/2024/03/31/windows-server-2025-with-solidfire-part-one.html" class="pagination--pager" title="Windows Server 2025 with NetApp SolidFire 12 iSCSI">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

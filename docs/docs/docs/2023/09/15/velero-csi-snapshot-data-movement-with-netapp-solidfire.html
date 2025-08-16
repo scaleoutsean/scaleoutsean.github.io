@@ -1,0 +1,1088 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire | Acting Technologist</title>
+<meta name="description" content="What the heck is CSI Snapshot Data Movement and how do I use it with NetApp SolidFire">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">
+
+
+  <meta property="og:description" content="What the heck is CSI Snapshot Data Movement and how do I use it with NetApp SolidFire">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire">
+  <meta name="twitter:description" content="What the heck is CSI Snapshot Data Movement and how do I use it with NetApp SolidFire">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-09-15T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire">
+    <meta itemprop="description" content="  Introduction  WTF is CSI Snapshot Data Movement (CSI SDM)          Why is that a Good Thing        Get ready to use CSI SDM with NetApp Astra Trident CSI and SolidFire          Software stack        Backup workflow  Conclusion  Appendix A - Demo  Appendix B - CSI SDM backup job details">
+    <meta itemprop="datePublished" content="2023-09-15T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html" itemprop="url">Velero 1.12 and CSI Snapshot Data Movement with NetApp SolidFire
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-09-15T00:00:00+08:00">2023-09-15 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#wtf-is-csi-snapshot-data-movement-csi-sdm">WTF is CSI Snapshot Data Movement (CSI SDM)</a>
+    <ul>
+      <li><a href="#why-is-that-a-good-thing">Why is that a Good Thing</a></li>
+    </ul>
+  </li>
+  <li><a href="#get-ready-to-use-csi-sdm-with-netapp-astra-trident-csi-and-solidfire">Get ready to use CSI SDM with NetApp Astra Trident CSI and SolidFire</a>
+    <ul>
+      <li><a href="#software-stack">Software stack</a></li>
+    </ul>
+  </li>
+  <li><a href="#backup-workflow">Backup workflow</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---demo">Appendix A - Demo</a></li>
+  <li><a href="#appendix-b---csi-sdm-backup-job-details">Appendix B - CSI SDM backup job details</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>I've written a bunch of posts about Velero with NetApp Astra Trident and SolidFire, so I'll skip all that.</p>
+
+<p>You can use search bar at the top to find older posts (Velero SolidFire CSI).</p>
+
+<h2 id="wtf-is-csi-snapshot-data-movement-csi-sdm">WTF is CSI Snapshot Data Movement (CSI SDM)</h2>
+
+<p>According to Velero, <a href="https://velero.io/docs/v1.12/csi-snapshot-data-movement/">CSI Snapshot Data Movement</a> is a feature designed to move CSI snapshot data to a backup storage location.</p>
+
+<p>How is that different from CSI snapshots?</p>
+
+<p>The difference - as the feature name suggests - is that CSI Snapshot Data Movement doesn't stop at creating and retaining CSI snapshots.</p>
+
+<p>If you read some of my earliest posts related to CSI (I have a few about non-CSI as well) you'll see that Velero takes a snapshot and in its backup "catalog" it only records its existence. Data remains on the snapshot itself.</p>
+
+<p>Then, what happens is if the SolidFire cluster gets destroyed, all you have is a nice reference to snapshots that you once had.</p>
+
+<p>In other words, a snapshot is not a backup. Which I hope you knew.</p>
+
+<p>CSI SDM, on the other hand, <em>moves</em> snapshot data to another place, which is to say, it makes a copy also known as a "backup".</p>
+
+<blockquote>
+  <p>it tries to access the snapshot data through various data movers and back up the data to a backup storage connected to the data movers.</p>
+</blockquote>
+
+<h3 id="why-is-that-a-good-thing">Why is that a Good Thing</h3>
+
+<p>If you completely lose a site, you may still be able to recover your snapshot data from the cloud or some other S3 storage (I used Backblaze for this PoC).</p>
+
+<p>This also makes it easier to restore data from one cluster to another, similar to the way Kasten K10 has been doing it for a while now: you can have it all in S3, not just backups "exported" to S3.
+As you can see <a href="/2023/09/03/solidbackup-with-kopia.html#steps-related-to-kopia">here</a>, subsequent backups can be tiny (although we need to remember Velero's Kopia <a href="https://velero.io/docs/v1.12/csi-snapshot-data-movement/">doesn't</a> work exactly the same way as stand-alone Kopia does), so it may not be a big burden to "backup to S3" once or thrice a day, except for large volumes.</p>
+
+<p>Restore can also be migration; if you want to move data from SolidFire to the cloud, you could sure use VolSync or other tools I blogged about, but you can use Velero or Kasten to backup to S3 and then restore to destination. (I wouldn't do it for SolidFire-to-SolidFire because it's easy enough to replicate volumes between using SolidFire's features, but if network didn't permit storage array-based replication, then I'd consider backup and restore.)</p>
+
+<p>When you think of it, Kopia's data movement of snapshot to S3 means you may (or may not, of course) not need a dedicated disk for "disk-to-S3" preparation: data flows from SolidFire directly to S3. If you need to restore TBs of data quickly, then of course one has to have a replica or on-prem S3 storage. Kopia and Restic <em>can</em> bacup TB-sized volumes but when that happens on <em>live</em> volumes it creates potential data inconsistencies in backups, which snapshot copies do not suffer from because they are point-in-time copies.</p>
+
+<p>And finally - I wrote about this in the context of Velero CSI backups - you don't have to "allocate" snapshot quotas between people and Velero. Because SolidFire can have up to 32 snapshots per each volume, I used to recommend to create schedules that would give 24-ish to Velero and leave 8 for human consumption (on-demand snapshots, daily snapshots retained for 1 week, etc). Since CSI SDM deletes the snapshot after running, you don't need to reserve that many slots for Velero - one per schedule per volume should be enough.</p>
+
+<h2 id="get-ready-to-use-csi-sdm-with-netapp-astra-trident-csi-and-solidfire">Get ready to use CSI SDM with NetApp Astra Trident CSI and SolidFire</h2>
+
+<p>I could create a detailed how-to, but I've no idea if anyone needs that, so I won't. Instead I'll just remind:</p>
+
+<ul>
+  <li>you need to install the Kubernetes CSI snapshot stuff (it's in the Trident documentation) and a Volume Snapshot Class for your SolidFire Storage Class</li>
+  <li>then, make sure you can manually create snapshots in Kubernetes from YAML files</li>
+  <li>if that works, read the Velero docs carefully on how to enable CSI and CSI SDM</li>
+</ul>
+
+<h3 id="software-stack">Software stack</h3>
+
+<ul>
+  <li>Debian 12.1 ARM64</li>
+  <li>NetApp SolidFire 12.5</li>
+  <li>NetApp Astra Trident v23.07</li>
+  <li>Kubernetes v1.25 (K3s)</li>
+  <li>Velero v1.12 RC1 with latest (as of Sep 15, 2023) Velero plugins for S3 and CSI</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /etc/debian_version 
+11.7
+
+<span class="nv">$ </span><span class="nb">uname</span> <span class="nt">-a</span>
+Linux k1 6.1.11-meson64 <span class="c">#23.02.2 SMP PREEMPT Sat Feb 18 00:07:55 UTC 2023 aarch64 GNU/Linux</span>
+
+<span class="nv">$ </span>k3s <span class="nt">--version</span>
+k3s version v1.25.14-rc1+k3s1 <span class="o">(</span>c20a6195<span class="o">)</span>
+go version go1.20.8
+
+<span class="nv">$ </span><span class="c"># my custom Trident build for ARM64</span>
+
+<span class="nv">$ </span>./tridentctl <span class="nt">-n</span> kube-system version
++---------------------------------------------------------+---------------------------------------------------------+
+|                     SERVER VERSION                      |                     CLIENT VERSION                      |
++---------------------------------------------------------+---------------------------------------------------------+
+| 23.07.0-custom+e2344922b27d1aec8c2574153962ef7ea49e390d | 23.07.0-custom+e2344922b27d1aec8c2574153962ef7ea49e390d |
++---------------------------------------------------------+---------------------------------------------------------+
+
+<span class="nv">$ </span>kubectl version <span class="nt">-o</span> yaml
+clientVersion:
+  buildDate: <span class="s2">"2023-09-14T00:42:50Z"</span>
+  compiler: gc
+  gitCommit: c20a619525fb64465e50253d2c559f75cf4736de
+  gitTreeState: clean
+  gitVersion: v1.25.14-rc1+k3s1
+  goVersion: go1.20.8
+  major: <span class="s2">"1"</span>
+  minor: <span class="s2">"25"</span>
+  platform: linux/arm64
+kustomizeVersion: v4.5.7
+serverVersion:
+  buildDate: <span class="s2">"2023-09-14T00:42:50Z"</span>
+  compiler: gc
+  gitCommit: c20a619525fb64465e50253d2c559f75cf4736de
+  gitTreeState: clean
+  gitVersion: v1.25.14-rc1+k3s1
+  goVersion: go1.20.8
+  major: <span class="s2">"1"</span>
+  minor: <span class="s2">"25"</span>
+  platform: linux/arm64
+
+<span class="nv">$ </span>velero version
+Client:
+	Version: v1.12.0-rc.1
+	Git commit: 0c0ccf949bed87c2a8f773270ca0d79779283a4e
+Server:
+	Version: v1.12.0-rc.1
+
+</code></pre></div></div>
+
+<h2 id="backup-workflow">Backup workflow</h2>
+
+<p>I'll show how I backed up an app using CSI SDM. I won't even try to restore as that should work the same as in all other posts with Velero and SolidFire.</p>
+
+<p>My resources:</p>
+
+<ul>
+  <li>Namespace: minio</li>
+  <li>Pod: minio-deployment-68c69c6d55-qn45l (/data is using 2GiB iSCSI volume on SolidFire)</li>
+  <li>PVC: pvc-ba3213cd-01bc-4920-b1c7-708ed89e5730 (2GiB volume on SolidFire)</li>
+</ul>
+
+<p>With this, I created a Velero CSI backup job:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup create minio-backup <span class="se">\</span>
+  <span class="nt">--snapshot-volumes</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+  <span class="nt">--snapshot-move-data</span> <span class="se">\</span>
+  <span class="nt">--include-namespaces</span> minio
+Backup request <span class="s2">"minio-backup"</span> submitted successfully.
+Run <span class="sb">`</span>velero backup describe minio-backup<span class="sb">`</span> or <span class="sb">`</span>velero backup logs minio-backup<span class="sb">`</span> <span class="k">for </span>more details.
+
+</code></pre></div></div>
+
+<p>This initially looked promising because I hadn't seen this before - I thought it was waiting for Trident CSI to do something on the back end.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME           STATUS                       ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+minio-backup   WaitingForPluginOperations   0        0          2023-09-15 08:18:07 +0000 UTC   29d       default            &lt;none&gt;
+
+</code></pre></div></div>
+
+<p>Darn, it completed too quickly!</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME           STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+minio-backup   Completed   0        0          2023-09-15 08:18:07 +0000 UTC   29d       default            &lt;none&gt;
+
+</code></pre></div></div>
+
+<p>I was suspicious. On the one hand, SolidFire logs looked promising (I noticed a clone was created), but I didn't know how to tell if it worked the way I expected.</p>
+
+<p>On the other hand <code class="language-plaintext highlighter-rouge">velero backup describe</code> had "Velero-Native Snapshots: none included" at the very bottom (see in Appendix A), which scared me. But the messages near the top (this screenshot below) looked good.</p>
+
+<p><img src="/assets/images/velero-csi-sdm-07-velero-status-backup-completed.png" alt="" /></p>
+
+<p>Completed! (Notice "Snapshot Move Data: true".)</p>
+
+<p>Here are a few selected screenshots. The first is the app (pod and PVC).</p>
+
+<p><img src="/assets/images/velero-csi-sdm-01-minio-pod-pvc.png" alt="MinIO Pod and PVC" /></p>
+
+<p>Show all Velero backups:</p>
+
+<p><img src="/assets/images/velero-csi-sdm-02-velero-csi-backup.png" alt="" /></p>
+
+<p>SolidFire PV (pvc-ba3213cd-01bc-4920-b1c7-708ed89e5730) is storage used by MinIO pod:</p>
+
+<p><img src="/assets/images/velero-csi-sdm-03-solidfire-pvc.png" alt="" /></p>
+
+<p>This is one of <strong>key</strong> screenshots! Mind the clone volume!</p>
+
+<p><img src="/assets/images/velero-csi-sdm-04-solidfire-csi-snap-clone-for-velero.png" alt="" /></p>
+
+<p>I feel obliged to remind every time: notice how the clone has the same QoS as the source?</p>
+
+<p>It should be possible to use a <a href="https://velero.io/docs/v1.12/backup-hooks/">hook</a> to increase a storage QoS setting (MaxIOPS, mostly) of the clone to increase its backup performance.</p>
+
+<p>Backup data was sucked in by Velero and shipped off to my Backblaze bucket.</p>
+
+<p><img src="/assets/images/velero-csi-sdm-05-backblaze-backup-bucket.png" alt="" /></p>
+
+<p>And finally, <strong>the key</strong> screenshot. You may want to right-click and open it in another tab if you're interested in this post.</p>
+
+<p><img src="/assets/images/velero-csi-sdm-06-velero-csi-sdm-workflow.png" alt="" /></p>
+
+<p>What's this? Looking from the bottom:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th style="text-align: left">Message</th>
+      <th style="text-align: left">Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>14368</td>
+      <td style="text-align: left">Snapshot succeeded</td>
+      <td style="text-align: left">Velero kicks off Trident CSI volume snapshot</td>
+    </tr>
+    <tr>
+      <td>14370</td>
+      <td style="text-align: left">Clone volume started</td>
+      <td style="text-align: left">SolidFire snapshots must be cloned to become accessible. Velero CSI SDM creates clone from a CSI snapshot</td>
+    </tr>
+    <tr>
+      <td>14373</td>
+      <td style="text-align: left">API Call (DeleteSnapshot)</td>
+      <td style="text-align: left">Snapshot is no longer needed</td>
+    </tr>
+    <tr>
+      <td>14374</td>
+      <td style="text-align: left">API Call (DeleteVolume)</td>
+      <td style="text-align: left">Cloned volume is no longer needed</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Let's nicely format JSON from event ID 14371 (part of clone volume operation) above:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"authMethod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cluster"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"ip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.1.18"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"admin"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CloneVolume"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"docker-name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-b6b350ba-7e3a-4195-b31e-084c14f0ebe8"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fstype"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xfs"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"provisioning"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"trident"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{</span><span class="se">\"</span><span class="s2">version</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">23.07.0-custom+e2344922b27d1aec8c2574153962ef7ea49e390d</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">backendUUID</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">f069f7c4-759a-4758-9b90-564d290e76a4</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">platform</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">kubernetes</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">platformVersion</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">v1.25.14-rc1+k3s1</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="s2">plugin</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">solidfire-san</span><span class="se">\"</span><span class="s2">}"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-b6b350ba-7e3a-4195-b31e-084c14f0ebe8"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"requestAPIVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12.2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"snapshotID"</span><span class="p">:</span><span class="w"> </span><span class="mi">132</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeID"</span><span class="p">:</span><span class="w"> </span><span class="mi">59</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"success"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>This clones our original PVC - of course - but how? By using Snapshot ID 132 as the source!</p>
+
+<p>Snapshot ID 132 (snapshot-2eaf2311-e284-44be-8afb-190b32c7d5bb) is the snapshot that was created when Velero executed backup. The whole thing happened too quickly so by the time I realized what happened, the snapshot was already deleted. (I captured another one in the demo video shared further below, but not this particular snapshot).</p>
+
+<p>The resulting clone (pvc-b6b350ba-7e3a-4195-b31e-084c14f0ebe8) also briefly appeared in the SolidFire Web UI, and was deleted as soon as Velero was done with it.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>CSI SDM is looking very promising and seems to work as expected (I'm sure there are bugs, of course, as it's a new feature).</p>
+
+<p>It could be especially helpful to NetApp HCI and SolidFire users who felt (or really have been) constrained in terms of snapshots.</p>
+
+<p>Once you set it up, CSI SDM is not more complicated to use than regular Velero CSI snapshots. (Most of the time I wasted in the process of doing this posts was the time spent on getting the damn Kubernetes snapshot add-ons YAML files deployed into Kubernetes.)</p>
+
+<p>As an aside: with CSI SDM it becomes even easier to backup non-partitioned Linux volumes using Kubernetes (which is one of my <a href="/2022/03/15/velero-18-with-restic-and-trident-2201.html#using-velero-and-restic-to-backup-regular-solidfire-volumes">old obsessions</a>).</p>
+
+<h2 id="appendix-a---demo">Appendix A - Demo</h2>
+
+<p>This was done after the first run in which screenshots were captured, so clone volume and snapshot IDs may be different.</p>
+
+<ul>
+  <li><a href="https://rumble.com/v3i2nua-velero-csi-snapshot-data-mover-with-netapp-trident-and-solidfire.html">Velero CSI Snapshot Data Mover with NetApp Trident and SolidFire</a> - 4m0s</li>
+</ul>
+
+<h2 id="appendix-b---csi-sdm-backup-job-details">Appendix B - CSI SDM backup job details</h2>
+
+<p>Detailed backup job log:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup describe minio-backup <span class="nt">--details</span>
+Name:         minio-backup
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.25.14-rc1+k3s1
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>25
+
+Phase:  Completed
+
+
+Namespaces:
+  Included:  minio
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included:        <span class="k">*</span>
+  Excluded:        &lt;none&gt;
+  Cluster-scoped:  auto
+
+Label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:  <span class="nb">true
+</span>Snapshot Move Data:          <span class="nb">true
+</span>Data Mover:                  velero
+
+TTL:  720h0m0s
+
+CSISnapshotTimeout:    10m0s
+ItemOperationTimeout:  4h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2023-09-15 08:18:07 +0000 UTC
+Completed:  2023-09-15 08:19:18 +0000 UTC
+
+Expiration:  2023-10-15 08:18:07 +0000 UTC
+
+Total items to be backed up:  27
+Items backed up:              27
+
+Backup Item Operations:
+  Operation <span class="k">for </span>persistentvolumeclaims minio/minio-storage:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-35ec57e3-2c01-4ec5-bbb0-1ecb9d6cc7f9.ba3213cd-01bc-49262cbd2
+    Items to Update:
+                           datauploads.velero.io velero/minio-backup-p5r87
+    Phase:                 Completed
+    Progress:              19281 of 19281 <span class="nb">complete</span> <span class="o">(</span>Bytes<span class="o">)</span>
+    Progress description:  Completed
+    Created:               2023-09-15 08:18:17 +0000 UTC
+    Started:               2023-09-15 08:18:17 +0000 UTC
+    Updated:               2023-09-15 08:19:08 +0000 UTC
+Resource List:
+  apps/v1/Deployment:
+    - minio/minio-deployment
+  apps/v1/ReplicaSet:
+    - minio/minio-deployment-68c69c6d55
+  discovery.k8s.io/v1/EndpointSlice:
+    - minio/minio-service-7swv6
+  v1/ConfigMap:
+    - minio/kube-root-ca.crt
+  v1/Endpoints:
+    - minio/minio-service
+  v1/Event:
+    - minio/minio-deployment-68c69c6d55-qn45l.1785039f5fce2cdb
+    - minio/minio-deployment-68c69c6d55-qn45l.1785039fb4443860
+    - minio/minio-deployment-68c69c6d55-qn45l.1785039fd934c55b
+    - minio/minio-deployment-68c69c6d55-qn45l.178503a23ea405cd
+    - minio/minio-deployment-68c69c6d55-qn45l.178503a29c304d7e
+    - minio/minio-deployment-68c69c6d55-qn45l.178503a2a0db93c1
+    - minio/minio-deployment-68c69c6d55-qn45l.178503a2ad412d99
+    - minio/minio-deployment-68c69c6d55.1785039f5f425f2d
+    - minio/minio-deployment.1785039f5b0b851d
+    - minio/minio-storage.1785039f4f52d692
+    - minio/minio-storage.1785039f4fb59b04
+    - minio/minio-storage.1785039f756e6646
+    - minio/minio-storage.1785039f7727e39a
+    - minio/velero-minio-storage-c72ck.178503fcc1dec71e
+    - minio/velero-minio-storage-c72ck.178503fcebd6bfb3
+    - minio/velero-minio-storage-c72ck.178503fcebd7890b
+  v1/Namespace:
+    - minio
+  v1/PersistentVolume:
+    - pvc-ba3213cd-01bc-4920-b1c7-708ed89e5730
+  v1/PersistentVolumeClaim:
+    - minio/minio-storage
+  v1/Pod:
+    - minio/minio-deployment-68c69c6d55-qn45l
+  v1/Service:
+    - minio/minio-service
+  v1/ServiceAccount:
+    - minio/default
+
+Velero-Native Snapshots: &lt;none included&gt;
+
+CSI Volume Snapshots: &lt;none included&gt;
+</code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/backup" class="page__taxonomy-item p-category" rel="tag">backup</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/kopia" class="page__taxonomy-item p-category" rel="tag">kopia</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/snapshot" class="page__taxonomy-item p-category" rel="tag">snapshot</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-09-15T00:00:00+08:00">2023-09-15 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Velero+1.12+and+CSI+Snapshot+Data+Movement+with+NetApp+SolidFire%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F09%2F15%2Fvelero-csi-snapshot-data-movement-with-netapp-solidfire.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/09/08/beegfs-csi-driver-lives-on.html" class="pagination--pager" title="ThinkParQ takes over NetApp-created BeeGFS CSI driver">Previous</a>
+    
+    
+      <a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html" class="pagination--pager" title="Event monitoring with SNMP trap notifications from NetApp E-Series arrays">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

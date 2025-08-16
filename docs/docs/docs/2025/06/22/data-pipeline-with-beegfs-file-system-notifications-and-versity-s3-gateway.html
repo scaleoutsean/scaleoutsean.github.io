@@ -1,0 +1,829 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway | Acting Technologist</title>
+<meta name="description" content="Make use of BeeGFS 8 file-system event notifications with Versity S3 Gateway">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway">
+<meta property="og:url" content="https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">
+
+
+  <meta property="og:description" content="Make use of BeeGFS 8 file-system event notifications with Versity S3 Gateway">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway">
+  <meta name="twitter:description" content="Make use of BeeGFS 8 file-system event notifications with Versity S3 Gateway">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2025-06-22T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway">
+    <meta itemprop="description" content="  Background  Why this is cool  Catches  File/object duality considerations  Conclusion  Demo">
+    <meta itemprop="datePublished" content="2025-06-22T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html" itemprop="url">Data pipeline with BeeGFS FS Event Notifications and Versity S3 Gateway
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-06-22T00:00:00+08:00">2025-06-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#background">Background</a></li>
+  <li><a href="#why-this-is-cool">Why this is cool</a></li>
+  <li><a href="#catches">Catches</a></li>
+  <li><a href="#fileobject-duality-considerations">File/object duality considerations</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#demo">Demo</a></li>
+</ul>
+
+<h2 id="background">Background</h2>
+
+<p>For the context, see <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html">"Improved pipelines with BeeGFS FS Event Notifications in v8"</a> where I build on top of an earlier approach to scalable S3 anti-virus scanning from some time ago, and discover that BeeGFS file-system event notifications in version 8 are very fast, useful and convenient.</p>
+
+<p><img src="/assets/images/storagegrid-s3-scanner-beegfs.png" alt="StorageGRID Kafka notifications for AV scanner architecture" /></p>
+
+<p>Where does BeeGFS come in play here? It is a parallel file-system, so scanning and/or downloading can be done from different BeeGFS nodes, and notifications from version 8 can be used for this.</p>
+
+<p>Well, it has occurred to me that the Versity S3 Gateway can <em>also</em> run on BeeGFS. I blogged about it years ago.</p>
+
+<p>And it has also occurred to me that, since it's an S3 gateway, as soon as S3 PUT requests complete and object content are flushed to BeeGFS file-system, I don't <em>have to</em> deal with Kafka or Web hooks and arrange for S3 downloads in order to scan those files.</p>
+
+<p>As objects land on Versity S3 Gateway server in the form of S3 PUTs, BeeGFS file-system event notifications kick off automatically.</p>
+
+<p>If you don't want a complex stack, it doesn't get simpler than this:</p>
+
+<ul>
+  <li>Receive gRPC notifications and send AV scan jobs to a job scheduler. That's it!</li>
+</ul>
+
+<p><img src="/assets/images/versity-s3-gw-av-scanner.png" alt="StorageGRID Web hook notifications for AV scanner architecture" /></p>
+
+<p>If you want to persist job queue, pick a scheduler that does it, if not, pick a simpler one. I used a memory-based outgoing queue in gRPC, but I could have used a kind that persists outgoing queue to disk.</p>
+
+<p>You can make your stack more complex and add Kafka or NATS back into the picture, but I don't think it'd add much value.</p>
+
+<p>Versity S3 Gateway supports <a href="https://github.com/versity/versitygw/wiki/Events-Notifications">Web hook notifications, NATS and Kafka</a> so you could duplicate the complex design from the top with Versity S3 Gateway, too.</p>
+
+<h2 id="why-this-is-cool">Why this is cool</h2>
+
+<p>There are some niche use cases I can think of (such as, S3 metadata-related scanning or when we only ever use S3 to create content) where scanning based on Versity Web hooks would be better, but relying on underlying BeeGFS notifications - although they're not super full-featured yet - gives you the following advantages:</p>
+
+<ul>
+  <li>No need to download S3 objects to containers or VMs with AV software to scan uploaded content (may save a lot of time for large objects!)</li>
+  <li>Scale-out scanning of Versity S3 Gateway uploads from <em>any</em> BeeGFS client that can access (ACLs, etc.) that file-system location</li>
+  <li>Two-in-one event notifications for <em>both</em> file-system and S3 scanning (let's not forget - the reason we use S3 gateway and not an S3-only service (like MinIO) is that we probably upload data via both file and object services)</li>
+  <li>Very simple stack, easy to understand, operate, maintain and monitor</li>
+  <li>You can still use Versity event notifications for whatever other stuff you need</li>
+</ul>
+
+<p>In the previous posts related to this topic I mentioned "decide &amp; dispatch" location (e.g. maybe a messaging service or right there on the gRPC server, if it wouldn't add too much complexity to it), so regarding that - you <em>could</em> keep that decider logic for S3 on Versity.</p>
+
+<p>Or you could take a step back and centralize logic and rules in a messaging service (step (3)) where both BeeGFS (file-system-only, via steps (1) and (2)) and Versity S3 Gateway (S3-only, via Web hooks) send their notifications.</p>
+
+<p><img src="/assets/images/versity-s3-gw-av-scanner-full-featured.png" alt="StorageGRID Web hook notifications for AV scanner architecture" /></p>
+
+<p>This has advantages and disadvantages, depending on the situation, but notice that even if Versity S3 Gateway sends Web-hook notifications to NATS, the advantages of being able to scan objects as files remains and step (4) can remain unchanged: it should be advantageous to scan S3 PUTs as file-system objects, even if we got notified about it by a Versity Web hook notification.</p>
+
+<ul>
+  <li>Web hook: https://s3/bucket/obj.ect - when we are about AV-scan this, we know that object can be found at /mnt/beegfs/bucket/obj.ect and can "translate to POSIX path &amp; scan" on file-system</li>
+  <li>FS event: we'd get notified about LAST_WRITER_CLOSED on bucket/obj.ect and we'd prefix those with the BeeGFS mount point such as '/mnt/beegfs/'</li>
+</ul>
+
+<p>Either way, regardless of where notifiations are coming from we can scan the file/object on BeeGFS - there's no need to "download" it.</p>
+
+<p>We'd just need to be careful to avoid scanning the same file twice if both gRPC and S3 Web hook notifications are active.</p>
+
+<p>We can't "exclude" certain file-system paths on BeeGFS gRPC client in 8.0.1, so we should build "drop duplicates" and similar rules in our job scheduler, for example, or drop bucket paths in Step (2) or (4) above.</p>
+
+<p>A simplified depiction of a setup that uses both Versity S3 Gateway and BeeGFS gRPC notifications.</p>
+
+<p><img src="/assets/images/versity-s3-gw-av-scanner-dual-event-pipeline.png" alt="Dual event pipeline with Versity S3 GW and BeeGFS gRPC notifications" /></p>
+
+<p>These event sources could also "cross-pollinate", so to speak, as we could (for example) use S3 web hooks to initiate non-AV on-file-system processing.</p>
+
+<p>Or we could use BeeGFS gRPC notifications to kick off data pipelines processing on file-system level. Example:</p>
+
+<ul>
+  <li>On new S3 PUT, we receive gRPC notification and update embeddings for the "object-file" in a vector DB</li>
+  <li>We then "touch" the object over S3 (new tag: <code class="language-plaintext highlighter-rouge">embeddings=ok</code>)</li>
+  <li>That triggers a new S3 Web hook notification</li>
+  <li>Some Web hook event subscriber out there sees that vector DB has embeddings for latest version of the documents and selectively prunes outdated KV cache for an AI chat bot</li>
+</ul>
+
+<h2 id="catches">Catches</h2>
+
+<p>I did a generic demo of the approach with BeeGFS and gRPC in the linked post, but I also did one with Versity S3 Gateway today.</p>
+
+<p>I first blogged about the (not original) approach to AV scanning on premises <a href="/2024/01/29/antivirus-scanning-for-on-premises-s3.html">in early 2024</a>, but I kept this on my "to-do" list as the PoC I did in that post was extremely basic.</p>
+
+<p>The recent ones were more real and I've discovered several unexpected things. I'm always happy to discover problems and ""gotchas".</p>
+
+<p>With this stack, I've found two problems, neither of which is a show-stopper for most people.</p>
+
+<p>The first was I had to use a non-BeeGFS volume (which can be a stand-alone E-Series LUN or a PVC on such LUN, for example) for Versity S3 metadata (so in effect Versity S3 Gateway container starts with 2 "volumes", one local directory (metadata) and one BeeGFS directory). What this means is that I can't scale out individual instances of Versity S3 Gateway on BeeGFS: if I did, each gateway's metadata could be different.</p>
+
+<p>This isn't a big deal for most cases as each "bucket" on BeeGFS, as the smallest unit of metadata allocation, can't go beyond a few GB/s. But that is plenty for a bucket and would be limiting to very few users.</p>
+
+<p>Another workaround - also not great, but may be acceptable, is to start several Versity S3 Gateway instances each on own sub-directory below the BeeGFS data path we want to "scale-out". Also, consider the "classic" approach where everything has to be downloaded from S3 to a file-system - that's far from "free" and scalable. If your "classic" external S3 object store ingests at 5GB/s, you'd' need the same throughput on your NAS or other storage used to download and AV-scan new objects from S3, so other ways wouldn't necessarily be easier or cheaper.</p>
+
+<p>In fact, even without BeeGFS your Versity S3 Gateway's metadata would be single-instance only, unless you had a file-system that supported "shared metadata volumes" (I don't know of any, and "metadata volume" feature of Versity S3 Gateway is experimental in any case, so it's great enough that it works as-is at this time).</p>
+
+<p>The second gotcha was I had to modify my gRPC server to drop BeeGFS events related to Versity's temporary files (used during S3 PUT and "housekeeping" Versity S3 Gateway operations). I modified my gRPC server to ignore events related to temporary files, and that fixed it.</p>
+
+<h2 id="fileobject-duality-considerations">File/object duality considerations</h2>
+
+<p>I've mentioned this in other posts, but I'll say it again because it's necessary.</p>
+
+<p>The user needs to consider what to do with infected objects/files.</p>
+
+<p>I've mentioned before: in "classic" (no file/object duality) scenarios some approaches include moving infected object to a quarantine, in others deleting it, and there's also a "temp bucket" approach in which objects first go to a temporary bucket and only get moved to the intended destination if they are clean.</p>
+
+<p>I think the right way is to send AV scan results to a message store and let bucket owners figure it out. As long as they have access (and as owners, they should) to the bucket, they can wipe the objects or squirrel them away seconds later. There's no need for storage layer to get involved here.</p>
+
+<p>But, if you do get involved, work on infected files through S3 gateway: that's where it came from, and that's how it should be (re)moved. Messing with objects from file-system side may be risky:</p>
+
+<ul>
+  <li>Risky for S3 gateway cache and metadata (I'm not saying it is, but it could be)</li>
+  <li>Risky for S3 users who may count on S3 web hooks to track what's going on with the object. It's nicer to tag the object with "<code class="language-plaintext highlighter-rouge">infected: true</code>" than just yank it or "<code class="language-plaintext highlighter-rouge">chown 0400</code>" it from BeeGFS side.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Versity S3 Gateway on BeeGFS is a good stack for scanning incoming data for viruses and malware before you process it.</p>
+
+<p>Unlike AV scanning with "external" S3 storage, any S3 PUT is a BeeGFS write which automatically drives gRPC notifications, eliminates at least one layer of complexity, eliminates the downloading of S3 data to a file-system for scanning, and allows scale-out in AV scanning.</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v6vimvh-event-processing-with-versity-s3-gateway-and-beegfs-grpc-event-notification.html">Event processing with Versity S3 Gateway and BeeGFS gRPC event notifications</a> (2m46s)</li>
+</ul>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/clamav" class="page__taxonomy-item p-category" rel="tag">clamav</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/pipeline" class="page__taxonomy-item p-category" rel="tag">pipeline</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/versity" class="page__taxonomy-item p-category" rel="tag">versity</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2025-06-22T00:00:00+08:00">2025-06-22 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Data+pipeline+with+BeeGFS+FS+Event+Notifications+and+Versity+S3+Gateway%20https%3A%2F%2Fscaleoutsean.github.io%2F2025%2F06%2F22%2Fdata-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2025/06/18/sfc-2-dot-1.html" class="pagination--pager" title="SFC (SolidFire Collector) 2.1">Previous</a>
+    
+    
+      <a href="/2025/06/24/initial-exploration-solidfire-proxmox-plugin.html" class="pagination--pager" title="Do we need a NetApp SolidFire plugin for Proxmox">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

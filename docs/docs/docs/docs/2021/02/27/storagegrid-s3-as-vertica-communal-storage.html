@@ -1,0 +1,943 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>NetApp StorageGRID object store for Vertica EON Mode | Acting Technologist</title>
+<meta name="description" content="Create Vertica DB in EON mode and use StorageGRID for Vertica communal storage">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="NetApp StorageGRID object store for Vertica EON Mode">
+<meta property="og:url" content="https://scaleoutsean.github.io/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html">
+
+
+  <meta property="og:description" content="Create Vertica DB in EON mode and use StorageGRID for Vertica communal storage">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="NetApp StorageGRID object store for Vertica EON Mode">
+  <meta name="twitter:description" content="Create Vertica DB in EON mode and use StorageGRID for Vertica communal storage">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-02-27T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="NetApp StorageGRID object store for Vertica EON Mode">
+    <meta itemprop="description" content="  WTF is EON Mode  What do I need to do to get Vertica EON Mode work with StorageGRID          TLS certificate for HTTPS      IP address for S3 API endpoint      S3 bucket and region name      Configuration details for Object Storage        Backup to S3  Export data to S3  StorageGRID sizing for performance and data protection  Summary  Configuration details  Demo  Appendix - Screenshots">
+    <meta itemprop="datePublished" content="2021-02-27T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html" itemprop="url">NetApp StorageGRID object store for Vertica EON Mode
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2021-02-27T00:00:00+08:00">2021-02-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#wtf-is-eon-mode">WTF is EON Mode</a></li>
+  <li><a href="#what-do-i-need-to-do-to-get-vertica-eon-mode-work-with-storagegrid">What do I need to do to get Vertica EON Mode work with StorageGRID</a>
+    <ul>
+      <li><a href="#tls-certificate-for-https">TLS certificate for HTTPS</a></li>
+      <li><a href="#ip-address-for-s3-api-endpoint">IP address for S3 API endpoint</a></li>
+      <li><a href="#s3-bucket-and-region-name">S3 bucket and region name</a></li>
+      <li><a href="#configuration-details-for-object-storage">Configuration details for Object Storage</a></li>
+    </ul>
+  </li>
+  <li><a href="#backup-to-s3">Backup to S3</a></li>
+  <li><a href="#export-data-to-s3">Export data to S3</a></li>
+  <li><a href="#storagegrid-sizing-for-performance-and-data-protection">StorageGRID sizing for performance and data protection</a></li>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#configuration-details">Configuration details</a></li>
+  <li><a href="#demo">Demo</a></li>
+  <li><a href="#appendix---screenshots">Appendix - Screenshots</a></li>
+</ul>
+
+<h2 id="wtf-is-eon-mode">WTF is EON Mode</h2>
+
+<p>Vertica DB in <a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/Eon/EonModeLandingPage.htm">EON Mode</a> is similar to Splunk with SmartStore enabled: you keep some data on compute nodes and most of it on object storage. I know this will upset some purists but if you want to know more please visit the Vertica documentation.</p>
+
+<p>And just like with SmartStore, you can store your data in NetApp StorageGRID S3-compatible object storage. How that'd work with Splunk SmartStore, I wrote <a href="/2021/01/15/netapp-hci-storagegrid-splunk-smartstore-on-efseries">here</a>.</p>
+
+<p>What's good about EON Mode? Well, you may have noticed that scaling data and compute together isn't always a great pattern for data-intensive applications like Hadoop and Splunk, but also for container and VM clusters either (Kubernetes, HCI). Vertica EON Mode lets you right-size both compute and storage, simplify storage management, and improve <a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/AdministratorsGuide/BackupRestore/SampleConfigFiles/eon.htm">data protection</a>.</p>
+
+<p>You can read about EON Mode <a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/Eon/Architecture.htm">in TFM</a>.</p>
+
+<h2 id="what-do-i-need-to-do-to-get-vertica-eon-mode-work-with-storagegrid">What do I need to do to get Vertica EON Mode work with StorageGRID</h2>
+
+<p>Nothing. Just follow the Vertica and StorageGRID documentation.</p>
+
+<p>To deploy Vertica I downloaded Community Edition and deployed it in VMs running on an older NetApp HCI system (H300E compute nodes, aka "Gen 1" h/w).</p>
+
+<p>I mention hardware because Vertica runs validation tests which test network, CPU and I/O performance and even with default settings (I have not implemented recommendations for optimal BIOS settings), the VMs were able to pass validation.</p>
+
+<p>This doesn't mean you should attempt to run Vertica on NetApp HCI (SoldiFire) storage because it's not meant for large analytics workloads. It is to say you can run a minimalistic Dev/Test environments in a NetApp HCI environment. For Vertica storage I'd prefer E-Series (see the Splunk SmartStore article above or my posts about Elastic on NetApp HCI), especially with Vertica in EON Mode when you don't need a lot of storage and backup Vertica data to StorageGRID as well. NetApp All Flash FAS (AFF) arrays can also provide sufficient performance and do more storage management-wise.</p>
+
+<p>After your cluster is up and running, you create a database. This is where you decide to use EON Mode. Using Vertica Community Edition you can create only one, so if you choose Enterprise Mode you'll have to remove it first and then create a new one in EON Mode.</p>
+
+<p>On StorageGRID, create a Tenant account, login as Tenant admin, create a bucket and S3 keys. In a production environment you'd create a non-root Tenant user for Vertica, issue the keys to that user and tighten backup bucket ACLs. The usual stuff.</p>
+
+<h3 id="tls-certificate-for-https">TLS certificate for HTTPS</h3>
+
+<p>It appears that HTTPS access to S3-compatible object storage requires validation of TLS certificates on Vertica nodes.</p>
+
+<p>I used HTTP to get around that as I had a self-signed TLS on StorageGRID load balancer (single VM!), and no DNS configuration in place.</p>
+
+<h3 id="ip-address-for-s3-api-endpoint">IP address for S3 API endpoint</h3>
+
+<p>Vertica v10.0 specifically asks for the IP address of object storage.</p>
+
+<p>I haven't tried to use FQDN for S3 API end-point because I didn't have one in my environment, but for StorageGRID it doesn't make much difference either way: best practice is to have TLS in place, and for that you need FQDN.</p>
+
+<h3 id="s3-bucket-and-region-name">S3 bucket and region name</h3>
+
+<p>Use any allowed but don't get too fancy. I used <code class="language-plaintext highlighter-rouge">vertica</code>.</p>
+
+<p>I used path-style buckets (s3.org.com/bucket) and left the default (<code class="language-plaintext highlighter-rouge">us-east-1</code>) StorageGRID region in place.</p>
+
+<h3 id="configuration-details-for-object-storage">Configuration details for Object Storage</h3>
+
+<pre><code class="language-raw">awsauth = SG_Access_Key:SG_Secret_Key
+awsendpoint = SG_Load_Balancer:SG_Load_Balancer_Port
+awsenablehttps = 0|1
+</code></pre>
+
+<p>I used a StorageGRID load balancer IP with the last IP octet 215, port 18080 (this was HTTP, not HTTPS which I had at 1443), so my <code class="language-plaintext highlighter-rouge">auth_params.conf</code> looked like this:</p>
+
+<pre><code class="language-raw">awsauth = MHC...TV5:xxxxxxxxxxxxxxxxxxxxxxx
+awsendpoint = 10.x.x.215:18080
+awsenablehttps = 0
+</code></pre>
+
+<p>Using this back-end, to create an EON Mode database <code class="language-plaintext highlighter-rouge">scaleoutsean</code> in the bucket <code class="language-plaintext highlighter-rouge">s3://vertica</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>admintools <span class="nt">-t</span> create_db <span class="nt">-x</span> auth_params.conf <span class="se">\</span>
+  <span class="nt">--communal-storage-location</span><span class="o">=</span>s3://vertica <span class="se">\</span>
+  <span class="nt">--depot-path</span><span class="o">=</span>/home/dbadmin/scaleoutsean <span class="nt">--shard-count</span><span class="o">=</span>12 <span class="se">\</span>
+  <span class="nt">-s</span> vertica1,vertica2,vertica3 <span class="nt">-d</span> scaleoutsean <span class="nt">-p</span> <span class="s1">'NetApp123'</span>
+</code></pre></div></div>
+
+<p>The Vertica documentation indicates <code class="language-plaintext highlighter-rouge">/home/dbadmin/depot</code> is the usual choice for depot-path, but it's up to you. Use <code class="language-plaintext highlighter-rouge">admintools -t create_db --help</code> to get the details on all of the options. There's a forgiving Web-based "Create database" wizard for this step so you don't have to worry about the CLI.</p>
+
+<p>For production clusters consult the documentation (or better, get advice from a Vertica specialist) for best practices regarding the number of shards.</p>
+
+<h2 id="backup-to-s3">Backup to S3</h2>
+
+<p>This is another use case (different from EON Mode).</p>
+
+<p>To quote <a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/AdministratorsGuide/BackupRestore/CreatingBackupsonAmazonS3.htm">TFM</a>: "Vertica supports backing up to S3-compatible storage either in the cloud (AWS S3) or on-premises (Pure Storage FlashBlades, Minio, <strong>etc.</strong>) in both Enterprise Mode and Eon Mode." (emphasis mine)</p>
+
+<p>You should create another bucket for Vertica backup-to-S3 (you don't want to use the same bucket for EON Mode data and backup - s3://scaleoutsean/vertica for data and s3://scaleoutsean/vertica/backup for backups - because one mistake can destroy everything).</p>
+
+<p>You could (should, in fact) use a different Tenant user and another set of S3 keys for the backup bucket.</p>
+
+<p>If your StorageGRID is running on just one site, consider setting up up StorageGRID replication to public cloud S3. Users of StorageGRID clusters running across two or three sites, or with multiple StorageGRID clusters, have additional options to protect storage by replicating data to other sites or different StorageGRID clusters.</p>
+
+<p>Sample Vertica backup configuration file for S3-compatible storage can be found <a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/AdministratorsGuide/BackupRestore/SampleConfigFiles/s3_backup_restore.htm">here</a>.</p>
+
+<p>I haven't tested Backup to S3 because I didn't see any indications that its requirements might differ from Vertica EON Mode requirements.</p>
+
+<h2 id="export-data-to-s3">Export data to S3</h2>
+
+<p>This is for when you want to <em>export</em> data to S3.</p>
+
+<p>"Vertica does not support virtual host style URLs. If you use HTTPS URL constructions, you must use path style URLs." (<a href="https://www.vertica.com/docs/10.0.x/HTML/Content/Authoring/AdministratorsGuide/BulkLoadCOPY/AWSLibrary/exportAWSlibrary.htm">source</a>)</p>
+
+<h2 id="storagegrid-sizing-for-performance-and-data-protection">StorageGRID sizing for performance and data protection</h2>
+
+<p>Random sequential reads and writes are common to other analytics workloads.</p>
+
+<p>Generally speaking you'd prefer a higher number of smaller capacity units over over fewer large capacity units, as well as latest generation nodes for lower latency, so consider using more latest StorageGRID appliances with HDDs. At this moment, that is the SG6060.</p>
+
+<p>A StorageGRID cluster can consist of HDD- and SSD-backed nodes, so for large clusters you could fine-tune your configuration using SSD-based StorageGRID appliances, and for small clusters that need SSDs you could use StorageGRID software (VMs connected to all-flash E-Series storage arrays). For very busy clusters you could use all-flash StorageGRID appliances.</p>
+
+<p>For up to half a dozen StorageGRID appliances use a smaller load balancer like SG100. Above that, use the big one (SG1000).</p>
+
+<p>Of course, the above "thoughts" are just generic musings. For EON Mode in production you'd want to first work with a Vertica specialist to figure out what you need in terms of capacity, performance and data protection, and with that engage a StorageGRID specialist to translate that into a StorageGRID (and possibly EF or AFF) configuration.</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>Vertica v10.0 in EON Mode is easy to configure with NetApp StorageGRID - just follow the Vertica and StorageGRID documentation.</p>
+
+<h2 id="configuration-details">Configuration details</h2>
+
+<ul>
+  <li>Vertica 10.1.0 (running in CentOS 7 VMs)</li>
+  <li>StorageGRID 11.4 (virtualized on NetApp HCI)</li>
+  <li>NetApp HCI H300 compute nodes and H410S storage nodes</li>
+</ul>
+
+<h2 id="demo">Demo</h2>
+
+<p>Find it <a href="https://youtu.be/V0RTCNJ9Dak">here</a> (2m48s).</p>
+
+<p>In video I screwed up by connecting Vertica to the wrong IP of S3 API load balancer (physical .214 instead of virtual .215) but I didn't notice it until much later. In production that would impact high availability (which I didn't have anyway) and security.</p>
+
+<h2 id="appendix---screenshots">Appendix - Screenshots</h2>
+
+<ul>
+  <li>NetApp HCI Gen 1 ESXi hosts running StorageGRID and Vertica VMs</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-000-host.png" alt="" /></p>
+
+<ul>
+  <li>Vertica and StorageGRID are virtualized. This setup isn't recommended for production use.</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-000-sg-gateway.png" alt="" /></p>
+
+<ul>
+  <li>StorageGRID S3 API gateway. All StorageGRID nodes were running as VMs on the same NetApp HCI cluster. <code class="language-plaintext highlighter-rouge">DC1-GW1</code> is the only S3 API gateway node we have (in production we'd have two, in a lab we can get away with one and VMware HA).</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-001-sg-gateway.png" alt="" /></p>
+
+<ul>
+  <li>Load balancer configuration (we use HTTP at 18080, with single API gateway VM (no HA)). For production use we'd use an HA pair of physical load balancers.</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-002-sg-gateway.png" alt="" /></p>
+
+<ul>
+  <li>This "HA Group" in my lab has only the API gateway node x.x.x.214 (not HA at all)</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-002-sg-gateway-group.png" alt="" /></p>
+
+<ul>
+  <li>Vertica OS (VM) configuration is easy - and everything is documented - but if you don't RTFM be ready to run this few times more than expected. It's not often that you can configure something by reading only the official docs! The RPM name indicates the package may be for RHEL 6 but it is the right RPM for RHEL (and CentOS) 7.</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-007-validate-vm-configuration.png" alt="" /></p>
+
+<ul>
+  <li>An attempt to configure EON Mode using a (very) remote StorageGRID timed out. I wish I tested FQDN instead of IP here, because that host did have a FQDN, but I forgot.</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-013-configure-s3-back-end-for-vertica.png" alt="" /></p>
+
+<ul>
+  <li>Once you go through all steps of a Web UI-driven database creation wizard, Vertica will create an EON Mode database</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-012-install-eon-database.png" alt="" /></p>
+
+<ul>
+  <li>That creates a tiny bit of traffic on the StorageGRID S3 API gateway</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-014-storagegrid-gateway-traffic-on-install.png" alt="" /></p>
+
+<ul>
+  <li>With that in place our DB becomes visible in Vertica's MC (management console), with Vertica nodes x.x.x.193, x.x.x.194, x.x.x.195 and we can switch to Dark Theme and appreciate the outcome!</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-008-mc-view-with-eon-db-on-sg.png" alt="" /></p>
+
+<p><img src="/assets/images/sg-vertica-015-mc-view-cluster.png" alt="" /></p>
+
+<p><img src="/assets/images/sg-vertica-017-cluster-and-database-view.png" alt="" /></p>
+
+<ul>
+  <li>The scaleoutsean database is using Communal Storage (S3)</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-018-mc-scaleoutsean-storage-view-of-eon.png" alt="" /></p>
+
+<ul>
+  <li>Communal (S3) storage view shows bucket s3://vertica and depot-path I used in the CLI example above (/home/dbadmin/scaleoutsean)</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-019-vertica-communal-storage-view-in-vertica.png" alt="" /></p>
+
+<ul>
+  <li>Sharding subscription by segment</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-022-mc-storage-view-communal-depot-sharding.png" alt="" /></p>
+
+<ul>
+  <li>Sharding subscription by node</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-023-mc-storage-view-communal-depot-sharding.png" alt="" /></p>
+
+<ul>
+  <li>Initial data structures in the StorageGRID <code class="language-plaintext highlighter-rouge">vertica</code> bucket</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-030-storagegrid-vertica-communal-storage-bucket-view.png" alt="" /></p>
+
+<ul>
+  <li>Same account accessed over HTTP using S3 Browser:</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-034-storagegrid-vertica-communal-bucket.png" alt="" />
+<img src="/assets/images/sg-vertica-035-storagegrid-vertica-communal-bucket-view-01.png" alt="" />
+<img src="/assets/images/sg-vertica-036-storagegrid-vertica-communal-bucket-view-02.png" alt="" /></p>
+
+<ul>
+  <li>Vertica MC (Dark Theme) with EON Mode visible in top right corner.</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-040-vertica-mc-view-01.png" alt="" /></p>
+
+<ul>
+  <li>In the screenshot above one pie chart shows 3 failed queries which I thought was related to my rebooting the sole StorageGRID API Gateway VM to reconfigure it with more RAM. It turns out those are harmless (one is a query not supported in EON mode, two are about a missing index).</li>
+</ul>
+
+<p><img src="/assets/images/sg-vertica-040-vertica-mc-view-04.png" alt="" /></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a><span class="sep">, </span>
+    
+      <a href="/tags/vertica" class="page__taxonomy-item p-category" rel="tag">vertica</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2021-02-27T00:00:00+08:00">2021-02-27 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=NetApp+StorageGRID+object+store+for+Vertica+EON+Mode%20https%3A%2F%2Fscaleoutsean.github.io%2F2021%2F02%2F27%2Fstoragegrid-s3-as-vertica-communal-storage.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2021/02/24/netapp-trident-on-arm64.html" class="pagination--pager" title="NetApp Trident v21.01.1 on Linux/ARM64 with SolidFire iSCSI storage">Previous</a>
+    
+    
+      <a href="/2021/03/08/hcicollector-v0.7.html" class="pagination--pager" title="Announcing HCICollector v0.7">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

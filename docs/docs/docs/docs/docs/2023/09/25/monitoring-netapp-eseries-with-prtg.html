@@ -1,0 +1,1174 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Monitoring NetApp E-Series with PRTG | Acting Technologist</title>
+<meta name="description" content="Use SNMP Get, SNMP traps and SANtricity API to monitor E-Series in PRTG">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Monitoring NetApp E-Series with PRTG">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/09/25/monitoring-netapp-eseries-with-prtg.html">
+
+
+  <meta property="og:description" content="Use SNMP Get, SNMP traps and SANtricity API to monitor E-Series in PRTG">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Monitoring NetApp E-Series with PRTG">
+  <meta name="twitter:description" content="Use SNMP Get, SNMP traps and SANtricity API to monitor E-Series in PRTG">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/09/25/monitoring-netapp-eseries-with-prtg.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-09-25T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/09/25/monitoring-netapp-eseries-with-prtg.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Monitoring NetApp E-Series with PRTG">
+    <meta itemprop="description" content="  Introduction  Software stack  Getting E-Series events and metrics into PRTG          Generic probes      SNMP walk      SNMP traps      Custom sensor script                  API access                      Conclusion  Appendix A - SNMP walk ("Needs Attention" status check)  Appendix B - SNMP Trap Receiver sensor  Appendix C - HTTP Push Data sensor (performance monitoring)          Write a script for sensor      Security in shell scripts        Appendix D - Syslog receiver">
+    <meta itemprop="datePublished" content="2023-09-25T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/09/25/monitoring-netapp-eseries-with-prtg.html" itemprop="url">Monitoring NetApp E-Series with PRTG
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-09-25T00:00:00+08:00">2023-09-25 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#software-stack">Software stack</a></li>
+  <li><a href="#getting-e-series-events-and-metrics-into-prtg">Getting E-Series events and metrics into PRTG</a>
+    <ul>
+      <li><a href="#generic-probes">Generic probes</a></li>
+      <li><a href="#snmp-walk">SNMP walk</a></li>
+      <li><a href="#snmp-traps">SNMP traps</a></li>
+      <li><a href="#custom-sensor-script">Custom sensor script</a>
+        <ul>
+          <li><a href="#api-access">API access</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#appendix-a---snmp-walk-needs-attention-status-check">Appendix A - SNMP walk ("Needs Attention" status check)</a></li>
+  <li><a href="#appendix-b---snmp-trap-receiver-sensor">Appendix B - SNMP Trap Receiver sensor</a></li>
+  <li><a href="#appendix-c---http-push-data-sensor-performance-monitoring">Appendix C - HTTP Push Data sensor (performance monitoring)</a>
+    <ul>
+      <li><a href="#write-a-script-for-sensor">Write a script for sensor</a></li>
+      <li><a href="#security-in-shell-scripts">Security in shell scripts</a></li>
+    </ul>
+  </li>
+  <li><a href="#appendix-d---syslog-receiver">Appendix D - Syslog receiver</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p><a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html">This post</a> explains how SNMP works on E-Series, so you should be able to accomplish everything you need by simply using the details from that post.</p>
+
+<p>Because that post is quite long, I decided to add some screenshots and additional notes related to PRTG.</p>
+
+<p>This post covers main approaches to get event and metrics data into PRTG.</p>
+
+<p>When some detail in this post is missing, refer to that previous article.</p>
+
+<h2 id="software-stack">Software stack</h2>
+
+<ul>
+  <li>Windows Server 2022</li>
+  <li>PRTG 23.3.88.1393</li>
+  <li>E-Series SANtricity 11.80</li>
+</ul>
+
+<h2 id="getting-e-series-events-and-metrics-into-prtg">Getting E-Series events and metrics into PRTG</h2>
+
+<p>These are four main ways to do it:</p>
+
+<ul>
+  <li>generic probes</li>
+  <li>SNMP walk can give you one meaningful information, which is whether the array needs attention</li>
+  <li>SNMP traps can give you precise error (event) details</li>
+  <li>custom plugin or script can get array events and performance details into PRTG</li>
+</ul>
+
+<h3 id="generic-probes">Generic probes</h3>
+
+<p>Generic probes include ping and HTTPS, for example.</p>
+
+<p>Set up one of these probes to check the controllers' IPs.</p>
+
+<p>These IPs should always be reachable. When they are not, that's likely because the management network or cable got disconnected, or maybe a controller is rebooting.</p>
+
+<p>The ping sensor is useful because when it fails at the same time as few others (say, L2 switch probe), it may be a sign of a network issue rather than storage issue. Then the ping alert can be ignored until network is up again.</p>
+
+<p>There's also a TLS certificate checker sensor, useful for when you have proper TLS certificates deployed to E-Series controllers, and want to avoid failures when these expire and become invalid.</p>
+
+<p>You don't need any E-Series-specific knowledge to setup these probes.</p>
+
+<h3 id="snmp-walk">SNMP walk</h3>
+
+<p>Here the idea is simply to GET the value of an OID that tells you when there's a problem.</p>
+
+<p>To do that we simply watch <code class="language-plaintext highlighter-rouge">enterprises.789.1123.2.500.1.7.0</code> which indicates if there's a problem:</p>
+
+<ul>
+  <li>If value is 0, do nothing</li>
+  <li>If value is anything else, alert and notify</li>
+</ul>
+
+<p>We can poll this OID periodically.</p>
+
+<p>When it activates, PRTG users can't see what is wrong, it can just see <em>something</em> is wrong. So after the Warning is received, the storage administrator needs to take a look at the storage system. Or, if SNMP Trap Receiver is set up, they can also (or only) use SNMP Trap Receiver to see what the MEL error is.</p>
+
+<p>See Appendix A for more on this setup.</p>
+
+<h3 id="snmp-traps">SNMP traps</h3>
+
+<p>As explained in that previous post, for these you need to add a PRTG server to the list of trap recipients for the E-Series trap sender (or its forwarder). In my environment I couldn't get from SANtricity controller to my PRTG server, so I used an SNMP trap forwarder.</p>
+
+<p>I want to highlight several items from the PRTG documentation:</p>
+
+<blockquote>
+  <p>The sensor states of this sensor persist for one scanning interval only. After showing the Warning or the Down status, and if there is no warning or error message in the next scanning interval, the sensor shows the Up status again.</p>
+</blockquote>
+
+<p>There's a way to change this in the settings (same as with my "Needs Attention" SNMP example in Appendix A), but by default it's like it says.</p>
+
+<p>If you want to retain traps beyond maximum retention period of PRTG's SNMP Trap Receiver, configure E-Series Syslog redirection to also send events to something like Elasticsearch.</p>
+
+<p>Filter rules exist for you to customize PRTG behavior depending on various conditions. But read my previous post (link at the top) and also see <a href="/2021/07/19/solidfire-mib-snmp-monitoring.html#snmp-traps-cluster-fault-trap-and-cluster-resolved-fault-trap-examples">how SNMP traps with filters are used with SolidFire</a>.</p>
+
+<p>PRTG's SNMP trap filters work very similarly to this and are described <a href="https://www.paessler.com/manuals/prtg/snmp_trap_receiver_sensor#filter_rules">here</a>. For example, to catch the specific MEL error you could use <code class="language-plaintext highlighter-rouge">bindings[oid,value,mode]</code> mentioned at this page.</p>
+
+<p>See Appendix B for a walk-through.</p>
+
+<h3 id="custom-sensor-script">Custom sensor script</h3>
+
+<p>There's no official or community PRTG plugin for E-Series at this time, so the main approach would be to use "Standard and Advanced Script Sensor" which is a script that uses the SANtricity OS API.</p>
+
+<p>As the name of this section suggests, this involves writing a <a href="https://www.paessler.com/manuals/prtg/additional_sensor_types_(custom_sensors)">custom sensor script</a>. Main approaches we can consider:</p>
+
+<ul>
+  <li>EXE/Script - PowerShell with Write-Output to provide output to PRTG, for example</li>
+  <li>Python Script Advanced - similar to EXE/Script</li>
+  <li>HTTP "push" sensors (see in Appendix C)</li>
+</ul>
+
+<p>You'd need a valid Bearer authentication token to access the SANtricity API, and that token has to be refreshed inside of, or by, your script.</p>
+
+<p>There are other (especially indirect) ways to do it, but the main point to remember is: SNMP walk and/or traps from E-Series contain no performance metrics. If you want E-Series performance metrics, you need to get them from the SANtricity API or some service or file that got them from the SANtricity API.</p>
+
+<p>Alternatively, consider <a href="/2022/10/26/eseries-performance-analyzer-e-series.html">E-Series Performance Analyzer (EPA)</a>. You can also modify EPA's source code to create a Python script for PRTG (this source code is very permissive). The other source code you could leverage is from <a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html#appendix-d---centreon-with-e-series">Centreon</a>.</p>
+
+<h4 id="api-access">API access</h4>
+
+<p>See the NetApp Technical Report 4736 (aka TR-4736) for more on using SANtricity Web Services API.</p>
+
+<p>Personally I would suggest to not use the SANtricity Web Services proxy; I prefer to directly access E-Series controllers' API endpoints if possible.</p>
+
+<p>Ideally in the future it will be possible to issue long-lasting bearer tokens or allow public access to read-only API methods, but until then you need to obtain them and - update the bearer token if the script doesn't automatically obtain it.</p>
+
+<p>Why wouldn't the script obtain it? It can, but then it needs access to a SANtricity account and password, so if you get bearer token on the fly, setup a read-only (Monitor) type SANtricity user account.</p>
+
+<p>A safer way is to use PRTG API and have another place (VM, container, etc.) where a script only obtains a fresh bearer token from SANtricity and use PRTG API or other method to deploy the token for use by the script.</p>
+
+<p>Read <a href="https://www.paessler.com/manuals/prtg/custom_sensors">this page</a> for additional details on writing custom scripts for PRTG.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We configured an SNMP Custom String sensor on the E-Series device, and an SNMP Trap Receiver on Probe Device (PRTG server).</p>
+
+<p><img src="/assets/images/prtg-eseries-18-snmp-trap-receiver-sensor-location.png" alt="" /></p>
+
+<p>It seems this placement is flexible - each sensor could be placed on either device.</p>
+
+<p>With filters configured to trigger warnings (SNMP Trap Receiver when number of messages starts going up, and SNMP Custom String when its value is not equal to 0), issues with the array makes both sensors enter the Warning state.</p>
+
+<p><img src="/assets/images/prtg-eseries-19-snmp-sensors-prtg.png" alt="" /></p>
+
+<p>In my configuration SNMP Trap Receiver by default returns to non-Warning after one probe cycle (also PRTG default), but SNMP Custom String remains in the Warning state as long as <code class="language-plaintext highlighter-rouge">ssStorageNeedsAttention</code> is not 0.</p>
+
+<p>In order to not miss warnings triggered by SNMP traps, configure SNMP Custom String sensor to remain in the Warning state as long as its value isn't 0, or configure SNMP Trap notifications to be triggered each time there's a warning (for example: a new trap event is received).</p>
+
+<p>PRTG also provides Syslog Receiver sensor which works similarly to SNMP Trap Receiver sensor.</p>
+
+<p>Custom scripts can be used to fetch main metrics (such as array MB/s and IOPS, for example) and send them to PRTG.</p>
+
+<p>These are some screenshots from my environment at the end of this PoC.</p>
+
+<ul>
+  <li>E-Series is monitored via SNMP Get (basic "Needs Attention" monitor), and Custom EXE/Script sensors for System and critical Volume monitoring (later on DDP as well).</li>
+</ul>
+
+<p><img src="/assets/images/prtg-eseries-29-prtg-snmp-and-custom-senors.png" alt="" /></p>
+
+<ul>
+  <li>As multiple volumes or pools are added, they can be selected from the sensor drop-down list for the array. (As mentioned earlier, SNMP Trap Receiver sensor can't be seen here because we didn't attach it to the monitored storage array - see the notes related to SNMP Trap Receiver).</li>
+</ul>
+
+<p><img src="/assets/images/prtg-eseries-30-prtg-list-of-sensors.png" alt="" /></p>
+
+<ul>
+  <li>This DDP (pool) monitor can show some things that aren't even in the SANtricity Web UI, such as total DDP capacity expressed in <a href="/2022/09/12/new-ddp-and-e-series-santricity-web-restful-api.html">RAID1-</a> and RAID6-style volumes. (I think most E-Series admins have no idea RAID1 volumes can be created in DDP to begin with.)</li>
+</ul>
+
+<p><img src="/assets/images/prtg-eseries-32-prtg-pool-sensor-gauge.png" alt="" /></p>
+
+<h2 id="appendix-a---snmp-walk-needs-attention-status-check">Appendix A - SNMP walk ("Needs Attention" status check)</h2>
+
+<p>As usual with PRTG, you can run ome sort of discovery, such as SNMP, and add the usual sensors such as ping and HTTP(S) service check.</p>
+
+<p><img src="/assets/images/prtg-eseries-01-discovery-snmp.png" alt="" /></p>
+
+<p>As I mentioned in the main post on E-Series SNMP,  SNMP walk won't give you almost anything useful, but ping is still useful.</p>
+
+<p><img src="/assets/images/prtg-eseries-02-discovery-status.png" alt="" /></p>
+
+<p>What we really want to do is monitor one specific OID. So, add another sensor based on SNMP.</p>
+
+<p><img src="/assets/images/prtg-eseries-03-add-sensors.png" alt="" /></p>
+
+<p>There's a bunch of them and several potential candidates are marked in this screenshot. For our "Needs Attention" purpose, we don't need a table, but just the value of one OID.</p>
+
+<p><img src="/assets/images/prtg-eseries-04-sensor-snmp-get.png" alt="" /></p>
+
+<p>We can use SNMP Basic sensor to monitor a single OID. Add SNMP Basic. Use any name you want, and use this exact OID. You may also edit other options (see further below) for the situation when the value is not 0 (which is when there is a problem).</p>
+
+<p><img src="/assets/images/prtg-eseries-06-snmp-sensor-add-ssStorageArrayNeedsAttention.png" alt="" /></p>
+
+<p>With ping, HTTP(S) to SANtricity management IP addresses, and this new SNMP monitor, you have a good idea of how E-Series is doing: with ping and HTTPS up and array needing no attention you know everything is fine.</p>
+
+<p><img src="/assets/images/prtg-eseries-07-snmp-sensor-ssStorageArrayNeedsAttention-status.png" alt="" /></p>
+
+<p>What happens if management network cables get disconnected or a controller dies?</p>
+
+<p><img src="/assets/images/prtg-eseries-08-warning-01.png" alt="" /></p>
+
+<p>Now you know it's likely a network problem. If the controller's management IP cannot even be pinged, there's no hope that SNMP queries could be OK. So PRTG pauses those other probes.</p>
+
+<p><img src="/assets/images/prtg-eseries-09-paused-sensors.png" alt="" /></p>
+
+<p>By default, a failed ping sensor pauses check of other sensors.</p>
+
+<p>Notice the blue pause icon in the larger pane in the background (screenshot above). You can always configure PRTG differently (to not pause dependent sensors, that is), but then you may receive a bunch (ping, HTTP(S), SNMP) of alerts at the same time, with little value added.</p>
+
+<p>Another thing to notice is: <em>if</em> ping fails, you can still manually un-pause SNMP or HTTP(S) sensors, although it's likely they would also fail.</p>
+
+<p>The next screenshot shows what happens when a controller enters Maintenance Mode:</p>
+<ul>
+  <li>SANtricity Web UI will show an alert</li>
+  <li>SNMP sensor we configured will change from 0 to 1, meaning "storage array needs attention".</li>
+</ul>
+
+<p><img src="/assets/images/prtg-eseries-10-snmp-sensor-add-ssStorageArrayNeedsAttention-test-OK.png" alt="" /></p>
+
+<p>Notice that there's no alert in PRTG despite the value being <code class="language-plaintext highlighter-rouge">1</code>. This is a matter of configuration. You need to set off an alert or send some kind of notification when the value becomes <code class="language-plaintext highlighter-rouge">1</code>.</p>
+
+<p><img src="/assets/images/prtg-eseries-12-snmp-sensor-ssStorageArrayNeedsAttention-raise-warning.png" alt="" /></p>
+
+<p>Where do we do that? In sensor settings: if the OID value isn't <code class="language-plaintext highlighter-rouge">0</code>, I want this sensor to show Warning.</p>
+
+<p><img src="/assets/images/prtg-eseries-13-snmp-sensor-ssStorageArrayNeedsAttention-set-warning.png" alt="" /></p>
+
+<p>In SNMP configuration wizard there's a check box "Trigger 'change' notification" [if value changes] which I did select, but I didn't have time to complete setting up. The PRTG <a href="https://www.paessler.com/manuals/prtg/notification_triggers_settings#change">trigger documentation says</a>:</p>
+
+<blockquote>
+  <p>Before you set up a change trigger, make sure that you select Trigger 'change' notification in the sensor's settings, otherwise PRTG never sends the notification…. Hover over <code class="language-plaintext highlighter-rouge">(+)</code> and select Add Change Trigger from the menu to add a new change trigger…</p>
+</blockquote>
+
+<p>Also worthy a mention is the behavior on recovery. As the controller is being brought online (background window), sensors start recovering from a failed state. The ping probe and SNMP in this screenshot are already OK, but HTTP(S) hasn't done a fresh check yet, so we still see a warning in PRTG.</p>
+
+<p><img src="/assets/images/prtg-eseries-11-snmp-sensor-ssStorageArrayNeedsAttention-recovery.png" alt="" /></p>
+
+<p>This shows that the default approach, in which the failure of ping causes all other sensors to be paused, is reasonable. Having extra warnings and alerts for the similar or same problem doesn't help.</p>
+
+<p>Here's another view of how a failed ping sensor pauses other sensors.</p>
+
+<p><img src="/assets/images/prtg-eseries-14-ping-pauses-other-sensors.png" alt="" /></p>
+
+<h2 id="appendix-b---snmp-trap-receiver-sensor">Appendix B - SNMP Trap Receiver sensor</h2>
+
+<p>As in Appendix A, we start by adding an SNMP-based sensor, but pick SNMP Trap Receiver.</p>
+
+<p><img src="/assets/images/prtg-eseries-05-sensor-snmp-trap-put.png" alt="" /></p>
+
+<p>In SNMP Trap Receiver settings, you don't need to change anything to start receiving alerts from E-Series.</p>
+
+<p><img src="/assets/images/prtg-eseries-15-snmp-trap-receiver-retention.png" alt="" /></p>
+
+<p>Windows must let SNMP traps come in through firewall (162/UDP) to let PRTG receive traps. If PRTG is properly installed, it should already have the ability to receive SNMP Traps, but alternatively SNMP Traps may be allowed to any application as in this screenshot.</p>
+
+<p><img src="/assets/images/prtg-eseries-16-snmp-trap-allow-windows-firewall.png" alt="" /></p>
+
+<p>Next, receive SNMP traps from E-Series and look for notification type traps in this sensor, as explained in <a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html#santricity-snmp-traps-and-trap-examples">the main E-Series SNMP post</a>.</p>
+
+<p>If you (optionally) uploaded the E-Series MIB files to PRTG (at least two: one generic, one E-Series model-specific MIB), you'll see OIDs from traps "translated", as in this screenshot (otherwise you'll see numeric OID strings).</p>
+
+<p><img src="/assets/images/prtg-eseries-17-snmp-trap-messages.png" alt="" /></p>
+
+<p>Notice the message is the <strong>ssStorageArrayAlert NOTIFICATION-TYPE</strong> trap from the SNMP trap section in the <a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html#e-series-specific-sm10-r3-mib-and-es-netapp">main E-Series SNMP post</a>.</p>
+
+<p>Now that this is working, we can refine SNMP Trap Receiver sensor filters and customize alerts, notifications, etc.</p>
+
+<p>If only E-Series forwards to this SNMP Trap Receiver, everything PRTG receives would be an alert. But this can be configured - especially with filter - to represent warnings, downtime, or something else. Fine tune these filter and notifications as needed.</p>
+
+<p>If we receive only SANtricity SNMP trap, then we don't have to create complex filters - we can accept "any" trap entry and count it as "Warning" if it has the word "Critical" in it:</p>
+
+<p><img src="/assets/images/prtg-eseries-21-snmp-trap-receiver-filter.png" alt="" /></p>
+
+<p>Such traps would increase the value of Warnings counter by only slightly, but that is enough.</p>
+
+<p>This is how <a href="https://www.paessler.com/manuals/prtg/snmp_trap_receiver_sensor">the PRTG documentation</a> explains it:</p>
+
+<blockquote>
+  <p>By default, the sensor changes to the Warning status after a scanning interval finishes and there was at least one warning message (and no error message) during this scanning interval. The sensor shows the Warning status at least until the succeeding scanning interval finishes.</p>
+</blockquote>
+
+<p>I configured traps to trigger only warnings, so I just watch that one indicator. We don't care whether the value is 0.01 or 0.03 - if it's incremented at least once during an interval, it will trigger a Warning and then go back to normal in the next interval if no new traps are received.</p>
+
+<p><img src="/assets/images/prtg-eseries-18-snmp-trap-receiver-sensor-chart.png" alt="" /></p>
+
+<p>Notifications (email, Slack, etc.) can be configured separately to fire off when triggered by the Warning status, for example. That lets you not miss traps that trigger a warning and then "disappear".</p>
+
+<p>If you get rid of junk traps, your sensor won't show non-SANtricity errors. This screenshot below show an example of that, with the <a href="/2023/09/17/netapp-e-series-snmp-trap-notifications.html#appendix-a---e-series-mel-codes-aka-storage-system-event-types">MEL error code</a> MEL_EV_WB_CACHING_FORCIBLY_DISABLED (0x212B).</p>
+
+<p><img src="/assets/images/prtg-eseries-25-snmp-trap-receiver-filtered.png" alt="" /></p>
+
+<h2 id="appendix-c---http-push-data-sensor-performance-monitoring">Appendix C - HTTP Push Data sensor (performance monitoring)</h2>
+
+<p>This should be enough to get you started.</p>
+
+<p>The first step is to pick an approach and a sensor. As mentioned earlier, there are many ways and "which is better" is up to you.</p>
+
+<p>For this demo I picked a simple one, HTTP Push Data sensor. Please <a href="https://www.paessler.com/manuals/prtg/http_push_data_sensor">RTFM to see what it does</a>, but it's a custom URL (usually on PRTG system) where you can periodically submit a key-value pair.</p>
+
+<ul>
+  <li>TLS Settings - I chose HTTP (which is the default) because I ran my probe <em>from</em> the PRTG server, so I was really using http://localhost which is secure enough for me</li>
+  <li>the unique port (here 5050) is picked by PRTG on the fly a you Save and create the sensor. Just create the sensor and go to Settings to see what this value is</li>
+  <li>the identification token (<code class="language-plaintext highlighter-rouge">F75...5A3</code>) is also generated on-the-fly, do not try to come up with your own string. Create the sensor and then check the value</li>
+  <li>in other settings for this sensor I picked Any (over GET, POST) and picked float over integer (because I realized many E-Series performance metric are floats)</li>
+</ul>
+
+<p><img src="/assets/images/prtg-eseries-22-http-push-value-webhook-01.png" alt="" /></p>
+
+<p>All right, now we have the URL template and some values.</p>
+
+<p>We need a Key-Value pair.</p>
+
+<p>In the SANtricity API there's a method <code class="language-plaintext highlighter-rouge">analysed-system-statistics</code> that returns a JSON like this. This is a "per controller" query, so you may want to do one against each controller's management IP.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"observedTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2023-09-26T06:46:40.000+00:00"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"observedTimeInMS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1695710800000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"sourceController"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000001"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"otherIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedThroughput"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageReadOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"averageWriteOpSize"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readPhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writePhysicalIOps"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"storageSystemId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"600A098000XXXXXXXXXXXXXXXXXXXXXX"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"storageSystemWWN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"600A098000XXXXXXXXXXXXXXXXXXXXXX"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"storageSystemName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iXXXXXXXXXXXXXXXXXXXXXX"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cacheHitBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"randomIosPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"mirrorBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"fullStripeWritesBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"maxCpuUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">34.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cpuAvgUtilization"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.3742857142857146</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"raid0BytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"raid1BytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"raid5BytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"raid6BytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"ddpBytesPercent"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"readHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"writeHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTime"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"combinedHitResponseTimeStdDev"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"maxPossibleBpsUnderCurrentLoad"</span><span class="p">:</span><span class="w"> </span><span class="mf">9.69375E10</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"maxPossibleIopsUnderCurrentLoad"</span><span class="p">:</span><span class="w"> </span><span class="mf">4442968.0</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>I picked <code class="language-plaintext highlighter-rouge">"maxCpuUtilization": 34.0</code> for this PoC.</p>
+
+<p>Now we have the complete URL.</p>
+
+<pre><code class="language-raw"># http://&lt;probe_ip&gt;:&lt;port_number&gt;/&lt;token&gt;?value=&lt;integer_or_float&gt;&amp;text=&lt;text message&gt;
+http://127.0.0.1:5050/F7584438-F08D-4172-90D4-7C33A73355A3/?value=34.0&amp;text=maxCpuUtilization
+
+</code></pre>
+
+<p>Visit the URL (which is a <code class="language-plaintext highlighter-rouge">GET</code>).</p>
+
+<p><img src="/assets/images/prtg-eseries-23-http-push-value-webhook-02.png" alt="" /></p>
+
+<p>This is looking good. Let's see how the sensor page looks like now.</p>
+
+<p><img src="/assets/images/prtg-eseries-24-http-push-value-webhook-03.png" alt="" /></p>
+
+<p>Also good - max controller utilization: 34%. (cpuAvgUtilization seems more useful, but nothing prevents you from collecting more than one or, indeed, all of the KV pairs returned by the API.)</p>
+
+<p>For two controllers you could create two sensors <strong>or</strong> you could have one script that intelligently combines values from two controllers into one sensor (which seems hard - personally, I gave up).</p>
+
+<p>Because a misconfigured host or array can actually have a good average but poor balancing, it's probably better to have two sensors, one per controller, or a more complex senor that can take values from both at once.</p>
+
+<h3 id="write-a-script-for-sensor">Write a script for sensor</h3>
+
+<p>If you're going to do it in PowerShell, remember that even PRTG 23 uses 32-bit PowerShell 5.1 (which, surprisingly, even Window Server 2022 has).</p>
+
+<ul>
+  <li>
+    <p>Create HTTP Push Data sensors you need (one or more, but probably at least one per controller)</p>
+  </li>
+  <li>
+    <p>Get analysed-system-statistics from either controller, c1 or c2 (results should be the same). You need a JWT or Bearer Token (see that SANtricity API technical report) to be able to access the API.</p>
+  </li>
+</ul>
+
+<pre><code class="language-raw">https://c1:8443/devmgr/v2/storage-systems/1/analysed-system-statistics
+# https://c2:8443/devmgr/v2/storage-systems/1/analysed-system-statistics
+</code></pre>
+
+<ul>
+  <li>
+    <p>Extract KV pair(s) you need, such as cpuAvgUtilization, readIOps, writeIOps, readThroughput, writeThroughput</p>
+  </li>
+  <li>
+    <p>Submit KV pair(s) to sensor(s) by creating per-sensor URLs on the fly (PRTG collects <code class="language-plaintext highlighter-rouge">stdout</code> from the script)</p>
+  </li>
+  <li>
+    <p>Wait 5 minutes, repeat (done automatically by PRTG)</p>
+  </li>
+</ul>
+
+<p>Remember that analysed-system-statistics are not raw. They are pre-cooked averaged metrics and collected after fixed intervals (PRTG default: 5 min), so it is only fixed and stable workloads that would reflect in PRTG (which usually lags by a few minutes, and shows averaged values). (Full stripe writes percentage (-1) isn't a bug in my script, that's the value obtained from the API; I don't know why it can be negative. Maybe it's for negative for DDP-based volumes).</p>
+
+<p><img src="/assets/images/prtg-eseries-31-prtg-volume-sensor-gauge.png" alt="" /></p>
+
+<p>If you have half a dozen performance metrics you want to track, it's easy enough to use this single-value sensor. How does one create a visualization from multiple individual sensors? You can use <a href="https://www.paessler.com/manuals/prtg/sensor_factory_sensor">Sensor Factory</a> for that. It's relatively resource-intensive, but if you have 10 sensors (5 per controller) that are refreshed once every 5 minutes, a Sensor Factory dashboard refreshed every 6 minutes won't create any impact on your PRTG.</p>
+
+<p>If you have a bunch of metrics (dozens) you want to collect, check out <a href="https://www.paessler.com/manuals/prtg/http_push_data_advanced_sensor">HTTP Push Data Advanced Sensor</a> and other custom sensors.</p>
+
+<p>Here's an example of a Custom EXE/Script Sensor with a PowerShell script that checks a controller for <code class="language-plaintext highlighter-rouge">analysed-system-statistics</code>, picks selected metrics, and submits them to PRTG.</p>
+
+<p><img src="/assets/images/prtg-eseries-26-prtg-script-gauges.png" alt="" /></p>
+
+<p>When metrics are many, viewing them as a chart may be easier. Generally I'm against collecting unnecessary metrics in the first place, so I wouldn't collect all these on my production system.</p>
+
+<p><img src="/assets/images/prtg-eseries-27-prtg-script-table.png" alt="" /></p>
+
+<p>Another approach is to focus on selected values over time which is better done with charts.</p>
+
+<p><img src="/assets/images/prtg-eseries-28-prtg-script-chart.png" alt="" /></p>
+
+<p>Here we see DDP is &gt; 80% of my workload, and most recently read latency was around 150 microseconds (0.15 ms) which is not unusual with RDMA-based storage protocols and EF-Series (<a href="/2023/09/22/ubuntu-lts-netapp-eseries-iser.html">Ubuntu with EF-570 over iSER</a>, in this case).</p>
+
+<h3 id="security-in-shell-scripts">Security in shell scripts</h3>
+
+<p>PRTG can pass username/password combinations, JSON Web Tokens or Bearer tokens as parameters to sensor scripts. They have practical recommendations for security of credentials, and that should be your primary source of information for securing PRTG.</p>
+
+<p>One way to deal with passwords or Tokens is to hard-code them into the script. That's generally a stupid idea, but SANtricity has read-only monitor RBAC, so hard-coding a password the monitor account is usually not a major concern (an attacker could view SANtricity settings, but not change anything).</p>
+
+<p>As of SANtricity 11.80 JWTs still have a known shortcoming which is that they can't be issued by (or on behalf of) accounts who aren't security admins, so the harmless monitor account can't have it. See <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-settings/access-management-tokens.html">more about JWTs here</a>.</p>
+
+<p>Ideas:</p>
+
+<ul>
+  <li>Encode username/password for the monitor account in the script or pass them from PRTG - it doesn't matter.</li>
+  <li>Alternatively, in Sensor settings, use Bearer Token (the relatively short-lived token you get when you login via the APIs) for the SANtricity Monitor account. Since these last much shorter than JWTs, you would need another script (maybe running from a secure system) that renews Bearer Token on SANtricity and uses the PRTG API to update the value of token variable in the Sensor settings of the PRTG system or remote Windows system that runs the script. You could have that script run on the local system, but then you'd have approximately the same security as in the first, simple alternative, with username/password encoded in the script or passed to the script from PRTG.</li>
+</ul>
+
+<p>JWT is convenient because it can last up to 366 days despite any (possible) SANtricity password changes, but it's no different from using an admin user's username/password: if somebody get hold of it, they can write their own script and use it there. If you decide to use JWT , create a renewal reminder in (X-7) days somewhere to renew it and update parameters in Sensor settings or the script itself before it expires.</p>
+
+<p>If SANtricity makes it possible to issue JWT for the monitor account, we could then use a secure workstation to issue and daily refresh JWT for the account, and remotely push JWT token to the script or value to the sensor to refresh it. 
+Even if the attacker gets the JWT token, it'd be valid only for the day, and have nothing but read-only capabilities.</p>
+
+<h2 id="appendix-d---syslog-receiver">Appendix D - Syslog receiver</h2>
+
+<p>E-Series lets you forward system logs to another destination and PRTG has a Syslog Receiver sensor that works very similarly to SNMP Trap Receiver. If SNMP for some reason isn't available in your environment and syslog is, you can use it to apply most of the details from SNMP Trap Receiver sensor appendix.</p>
+
+<p>To test this feature I forwarded logs from SANtricity controllers to another system, and from there to PRTG server running on Windows.</p>
+
+<p>The source IP belongs to the Linux forwarder, but Hostname in forwarded messages is the address of SANtricity Controller(s).</p>
+
+<p>We could use these in <code class="language-plaintext highlighter-rouge">(source[IP1] AND source[IP2])</code> for both controllers and drop the rest (if SNMP traps are being indiscriminately forwarded and contain some junk). If DNS resolution worked, you could use FQDNs in filters instead, or expand the filter to cover both controller IPs and FQDNs.</p>
+
+<p>Another property that can be used in generic Syslog Receiver message filter is App Name, "StorageArray"; if that appears in non-test messages as I think it does, then we can use that to eliminate non-SANtricity log messages. In PRTG filter, that could be used as <code class="language-plaintext highlighter-rouge">(message["StorageArray"])</code>, but I haven't tried that as I didn't want to spend time on syslog.</p>
+
+<p><img src="/assets/images/prtg-eseries-20-syslog-receiver-eseries-test-prtg.png" alt="" /></p>
+
+<p>Try without any filters first, so that you can confirm messages are coming in, and then configure the filters and customize the rest.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/custom" class="page__taxonomy-item p-category" rel="tag">custom</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/plugin" class="page__taxonomy-item p-category" rel="tag">plugin</a><span class="sep">, </span>
+    
+      <a href="/tags/powershell" class="page__taxonomy-item p-category" rel="tag">powershell</a><span class="sep">, </span>
+    
+      <a href="/tags/prtg" class="page__taxonomy-item p-category" rel="tag">prtg</a><span class="sep">, </span>
+    
+      <a href="/tags/snmp" class="page__taxonomy-item p-category" rel="tag">snmp</a><span class="sep">, </span>
+    
+      <a href="/tags/traps" class="page__taxonomy-item p-category" rel="tag">traps</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/monitoring" class="page__taxonomy-item p-category" rel="tag">monitoring</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-09-25T00:00:00+08:00">2023-09-25 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Monitoring+NetApp+E-Series+with+PRTG%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F09%2F25%2Fmonitoring-netapp-eseries-with-prtg.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/09/25/monitoring-netapp-eseries-with-prtg.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/09/22/ubuntu-lts-netapp-eseries-iser.html" class="pagination--pager" title="Ubuntu 22.04 LTS as iSER client to NetApp E-Series">Previous</a>
+    
+    
+      <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html" class="pagination--pager" title="Stand-alone and Consistency Group snapshots on NetApp E-Series">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

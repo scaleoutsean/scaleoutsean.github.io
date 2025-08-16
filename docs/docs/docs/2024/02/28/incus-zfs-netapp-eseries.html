@@ -1,0 +1,789 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>ZFS with NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="Practical use of NetApp E-Series-backed ZFS from Incus/LXD">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="ZFS with NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/02/28/incus-zfs-netapp-eseries.html">
+
+
+  <meta property="og:description" content="Practical use of NetApp E-Series-backed ZFS from Incus/LXD">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="ZFS with NetApp E-Series">
+  <meta name="twitter:description" content="Practical use of NetApp E-Series-backed ZFS from Incus/LXD">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2024/02/28/incus-zfs-netapp-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2024-02-28T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/02/28/incus-zfs-netapp-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="ZFS with NetApp E-Series">
+    <meta itemprop="description" content="  Introduction  What is E-Series anyway  Easy storage management  Conclusion">
+    <meta itemprop="datePublished" content="2024-02-28T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2024/02/28/incus-zfs-netapp-eseries.html" itemprop="url">ZFS with NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2024-02-28T00:00:00+08:00">2024-02-28 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#what-is-e-series-anyway">What is E-Series anyway</a></li>
+  <li><a href="#easy-storage-management">Easy storage management</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>This posts is for Incus (or LXD) or ZFS users interested in offloading some of the work to NetApp E-Series.</p>
+
+<p>I've written about the reasons why one may want to do that in the post on <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">ZFS deduplication</a>.</p>
+
+<p>This posts gives an example of a setup with Incus or LXD hosting VMs or containers on a ZFS pool that resides on a E-Series disk array.</p>
+
+<h2 id="what-is-e-series-anyway">What is E-Series anyway</h2>
+
+<p>It's a NetApp product line of classic dual-controller storage arrays.</p>
+
+<p>The <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">deduplication post</a> explains some benefits of not using JBOD with ZFS, so I'll skip that part.</p>
+
+<p>We are using a 2U shelf with dual controllers and 24 disks.</p>
+<ul>
+  <li>Some disks are allocated to a "pool" (<a href="/2022/09/12/new-ddp-and-e-series-santricity-web-restful-api.html">DDP</a> which is similar to a multi-disk zpool). These can be very wide (e.g. 100s of disks) and on top of a DDP we create RAID 1 or 6-type LUNs for ZFS or other hosts</li>
+  <li>Some disks are grouped in traditional RAID (0/1/10/5/6). RAID0 is not protected, so it doesn't make sense to stripe it - single-disk RAID0 would usually have just 1 LUN on top of each and be presented to ZFS hosts verbatim. Protected RAID always has more than one disk, so it makes sense to create multiple LUNs for one or more ZFS hosts</li>
+  <li>This screenshot shows 1 DDP (pool), 6 volume groups, with a total of 11 volumes (LUNs)</li>
+</ul>
+
+<p><img src="/assets/images/incus-zfs-eseries-01-controller-pool-groups-volumes-hosts.png" alt="" /></p>
+
+<p>The DDP has 16 disks an can be grown in small increments of a single disk. On it, stripes in RAID10 LUNs are written to random 10 disks at once (128kB each strip) and the same goes for RAID6 LUNs.</p>
+
+<p>The first RAID 0 (sean_raid0) made of two disks is unusual (we'd commonly create RAID 1 out of two disks), but the point is RAID 1 or 10 can be used as the base for a any number of LUNs for whatever purposes (cache, etc.) without having to dedicate a physical disk to each LUN.</p>
+
+<p>RAID 0 named <code class="language-plaintext highlighter-rouge">Z(number)</code> are individual disks as RAID 0 - same as JBOD. You can present them to hosts that are happy with that granularity (1 SSD) and protection (none).</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-02-pools.png" alt="" /></p>
+
+<p>On this array I've created a bunch of LUNs (11), most of them on the pool (sean_ddp). We'll use just one protected LUN (ddp_r1_04) which is a RAID 1-style volume on sean_ddp.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-03-ddp-lun.png" alt="" /></p>
+
+<p>Incus (or LXD) can create a protected single volume zpool on that disk. We see it in action here. Normally - with JBOD - you'd use a bunch of disks but here we use just one LUN of arbitrary size (here: 200 GiB), stored in hundreds of RAID 10-style stripes on the first DDP. If you move from another platform or want to allocate LUNs, rather than a lot of physical disks, to different hosts or groups of hosts, this is very convenient.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-04-zfs-pool.png" alt="" /></p>
+
+<p>As you create instances - whether it's VMs or containers - ZFS works as it normally does. But you don't have to deal with physical media protection, rebuilds, and security - E-Series does that for you.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-05-zfs-instance-create.png" alt="" /></p>
+
+<p>ZFS snapshots work fine, of course, and take a fraction of a second. By the way - when you're upgrading Incus (or LXD) you can take a short-lived snapshot of the E-Series volume ddp_r1_04, just in the case upgrade fails. If you have multiple disks in your Incus pool, you can snapshot them as a group using group snapshots. Anyway, most of the time you'd use ZFS snapshots that are accessible to Incus users, rather than storage administrators.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-06-zfs-snapshot-create.png" alt="" /></p>
+
+<p>A snapshot has been created.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-07-zfs-snapshot-restore.png" alt="" /></p>
+
+<p>ZFS volumes also look as usual, with one snapshot visible in the column Snapshots.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-08-zfs-pool-overview.png" alt="" /></p>
+
+<p>Host view is as you might expect from Linux - DevMapper multi-pathing has been configured, but ddp_r1_04 is "missing". Why? It's created and used by Incus, not by the host. When initializing zpool for Incus we told Incus to use that device (/dev/mapper/DEVID) and that was it.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-09-zfs-overview.png" alt="" /></p>
+
+<p>Above you can see that other LUNs from sean_ddp (ddp_r1_01 and ddp_r1_02, for example) are exposed to host and used for other filesystems (XFS, for example). (There's another "host-side" zpool created on this system - it's called <code class="language-plaintext highlighter-rouge">default</code> and mounted at <code class="language-plaintext highlighter-rouge">/default</code>, but it's not used by Incus).</p>
+
+<p>This particular host is connected to E-Series with direct-attach Infiniband (and uses iSER), but iSCSI, FC and other protocols are available. With iSCSI, as there are 4 x 25GigE ports per controller, so you can connect up to 4 ZFS hosts (2 HA pairs) to an array without having dedicated storage switches.</p>
+
+<p>Compression, when enabled and used on ZFS with compressible data, can save capacity and lower flash disk wear.</p>
+
+<p><img src="/assets/images/incus-zfs-eseries-10-zfs-compression.png" alt="" /></p>
+
+<p>If you're also interested in deduplication, please see the ZFS deduplication post linked at the top.</p>
+
+<p>For general VMs with non-compressed data, you may save 30-60% that way (that is, 1.50x to 2.00x is common).</p>
+
+<h2 id="easy-storage-management">Easy storage management</h2>
+
+<p>From Incus, all you need to "know" about storage is you can set quotas, create or restore snapshots.</p>
+
+<p>If Incus pool starts running low on capacity, we'd simply create another zpool from one of other disks exposed to the host and add it to Incus.</p>
+
+<p>Because you can create LUNs of arbitrary sizes, you can granularly provision zpools to different Incus projects, so that each team or department has own zpool or zpools.</p>
+
+<p>Because zpool is already protected by RAID 10 or RAID 6 on E-Series LUNs that live on DDP pools, there's no need to create complex configurations on Incus. While one could certainly create volumes on traditional RAID disk groups or even give LUNs made of an entire single-disk RAID 0 to Incus, but those seem like niche use cases as ZFS administrator would have to protect them by host-side replication or ZRAID.</p>
+
+<p>My primary choices would be:</p>
+<ul>
+  <li>general use LUNs for ZFS: RAID 6 LUNs on DDP</li>
+  <li>faster general use LUNs for ZFS: RAID 10 LUNs on DDP</li>
+  <li>fastest, specialty LUNs for ZFS (ARC, etc): LUNs on classic RAID 10 disk groups</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>If you use multiple filesystems or don't want to create large ZFS configurations, using protected storage saves you effort and time.</p>
+
+<p>Whereas experimenting with production-grade storage may take you multiple servers with 10-20 internal disks each, E-Series lets you start with mere gigabytes and offload the hard part of data protection from ZFS to E-Series while at the same time other filesystems and applications (Windows, VMware, etc.) can keep running fine using the same E-Series array.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/incus" class="page__taxonomy-item p-category" rel="tag">incus</a><span class="sep">, </span>
+    
+      <a href="/tags/lxd" class="page__taxonomy-item p-category" rel="tag">lxd</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/zfs" class="page__taxonomy-item p-category" rel="tag">zfs</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2024-02-28T00:00:00+08:00">2024-02-28 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=ZFS+with+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2024%2F02%2F28%2Fincus-zfs-netapp-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2024/02/28/incus-zfs-netapp-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html" class="pagination--pager" title="ZFS deduplication with NetApp E-Series">Previous</a>
+    
+    
+      <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html" class="pagination--pager" title="Ubuntu 24.04 LTS with NetApp SolidFire">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

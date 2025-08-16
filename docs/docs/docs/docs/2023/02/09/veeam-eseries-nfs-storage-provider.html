@@ -1,0 +1,830 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Store Kasten backups on NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="How to leverage E-Series for both Veeam and Kasten backup destination">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Store Kasten backups on NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/02/09/veeam-eseries-nfs-storage-provider.html">
+
+
+  <meta property="og:description" content="How to leverage E-Series for both Veeam and Kasten backup destination">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Store Kasten backups on NetApp E-Series">
+  <meta name="twitter:description" content="How to leverage E-Series for both Veeam and Kasten backup destination">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/02/09/veeam-eseries-nfs-storage-provider.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-02-09T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/02/09/veeam-eseries-nfs-storage-provider.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Store Kasten backups on NetApp E-Series">
+    <meta itemprop="description" content="  Backup repository choices for Kasten with E-Series  Veeam Repository  S3 bucket  NFS share  Which one to use?          Cost and performance      Security      ">
+    <meta itemprop="datePublished" content="2023-02-09T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/02/09/veeam-eseries-nfs-storage-provider.html" itemprop="url">Store Kasten backups on NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-02-09T00:00:00+08:00">2023-02-09 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#backup-repository-choices-for-kasten-with-e-series">Backup repository choices for Kasten with E-Series</a></li>
+  <li><a href="#veeam-repository">Veeam Repository</a></li>
+  <li><a href="#s3-bucket">S3 bucket</a></li>
+  <li><a href="#nfs-share">NFS share</a></li>
+  <li><a href="#which-one-to-use">Which one to use?</a>
+    <ul>
+      <li><a href="#cost-and-performance">Cost and performance</a></li>
+      <li><a href="#security">Security</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="backup-repository-choices-for-kasten-with-e-series">Backup repository choices for Kasten with E-Series</h2>
+
+<p>Many Veeam users use E-Series. There's a NetApp Technical Report for it, currently a copy can be found <a href="https://www.netapp.com/pdf.html?item=/media/79436-tr-4948.pdf">here</a>.</p>
+
+<p>How about Kasten K10 and Kubernetes?</p>
+
+<p>Also very easy: pick any of the following.</p>
+
+<ul>
+  <li>E-Series as Veeam Repository</li>
+  <li>S3 bucket on Linux backed by E-Series</li>
+  <li>NFS share on Linux backed by E-Series</li>
+</ul>
+
+<h2 id="veeam-repository">Veeam Repository</h2>
+
+<p>If you have Veeam and E-Series, you probably have a Veeam Repository.</p>
+
+<p>Simply use it from Kasten. That's it.</p>
+
+<h2 id="s3-bucket">S3 bucket</h2>
+
+<p>E-Series doesn't have its own S3 server, so we need one. Common approaches:</p>
+
+<ul>
+  <li>Use StorageGRID S3 appliances (suitable for enterprise use, based on E-Series, Veeam certified including for <a href="https://www.youtube.com/watch?v=e79AsPa4FAA">Object Lock</a>)</li>
+  <li>Use 3rd party S3 server such as MinIO (can be set up for free)</li>
+</ul>
+
+<p>I've blogged about MinIO with E-Series on several ocassions, also about StorageGRID with Kasten. Use search at the top of the page to find those.</p>
+
+<h2 id="nfs-share">NFS share</h2>
+
+<p>This is a new one, which I haven't had a chance to try before.</p>
+
+<p>Today I played with Kasten version 5.5.4 so I thought to give this a try.</p>
+
+<p>The way it works a volume (we'd probably use <a href="/2021/07/06/e-series-ddp-expansion-and-rebalancing.html">DDP</a> rather than RAID 6) is created and presented to a Linux host - it can be a VM that gets its HA from VI (vSphere, for example).</p>
+
+<p>For lower cost and enterprise support, use Rocky Linux or Ubuntu LTS.</p>
+
+<p>Format the device and export it to Kubernetes worker IPs using Linux NFS server.</p>
+
+<p>On Kubernetes, create a PVC for the Kasten namespace:</p>
+
+<p><img src="/assets/images/kasten-eseries-nfs-repo-00.png" alt="NFS PVC" /></p>
+
+<p>Also create a PV from that NFS share:</p>
+
+<p><img src="/assets/images/kasten-eseries-nfs-repo-01.png" alt="NFS PV" /></p>
+
+<p>When Kasten repository is being configured, pick NFS. This is where one can alternatively select S3 or Veeam Repository.</p>
+
+<p><img src="/assets/images/kasten-eseries-nfs-repo-04.png" alt="Kasten repository choices" /></p>
+
+<p>Once the PVC is provided, location profiles should show this NFS repository.</p>
+
+<p><img src="/assets/images/kasten-eseries-nfs-repo-02.png" alt="Kasten 5 location profiles" /></p>
+
+<p>Veeam backups now can be exported to this NFS repository.</p>
+
+<p><img src="/assets/images/kasten-eseries-nfs-repo-03.png" alt="Exported Kasten backup" /></p>
+
+<p>On the NFS server (export: /data/nfs/dump) backup data is saved to k10/{cluster-id} on the share.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo dir</span> <span class="nt">-laR</span> /data/nfs/dump/k10/57eadc84-23bc-4c1b-9c27-6a4138d8bf80
+/data/nfs/dump/k10/57eadc84-23bc-4c1b-9c27-6a4138d8bf80:
+total 12
+drwx------ 3 root root 4096 Feb  9 10:36 <span class="nb">.</span>
+drwx------ 3 root root 4096 Feb  9 10:36 ..
+drwx------ 4 root root 4096 Feb  9 10:36 migration
+
+/data/nfs/dump/k10/57eadc84-23bc-4c1b-9c27-6a4138d8bf80/migration:
+total 16
+drwx------ 4 root root 4096 Feb  9 10:36 <span class="nb">.</span>
+drwx------ 3 root root 4096 Feb  9 10:36 ..
+drwx------ 3 root root 4096 Feb  9 10:36 export-1675938973343468321
+drwx------ 3 root root 4096 Feb  9 10:36 repo
+...
+</code></pre></div></div>
+
+<p>If LVM is used, snapshots can be scheduled on Linux OS, and independently of that storage snapshots can also be scheduled on E-Series as well (how to choose the right options for various security considerations, see <a href="/2022/04/03/restic-server-netapp-eseries.html">here</a>).</p>
+
+<p>That's decent enough, but not as good as S3 Object Lock, or ransomware protection available on ONTAP NFS, for example. But it is very affordable and "reasonably" secure from ransomware.</p>
+
+<h2 id="which-one-to-use">Which one to use?</h2>
+
+<p>It really depends, so I won't deep dive into all scenarios and considerations.</p>
+
+<p>Some rules-of-thumb the way I see them are below.</p>
+
+<h3 id="cost-and-performance">Cost and performance</h3>
+
+<p>Cost-of-performance-wise Veeam Repository may be the best (my guess based on the fact that it has storage efficiencies, so one could save approximately 50% of capacity cost when compared to NFS, and maybe 75% when compared to S3).</p>
+
+<p>Cost-of-throughput-wise, MinIO may be the fastest, especially if you use the community edition of MinIO. See a sample run of MinIO on E-Series <a href="/2022/10/21/minio-performance-netapp-e-series.html">here</a>.</p>
+
+<p>Cost-of-capacity-wise, I suspect that for large repositories Veeam Repository would be better than NFS, but for small environments (under 50TB) Linux NFS server would have the lowest cost and (single instance, where there's no EC overhead) of free MinIO would be similar.</p>
+
+<p>Assuming 8 hour backup window:</p>
+
+<ul>
+  <li>At 1 GB/s (NFS repository on a 4 CPU VM), backup 28TB in 8 hours</li>
+  <li>At 2 GB/s (single MinIO instance), bakcup 50 TB in 8 hours</li>
+  <li>At 5 GB/s (medium-sized scale-out Veeam backup repository), 144 TB in 8 hours (and that's after reduction, so probably 300TB on front-end, before global (repo-wide) deduplication and compression)</li>
+</ul>
+
+<p>E-Series has excellent sequential performance, so it's suitable for frequent export runs. Exporting a 10 GB backup can take only seconds, which means it can be done frequently (hourly, for important data) as long as you set your retention carefully to expire old backups and avoid filling up the repository.</p>
+
+<p>There's an example <a href="/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html#vmfs-vs-raw-devices">here</a> that shows how a 75 GB database can be fully restored in under a minute. The same post has several <a href="/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html#appendix-configuration-and-diskspd-logs">examples</a> of DiskSpd runs with EF280 (older E-Series entry-level flash model, since replaced by EF300) which may be interesting to Veeam users interested in leveraging Veeam Repository for Kasten.</p>
+
+<h3 id="security">Security</h3>
+
+<p>Here I'd vote for S3 (features, convenience) and with StorageGRID it can also be multi-site active with read-write access from every site - here replication is done by StorageGRID.</p>
+
+<p>With MinIO it would probably be better to use Veeam to make another backup to a separate MinIO/E-Series cluster at a DR location.</p>
+
+<p>Similarly, a Veeam Repository can be replicated by <a href="https://www.veeam.com/vm-advanced-replication.html">Veeam BR</a>, so with E-Series you could have one E-Series per site, and use Veeam to take care of replication. Veeam BR's backup repository best practices can be found <a href="https://bp.veeam.com/vbr/2_Design_Structures/D_Veeam_Components/D_backup_repositories/">here</a>.</p>
+
+<p>NFS shares on Linux VMs that rely on VI for HA would likely work fine for a single site, but wouldn't have a good defense against ransomware, so even with Linux and/or E-Series snapshots, it'd be wise to also export all backups to another location where this risk be addressed or lessened (either another NFS or S3 or Veeam Repository).</p>
+
+<p>Having tried all three (Veeam Repository I tried only from Veeam), NFS is the easiest and simplest to use and maintain. But if you're already using Veeam, then there's no extra maintenance or new security concerns to going with Veeam Repository.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/backup" class="page__taxonomy-item p-category" rel="tag">backup</a><span class="sep">, </span>
+    
+      <a href="/tags/data-protection" class="page__taxonomy-item p-category" rel="tag">data protection</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">E-Series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/k8s" class="page__taxonomy-item p-category" rel="tag">k8s</a><span class="sep">, </span>
+    
+      <a href="/tags/kasten" class="page__taxonomy-item p-category" rel="tag">Kasten</a><span class="sep">, </span>
+    
+      <a href="/tags/kubernetes" class="page__taxonomy-item p-category" rel="tag">Kubernetes</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-02-09T00:00:00+08:00">2023-02-09 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Store+Kasten+backups+on+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F02%2F09%2Fveeam-eseries-nfs-storage-provider.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/02/09/veeam-eseries-nfs-storage-provider.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/02/06/cloud-sync-elasticsearch.html" class="pagination--pager" title="Use Cloud Sync API and Elasticsearch to improve data replication management">Previous</a>
+    
+    
+      <a href="/2023/02/10/backup-epa-data-on-kubernetes.html" class="pagination--pager" title="Backup and restore E-Series Performance Analyzer with Kasten K10">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

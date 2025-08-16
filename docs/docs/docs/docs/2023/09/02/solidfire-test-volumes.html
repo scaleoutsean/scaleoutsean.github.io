@@ -1,0 +1,925 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Using synthetic SolidFire S3 backups for Dev/Test purposes | Acting Technologist</title>
+<meta name="description" content="Use synthetic SolidFire S3 backups for clientless SolidFire Dev/Test">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Using synthetic SolidFire S3 backups for Dev/Test purposes">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/09/02/solidfire-test-volumes.html">
+
+
+  <meta property="og:description" content="Use synthetic SolidFire S3 backups for clientless SolidFire Dev/Test">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Using synthetic SolidFire S3 backups for Dev/Test purposes">
+  <meta name="twitter:description" content="Use synthetic SolidFire S3 backups for clientless SolidFire Dev/Test">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/09/02/solidfire-test-volumes.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-09-02T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/09/02/solidfire-test-volumes.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Using synthetic SolidFire S3 backups for Dev/Test purposes">
+    <meta itemprop="description" content="  Why  Automation          Generate data and backup volumes        Restore S3 backups to new SolidFire volumes  Restore-related notes  Cost estimation  Conclusion">
+    <meta itemprop="datePublished" content="2023-09-02T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/09/02/solidfire-test-volumes.html" itemprop="url">Using synthetic SolidFire S3 backups for Dev/Test purposes
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-09-02T00:00:00+08:00">2023-09-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#why">Why</a></li>
+  <li><a href="#automation">Automation</a>
+    <ul>
+      <li><a href="#generate-data-and-backup-volumes">Generate data and backup volumes</a></li>
+    </ul>
+  </li>
+  <li><a href="#restore-s3-backups-to-new-solidfire-volumes">Restore S3 backups to new SolidFire volumes</a></li>
+  <li><a href="#restore-related-notes">Restore-related notes</a></li>
+  <li><a href="#cost-estimation">Cost estimation</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="why">Why</h2>
+
+<p>It's one of those seemingly obvious things - after you've read the title, you know what it is and it seems so simple.</p>
+
+<p>But - like me - maybe you've been using SolidFire for years and haven't thought of this before (regardless of whether you have use for it or not).</p>
+
+<p>So, what is it about?</p>
+
+<ul>
+  <li>you want to run realistic replication, cloning, compression, deduplication tests</li>
+  <li>that cannot work with <em>empty</em> volumes - there's nothing to compress or deduplicate, all snapshots have the same data, and cloning a volume takes ~0 seconds!</li>
+  <li>you need volumes with <em>data</em>, which means you need iSCSI clients to generate data and write it to SolidFire iSCSI targets</li>
+</ul>
+
+<p>But:</p>
+
+<ul>
+  <li>sometimes you don't have iSCSI clients or hardware to run iSCSI clients</li>
+  <li>sometimes you don't want to have iSCSI clients if there's a better way</li>
+  <li>sometimes it takes time to create data (especially on SolidFire Demo VM, which can sustain around 15-20 MB/s - it takes &gt;100 seconds to create 2GB of test data)</li>
+</ul>
+
+<p>Technically, it's not rocket science - mount 20 volumes from one client, create 20 sample data sets, shut down the client.</p>
+
+<p>But then you work in another environment, and you need to set up replication from the first SolidFire environment, or repeat the exercise.</p>
+
+<p>Or you may want to have data from some application that you don't know how to set up or use.</p>
+
+<p><a href="/2021/04/21/solidfire-backup-to-s3.html">"Backup to S3"</a> costs next to nothing. We can create a variety of data once, back it up to S3 and when we need test data we can restore it to a SolidFire Demo VM or production environment without using any iSCSI clients.</p>
+
+<p>It can't replace iSCSI clients when iSCSI clients are necessary.</p>
+
+<h2 id="automation">Automation</h2>
+
+<p>That "Backup to S3" link above has all the S3-related commands to backup and restore. If you want to try these code samples, please visit that page first.</p>
+
+<h3 id="generate-data-and-backup-volumes">Generate data and backup volumes</h3>
+
+<p>Automation could include data generation and backup. For me generation is one-time activity so I'm not going to try to automate it.</p>
+
+<p>But I'll share some of my steps for those who wonder how I did it. I first prepared 10 1GiB volumes like this with the idea to populate them with several different applications.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">df</span> | <span class="nb">grep </span>volume
+/dev/sdc                                           1038336     40340    997996   4% /tmp/volume16.31
+/dev/sdl                                           1038336     40340    997996   4% /tmp/volume20.35
+/dev/sdd                                           1038336     40340    997996   4% /tmp/volume11.26
+/dev/sde                                           1038336     40340    997996   4% /tmp/volume17.32
+/dev/sdf                                           1038336     40340    997996   4% /tmp/volume18.33
+/dev/sdg                                           1038336     40340    997996   4% /tmp/volume13.28
+/dev/sdh                                           1038336     40340    997996   4% /tmp/volume19.34
+/dev/sdi                                           1038336     40340    997996   4% /tmp/volume14.29
+/dev/sdj                                           1038336     40340    997996   4% /tmp/volume15.30
+/dev/sdk                                           1038336     40340    997996   4% /tmp/volume12.27
+
+<span class="nv">$ </span><span class="nb">df</span> | <span class="nb">grep </span>volume | <span class="nb">wc</span> <span class="nt">-l</span>
+10
+</code></pre></div></div>
+
+<p>As we write to each volume to populate it, we can change parameters or even application, but every time we're done we should run <code class="language-plaintext highlighter-rouge">fstrim</code> to unmap junk data. Example:</p>
+
+<ul>
+  <li>Dedupe percentage - in my script in increase it by 5% for each volume as I want (50% in this run). We don't <em>need</em> this - it can be fixed across all volumes, but we can use different parameters or even different programs for each volume</li>
+  <li>Trim - command is executed after each run; because the volume is 1GiB and I write 750MiB, the rest (~250MiB of empty space) is expected to be trimmed every time</li>
+</ul>
+
+<pre><code class="language-raw">gen: (g=0): rw=randwrite, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=psync, iodepth=1
+fio-3.28
+Starting 1 process
+...
+Dedupe percentage now (%): 50
+Trimming old data
+/tmp/volume12.27: 263.8 MiB (276578304 bytes) trimmed
+
+</code></pre>
+
+<p>Another point on changing parameter values: if you are happy with one fixed test across each volume, there's no need to restore 10 volumes - you can restore 1 from S3 and clone it 9 times on SolidFire. That will work, but then your efficiency may shoot up to 50x.</p>
+
+<p>Consider this: SolidFire has global deduplication; a block seen twice is a block deduplicated. What happens, then, is when we create a bunch of volumes with common buffer, compression and dedupe settings, they get globally deduplicated, which is something you wouldn't get on E-Series or ONTAP (for example).</p>
+
+<p>Each has almost identical compression and deduplication - synthetically generated data was very uniform and repetitive across volumes.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="n">PS</span><span class="w"> </span><span class="nx">C</span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Get-SFVolumeEfficiency</span><span class="w"> </span><span class="nt">-VolumeID</span><span class="w"> </span><span class="nv">$VolId</span><span class="w"> </span><span class="c"># loop over all test volumes</span><span class="w">
+</span><span class="n">Compression</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">1.910035</span><span class="w">
+</span><span class="n">Deduplication</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">1.336889</span><span class="w">
+</span><span class="n">MissingVolumes</span><span class="w">   </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">ThinProvisioning</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">1.36137</span><span class="w">
+</span><span class="n">Timestamp</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">2023-09-02T11:00:01Z</span><span class="w">
+
+</span><span class="n">Compression</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">1.911576</span><span class="w">
+</span><span class="n">Deduplication</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">1.335702</span><span class="w">
+</span><span class="n">MissingVolumes</span><span class="w">   </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">ThinProvisioning</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">1.361356</span><span class="w">
+</span><span class="n">Timestamp</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">2023-09-02T11:00:01Z</span><span class="w">
+
+</span><span class="n">Compression</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="nx">1.911578</span><span class="w">
+</span><span class="n">Deduplication</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="nx">1.335702</span><span class="w">
+</span><span class="n">MissingVolumes</span><span class="w">   </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="n">ThinProvisioning</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">1.36137</span><span class="w">
+</span><span class="n">Timestamp</span><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="nx">2023-09-02T11:00:01Z</span><span class="w">
+</span><span class="o">...</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Initially I was going for 2x compression and 2x deduplication, which maybe was true within each volume, but I ended up with 12x deduplication and almost 50x storage efficiency on SolidFire Demo VM.</p>
+
+<p><img src="/assets/images/solidfire-iscsi-less-data-generation-from-s3.png" alt="Excessive deduplication due to poorly generated synthetic data" /></p>
+
+<p>I didn't like that so I changed my data generation to use different settings across each run.</p>
+
+<p>After that I got around 3x (dedupe * compression) which is a more realistic global efficiency with SolidFire.</p>
+
+<p>It'd b even better to have 2-3 volumes with application data (SQLite, MySQL, SQL Server, etc.) but I didn't want to spend time on that.</p>
+
+<h2 id="restore-s3-backups-to-new-solidfire-volumes">Restore S3 backups to new SolidFire volumes</h2>
+
+<p>Automating for restore is simple, but funnily enough - you can't simply "restore a volume".</p>
+
+<p><img src="/assets/images/backblaze-solidfire-backup-to-s3-b2-06.jpg" alt="One does not simply restore a SolidFire volume from S3" /></p>
+
+<p>You need to have a volume to be able to restore it. (That's also funny, isn't it?)</p>
+
+<ul>
+  <li>Create a storage account (there's an example <a href="https://solidfire-kubernetes.pages.dev/docs/intro#solidfire-storage-account">here</a>); you can also create cluster from scratch (scroll up on the same page)</li>
+  <li>Create a bunch of volumes not smaller than the volumes you plan to restore (in production we'd want them to be the same size down to byte, but in the lab we can restore backups of smaller volumes to larger volumes)</li>
+  <li>Loop over list of your 10 ${VolName}-${VolId} list in the backup bucket and insert those in a restore-from-S3 command</li>
+  <li>Optionally Adjust QoS and change volume names (for convenience) after restore</li>
+</ul>
+
+<p>To restore at scale (dozens or hundreds) you may want to run this in parallel, which is a bit more complicated but doable (I did it for backup, the script is in my Awesome SolidFire repo on Github).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/pwsh</span><span class="w">
+</span><span class="c"># set up a new account and get the ID</span><span class="w">
+</span><span class="nv">$AccountId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">New-SFAccount</span><span class="w"> </span><span class="nt">-Username</span><span class="w"> </span><span class="nx">tester</span><span class="p">)</span><span class="o">.</span><span class="nf">AccountID</span><span class="w">
+</span><span class="c"># set up a uniform QoS policy for all restored volumes</span><span class="w">
+</span><span class="nv">$QosPolicyId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">New-SFQoSPolicy</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">tester</span><span class="w"> </span><span class="nt">-MinIOPS</span><span class="w"> </span><span class="nx">200</span><span class="w"> </span><span class="nt">-MaxIOPS</span><span class="w"> </span><span class="nx">1500</span><span class="w"> </span><span class="nt">-BurstIOPS</span><span class="w"> </span><span class="nx">2500</span><span class="p">)</span><span class="o">.</span><span class="nf">QoSPolicyId</span><span class="w">
+</span><span class="c"># create empty volumes</span><span class="w">
+</span><span class="kr">For</span><span class="w"> </span><span class="p">(</span><span class="nv">$VolId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">11</span><span class="p">;</span><span class="w"> </span><span class="nv">$VolId</span><span class="w"> </span><span class="o">-le</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span><span class="w"> </span><span class="nv">$VolId</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">New-SFVolume</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">volume</span><span class="nv">$VolId</span><span class="w"> </span><span class="nt">-AccountID</span><span class="w"> </span><span class="nv">$AccountId</span><span class="w"> </span><span class="nt">-TotalSize</span><span class="w"> </span><span class="nx">1</span><span class="w"> </span><span class="nt">-GiB</span><span class="w"> </span><span class="nt">-Enable512e</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-QoSPolicyId</span><span class="w"> </span><span class="nv">$QosPolicyId</span><span class="p">}</span><span class="w">
+</span><span class="c"># now do a restore loop based on the S3 bulk "write" (i.e. read from S3, write to volume, i.e. "restore") command example</span><span class="w">
+</span><span class="c"># note: you need to "pair" existing empty volumes somehow (e.g. PROD-wcwb/log-2 =&gt; PROD-wcwb/volume12, PROD-wcp/sqlite-3 =&gt; PROD-wcwb/volume13)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>One way to do this "pairing" is to get a list of backups and the first Volume ID of the empty volumes to restore into and just loop through the both. Example with 2 volumes:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># assume we have 2 volumes to restore; you'd get this list from your S3 bucket where backups are stored</span><span class="w">
+</span><span class="nv">$s3backups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="s2">"volume11-23"</span><span class="p">,</span><span class="w"> </span><span class="s2">"volume12-24"</span><span class="p">)</span><span class="w">
+</span><span class="c"># assume your 2 "empty" volume IDs into which to restore are 36 and 37; empty volume's name doesn't matter for restore</span><span class="w">
+</span><span class="nv">$VolId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">36</span><span class="w">
+</span><span class="c"># you need additional values in places with "HERE" below - see the S3 backup post on details</span><span class="w">
+</span><span class="kr">foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$bkp</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$s3backups</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">Invoke-SFApi</span><span class="w"> </span><span class="nt">-Method</span><span class="w"> </span><span class="nx">StartBulkVolumeWrite</span><span class="w"> </span><span class="nt">-Params</span><span class="w"> </span><span class="p">@{</span><span class="w">  </span><span class="err">`</span><span class="w">
+        </span><span class="s2">"volumeID"</span><span class="o">=</span><span class="w"> </span><span class="nv">$VolId</span><span class="p">;</span><span class="w"> </span><span class="s2">"format"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"native"</span><span class="p">;</span><span class="w"> </span><span class="s2">"script"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bv_internal.py"</span><span class="p">;</span><span class="w"> </span><span class="s2">"scriptParameters"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="w">
+         </span><span class="p">@{</span><span class="w"> </span><span class="s2">"read"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w"> </span><span class="s2">"awsAccessKeyID"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"HERE"</span><span class="p">;</span><span class="w"> </span><span class="s2">"awsSecretAccessKey"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"HERE"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+         </span><span class="s2">"bucket"</span><span class="o">=</span><span class="w"> </span><span class="s2">"HERE"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+         </span><span class="s2">"prefix"</span><span class="o">=</span><span class="w"> </span><span class="s2">"HERE-HERE/</span><span class="nv">$bkp</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="err">`</span><span class="w">
+         </span><span class="s2">"endpoint"</span><span class="o">=</span><span class="w"> </span><span class="s2">"s3"</span><span class="p">;</span><span class="w"> </span><span class="s2">"hostname"</span><span class="o">=</span><span class="w"> </span><span class="s2">"HERE"</span><span class="p">}}}</span><span class="w">
+    </span><span class="c"># hostname is the S3 API endpoint, https:// and :443 can be left out but provide port number if non-standard e.g :18443</span><span class="w">
+    </span><span class="nv">$VolId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$VolId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w">
+    </span><span class="c"># you wouldn't need to wait for only 2 volumes, and maybe you'd need to wait longer for larger volumes, but as an example...</span><span class="w">
+    </span><span class="n">Start-Sleep</span><span class="w"> </span><span class="nx">300</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="restore-related-notes">Restore-related notes</h2>
+
+<p>To prevent deletion as well as tampering with backup images, we may create read-only keys to use them for resting data from S3 and give them to Dev/Test users. If data isn't synthetic, then even read access would have to be secured and possibly audited.</p>
+
+<p><img src="/assets/images/backblaze-solidfire-backup-to-s3-b2-07.png" alt="Backblaze key pair for restore" /></p>
+
+<p>"Pairing" of new empty volumes and volume IDs with what we have in our backup bucket goes like this: backup above came from PROD-wcwb/log-2 (ClusterName - ClusterUuid / VolumeName - VolumeID) and the new volume is PROD-wcwb/test-25 (same cluster, different volume name and ID), so when restoring Volume ID 25 we'd override automatically populated manifest to the cluster/volume combination to restore:</p>
+
+<ul>
+  <li>PROD-wcwb/test-25 =&gt; PROD-wcwb/log-2</li>
+</ul>
+
+<p><img src="/assets/images/backblaze-solidfire-backup-to-s3-b2-08.png" alt="Backblaze key pair for restore" /></p>
+
+<p>If restore destination (cluster) was different, I would have changed that part (PROD-wcwb) as well. As we went to volume ID 25 to restore, the manifest was auto-populated based on volume name and ID, but we had to change that to PROD-wcwb/log-2 (what we had in S3 bucket).</p>
+
+<p>With the data generator settings I used my global cluster efficiency (dedupe * compression) was 2.8x and in-volume efficiency was 1.5x, which is similar to real-life situations.</p>
+
+<p>As mentioned earlier, each of the 10 volumes with synthetic data was 1GiB large and 75% full, which resulted in approximately 0.5 GiB per volume backup size using Native backup mode.</p>
+
+<p><img src="/assets/images/backblaze-solidfire-backup-to-s3-b2-11.png" alt="Backup to Backblaze maxed out SolidFire Demo VM" /></p>
+
+<p>This is to say my "average" 1GiB volume that's 75% full and 1.5x efficient got reduced down to 50% in S3 bucket. If we used Uncompressed, backup would take 1 GiB in S3 (no savings - even the empty 0.25GiB would be backed up and sent to S3 although, as that's not compressed on disk, HTTPS' GZip might save that on ingress and egress). In conclusion: when backing up to the public cloud, you probably want to use <code class="language-plaintext highlighter-rouge">fstrim</code>` and Native mode!</p>
+
+<h2 id="cost-estimation">Cost estimation</h2>
+
+<p>You just need some local or remote S3 storage. With SolidFire v12, I've been able to use a variety of on-premises S3 offerings as well as Wasabi.</p>
+
+<p>For my own needs, I will create half a dozen 1GiB volumes that are 75% full and put them on low-cost S3 storage, on-premises as well as in the cloud.</p>
+
+<p>Restoring data still takes time, but all it takes is one loop to get those images restored and I don't need iSCSI clients.</p>
+
+<p>I just tested Backblaze which works fine. After the <a href="https://www.backblaze.com/blog/2023-product-announcement/">recent cost increases</a> it is still affordable.</p>
+
+<blockquote>
+  <p>Free egress … up to three times the amount of data you store with us, with any additional egress priced at just $0.01/GB</p>
+</blockquote>
+
+<p>Assuming 10 1GiB volumes that are 75% full and 2.5x efficient, each backup would take 300 MiB of bucket space. That's (10 * 0.75 / 2.5) = 3 GiB of data in the bucket.</p>
+
+<p>Assuming 30 downloads a month, 10 of which would be free on the account of 3GiB stored, the rest (20) would cost 20 * 0.3 * 0.01 = $0.06 per month.</p>
+
+<p>Six cents per month is not too bad!</p>
+
+<p>Although just above I observed 500 MiB per volume (more than my own estimate 300 MiB), that's based on synthetic data. "It depends".</p>
+
+<p>On-premises S3 storage is also inexpensive.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>When you need to work with non-empty SolidFire volumes and don't need or can't get any iSCSI clients, restoring volume data from S3 backups is very convenient.</p>
+
+<p>Even if all you have is just one S3 backup, that backup can be restored and cloned and with that you can develop your automation scripts with volumes that are populated with real data.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/data" class="page__taxonomy-item p-category" rel="tag">data</a><span class="sep">, </span>
+    
+      <a href="/tags/devops" class="page__taxonomy-item p-category" rel="tag">devops</a><span class="sep">, </span>
+    
+      <a href="/tags/restore" class="page__taxonomy-item p-category" rel="tag">restore</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/sample" class="page__taxonomy-item p-category" rel="tag">sample</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/synthetic" class="page__taxonomy-item p-category" rel="tag">synthetic</a><span class="sep">, </span>
+    
+      <a href="/tags/volume" class="page__taxonomy-item p-category" rel="tag">volume</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/automation" class="page__taxonomy-item p-category" rel="tag">automation</a><span class="sep">, </span>
+    
+      <a href="/categories/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-09-02T00:00:00+08:00">2023-09-02 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Using+synthetic+SolidFire+S3+backups+for+Dev%2FTest+purposes%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F09%2F02%2Fsolidfire-test-volumes.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/09/02/solidfire-test-volumes.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html" class="pagination--pager" title="SolidFire backup-to-S3 with Backblaze">Previous</a>
+    
+    
+      <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html" class="pagination--pager" title="MinIO Erasure Coding with NetApp E-Series">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

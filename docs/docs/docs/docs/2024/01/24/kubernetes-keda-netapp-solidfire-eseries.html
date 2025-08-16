@@ -1,0 +1,971 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Kubernetes KEDA with NetApp SolidFire and E-Series | Acting Technologist</title>
+<meta name="description" content="Notes on autoscaling Kubernetes workloads backed by E-Series or SolidFire using KEDA">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Kubernetes KEDA with NetApp SolidFire and E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">
+
+
+  <meta property="og:description" content="Notes on autoscaling Kubernetes workloads backed by E-Series or SolidFire using KEDA">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Kubernetes KEDA with NetApp SolidFire and E-Series">
+  <meta name="twitter:description" content="Notes on autoscaling Kubernetes workloads backed by E-Series or SolidFire using KEDA">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2024-01-24T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Kubernetes KEDA with NetApp SolidFire and E-Series">
+    <meta itemprop="description" content="  Introduction  KEDA concepts and components  Scalers  KEDA and persistent storage          SolidFire      E-Series        Storage-related events          Storage logs        Conclusion">
+    <meta itemprop="datePublished" content="2024-01-24T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html" itemprop="url">Kubernetes KEDA with NetApp SolidFire and E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2024-01-24T00:00:00+08:00">2024-01-24 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#keda-concepts-and-components">KEDA concepts and components</a></li>
+  <li><a href="#scalers">Scalers</a></li>
+  <li><a href="#keda-and-persistent-storage">KEDA and persistent storage</a>
+    <ul>
+      <li><a href="#solidfire">SolidFire</a></li>
+      <li><a href="#e-series">E-Series</a></li>
+    </ul>
+  </li>
+  <li><a href="#storage-related-events">Storage-related events</a>
+    <ul>
+      <li><a href="#storage-logs">Storage logs</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>WTF is KEDA? From <a href="https://keda.sh">their site</a>:</p>
+
+<blockquote>
+  <p>KEDA is a Kubernetes-based Event Driven Autoscaler. With KEDA, you can drive the scaling of any container in Kubernetes based on the number of events needing to be processed.</p>
+</blockquote>
+
+<p>The key word here is "event-driven".</p>
+
+<blockquote>
+  <p>KEDA works alongside standard Kubernetes components like the Horizontal Pod Autoscaler and can extend functionality without overwriting or duplication. With KEDA you can explicitly map the apps you want to use event-driven scale, with other apps continuing to function.</p>
+</blockquote>
+
+<p>This post won't deep dive into KEDA - at least not in its first version - since I haven't gotten any questions about it yet.</p>
+
+<p>But I'll explore some angles related to two NetApp storage arrays, E-Series and SolidFire (NetApp HCI uses SolidFire, too).</p>
+
+<p>The idea is to share some ideas about linking KEDA with these arrays, so that readers can see if there's anything of interest that could help them in their environment.</p>
+
+<p>I haven't <em>actually</em> tried KEDA, which is another reason why I won't (can't, really) deep-dive into it.</p>
+
+<h2 id="keda-concepts-and-components">KEDA concepts and components</h2>
+
+<p>Once deployed KEDA has 3 components and can make use of "scalers":</p>
+
+<ul>
+  <li>Agent — KEDA activates and deactivates Kubernetes Deployments to scale to and from zero on no events (keda-operator)</li>
+  <li>Metrics — KEDA acts as a Kubernetes metrics server that exposes rich event data like queue length or stream lag to the Horizontal Pod Autoscaler to drive scale out (keda-operator-metrics-apiserver container)</li>
+  <li>Admission Webhooks - API that automatically validates resource changes</li>
+  <li>Scalers - these are KEDA "plugins" that two two things: (a) detect if a deployment should be (de)activated and (b) feed custom metrics for a specific event source</li>
+</ul>
+
+<h2 id="scalers">Scalers</h2>
+
+<p>For v2.13 you can find a list of available scalers <a href="https://keda.sh/docs/2.13/scalers/">here</a>.</p>
+
+<p>I won't "recommend" any particular scaler because that always "depends", but I'll highlight two examples of scalers that are <em>not</em> application-specific.</p>
+
+<p>That is to say, you insert a value (0 or 1) by yourself, and based on that "event" or metric, KEDA does its thing. That way we can use these scalers for storage-related stuff, among other things.</p>
+
+<p>The first one is InfluxDB from that same page. The query triggers (or not) KEDA to do stuff if the result is over those threshold values.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">keda.sh/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ScaledObject</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">influxdb-scaledobject</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">my-project</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">scaleTargetRef</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">nginx-worker</span>
+  <span class="na">triggers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">influxdb</span>
+      <span class="na">metadata</span><span class="pi">:</span>
+        <span class="na">serverURL</span><span class="pi">:</span> <span class="s">http://influxdb:8086</span>
+        <span class="na">organizationNameFromEnv</span><span class="pi">:</span> <span class="s">INFLUXDB_ORG_NAME</span>
+        <span class="na">thresholdValue</span><span class="pi">:</span> <span class="s1">'</span><span class="s">4'</span>
+        <span class="na">activationThresholdValue</span><span class="pi">:</span> <span class="s1">'</span><span class="s">6'</span>
+        <span class="na">query</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">from(bucket: "bucket-of-interest")</span>
+          <span class="s">|&gt; range(start: -12h)</span>
+          <span class="s">|&gt; filter(fn: (r) =&gt; r._measurement == "stat")          </span>
+        <span class="na">authTokenFromEnv</span><span class="pi">:</span> <span class="s">INFLUXDB_AUTH_TOKEN</span>
+</code></pre></div></div>
+
+<p>My fork of E-Series Performance Analyzer (EPA) stores data in InfluxDB v1, and the above is for v2, so I'd have to modify "insert" queries to send to InfluxDB v2, and then compose a query based on my requirements.</p>
+
+<p>I've also created a script for SolidFire (I've been slowly updating HCI Collector to change it to work with InfluxDB) and here's an example of SolidFire volume efficiency metrics stored in InfluxDB v1.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">volume_efficiency</span><span class="p">;</span>
+<span class="n">name</span><span class="p">:</span> <span class="n">volume_efficiency</span>
+<span class="nb">time</span>                 <span class="n">account_id</span> <span class="n">cluster_name</span> <span class="n">cluster_uid</span> <span class="n">id</span>  <span class="n">volume_efficiency</span>
+<span class="c1">----                 ---------- ------------ ----------- --  -----------------</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">19</span><span class="n">T13</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">22</span><span class="n">Z</span> <span class="mi">1</span>          <span class="n">PROD</span>         <span class="n">wcwb</span>        <span class="mi">1</span>   <span class="mi">1</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">19</span><span class="n">T13</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">22</span><span class="n">Z</span> <span class="mi">1</span>          <span class="n">PROD</span>         <span class="n">wcwb</span>        <span class="mi">2</span>   <span class="mi">1</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">19</span><span class="n">T13</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">22</span><span class="n">Z</span> <span class="mi">10</span>         <span class="n">PROD</span>         <span class="n">wcwb</span>        <span class="mi">108</span> <span class="mi">1</span>
+<span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">19</span><span class="n">T13</span><span class="p">:</span><span class="mi">16</span><span class="p">:</span><span class="mi">22</span><span class="n">Z</span> <span class="mi">6</span>          <span class="n">PROD</span>         <span class="n">wcwb</span>        <span class="mi">36</span>  <span class="mi">1</span><span class="p">.</span><span class="mi">46</span>
+</code></pre></div></div>
+
+<p>For a specific volume we'd need to know which volume to query, so the query would have to use the right VolumeID such as <code class="language-plaintext highlighter-rouge">WHERE id='36'</code> and it would take some additional effort to figure that out.</p>
+
+<p>We could create the PVC first and use a sidecar that queries Kubernetes to find the PVC and PV name and then SolidFire to find the volume ID. Or, if the application never scaled to less than 1, we could create the first PVC and use the fixed Volume ID by observing PV's ID on SolidFire.</p>
+
+<p>The second example is Elasticsearch scaler, which also lets you scale applications based on Elasticsearch query results.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">keda.sh/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ScaledObject</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">elasticsearch-scaledobject</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">scaleTargetRef</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">deployment-name"</span>
+  <span class="na">triggers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+      <span class="na">metadata</span><span class="pi">:</span>
+        <span class="na">addresses</span><span class="pi">:</span> <span class="s2">"</span><span class="s">http://localhost:9200"</span>
+        <span class="na">username</span><span class="pi">:</span> <span class="s2">"</span><span class="s">elastic"</span>
+        <span class="na">index</span><span class="pi">:</span> <span class="s2">"</span><span class="s">my-index"</span>
+        <span class="na">searchTemplateName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">my-search-template"</span>
+        <span class="na">valueLocation</span><span class="pi">:</span> <span class="s2">"</span><span class="s">hits.total.value"</span>
+        <span class="na">targetValue</span><span class="pi">:</span> <span class="s2">"</span><span class="s">10"</span>
+        <span class="na">parameters</span><span class="pi">:</span> <span class="s2">"</span><span class="s">dummy_value:1"</span>
+      <span class="na">authenticationRef</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">keda-trigger-auth-elasticsearch-secret</span>
+</code></pre></div></div>
+
+<p>This <a href="/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html">post</a> explains how to get SolidFire metrics and/or logs into Elasticsearch.</p>
+
+<p>So we already have all we need to gather storage metrics we need and configure KEDA to use them.</p>
+
+<h2 id="keda-and-persistent-storage">KEDA and persistent storage</h2>
+
+<p>KEDA's connection to storage seems almost irrelevant because it's "indirect" in the sense that if the storage is slow, the application will be slow, too.</p>
+
+<p>Because of that, one may think that it's simpler and "better" to watch service or application latency (for example), and ignore storage: as application scales out, storage performance increases as well.</p>
+
+<p>As an <a href="https://keda.sh/docs/2.13/scalers/cpu/#example">example</a>, here's a no-brainer approach for CPU based auto-scaling when CPU utilization hits 70%.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">keda.sh/v1alpha1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ScaledObject</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">cpu-scaledobject</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">scaleTargetRef</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">database-deployment</span>
+  <span class="na">triggers</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">cpu</span>
+    <span class="na">metricType</span><span class="pi">:</span> <span class="s">Utilization</span> <span class="c1"># Allowed types are 'Utilization' or 'AverageValue'</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">70"</span>
+      <span class="na">containerName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">mongodb"</span>
+</code></pre></div></div>
+
+<p>Now we just sit and watch. Right? Well, <em>probably</em> not. Why?</p>
+
+<ul>
+  <li>Remember the key word from the beginning (event-driven)?</li>
+  <li>The other obvious property is auto-scaling, which sometimes may be the best way to auto-scale, but it's not always the best answer</li>
+</ul>
+
+<p>A no-brainer approach may yield a no-brainer result.</p>
+
+<p>This isn't to say if you completely ignore the storage, KEDA may or may not work well.</p>
+
+<p>In most cases you can ignore storage, watch the application or compute resources and you'll be fine, but in other cases not ignoring storage features may make KEDA work even better, or more efficiently.</p>
+
+<p>Let's consider potential opportunities for storage that I got by RTFM and which I may explored in a future post or future versions of this post if I make updates.</p>
+
+<p>Each of these arrays is quite different:</p>
+
+<ul>
+  <li>SolidFire has storage QoS and works NetApp Trident (CSI driver)</li>
+  <li>E-Series does not have storage QoS and works with several non-HA drivers</li>
+</ul>
+
+<h3 id="solidfire">SolidFire</h3>
+
+<p>As a quick reminder, NetApp Astra Trident CSI can create storage classes which specify the minimum, maximum and burst IOPS (and consequently MB/s) for SolidFire volumes.</p>
+
+<p>SolidFire-aware scaling may be interesting when our custom approach outperforms more generic metrics (Web server's latency or NoSQL cluster's CPU utilization).</p>
+
+<p>When would that be and how can SolidFire-influence scalers help?</p>
+
+<p><strong>Storage performance</strong>: if your application is IO-intensive, and especially if you constrain it with a narrowly-defined QoS specification, it may be better for KEDA to be driven by storage than application events because it's more likely that the application may be hitting Maximum QoS limit on a sustained basis.</p>
+
+<p>This can happen in the situation where the storage is generally low on unused IOPS, so the admin tries to use a low Minimum IO limit, and a low Maximum IO limit. KEDA can rely on one of SolidFire performance metrics (such as volume <em>performance</em> utilization, queue depth, etc) to allow you to use a low-performance storage class but at the same time avoid situations where you have to "re-type" volumes because you misjudged application requirements.</p>
+
+<p><strong>Storage capacity</strong>: SolidFire thin-provisions by default (and there's no way to thick-provision), but some users like to right-size volumes.</p>
+
+<p>When you right-size, it can also be dangerous if storage utilization becomes unexpectedly higher. Trident lets you resize volumes, but it can't shrink them.</p>
+
+<p>Sometimes it's better to resize, other times it's better to over-provision, but there are also times and situations where people like to right-size and KEDA could read disk fullness off SolidFire and scale out accordingly. This is not always the best (because full volumes can continue getting even fuller), but it may be best in certain situations.</p>
+
+<p><strong>Storage efficiency</strong>: sometimes you may have large volumes which you may not want to recklessly scale-out because you could run out of space, but this depends on data - if data is highly efficient (volume storage efficiency factor &gt; 6), we could let the application scale out more. This indicator could also be used as one of components in an aggregate metric. (See that earlier InfluxDB query with SolidFire volume efficiency.)</p>
+
+<p><strong>Aggregate metric</strong>: SolidFire caps iSCSI clients' IO queue at 32 per connection; while this is normally enough for most small and medium applications, it may be insufficient for larger databases and such.</p>
+
+<p>One common "workaround" is to create multiple iSCSI connections from the initiator, but if your application can scale out (e.g. MongoDB, NGINX…) you may prefer to watch for both fullness and queue depth and if both are critical, scale-out.</p>
+
+<p>Normally auto-scaling MongoDB should decrease disk fullness due to data rebalancing, but it may not always work the way you want (see [1]). In the case of NGINX, auto-scaling won't decrease content size of NGINX sites, but it may slow down the rate of increase in PVC fullness because the same logs would be spread across more volumes (if you log to disk).</p>
+
+<p>[1] "If the disk fills too quickly, Atlas might not be able to expand the cluster's storage space in time, even if Auto-Expand Storage is enabled." (Source: <a href="https://www.mongodb.com/docs/atlas/reference/alert-resolutions/disk-space-used/#common-triggers">MongoDB</a>)</p>
+
+<p>SolidFire metrics can be easily obtained (one <a href="/2021/03/08/hcicollector-v0.7.html">example</a>) and inserted into one of KEDA scalers for querying. See my Github <a href="https://github.com/scaleoutsean/awesome-solidfire/">repo Awesome SolidFire</a> for more on monitoring and metrics options for SolidFire, or search this blog.</p>
+
+<h3 id="e-series">E-Series</h3>
+
+<p>E-Series works with BeeGFS CSI (in a BeeGFS cluster file system environment only) and single-host CSI drivers about which I blogged <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">here</a>: DirectPV, TopoLVM, etc.</p>
+
+<p>You can check the archive or use search to find more about BeeGFS CSI. BeeGFS is a scale-out filesystem that can span across multiple arrays; even a single (sufficiently large) file can be chunked across multiple LUNs and arrays.</p>
+
+<p>So if you got that kind of an environment, it's easy to scale it out on compute side while "ignoring" storage (as far as KEDA is concerned).</p>
+
+<p>Here I'll focus on the single-host CSI approach because that that's the more challenging and less popular situation which is insufficiently appreciated.</p>
+
+<p>As I mentioned in that related post, single-host CSI drivers can work with E-Series LUNs (physical volumes) that are protected or <strong>un</strong>protected (JBOD-style).</p>
+
+<p>Some people think nobody needs JBOD-style PVs, but I disagree.</p>
+
+<p>You get decent performance, no overhead and if your application scales out <em>and</em> replicates data, there's no reason to not consider non-RAID-ed disks for some PVCs, and RAID-protected (1/10, 5, 6) LUNs for other.</p>
+
+<p>For example, you may run Elasticsearch with DirectPV on XFS-formatted JBOD disks using Elasticsearch to make three copies (2-replica)  and at the same time have a big RAID 6 with 5 volumes used by MinIO (EC:1) for tiering to S3 in the same array.</p>
+
+<p>All right, where does KEDA come in? My initial thoughts:</p>
+
+<p><strong>Disk fullness</strong>: even if the performance is fine, if disk is over 70% full, we may want to scale out and provision additional volumes for the application. This can probably be done by the application, but it may be harder.</p>
+
+<p><strong>Performance</strong>: we could use KEDA's InfluxDB scaler which lets us specify a query that triggers scaling events; <a href="https://github.com/scaleoutsean/eseries-perf-analyzer">EPA</a> can collect these metrics for you, or you can gather them yourself: maybe it's total array IOPS, maybe controller CPU utilization, maybe something else.</p>
+
+<p>If your workload bottleneck is disk performance, this could work better than application metrics.</p>
+
+<p><strong>Aggregate storage metric</strong>: use weighted value comprised of several metrics to trigger (or not) scaling up/down.</p>
+
+<p>Combine latency and queue depth, for example, and if their sum goes over or under a certain limit, trigger up- or down-scaling. Or combine capacity, performance and application metrics into one value. This may result in a better decision than just a single value.</p>
+
+<h2 id="storage-related-events">Storage-related events</h2>
+
+<p>This applies to both SolidFire and E-Series: we may want to scale-out your horizontally scalable application as long as it can perform faster, with the objective to minimize run time (time to result). This can be risky (scaling out as much as you can) but sometimes that's the first priority.</p>
+
+<p>On SolidFire you could calculate "Minimum IOPS allocated", and as long as that value is below the total of the cluster, you could scale out: after all, it doesn't cost you anything.</p>
+
+<p>Let's say your cluster guarantees 200,000 IOPS and there's just one important workload (CI/CD build farm, for example). We could sum up all volumes' Minimum IO value (MIN_IO_TOTAL) and if MIN_IO_TOTAL &gt; (200,000 x 80%), signal 0 (don't scale out), or else 1 (auto scale-out).</p>
+
+<p>On E-Series we could look at the controllers' CPU utilization. If &lt; 80%, auto-scale out, if &gt; 80%, do nothing (in which case we'd drop to <code class="language-plaintext highlighter-rouge">minReplicaCount</code>, perhaps).</p>
+
+<p>Another possibility is to look at storage throughput, especially with E-Series which often has just one-two applications per array. If the array performs faster than a single server then we can benefit from scaling that workload out, but also to 0 when there's nothing to do so that other application(s) can consume storage performance.</p>
+
+<p>We could even use storage indicators on filesystem level: determine how much data there is, and based on that configure KEDA's auto-scaling before you run a parallel batch job, for example. For this we may need BeeGFS (and BeeGFS CSI), but if data is replicated to multiple volumes even single-host filesystem could benefit from this approach.</p>
+
+<h3 id="storage-logs">Storage logs</h3>
+
+<p>I have this as a separate category of storage-related events because of two reasons:</p>
+
+<ul>
+  <li>Storage array logs are usually gathered differently (for example, by forwarding them to a syslog server and pre-processing before it can be used)</li>
+  <li>It's not just numbers that can be massaged to produce desired outcomes, but text (error messages) and event IDs, that we'd have to use</li>
+</ul>
+
+<p>So this is more challenging, but can let us create unique events.</p>
+
+<p>For example, we could auto-scale application down to minimum if a volume group is rebuilding, if one E-Series controller is down, or if SolidFire node count is below certain limit (i.e. a storage node went down).</p>
+
+<p>I wouldn't go too crazy on this approach as it can create unpredictable consequences, but advanced users may find it useful.</p>
+
+<p>If your application will time-out or jobs fail, it may be better to automatically reduce the number of jobs than fail due to I/O timeouts, or cause timeouts on a whole bunch of more important applications using the same array.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Based on what I've seen in the documentation I came up with some scenarios that seem feasible.</p>
+
+<p>Kubernetes is complicated enough so I wouldn't encourage you to unnecessarily complicate your environment and introduce unpredictability to storage and/or application behavior, but I believe that KEDA can sometimes take advantage of disk array characteristics.</p>
+
+<p>Again, I haven't actually tried any of these scenarios, but maybe I will. I would also encourage you to come up with your own scenarios and evaluate them on your own.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/autoscaling" class="page__taxonomy-item p-category" rel="tag">autoscaling</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/keda" class="page__taxonomy-item p-category" rel="tag">keda</a><span class="sep">, </span>
+    
+      <a href="/tags/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/trident" class="page__taxonomy-item p-category" rel="tag">trident</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/automation" class="page__taxonomy-item p-category" rel="tag">automation</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2024-01-24T00:00:00+08:00">2024-01-24 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Kubernetes+KEDA+with+NetApp+SolidFire+and+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2024%2F01%2F24%2Fkubernetes-keda-netapp-solidfire-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2024/01/24/kubernetes-keda-netapp-solidfire-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2024/01/10/ai-deep-learning-pytorch-checkpointing-eseries.html" class="pagination--pager" title="PyTorch checkpointing workload with NetApp E-Series">Previous</a>
+    
+    
+      <a href="/2024/01/24/netapp-eseries-as-veeam-hardened-repository.html" class="pagination--pager" title="NetApp E-Series DAS or SAN storage as Veeam Hardened Repository">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

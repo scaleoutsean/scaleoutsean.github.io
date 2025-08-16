@@ -1,0 +1,837 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Per-site erasure-coded copies of data with NetApp StorageGRID | Acting Technologist</title>
+<meta name="description" content="This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Per-site erasure-coded copies of data with NetApp StorageGRID">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html">
+
+
+  <meta property="og:description" content="This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Per-site erasure-coded copies of data with NetApp StorageGRID">
+  <meta name="twitter:description" content="This posts talks about modifying default NetApp StorageGRID ILM rules to get per-site erasure-coded copies of your data">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-08-22T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Per-site erasure-coded copies of data with NetApp StorageGRID">
+    <meta itemprop="description" content="Introduction">
+    <meta itemprop="datePublished" content="2023-08-22T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html" itemprop="url">Per-site erasure-coded copies of data with NetApp StorageGRID
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-08-22T00:00:00+08:00">2023-08-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>By default NetApp StorageGRID uses "2 Copy" ILM policy: make 2 copies anywhere, as long as it's on different nodes.</p>
+
+<p>Because StorageGRID storage nodes use protected storage (RAID-like, not JBOD), storage node's data is already protected from disk drive loss.</p>
+
+<p>As always, there are situations where people want, need or must customize.</p>
+
+<h2 id="grid-with-custom-requirements">Grid with custom requirements</h2>
+
+<p>Say we have a grid with 9 storage nodes total, deployed in three data centers (San Diego, Dublin, Bangalore).</p>
+
+<p>Because 3 storage nodes is the minimum "pool" size, we know a 9-node grid deployed at three sites has 3 nodes per site.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-01.png" alt="Three-site StorageGRID" /></p>
+
+<p>By default, StorageGRID will make 2 copies of each object, sometimes even at the same site. There are no other considerations.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-02-2-copy.png" alt="Three-site StorageGRID with 2 copy policy" /></p>
+
+<p>Both media files (film roll icon) and smaller files (red circle) are replicated on different storage nodes, regardless of object size.</p>
+
+<p>If we look at StorageGRID settings we'll see a default storage pool (all 9 storage nodes belong to it).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-04-default-storage-pool.png" alt="Default storage pool" /></p>
+
+<p>There's a default rule that says "save 2 copies on different nodes".</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-05-default-ilm-rule.png" alt="Default ILM rule" /></p>
+
+<p>This grid's administrator has received the instructions to implement a new ILM policy:</p>
+<ul>
+  <li>Two copies is enough, but each should be in a different DC, preferably San Diego and Dublin</li>
+  <li>For large objects, Erasure Coding can save capacity (and cost), so it should be applied on objects larger than or equal to 1MB</li>
+</ul>
+
+<p>The third site (Bangalore) is not yet in production. It will be used by R&amp;D in Bangalore, and ILM rules for it will be added later.</p>
+
+<p>What we want is:</p>
+<ul>
+  <li>For any and all objects, make two copies - one at DC1, another at DC2</li>
+  <li>For objects that are 1MB or larger, apply EC 2+1</li>
+</ul>
+
+<p>The first rule eliminates the possibility that both copies get saved at the same site.</p>
+
+<p>The second rule means non-small objects will be cut in two data and one parity chunks. Objects smaller than 1 MB will not be erasure-coded.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-03-ec.png" alt="Three-site StorageGRID with copy-per-site and EC policy" /></p>
+
+<h2 id="what-needs-to-be-done">What needs to be done</h2>
+
+<ul>
+  <li>We need to tell StorageGRID which storage nodes' data belongs to "DC1" and "DC2", respectively</li>
+  <li>We need to define an Erasure Coding profile, if possible</li>
+  <li>With these details available, we build a rule set for our new ILM policy</li>
+  <li>The new (proposed) ILM policy changes "2 Copy" approach to what we mentioned earlier</li>
+  <li>If simulation works as expected, we activate the policy</li>
+</ul>
+
+<p>Let's look at some (not all) of these items and discuss some noteworthy details.</p>
+
+<h3 id="storage-pools">Storage pools</h3>
+
+<p>Since we tagged each site's nodes, we can use those tags to define storage pools. We need only two pools at this time (for DC1 and DC2).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-06-storage-pool-by-dc.png" alt="Define a pool by using DC tags" /></p>
+
+<h3 id="erasure-coding-profile">Erasure Coding profile</h3>
+
+<p>As mentioned earlier, with 3 storage nodes per site we can't do EC 6+3: StorageGRID uses 1 chunk per storage node.</p>
+
+<p>In this situation we can do EC 2+1 and should a node fail, grid would by default temporarily use 2 Copy policy because at least 3 nodes are required to write 2+1 chunks (reads of EC 2+1 data will work with 2 nodes).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-07-ec-pool-2-1.png" alt="EC 2+1" /></p>
+
+<p>This is why we'd choose (or not change) Balanced, and not pick Strict, ILM consistency - to avoid having to deal with failures if a node goes down. (See that further below, in ILM screenshots.)</p>
+
+<p>EC profiles "one" and "two" have been created. Each uses storage pool at its own site (DC1, DC2).</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-08-ec-pool-2-1-with-redundancy.png" alt="EC profiles for DC1 and DC2" /></p>
+
+<p>Note: do not get confused by "Storage Node Redundancy: one" in this screenshot!</p>
+
+<p>That's data redundancy: EC 2+1 is 2D1P, so a StorageGRID pool can lose a node without <em>losing data</em> - i.e. that's for resilience only. But one can't save an object in 2D1P fashion if you have only 1 or 2 nodes up &amp; running (we need at least 3 nodes in the pool)! That's why we use Balanced ILM policy (see below) to achieve better service uptime during temporary storage node downtime.</p>
+
+<p>In other words, EC 2+1 needs at least 3 storage nodes to be even considered (we could choose to give up on it and choose 2 Copy policy). We could not "force" EC 4+1 in this pool because we don't have 5 storage nodes in it.</p>
+
+<h3 id="propose-ilm-policy">Propose ILM policy</h3>
+
+<p>When proposing a new ILM policy, we "lead" with the new requirements, but we need a default ILM rule to catch whatever objects that failed to match any of those fancy rules we configured.</p>
+
+<p>In demo video linked below, I use a strict interpretation of where to save what, and configure two sets of rules:</p>
+<ul>
+  <li>Replication: make 1 copy in DC1, 1 copy in DC2</li>
+  <li>EC: <em>if</em> object is &gt;=1MB, use EC 2+1</li>
+</ul>
+
+<p><img src="/assets/images/storagegrid-3-dc-10-ilm-rules-replica-and-ec-for-1mb-plus.png" alt="Rules for replication and EC for 1MB+ objects" /></p>
+
+<p>Because some objects may be smaller than 1MB and EC isn't recommended for tiny objects, our default rule doesn't do EC.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-11-ilm-rules-replica-and-ec-for-1mb-plus-default.png" alt="Default is just two copies in DC1 and DC2" /></p>
+
+<p>Closer look at default rule:</p>
+<ul>
+  <li>Replication: make 1 copy in DC1, 1 copy in DC2</li>
+</ul>
+
+<p><img src="/assets/images/storagegrid-3-dc-12-ilm-rules-replica-as-default.png" alt="Default ILM rule saves a copy in both DC1 and DC2" /></p>
+
+<p>In this imaginary scenario, &lt; 1MB objects will match the default rule and be saved a copy per each of DC1 and DC2. This means DC3 will remain empty, as per the new requirement.</p>
+
+<p>But once DC3 site is live, grid admin would likely be asked to add another rule that makes use of DC3 capacity. These could use DC3 locally, or even globally. Examples:</p>
+<ul>
+  <li>Use DC3 (Bangalore) capacity only for local R&amp;D: the rule to add could be something like "if client IP is one of internal Bangalore IPs, make 2 copies in DC3"</li>
+  <li>Use DC3 by all users: add another rule, whether by user (Active Directory group "Engineering"), bucket name ("engineering") or something else, so that matching objects are always saved 1 copy in DC3 and another not in DC2 (i.e. elsewhere)</li>
+</ul>
+
+<p>As mentioned earlier, if it's not critical that rules be immediately applied, we can use Balanced (default) rather than Strict.</p>
+
+<p><img src="/assets/images/storagegrid-3-dc-09-balanced-ilm.png" alt="Balanced vs. Strict ILM rules" /></p>
+
+<h3 id="simulate-and-activate">Simulate and activate</h3>
+
+<p>In the demo I simulate rule matching by picking a small object. To have the policy completely simulated I would only need to pick one more (&gt;1 MB large) object. It's trivial because my conditions are simple.</p>
+
+<p>But in real life rules are usually more complex - people want them per bucket, per user, per IP range, etc - and because there's no "Undo" it's very important to get simulation right. I strongly recommend to use VM-based StorageGRID nodes and try there before activating a  new ILM policy. In the worst case you can even delete your own data (by selecting a wrong rule that's used to delete old data from a temporary bucket, for example)!</p>
+
+<h2 id="demo">Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v3aavn5-example-of-using-per-site-and-erasure-coding-rules-and-ilm-policies.html">Example of using per-site and Erasure Coding rules and ILM policies"</a> - 7m28s</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Some object storage is fairly rigid and data protection policy (EC, etc.) picked at the start remains the only, or maybe default (the rest must be dealt with by setting very narrow exceptions), policy.</p>
+
+<p>A StorageGRID cluster may span multiple sites, but that still allows us to create custom ILM policies that deal with just one or two sites.</p>
+
+<p>In this post we saw how easy it is to apply new rules and achieve our objectives.</p>
+
+<p>Most users want to customize further, so it's highly recommended to build a VM-based StorageGRID cluster and execute detailed simulations before applying a new policy on TBs of data. For very complex grids, maybe even write ILM tests that use the S3 and StorageGRID API to run and validate rules on a sandbox grid.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/ec" class="page__taxonomy-item p-category" rel="tag">ec</a><span class="sep">, </span>
+    
+      <a href="/tags/erasure-coding" class="page__taxonomy-item p-category" rel="tag">erasure coding</a><span class="sep">, </span>
+    
+      <a href="/tags/ilm" class="page__taxonomy-item p-category" rel="tag">ilm</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/policy" class="page__taxonomy-item p-category" rel="tag">policy</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-08-22T00:00:00+08:00">2023-08-22 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Per-site+erasure-coded+copies+of+data+with+NetApp+StorageGRID%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F08%2F22%2Fstoragegrid-simple-two-site-copy-and-ec-ilm-example.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/08/22/storagegrid-simple-two-site-copy-and-ec-ilm-example.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/08/21/trident-new-stateful-set-delete-feature.html" class="pagination--pager" title="StatefulSet PVC Retention with Trident and SolidFire">Previous</a>
+    
+    
+      <a href="/2023/08/26/solidfire-backup-to-ontap-s3.html" class="pagination--pager" title="SolidFire backup-to-S3 using ONTAP S3 destination">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

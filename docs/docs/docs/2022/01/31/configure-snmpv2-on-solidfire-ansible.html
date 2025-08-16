@@ -1,0 +1,858 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Configure SNMP on SolidFire cluster using Ansible | Acting Technologist</title>
+<meta name="description" content="How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Configure SNMP on SolidFire cluster using Ansible">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html">
+
+
+  <meta property="og:description" content="How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Configure SNMP on SolidFire cluster using Ansible">
+  <meta name="twitter:description" content="How to configure SNMP on SolidFire cluster using Ansible and some thoughts on when to use Ansible">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-01-31T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Configure SNMP on SolidFire cluster using Ansible">
+    <meta itemprop="description" content="NOTICE: all credentials and tokens on this page are samples, not leaked.">
+    <meta itemprop="datePublished" content="2022-01-31T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html" itemprop="url">Configure SNMP on SolidFire cluster using Ansible
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-01-31T00:00:00+08:00">2022-01-31 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p><strong>NOTICE:</strong> all credentials and tokens on this page are samples, not leaked.</p>
+
+<p>I mentioned Ansible in my <a href="/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html">last post</a> and that reminded me that I haven't written about it for a while. And even in that post I mentioned it only as an example how its use could be <em>avoided</em> with the NetApp Data Ops Toolkit.</p>
+
+<p>In the context of my favorite topic, SolidFire, I think I haven't mentioned it for months. Why? Because I rarely need it for SolidFire.</p>
+
+<p>This isn't to say that it's not useful - if you have more than one cluster or if you make frequent or complex changes to SolidFire cluster configuration, it is very useful.</p>
+
+<p>But despite that, I rarely - in fact almost never - get any questions about it.</p>
+
+<p>Why is that? I think it's very simple:</p>
+
+<ul>
+  <li>SolidFire easily and nicely scales out to dozens of nodes, so very few users have multiple clusters. Normally that could mean 30 arrays and 60 volume groups to manage, but with SolidFire you have one cluster and no volume groups to manage</li>
+  <li>Users who do have multiple SolidFire clusters and use Ansible are likely to have a lot of other infra (if you have 50 SolidFire nodes, you probably have hundreds of servers), and therefore the staff and expertise that eliminates SolidFire-specific challenges</li>
+</ul>
+
+<p>People who have just one or two clusters can manage them just fine with PowerShell or Python SDK - there's very little to manage on SolidFire (accounts, volumes, QoS policies) so even with thousands of VMs or containers, it's easy to manage with DIY PowerShell scripts. Some anecdotal examples:</p>
+
+<ul>
+  <li>Reasonably reliable SolidFire cluster failover script in less than 200 lines of PowerShell (video demo on YouTube)</li>
+  <li>SolidFire cluster and Trident back-end failover script in less than 300 lines (video demo on YouTube; I haven't published)</li>
+  <li>Parallel SolidFire volume backup to S3 (210 lines of PowerShell in my awesome-solidfire repo on Github)</li>
+</ul>
+
+<p>To do the same with Ansible you may need fewer lines, but you also need to:</p>
+
+<ul>
+  <li>Install, understand and maintain Ansible</li>
+  <li>The same for SolidFire collection for Ansible</li>
+  <li>Write own modules or scripts for things that haven't been implemented (curl and JSON-RPC seems much better than doing the same in Python, but then one has to wonder why use Ansible at all)</li>
+</ul>
+
+<p>Again, all of that is easily justified when you have multiple clusters or use Ansible to automate other stuff.</p>
+
+<p>All right, enough ranting - let's do this thing. SolidFire has many Ansible modules but I picked SNMP because I've done a lot of <a href="/2021/07/19/solidfire-mib-snmp-monitoring.html">SNMP</a> and <a href="/2021/08/13/solidfire-snmp-v3-grafana.html">monitoring</a>-related work (see blog archive) so with this post I'll complete that work.</p>
+
+<p>My sf_snmp.yml:</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Configure SolidFire SNMPv2</span>
+  <span class="na">hosts</span><span class="pi">:</span> <span class="s">localhost</span> 
+  <span class="na">gather_facts</span><span class="pi">:</span> <span class="s">no</span>
+  <span class="na">connection</span><span class="pi">:</span> <span class="s">local</span>
+
+  <span class="na">vars</span><span class="pi">:</span>
+    <span class="na">elementsw_hostname</span><span class="pi">:</span> <span class="s">192.168.1.34</span>
+    <span class="na">elementsw_username</span><span class="pi">:</span> <span class="s">admin</span>
+    <span class="na">elementsw_password</span><span class="pi">:</span> <span class="s">wink-wink</span>
+
+  <span class="na">tasks</span><span class="pi">:</span>  
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Configure SNMP on SolidFire</span>
+      <span class="na">na_elementsw_cluster_snmp</span><span class="pi">:</span>
+        <span class="na">hostname</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_hostname</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">username</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_username</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">elementsw_password</span><span class="nv"> </span><span class="s">}}"</span>
+        <span class="na">state</span><span class="pi">:</span> <span class="s">present</span>
+        <span class="na">snmp_v3_enabled</span><span class="pi">:</span> <span class="s">False</span>
+        <span class="na">networks</span><span class="pi">:</span>
+          <span class="na">access</span><span class="pi">:</span> <span class="s">ro</span>
+          <span class="na">cidr</span><span class="pi">:</span> <span class="m">24</span>
+          <span class="na">community</span><span class="pi">:</span> <span class="s">MgmtNetwork</span>
+          <span class="na">network</span><span class="pi">:</span> <span class="s">192.168.1.0</span>
+</code></pre></div></div>
+
+<p>Some comments:</p>
+
+<ul>
+  <li>we use SolidFire Python SDK and because of that we operate against localhost</li>
+  <li>we don't need to gather_facts</li>
+</ul>
+
+<p>Result:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin"
+
+PLAY [SolidFire SNMPv2 Config] *****************************************************************************************
+
+TASK [Configure SNMP on SolidFire] *************************************************************************************
+ok: [localhost]
+
+PLAY RECAP *************************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+</code></pre></div></div>
+
+<p>Let's compare that with SoliFire PowerShell Tools:</p>
+
+<ul>
+  <li>For SNMPv2 we need a list Networks (with at least one member hashtable) which you can build or Get</li>
+  <li>PowerShell will save you 1-2 seconds, but if you do this once in five years that won't matter</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$snmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-SFSnmpInfo</span><span class="w">
+
+</span><span class="n">Networks</span><span class="w">                                                                                 </span><span class="nx">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w"> </span><span class="nx">UsmUsers</span><span class="w">
+</span><span class="o">--------</span><span class="w">                                                                                 </span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w"> </span><span class="o">--------</span><span class="w">
+</span><span class="p">{{</span><span class="s2">"Access"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ro"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cidr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="s2">"Community"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MgmtNetwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Network"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"192.168.1.0"</span><span class="p">}}</span><span class="w">    </span><span class="n">True</span><span class="w">         </span><span class="nx">False</span><span class="w"> 
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w">
+
+</span><span class="n">Access</span><span class="w"> </span><span class="nx">Cidr</span><span class="w"> </span><span class="nx">Community</span><span class="w">   </span><span class="nx">Network</span><span class="w">
+</span><span class="o">------</span><span class="w"> </span><span class="o">----</span><span class="w"> </span><span class="o">---------</span><span class="w">   </span><span class="o">-------</span><span class="w">
+</span><span class="n">ro</span><span class="w">       </span><span class="nx">24</span><span class="w"> </span><span class="nx">MgmtNetwork</span><span class="w"> </span><span class="nx">192.168.1.0</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Set-SFSnmpInfo</span><span class="w"> </span><span class="nt">-Network</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w"> </span><span class="nt">-Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-SnmpV3Enabled</span><span class="p">:</span><span class="nv">$False</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
+
+</span><span class="n">Networks</span><span class="w">                                                                                 </span><span class="nx">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w"> </span><span class="nx">UsmUsers</span><span class="w">
+</span><span class="o">--------</span><span class="w">                                                                                 </span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w"> </span><span class="o">--------</span><span class="w">
+</span><span class="p">{{</span><span class="s2">"Access"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ro"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cidr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="s2">"Community"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MgmtNetwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Network"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"192.168.1.0"</span><span class="p">}}</span><span class="w">    </span><span class="n">True</span><span class="w">         </span><span class="nx">False</span><span class="w"> 
+
+</span></code></pre></div></div>
+
+<p>To do the same for SNMPv3 you'd need to add a USM user before you Set:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nv">$user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Add-SFSnmpUsmUser</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">admin</span><span class="w"> </span><span class="nt">-Access</span><span class="w"> </span><span class="nx">rouser</span><span class="w"> </span><span class="nt">-Password</span><span class="w"> </span><span class="nx">password</span><span class="w"> </span><span class="nt">-Passphrase</span><span class="w"> </span><span class="nx">passphrase</span><span class="w"> </span><span class="nt">-SecLevel</span><span class="w"> </span><span class="nx">auth</span><span class="w">
+
+</span><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Set-SFSnmpInfo</span><span class="w"> </span><span class="nt">-Networks</span><span class="w"> </span><span class="nv">$snmp</span><span class="o">.</span><span class="nf">Networks</span><span class="w"> </span><span class="nt">-Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-SnmpV3Enabled</span><span class="p">:</span><span class="bp">$true</span><span class="w"> </span><span class="nt">-UsmUsers</span><span class="w"> </span><span class="nv">$user</span><span class="o">.</span><span class="nf">UsmUsers</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="bp">$false</span><span class="w">
+</span></code></pre></div></div>
+
+<p>To disable SNMP with PowerShell:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">Disable-SFSnmp</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="nv">$False</span><span class="w">
+
+</span><span class="n">Enabled</span><span class="w"> </span><span class="nx">SnmpV3Enabled</span><span class="w">
+</span><span class="o">-------</span><span class="w"> </span><span class="o">-------------</span><span class="w">
+  </span><span class="n">False</span><span class="w">         </span><span class="nx">False</span><span class="w">
+</span></code></pre></div></div>
+
+<p>SNMPv3 can also be configured via Ansible - just change snmp_v3_enabled to True and add a block with USM configuration:</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="na">snmp_v3_enabled</span><span class="pi">:</span> <span class="s">True</span>
+    <span class="na">usm_users</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">admin</span>
+      <span class="na">access</span><span class="pi">:</span> <span class="s">rouser</span>
+      <span class="na">password</span><span class="pi">:</span> <span class="s">passphrase</span>
+      <span class="na">passphrase</span><span class="pi">:</span> <span class="s">passphrase</span>
+      <span class="na">secLevel</span><span class="pi">:</span> <span class="s">auth</span>
+</code></pre></div></div>
+
+<p>You can have just one YAML file with SNMPv3 in it, and disable it when configuring SNMPv2:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin;state=present;snmp_v3_enabled=false" 
+</code></pre></div></div>
+
+<p>To disable SNMP server with Ansible, set state to false (absent):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ansible-playbook sf-snmp.yml --extra-vars "elementsw_password=admin;state=false"
+
+PLAY [SolidFire SNMPv2 Config] *****************************************************************************************
+
+TASK [Configure SNMP on SolidFire] *************************************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************
+localhost                  : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+</code></pre></div></div>
+
+<h2 id="summary">Summary</h2>
+
+<p>Both approaches are valid and work better than manual operations through the Web UI or Hybrid Cloud Control.</p>
+
+<p>If you already use Ansible for other infrastructure than SolidFire, or have more than one SolidFire cluster, you'll probably find more suitable for SolidFire management than PowerShell.</p>
+
+<p>If you don't like Python you can still use SolidFire PowerShell Tools in place of missing SolidFire modules or even instead of NetApp Element Software modules you don't like (maybe they don't do something you can do with PowerShell, or aren't available yet).</p>
+
+<p>Use ansible.windows.win_powershell or other (shell) module to execute your PowerShell scripts from within Ansible. Could we run Ansible from PowerShell rather than PowerShell from Ansible? Yes, that works too - that's the approach I use in solidbackup: I use PowerShell for all the SolidFire-related stuff because it's much better and faster than Ansible, but I don't want to use PowerShell to deal with the rest - namely Linux devices and mounts - because Ansible is much better for that.</p>
+
+<p>All these scripts aren't very long and take mere hours to develop, so you can find what's best for you by doing just two-three simple PoCs.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/ansible" class="page__taxonomy-item p-category" rel="tag">ansible</a><span class="sep">, </span>
+    
+      <a href="/tags/api" class="page__taxonomy-item p-category" rel="tag">api</a><span class="sep">, </span>
+    
+      <a href="/tags/monitoring" class="page__taxonomy-item p-category" rel="tag">monitoring</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/snmp" class="page__taxonomy-item p-category" rel="tag">snmp</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-01-31T00:00:00+08:00">2022-01-31 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Configure+SNMP+on+SolidFire+cluster+using+Ansible%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F01%2F31%2Fconfigure-snmpv2-on-solidfire-ansible.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/01/31/configure-snmpv2-on-solidfire-ansible.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html" class="pagination--pager" title="StorageGRID S3 in Public Cloud workflows without Data-at-Rest">Previous</a>
+    
+    
+      <a href="/2022/02/14/middle-class-rbac-solidfire-ansible.html" class="pagination--pager" title="SolidFire RBAC workflow with Ansible">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

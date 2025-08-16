@@ -1,0 +1,974 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>LXD containers and VMs on BeeGFS with NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="Use BeeGFS on E-Series as storage pools for LXD containers and VMs">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="LXD containers and VMs on BeeGFS with NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html">
+
+
+  <meta property="og:description" content="Use BeeGFS on E-Series as storage pools for LXD containers and VMs">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="LXD containers and VMs on BeeGFS with NetApp E-Series">
+  <meta name="twitter:description" content="Use BeeGFS on E-Series as storage pools for LXD containers and VMs">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-09-02T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="LXD containers and VMs on BeeGFS with NetApp E-Series">
+    <meta itemprop="description" content="  Introduction  Why LXD on BeeGFS (with or without NetApp E-Series)  Get started  Optimal BeeGFS settings  HA  BeeGFS client in LXD VMs on LXD server accessing BeeGFS on E-Series  Storage-related rant  Issues and workarounds  Conclusion">
+    <meta itemprop="datePublished" content="2022-09-02T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html" itemprop="url">LXD containers and VMs on BeeGFS with NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-09-02T00:00:00+08:00">2022-09-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          11 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#why-lxd-on-beegfs-with-or-without-netapp-e-series">Why LXD on BeeGFS (with or without NetApp E-Series)</a></li>
+  <li><a href="#get-started">Get started</a></li>
+  <li><a href="#optimal-beegfs-settings">Optimal BeeGFS settings</a></li>
+  <li><a href="#ha">HA</a></li>
+  <li><a href="#beegfs-client-in-lxd-vms-on-lxd-server-accessing-beegfs-on-e-series">BeeGFS client in LXD VMs on LXD server accessing BeeGFS on E-Series</a></li>
+  <li><a href="#storage-related-rant">Storage-related rant</a></li>
+  <li><a href="#issues-and-workarounds">Issues and workarounds</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>LXD is a handy virtualization platform for containers and virtual machines. It also supports Windows VMs, and doesn't prevent you from using Docker containers if that's what you like - some users run Docker containers in LXD VMs.</p>
+
+<p>I think it's fair to say it's a niche approach if you consider it for enterprise use, but it's popular enough among non-enterprise users (especially Ubuntu users) and has its advantages.</p>
+
+<p>Because LXD is self-quarantined into that niche, its storage integrations are also - in my opinion - not of enterprise quality. You can read about storage options <a href="https://linuxcontainers.org/lxd/docs/master/storage/">here</a>.</p>
+
+<p>While this may sound too critical, I think it's true and despite that, not a reason to not use LXD. If you want a virtualization management tool that does a lot of basic things very well, check it out!</p>
+
+<p>Personally, I've been meaning to check it on BeeGFS, because that's one of my frequent topics here, and secondly, the docs (link above) are limited to those several options so the LXD and BeeGFS communities may benefit from experiments of this kind.</p>
+
+<h2 id="why-lxd-on-beegfs-with-or-without-netapp-e-series">Why LXD on BeeGFS (with or without NetApp E-Series)</h2>
+
+<p>I don't have good reasons to share, and I even won't say you <em>should</em> try this.</p>
+
+<p>BeeGFS - even with the features included in enterprise license support that NetApp sells - is also not an "enterprise file system for virtualization". Its main characteristics are scalability and performance, and because of that it's very popular in HPC.</p>
+
+<p>The goal of this post is not to encourage you to move your VMs from ESXi and VMFS to LXD and BeeGFS, but to show how to get started, after which you can explore it, and identify workloads and use cases where this combination makes sense.</p>
+
+<p>Suitable workloads are probably workloads that read/write in large requests. If you already have BeeGFS, you can run such workloads from containers or hosts, you don't need to deploy VMs for that, but there may be situations where data doesn't have to be shared among multiple users.</p>
+
+<p>One such example may be running Dev/Test/Lab workloads with Big Data/Analytics installed with Docker or Docker Compose. LXD VMs might be good for that:</p>
+
+<ul>
+  <li>Each VM is stand-alone, either pre-deployed or bare, to allow installation from scratch (for testing or learning)</li>
+  <li>IO is sequential</li>
+  <li>IO can burst to hundreds of MBs or several GB/s</li>
+</ul>
+
+<h2 id="get-started">Get started</h2>
+
+<p>What I used:</p>
+
+<ul>
+  <li>Ubuntu Linux 20.04 LTS</li>
+  <li>ThinkParQ BeeGFS 7.3.0</li>
+  <li>Ubuntu LXD 5.5 (snapd)</li>
+</ul>
+
+<p>We'll use a "directory" based LXD storage pool. How does that compare to … something else? At this time a comparison can be found <a href="https://linuxcontainers.org/lxd/docs/master/reference/storage_drivers/#feature-comparison">here</a>. It doesn't have many advantages, but it works inside an LXD container (although LXD container doesn't seem to work with BeeGFS - more on that later). If you want to LXD with other drivers, you can - just create a volume on E-Series and present it directly to LXD server; once you have that block device, you can use BTRFS, LVM, etc. But this posts focuses only on <code class="language-plaintext highlighter-rouge">dir</code> driver.</p>
+
+<p>With that:</p>
+
+<ul>
+  <li>Create a directory on existing BeeGFS mount point, or a dedicated BeeGFS filesystem</li>
+  <li>Create a directory-type storage pool (<code class="language-plaintext highlighter-rouge">dir</code>) and give it a name such as <code class="language-plaintext highlighter-rouge">beegfs</code></li>
+  <li>Review</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> /mnt/beegfs/lxd-pool
+
+<span class="nv">$ </span>lxc storage create beegfs <span class="nb">dir source</span><span class="o">=</span>/mnt/beegfs/lxd-pool
+
+<span class="nv">$ </span>lxc storage list
++----------+--------+----------------------+-------------+---------+---------+
+|   NAME   | DRIVER |        SOURCE        | DESCRIPTION | USED BY |  STATE  |
++----------+--------+----------------------+-------------+---------+---------+
+| beegfs   | <span class="nb">dir</span>    | /mnt/beegfs/lxd-pool |             | 0       | CREATED |
++----------+--------+----------------------+-------------+---------+---------+
+</code></pre></div></div>
+
+<ul>
+  <li>If you look at the path you'll see LXD created an empty directory structure for VMs, containers, plain "volumes" that can be attached to those.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo dir</span> <span class="nt">-lat</span> /mnt/beegfs/lxd-pool
+total 2
+drwx--x--x  3 root    root     1 Sep  1 15:18 virtual-machines
+drwxrwxr-x  9 sean    sean     7 Sep  1 15:16 <span class="nb">.</span>
+drwx--x--x  2 root    root     0 Sep  1 15:16 containers
+drwx--x--x  2 root    root     0 Sep  1 15:16 containers-snapshots
+drwx--x--x  2 root    root     0 Sep  1 15:16 custom
+drwx--x--x  2 root    root     0 Sep  1 15:16 custom-snapshots
+drwx--x--x  2 root    root     0 Sep  1 15:16 images
+drwx--x--x  2 root    root     0 Sep  1 15:16 virtual-machines-snapshots
+drwxrwxrwx 15 root    root    15 Sep  1 15:16 ..
+</code></pre></div></div>
+
+<ul>
+  <li>Create a VM that uses this pool you've just created</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>lxc launch ubuntu:22.04 <span class="nt">--vm</span> <span class="nt">--storage</span> beegfs
+</code></pre></div></div>
+
+<ul>
+  <li>This will download OS image and deploy a randomly named VM (e.g. smelly-sink). Get help for <code class="language-plaintext highlighter-rouge">lxc launch</code> if you want to customize. Use list to list all VMs, start and stop to start named VMs.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>lxc <span class="o">(</span>list|start|stop<span class="o">)</span> <span class="nv">$MY_VM_NAME</span>
+
+<span class="nv">$ </span><span class="nb">sudo </span>lxc info smelly-sink
+Name: smelly-sink
+Status: RUNNING
+Type: virtual-machine
+Architecture: x86_64
+PID: 53378
+Created: 2022/09/01 15:18 UTC
+Last Used: 2022/09/02 04:21 UTC
+
+Resources:
+  Processes: 21
+  CPU usage:
+    CPU usage <span class="o">(</span><span class="k">in </span>seconds<span class="o">)</span>: 54
+  Memory usage:
+    Memory <span class="o">(</span>current<span class="o">)</span>: 795.90MiB
+  Network usage:
+    enp5s0:
+      Type: broadcast
+      State: UP
+      Host interface: tapeb7fc4f8
+      MAC address: 00:16:3e:20:e0:72
+      MTU: 1500
+      Bytes received: 133.30MB
+      Bytes sent: 845.63kB
+      Packets received: 32995
+      Packets sent: 12256
+      IP addresses:
+        inet:  10.63.129.177/24 <span class="o">(</span>global<span class="o">)</span>
+        inet6: fe80::216:3eff:fe20:e072/64 <span class="o">(</span><span class="nb">link</span><span class="o">)</span>
+    lo:
+      Type: loopback
+      State: UP
+      MTU: 65536
+      Bytes received: 11.98kB
+      Bytes sent: 11.98kB
+      Packets received: 142
+      Packets sent: 142
+      IP addresses:
+        inet:  127.0.0.1/8 <span class="o">(</span><span class="nb">local</span><span class="o">)</span>
+        inet6: ::1/128 <span class="o">(</span><span class="nb">local</span><span class="o">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Enter the VM with <code class="language-plaintext highlighter-rouge">sudo lxc shell $MY_VM_NAME</code></p>
+  </li>
+  <li>
+    <p>What LXD volumes does my VM use? We need two variables here, one is pool name (beegfs) and another is VM name which we add as suffix to resource type (virtual-machine)</p>
+  </li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>lxc storage volume list beegfs <span class="nt">--all-projects</span>
++---------+-----------------+----------------+-------------+--------------+---------+
+| PROJECT |      TYPE       |      NAME      | DESCRIPTION | CONTENT-TYPE | USED BY |
++---------+-----------------+----------------+-------------+--------------+---------+
+| default | virtual-machine |   smelly-sink  |             | block        | 1       |
++---------+-----------------+----------------+-------------+--------------+---------+
+
+<span class="nv">$ </span>lxc storage volume show beegfs virtual-machine/smelly-sink
+config: <span class="o">{}</span>
+description: <span class="s2">""</span>
+name: smelly-sink
+<span class="nb">type</span>: virtual-machine
+used_by:
+- /1.0/instances/smelly-sink
+location: none
+content_type: block
+project: default
+</code></pre></div></div>
+
+<ul>
+  <li>Storage-wise, data will be stored in the virtual-machines sub-directory of your "directory" style pool. On BeeGFS, these files may be all over the place, or on just one storage device - that depends on settings you use</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo dir -lat /mnt/beegfs/lxd-pool/virtual-machines/smelly-sink
+total 3058532
+-rw-r--r-- 1 root root 10737418240 Sep  2 06:48 root.img
+-rw------- 1 lxd  root      131072 Sep  2 04:21 qemu.nvram
+-r-------- 1 root root        2199 Sep  2 04:21 backup.yaml
+dr-x------ 6 lxd  root          10 Sep  2 04:21 config
+d--x------ 4 root root          10 Sep  1 15:18 .
+-rw-r--r-- 1 root root         692 Sep  1 15:18 agent-client.crt
+-rw------- 1 root root         288 Sep  1 15:18 agent-client.key
+-rw-r--r-- 1 root root         721 Sep  1 15:18 agent.crt
+-rw------- 1 root root         288 Sep  1 15:18 agent.key
+drwx--x--x 3 root root           1 Sep  1 15:18 ..
+-rw-r--r-- 1 root root         295 Aug 10 07:29 metadata.yaml
+drwxr-xr-x 2 root root           1 Aug 10 07:29 templates
+</code></pre></div></div>
+
+<ul>
+  <li>Directory type pools don't have many options, but one that works is the maximum volume size limit, e.g.:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lxc storage <span class="nb">set </span>beegfs volume.size 2000000000000000000
+</code></pre></div></div>
+
+<ul>
+  <li>With fully open source BeeGFS, quotas are disabled so that won't have effect. For example, while trying to launch a LXD container, syslog tells us the FS doesn't support quotas</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sep  2 08:51:52 b5 lxd.daemon[1733]: <span class="nb">time</span><span class="o">=</span><span class="s2">"2022-09-02T08:51:52Z"</span> <span class="nv">level</span><span class="o">=</span>warning <span class="nv">msg</span><span class="o">=</span><span class="s2">"The backing filesystem doesn't support quotas, skipping set quota"</span> <span class="nv">driver</span><span class="o">=</span><span class="nb">dir </span><span class="nv">path</span><span class="o">=</span>/var/snap/lxd/common/lxd/storage-pools/beegfs/containers/c1 <span class="nv">pool</span><span class="o">=</span>beegfs <span class="nv">size</span><span class="o">=</span>2000000000000000000 <span class="nv">volID</span><span class="o">=</span>2
+</code></pre></div></div>
+
+<h2 id="optimal-beegfs-settings">Optimal BeeGFS settings</h2>
+
+<p>I don't know what they are. Generally speaking:</p>
+
+<ul>
+  <li>Use a small <code class="language-plaintext highlighter-rouge">chunksize</code> value and a low <code class="language-plaintext highlighter-rouge">numtargets</code> figure for VMs with small I/O requests. With BeeGFS on NetApp E-Series, because it uses protected storage, you can even use <code class="language-plaintext highlighter-rouge">numtargets 1</code>. A target can go down - temporary during BeeGFS server fail-over, or maybe even longer, but underlying volume will be there even if the server has to be replaced, and this will work without any BeeGFS software replication (which should help a lot in terms of write performance, but also cost).</li>
+  <li>Use larger chunk sizes and multiple storage targets for VMs with sequential I/O (e.g. 1MB or 100MB files)</li>
+</ul>
+
+<p>For a Web server, I may go with <code class="language-plaintext highlighter-rouge">chunksize 128KB</code> and <code class="language-plaintext highlighter-rouge">numtargets 1</code> (or 2, in the case there are large images).</p>
+
+<p>For MySQL, <code class="language-plaintext highlighter-rouge">chunksize 128KB</code> and <code class="language-plaintext highlighter-rouge">numtargets=1</code>.</p>
+
+<p>For MinIO we may decide based on workload characteristics - say for 4MB I/O requests we could use <code class="language-plaintext highlighter-rouge">chunksize 256KB</code> and <code class="language-plaintext highlighter-rouge">numtargets 4</code>(assuming you have that many disks) - it's impossible to say what would be "best" without knowing more about the entire stack.</p>
+
+<p>These settings could be applied:</p>
+
+<ul>
+  <li>on FS level, for all data on a filesystem</li>
+  <li>on BeeGFS pool level, for all pool data</li>
+  <li>on VM/Container directory level (<em>before</em> a VM or container has been created), to make exceptions for unusual workloads</li>
+</ul>
+
+<h2 id="ha">HA</h2>
+
+<p>How do we do HA here? For BeeGFS with E-Series, storage HA is taken care of with HA functionality on <a href="/2022/08/28/configuring-netapp-e-series-solution-for-beegfs.html">BeeGFS storage servers connected to E-Series storage</a> - BeeGFS clients (LXD servers) connect to one or more BeeGFS servers to get to their shared storage.</p>
+
+<p>For LXD and VM/container services, you'd have to to use <a href="https://linuxcontainers.org/lxd/docs/master/clustering/">LXD clustering</a> which is more like a loose federation and less like VMware vSphere clusters with shared storage. I've clustered LXD before, but not with shared storage such as BeeGFS, so I can only assume that failing over VMs and containers should work just as it would with directories on NFS mount points. Dump container or VM config onto BeeGFS, and recreate it from another LXD host/BeeGFS client if you need to.</p>
+
+<p>The tricky part is disabling autostart on a dead host, or removing a stale VM configuration if we've resurrected the VM elsewhere. In other words, handling <em>unplanned</em> failures is the challenging part with LXD clusters backed by shared storage.</p>
+
+<p>For <em>planned</em> failover that involves persistent data we could also use the LXD volume copy and move features, although they are ineffective (more on that below).</p>
+
+<h2 id="beegfs-client-in-lxd-vms-on-lxd-server-accessing-beegfs-on-e-series">BeeGFS client in LXD VMs on LXD server accessing BeeGFS on E-Series</h2>
+
+<p>That's a deliberate attempt to confuse, but a real-live question might be: can I run BeeGFS client in LXD VMs (which run on LXD hosts which themselves may or may not be BeeGFS clients)?</p>
+
+<p>I think that scenario is covered <a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">in this post</a> where I used BeeGFS in VMware VMs running on hosts that did not run BeeGFS (why, because those hosts were ESXi servers).</p>
+
+<p>However, while running LXD VM on GPU-enabled hosts, I did notice VMs behaved similar to Docker containers in the sense that certain h/w device modules had to be installed on the host to be accessible from a guest (VM). If you try BeeGFS on LXD VMs, you may want to install BeeGFS on the host.</p>
+
+<h2 id="storage-related-rant">Storage-related rant</h2>
+
+<p>At the top I mentioned about non-enterprise mindset - to see what I mean, read <a href="https://linuxcontainers.org/lxd/docs/master/howto/storage_move_volume/">this</a>.</p>
+
+<p>You can copy a volume from one LXD host to another. You can also move a volume (by copying it and then deleting the original file).</p>
+
+<p>While good, these features assume that storage is stupid, which is an assumption some users may not mind - especially if they have exactly such storage - but others, who could use LXD much better if they could simply migrate a <em>VM or container configuration file</em> from one LXD host to another and restart it there, have no choice but to use their feature-full storage in a stupid way. LXD's Ceph integration attempts to improve on that, but with Ceph you still don't have enterprise storage.</p>
+
+<p>I'm not ranting against the inability to better leverage BeeGFS here, or the fact that LXD has integration with Ceph, but against these storage "features" that were difficult to develop, are hard to use (how do you copy a VM if the LXD server is down?), and seem unreliable outside of simple demo scenarios.</p>
+
+<p>Had Ubuntu invested <strong>a fraction of the time and effort</strong> in creating integrations with NFS or SAN storage, they'd actually have something that works correctly and reliably 99.999% of time, and get a shot at becoming a Tier 2 virtualization platform (something <a href="/2022/04/05/proxmox-solidfire.html">Proxmox</a> and <a href="/2022/07/10/xcp-ng-with-netapp-solidfire-iscsi.html">XCP-NG</a> have both done). Without that, LXD is probably a Tier 3 choice for anyone with non-trivial clustering or storage requirements.</p>
+
+<p>I've been waiting for LXD (before LXD) to come up with something sensible in this area for half a decade now so the above amounts to approximately one ranting paragraph per year - I hope that's not too bad, Ubuntu!</p>
+
+<h2 id="issues-and-workarounds">Issues and workarounds</h2>
+
+<ul>
+  <li>I had to uninstall open-vm-tools from Ubuntu 20.04 and reboot to be able to run the first lxc launch command (for VM). Then I reinstalled open-vm-tools and did not have any problems.</li>
+  <li>When <code class="language-plaintext highlighter-rouge">lxc</code> commands are executed from a BeeGFS path (e.g. normally that means somewhere in /mnt/beegfs/), they hang and after 9 minutes time out. Execute them from a non-BeeGFS path.</li>
+  <li>LXD container creation hangs, still trying to figure out why. It may be related to lack of hard link support and/or the need to enable ACLs (not available in non-licensed version of BeeGFS I use)</li>
+  <li>BeeGFS has no snapshots; E-Series does, but with BeeGFS snapshots should be taken on filesystem level. Backups can be taken by using application- or host-side tools or by simply copying (closed) files to another location. LXD also can <a href="https://linuxcontainers.org/lxd/docs/master/howto/storage_backup_volume/">backup volumes</a> (i.e. what we see as VM or container files on BeeGFS).</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>If you're looking for a "KVM Lite that doesn't suck", LXD is great. Once it gets to LXD with persistent storage, or HA LXD, it depends.</p>
+
+<p>But I still recommend to evaluate it because LXD VMs are really good and single-host LXD is so much easier to use than KVM.</p>
+
+<p>If you don't have any important container or VM workload that is IO-heavy and tends to work with 64kB requests or higher, there may be no value in adding BeeGFS to your LXD environment - you'd have extra software to manage and additional considerations to think about. As illustrated <a href="https://scaleoutsean.github.io/2022/04/09/beegfs-csi-introduction.html#options-in-a-mixed-environment">here</a>, LXD servers can consume E-Series storage (block devices) directly from LXD hosts using LXD's <a href="https://linuxcontainers.org/lxd/docs/master/reference/storage_lvm/#storage-lvm">LVM driver</a>, and BeeGFS can be using other E-Series storage for suitable workloads.</p>
+
+<p>On the other hand, IO-heavy containers and VMs with mixed or sequential workload could benefit from directory-style pools on BeeGFS storage.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/container" class="page__taxonomy-item p-category" rel="tag">container</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/lxd" class="page__taxonomy-item p-category" rel="tag">lxd</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/containers" class="page__taxonomy-item p-category" rel="tag">containers</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a><span class="sep">, </span>
+    
+      <a href="/categories/virtualization" class="page__taxonomy-item p-category" rel="tag">virtualization</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-09-02T00:00:00+08:00">2022-09-02 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=LXD+containers+and+VMs+on+BeeGFS+with+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F09%2F02%2Flxd-containers-vms-on-beegfs.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/09/02/lxd-containers-vms-on-beegfs.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/08/30/apptainer-beegfs-software-bom-sbom.html" class="pagination--pager" title="SBOM with signed Apptainer containers on BeeGFS">Previous</a>
+    
+    
+      <a href="/2022/09/04/brute-force-sizing-netapp-eseries.html" class="pagination--pager" title="Brute force sizing NetApp E-Series">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

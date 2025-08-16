@@ -1,0 +1,1549 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Elasticsearch 8 with NetApp storage | Acting Technologist</title>
+<meta name="description" content="Notes on using Elasticsearch 8 with NetApp storage">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Elasticsearch 8 with NetApp storage">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/03/06/elastic-elk-stack-on-netapp.html">
+
+
+  <meta property="og:description" content="Notes on using Elasticsearch 8 with NetApp storage">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Elasticsearch 8 with NetApp storage">
+  <meta name="twitter:description" content="Notes on using Elasticsearch 8 with NetApp storage">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/03/06/elastic-elk-stack-on-netapp.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-03-06T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/03/06/elastic-elk-stack-on-netapp.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Elasticsearch 8 with NetApp storage">
+    <meta itemprop="description" content="NOTICE: all credentials and tokens on this page are samples, not leaked.">
+    <meta itemprop="datePublished" content="2022-03-06T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/03/06/elastic-elk-stack-on-netapp.html" itemprop="url">Elasticsearch 8 with NetApp storage
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-03-06T00:00:00+08:00">2022-03-06 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          33 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p><strong>NOTICE:</strong> all credentials and tokens on this page are samples, not leaked.</p>
+
+<ul>
+  <li><a href="#elasticsearch-and-netapp-storage-systems">Elasticsearch and NetApp storage systems</a>
+    <ul>
+      <li><a href="#sizing-and-management">Sizing and management</a>
+        <ul>
+          <li><a href="#precise-storage-sizing">Precise storage sizing</a></li>
+          <li><a href="#use-cases-for-enterprise-storage-features">Use cases for "enterprise" storage features</a></li>
+        </ul>
+      </li>
+      <li><a href="#asymmetric-configurations">Asymmetric configurations</a></li>
+      <li><a href="#to-nfs-or-not-to-nfs">To NFS or not to NFS?</a></li>
+      <li><a href="#object-storage-s3-flavor">Object storage (S3 flavor)</a></li>
+    </ul>
+  </li>
+  <li><a href="#install-elasticsearch-with-iscsi-backed-data-store-on-ontap-or-solidfire">Install Elasticsearch with iSCSI-backed data store on ONTAP or SolidFire</a>
+    <ul>
+      <li><a href="#where-to-get-the-netapp-software-required-to-test-this">Where to get the NetApp software required to test this?</a></li>
+      <li><a href="#physical-or-virtual-elasticsearch-servers">Physical or virtual Elasticsearch servers</a></li>
+      <li><a href="#containerized-elasticsearch-service">Containerized Elasticsearch service</a></li>
+    </ul>
+  </li>
+  <li><a href="#static-provisioning-with-external-volumes">Static provisioning with external volumes</a></li>
+  <li><a href="#dynamic-provisioning-with-external-volumes">Dynamic provisioning with external volumes</a></li>
+  <li><a href="#elastic-on-kubernetes-with-trident-csi-and-cinder-csi">Elastic on Kubernetes with Trident CSI and Cinder CSI</a>
+    <ul>
+      <li><a href="#trident-csi">Trident CSI</a></li>
+      <li><a href="#cinder-csi-on-openstack-vm">Cinder CSI on Openstack VM</a></li>
+      <li><a href="#other-csi-resources-for-netapp-storage">Other CSI resources for NetApp storage</a></li>
+    </ul>
+  </li>
+  <li><a href="#demos">Demos</a></li>
+  <li><a href="#appendix-a---docker-compose-setup-with-trident-docker-plugin">Appendix A - Docker Compose setup with Trident Docker plugin</a></li>
+  <li><a href="#appendix-b-kubernetes-helm-chart-for-trident-and-cinder-csi">Appendix B: Kubernetes Helm Chart for Trident and Cinder CSI</a></li>
+</ul>
+
+<p>I've written several posts on Elasticsearch (look for ELK and Elasticsearch posts in Archive). This article is about getting started with Elasticsearch 8 and focuses on integration with NetApp block storage in physical, virtual, Docker and Kuberntes environments.</p>
+
+<p>It's also about the new Elasticsearch version 8 (previous articles were about version 7) and opinionated in the sense that it's not necessarily based on the official NetApp documentation.</p>
+
+<h2 id="elasticsearch-and-netapp-storage-systems">Elasticsearch and NetApp storage systems</h2>
+
+<p>Generally speaking - and this is where "opinionated" comes in - one can use Elasticsearch with any NetApp storage (even NetApp object storage, for ILM).</p>
+
+<p>Which one should you use? There are too many buts, ifs and "it depends", so I won't try to cover them all and "prove" that my opinion is correct.</p>
+
+<p>Here's a couple of general criteria I'd consider and (below that) why:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left">SolidFire</th>
+      <th style="text-align: left">ONTAP</th>
+      <th style="text-align: left">E-Series</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Docker, K8s proto</td>
+      <td style="text-align: left">iSCSI</td>
+      <td style="text-align: left">iSCSI</td>
+      <td style="text-align: left">iSCSI, BeeGFS FS</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">VI, physical</td>
+      <td style="text-align: left">iSCSI</td>
+      <td style="text-align: left">iSCSI, FC…</td>
+      <td style="text-align: left">iSCSI, FC, SAS</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Media</td>
+      <td style="text-align: left">Flash-only</td>
+      <td style="text-align: left">Use flash</td>
+      <td style="text-align: left">Use flash or hybrid</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ELK hot tier</td>
+      <td style="text-align: left">0-10 TB</td>
+      <td style="text-align: left">0-50 TB</td>
+      <td style="text-align: left">0-500 TB</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Docker</td>
+      <td style="text-align: left">Trident</td>
+      <td style="text-align: left">Trident</td>
+      <td style="text-align: left">Static, LVM</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Kubernetes</td>
+      <td style="text-align: left">Trident CSI</td>
+      <td style="text-align: left">Trident CSI</td>
+      <td style="text-align: left">LVM, Local Path, BeeGFS CSI</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rel. cost of perf</td>
+      <td style="text-align: left">$$$</td>
+      <td style="text-align: left">$$</td>
+      <td style="text-align: left">$</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rel. cost of cap</td>
+      <td style="text-align: left">$$$</td>
+      <td style="text-align: left">$$</td>
+      <td style="text-align: left">$</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rec. replicas</td>
+      <td style="text-align: left">1</td>
+      <td style="text-align: left">1</td>
+      <td style="text-align: left">1 (S,M) or 2 (L+)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rec. vol size</td>
+      <td style="text-align: left">&lt;= 1 TiB</td>
+      <td style="text-align: left">2-4 TiB</td>
+      <td style="text-align: left">&gt; 2 TiB</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rec. thruput</td>
+      <td style="text-align: left">&lt;= 1 GB/s</td>
+      <td style="text-align: left">&lt;= 4 GB/s</td>
+      <td style="text-align: left">any</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rec. scale</td>
+      <td style="text-align: left">S, up to M</td>
+      <td style="text-align: left">S, M</td>
+      <td style="text-align: left">M, L, XL, XXL</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>(Rel. = relative; Rec. = recommended)</p>
+
+<ul>
+  <li>SolidFire only supports iSCSI so if you want to run in a FC environment, don't consider it. ONTAP and E-series also support other protocols (even iSER and Infiniband, in the case of E-Series)
+    <ul>
+      <li>SolidFire is all-flash, while the other two can be hybrid (SSD/HDD); I wouldn't bother with non-flash tiers for hot data, though - use S3 and ILM if you want to cost-down</li>
+    </ul>
+  </li>
+  <li>ELK hot tier size: we can certainly store more than mentioned in that row, but I would suggest to consider those as loose rules of thumb - for SolidFire and ONTAP, storing over 100 TB of Elasticsearch data would get pricey</li>
+  <li>Docker: if you run in Docker, unless you want to use static (manual) provisioning which would allow maximum flexibility and minimum manageability, you'd likely use NetApp Astra Trident iSCSI driver for that, so you'd be limited to iSCSI (which works very well with 10 or 25 GigE - we get <a href="/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html">multiple GB/s per second with iSCSI</a>)
+    <ul>
+      <li>With BeeGFS on E-Series you could use any storage supported by BeeGFS filesystem which means any storage interface E-Series supports</li>
+      <li>Caveat: I am not aware of any testing done with Elasticsearch on BeeGFS so with E-Series it's safer to use manually provisioned volumes, especially because Elasticsearch volumes are meant to be set-and-forget and not require attention</li>
+    </ul>
+  </li>
+  <li>Kubernetes: Trident CSI supports only iSCSI at this time, while BeeGFS CSI supports BeeGFS on any E-Series system. For BeeGFS the Docker caveat above applies. There are other provisioners that can be used with Kubernetes and E-Series.</li>
+  <li>Recommended volume size: while we can certainly create a bunch of 16 TB volumes my personal preference is to have at least 2 and at most 16 volumes, so that volume size becomes something like TOTAL_SIZE/8. As an example, let's say your total ELK data (no extra copies, just sharded) on ONTAP iSCSI is 32 TB; using 4 TB volumes that could be 3 VMs with 3 x 4 TB volumes each (36 TB capacity). Although 3 VMs with a single 12TB volume would be fine as well, personally I prefer to spread data a bit more</li>
+  <li>Data replicas: for Hadoop and Ceph, which NetApp customers sometimes use with E-Series, NetApp recommends 2 copies rather than 3. The reason is disks are already protected so having just 1 copy protects you from disk or controller failures. Having 2 copies on two E-Series arrays in different racks also protects you from rack failure, which is nice to have when your Hadoop cluster is large. You could do 2 copies with SolidFire and ONTAP as well, but I wouldn't recommend two copies in the same SolidFire or ONTAP array - it's wasteful and expensive. <strong>But</strong>, as I've mentioned in other posts before and after, any VM or container downtime equals disruption simply because service to affected shards goes down (even if they aren't "damaged"). So for HA (not for data consistency) RF1 (i.e. the 2nd copy) is unavoidable.</li>
+  <li>Cost: cost of performance and capacity is relative
+    <ul>
+      <li>SolidFire already uses two-copy data protection and it's designed for used for small-to-medium workloads with data that can be compressed and deduplicated. Elasticsearch compresses data natively and can consume a lot of bandwidth, so running a large ELK on SolidFire - especially if you make multiple copies of Elasticsearch data - can be expensive in both capacity and performance. That's why I wouldn't recommend it for medium or large Elasticsearch clusters</li>
+      <li>ONTAP also provides efficiency features and many advanced data management features that you may not necessarily use with Elastic, but unlike SolidFire it doesn't use RF2 to protect data, so it's more economical for ELK</li>
+      <li>E-Series is designed for low latency and high performance IO. That's it. These features make it the most cost-effective NetApp back-end for Elasticsearch in DAS or SAN environments</li>
+    </ul>
+  </li>
+</ul>
+
+<p>From the <a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">post</a> on Elasticsearch with EF280 (current equivalent model is EF300):</p>
+
+<p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-cluster-cpu-and-disk-grafana.png" alt="EF280 - 1GB/s write with ELK in single ESXi" /></p>
+
+<p>Additional performance tests with containerized Elasticsearch 8.6 and all-flash E-Series can be found <a href="/2023/02/25/elasticsearch-eseries-performance.html">here</a>.</p>
+
+<p>(All images can be opened in new browser tab.)</p>
+
+<h3 id="sizing-and-management">Sizing and management</h3>
+
+<p>I discussed the relative <em>cost</em> of performance above, so this is purely about performance and capacity sizing as well as some high level management aspects:</p>
+
+<ul>
+  <li>SolidFire gets you few hundred MB/s per node and scales out to 40 nodes; additional nodes can be added in increments of one. It's best to have two to four volumes per each SolidFire node</li>
+  <li>ONTAP iSCSI clusters scale to 12 nodes and each appliance has two controllers. Depending on the model you can get GB/s per each appliance but at large scale this becomes expensive. We'd want at least one data volume per controller (so at least 2 per appliance)</li>
+  <li>E-Series doesn't scale out but the fastest model (currently that's EF600) can deliver tens of GB/s which means many customers wouldn't need to scale out at all</li>
+</ul>
+
+<p>Scale-out storage isn't necessary for Elasticsearch - it can scale out on application level - but in smaller and medium Elasticsearch environments it makes storage provisioning easier, which is why some users like to use enterprise storage for Elasticsearch.</p>
+
+<p>Storage efficiency features aren't needed by recent Elastic releases (7 and 8 store data in a compressed format), so when sizing for capacity on SolidFire and ONTAP we need to assume storage efficiency of 1x (i.e. no savings from compression and deduplication). The same applies to E-Series, but E-Series doesn't have these features so no one would assume any storage efficiency anyway.</p>
+
+<p>If you decide to make 2 copies on Elasticsearch, then assume efficiency of 0.5x if the sizer can take it, or just divide usable by two. As mentioned above, I think it doesn't make sense to have two or three copies on redundant and protected storage like these arrays - if you want to have a redundant replica, then it's better to have another disk array with E-Series attached to one or more Elastic nodes in DAS fashion.</p>
+
+<h4 id="precise-storage-sizing">Precise storage sizing</h4>
+
+<p>New storage systems (ONTAP, E-Series, SolidFire) can be sized for required level of performance.</p>
+
+<p>I don't know what units or specs Elastic uses in sizing recommendations for external storage, but when we size storage we usually need a read-write ratio (50/50?) and I/O request size (128kB?). There's some variance in Elasticsearch workload patterns depending on what data being indexed and searched and how, so I suspect there may be 3-4 workload profiles for medium and large configurations.</p>
+
+<p>For small environments with 1-2 month retention (say, your first Kubernetes cluster with few dozen apps) 200 MB/s (or ~2,000 IOPS in 128kB requests per second) and few TB of capacity should be enough.</p>
+
+<p>You can ask your Elastic partner or representative to help you with detailed sizing.</p>
+
+<p>Update (Feb 2023): blog post on <a href="/2023/02/25/elasticsearch-eseries-performance.html">Elasticsearch performance with E-Series can be found here</a>.</p>
+
+<h4 id="use-cases-for-enterprise-storage-features">Use cases for "enterprise" storage features</h4>
+
+<p>Earlier I mentioned easy-to-use snapshots and clones as one example of "nice to have" features you can get on ONTAP and SolidFire.</p>
+
+<p>JBOD and KISS used to be - back in the early days of Hadoop - a way to avoid unnecessary storage costs and very large Hadoop users possibly do. But it must be done at scale which many on-premises users do not have, and unsurprisingly many have discovered it's more cost effective to subscribe to <a href="https://www.elastic.co/cloud/">Elastic Cloud</a> or switch to enterprise-grade on-prem storage. What does the later really mean?</p>
+
+<p>If you want to test latest version of Elastic, for example, SolidFire and ONTAP allow you to thin-clone your 20 TB Elasticsearch cluster in minutes and spin a new test cluster with on a clone production data in no time.</p>
+
+<p>Enterprise-level storage also lowers barriers to entry. Instead of buying three JBODs and spending weeks to put this (oversized) configuration in production, you can provision VM or container-based storage on existing ONTAP or SolidFire in 5 minutes. And if your Elasticsearch cluster grows, it's easy to expand it with E-Series based nodes and evacuate or tier data from ONTAP or SolidFire if you want to release that capacity.</p>
+
+<p>Anther advantage of enterprise-grade storage is that it lets you easily consolidate workloads: because both SolidFire and ONTAP have QoS management features, it's possible to share existing capacity and performance but at the same time ensure that other workloads do not get starved. And we can allocate more - or less - IOPS and bandwidth to Elasticsearch nodes.</p>
+
+<p>Let's consider this situation: Elasticsearch is provisioned in three VMs, each with a single 512 GiB volume (elk01, elk02, elk03). Due to data growth each volume needs to be expanded to 1024 GiB and we'd also like to increase IOPS from 3,000 and 15,000 (Min/Max, respectively) to 5,000 and 15,000 (the latter pair on SolidFire translates to 35 and 105 MB/s in sequential IO, respectively).</p>
+
+<p>This performance adjustment used to require careful "design" of RAID groups and whatnot, but now can be easily done in software via the API.</p>
+
+<p>On SolidFire this entire procedure takes 1 second. Ok, it took more than that - 1.092 seconds (I measured).</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Get-SFVolume</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">elk</span><span class="o">*</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Set-SFVolume</span><span class="w"> </span><span class="nt">-TotalSize</span><span class="w"> </span><span class="nx">1</span><span class="w"> </span><span class="nt">-TiB</span><span class="w"> </span><span class="nt">-MinIOPS</span><span class="w"> </span><span class="nx">5000</span><span class="w"> </span><span class="nt">-MaxIOPS</span><span class="w"> </span><span class="nx">15000</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="nv">$False</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Or, you prefer to not resize filesystems in ELK hosts, you could add three more volumes of the same size using same QoS characteristics as existing volumes.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">For</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="nv">$i</span><span class="w"> </span><span class="o">-le</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span><span class="w"> </span><span class="nv">$i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">New-SFVolume</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">elk0</span><span class="nv">$i</span><span class="w"> </span><span class="nt">-AccountID</span><span class="w"> </span><span class="nx">1</span><span class="w"> 
+  </span><span class="nt">-TotalSize</span><span class="w"> </span><span class="mi">512</span><span class="w"> </span><span class="nt">-GiB</span><span class="w"> </span><span class="nt">-Enable512e</span><span class="p">:</span><span class="nv">$True</span><span class="w"> 
+  </span><span class="nt">-MinIOPS</span><span class="w"> </span><span class="mi">3000</span><span class="w"> </span><span class="nt">-MaxIOPS</span><span class="w"> </span><span class="mi">10000</span><span class="w"> </span><span class="nt">-Confirm</span><span class="p">:</span><span class="nv">$False</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Or, if you prefer to do the above <em>but</em> offload replication to SolidFire clone feature, you may be able to clone existing Elastisearch volumes and import them with Trident. I haven't tried this to see if it actually works, but clone &amp; import would make it possible to complete scale out in minutes rather than hours. <a href="/2022/04/28/solidfire-operator-kubernetes.html">SolidFire Operator</a> could be used to prepare clone volumes before Elasticsearch scale-out, for example.</p>
+
+<p>With VMs or physical hosts you'd rescan targets, login to new targets and modify Elasticsearch configuration to use the new volumes.</p>
+
+<p>ONTAP iSCSI also provides storage QoS and similar ease of use.</p>
+
+<p>The above is specific to SolidFire and the examples are in PowerShell, but ONTAP and SolidFire can also be automated with Ansible or Python. Whether you use ONTAP or SolidFire, it only takes a minute to take care of most storage management tasks. Even with E-Series you can still eliminate a lot of storage management tasks with automation.</p>
+
+<h3 id="asymmetric-configurations">Asymmetric configurations</h3>
+
+<p>Elasticsearch replication works with asymmetric configurations so having a fast E-Series EF600 array for main ELK workload and a white box JBOD for DR replica is fine as well as long as the JBOD can keep up.</p>
+
+<p>It's also possible to use a fast tier for hot data (e.g. ONTAP A700) and a lower cost HDD-based E-Series E5760 for cold data and have Elasticsearch take care of ILM.</p>
+
+<h3 id="to-nfs-or-not-to-nfs">To NFS or not to NFS?</h3>
+
+<p>NFS file shares (that is, file shares on ONTAP systems) should not be used to store Elasticsearch indexes for busy and large Elasticsearch clusters.</p>
+
+<p>It's perfectly fine to use them for small Elasticsearch clusters especially when they are all-flash (C190, all A and AFF models, all cloud-based ONTAP file services based on flash storage, all partner-based services such as FSxN in AWS, ANF in Azure, CVO-SW in GCP, etc).</p>
+
+<p>The same approach that <a href="https://www.netapp.com/media/17211-tr4819design.pdf">works well for Oracle RAC</a> and IO-hungry NVIDIA DGX A100 can work well for Elasticsearch clusters.</p>
+
+<p>If you have a small HDD-based NetApp FAS storage system and try to run a medium sized or busy ELK cluster on it, you'll have a miserable experience. That won't work for Oracle RAC and Deep Learning workloads either. And while I'm at it - avoid pouring hot coffee on your crotch area.</p>
+
+<h3 id="object-storage-s3-flavor">Object storage (S3 flavor)</h3>
+
+<p>Elasticsearch can also use <a href="https://www.elastic.co/guide/en/elasticsearch/reference/8.0/ilm-index-lifecycle.html">object storage for ILM</a> and "snapshots" (which are basically "dumps" or backups).</p>
+
+<p>NetApp StorageGRID works well for Elasticsearch snapshots to S3, but smaller Elasticsearch clusters may not need dedicated S3 appliances.</p>
+
+<p>As far as using S3 service on the same storage product considered in this post:</p>
+
+<ul>
+  <li>ONTAP S3 service, in my opinion, is not yet suitable for Elasticsearch (Elasticsearch 8.11.1 is quirky with ONTAP 9.12.1), while E-Series and SolidFire don't have their own S3 service</li>
+  <li><a href="https://docs.netapp.com/us-en/storagegrid-117/vmware/index.html">StorageGRID VMs</a> or MinIO S3 in VMs or containers can be used with ONTAP, E-Series, and SolidFire block devices</li>
+</ul>
+
+<p>MinIO on SolidFire would be expensive, but on E-Series it can be affordable (e.g. free MinIO on NL-SAS backed volumes) and fast. With E-Series we can get <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#appendix-a">several GB/s</a> from a single MinIO VM. You'd need 8-12 cores (HT OFF) and enough NL-SAS disks to drive that performance.</p>
+
+<p>If we can rely on vSphere for HA of VMs, a single MinIO VM (MinIO on Ubuntu LTS or Rocky Linux) can provide a decent level of uptime and performance on a single site (same as vSphere's uptime, plus a few annual restarts of OS and MinIO when/if those get updated and require a restart). If you need an even more reliable solution, deploy multiple VMs or containers with EC:1 (see the same post which talks about MinIO performance on E-Series) - it would cost a bit more due to erasure coding storage overhead, but provide a higher uptime and reliability as containers could be restarted in a rolling fashion and without service downtime.</p>
+
+<h2 id="install-elasticsearch-with-iscsi-backed-data-store-on-ontap-or-solidfire">Install Elasticsearch with iSCSI-backed data store on ONTAP or SolidFire</h2>
+
+<h3 id="where-to-get-the-netapp-software-required-to-test-this">Where to get the NetApp software required to test this?</h3>
+
+<p>Both of these require a NetApp support account. If you have problems with any of these, reach out to your NetApp account team or (for partnersA) Technical Partner Manager.</p>
+
+<ul>
+  <li>For on-premises and ONTAP, download <a href="https://www.netapp.com/forms/90-day-trial-of-ontap-select/">ONTAP Select 90-day Evaluation</a> and deploy it on vSphere</li>
+  <li>For on-premises SolidFire, get <a href="https://docs.netapp.com/us-en/element-software/try/task_use_demonode.html">Element Demo VM</a> which can be deployed on ESXi and even <a href="https://www.youtube.com/watch?v=6SXa-0Amhx0">Virtualbox</a> (use bridged interfaces)</li>
+  <li>For major hyperscalers, try <a href="https://cloud.netapp.com/ontap-cloud">Cloud Volumes ONTAP</a> in the cloud of your choice. Note that this assumes you run your own Elasticsearch (Elastic Cloud is a managed service not related to Cloud Volumes ONTAP)</li>
+</ul>
+
+<p>The remainder of this post is based on SolidFire which I find easier to use for folks who haven't used either, but Docker plugin virtualizes storage behind it so once Trident is in place these instructions become generic and unless noted, apply to all three environments.</p>
+
+<p>Deploy either of these and configure it just enough so that it can present iSCSI LUNs/Volumes to Elasticsearch host and the rest is all Trident configuration.</p>
+
+<h3 id="physical-or-virtual-elasticsearch-servers">Physical or virtual Elasticsearch servers</h3>
+
+<p>With Linux and Windows VMs and physical servers, you'd simply create iSCSI volumes and present them to the ELK server(s). For that simply follow SolidFire, ONTAP or E-Series documentation. If these servers run as VMs, first create a new vSwitch to let them get to iSCSI targets, and then create volumes and present to the servers over this iSCSI network.</p>
+
+<p>For VMs there's another way - or two - to provision storage to Elasticseach. If you want Elasticsearch to <em>indirectly</em> (through VMFS) consume iSCSI or NFS storage from these storage systems and have a storage plugin for VMware or Openstack in place:</p>
+
+<ul>
+  <li>Provision VM disks (VMware disks, Openstack Cinder volumes, or VMware vVols) and assign one or more to each Elasticsearch VM</li>
+  <li>Use block devices such as /dev/[v,s]db (Linux) or D: (Windows) inside of your VM</li>
+</ul>
+
+<p>The good thing about is you don't need to know anything about back-end storage, but:</p>
+
+<ul>
+  <li>There will be some performance overhead (single digit %)</li>
+  <li>You'll get the benefits, but also the responsibilities of virtualization management. That means you'll be able to easily snapshot and backup your ELK cluster (not sure how valuable that is, but maybe people will smaller ELK clusters back them up) and create test clusters from production clusters. But you'd have to maintain that virtualization layer (VMware or Openstack storage integration and plugins) to ensure its trouble-free operation</li>
+</ul>
+
+<p>VM-based Elasticsearch clusters perform well and if you find value in not having to setup or manage Elasticsearch servers differently from the rest of your infrastructure, consider this approach.</p>
+
+<ul>
+  <li><a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">this post</a> shows performance of a VM-based Elasticsearch 7 cluster running 3 VMs on just 1 x86_64 server with E-Series EF280 (compare those charts against your own cluster)</li>
+  <li><a href="https://cloud.netapp.com/blog/aws-cvo-blg-how-to-deploy-elasticsearch-with-cloud-volumes-ontap-on-aws">this post</a> shows the entire configuration workflow for Cloud Volumes ONTAP iSCSI with VMs or physical hosts (on-prem ONTAP has a different UI, System Manager)</li>
+</ul>
+
+<h3 id="containerized-elasticsearch-service">Containerized Elasticsearch service</h3>
+
+<p>For Elasticsearch version 8.0, RTFM <a href="https://www.elastic.co/guide/en/elasticsearch/reference/8.0/docker.html">here</a>. This link - <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">current</a> - should work as well, but this can take you to version 8.7 or 9.2 depending on when you click on this link.</p>
+
+<p>With local or "host-internal" storage (which could live on ONTAP or SolidFire if the Docker host such as VM was using storage provisioned on these arrays), just follow the steps from the official documentation.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker network create elastic
+f1ca1fe012d739bb297b01cec05c08dade508092720d66663c46a00e05787eb1
+
+<span class="nv">$ </span><span class="nb">sudo </span>docker pull docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+8.0.1: Pulling from elasticsearch/elasticsearch
+4fb807caa40a: Pull <span class="nb">complete 
+</span>939e6d6de1cd: Pull <span class="nb">complete 
+</span>c6e272a692c1: Pull <span class="nb">complete 
+</span>c35cf7d81655: Pull <span class="nb">complete 
+</span>00b951a3ddcb: Pull <span class="nb">complete 
+</span>c1686887c5ec: Pull <span class="nb">complete 
+</span>c9c4cd9d9e71: Pull <span class="nb">complete 
+</span>ff28b3874cac: Pull <span class="nb">complete 
+</span>d8fe9cb3f525: Pull <span class="nb">complete 
+</span>8287b1c3b76d: Pull <span class="nb">complete 
+</span>Digest: sha256:4d048cdee0f077666a299a4d11b85146dc8ec8d8a821bf3ea8b11e31b4189845
+Status: Downloaded newer image <span class="k">for </span>docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+
+<span class="nv">$ </span><span class="nb">sudo </span>docker run <span class="nt">--name</span> es01 <span class="nt">--net</span> elastic <span class="nt">-p</span> 9200:9200 <span class="nt">-p</span> 9300:9300 <span class="nt">-it</span> docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+</code></pre></div></div>
+
+<p>By default, <code class="language-plaintext highlighter-rouge">elasticsearch</code> container will store data in /usr/share/elasticsearch/data unless you override that in Elasticsearch configuration.</p>
+
+<p>This approach works, but it doesn't allow us to separate Docker container from Elasticsearch data, and makes it hard to recover from Docker host failures (while this can be solved with Elasticsearch replication, that results in a higher cost of capacity and, compared to VM or container failover, takes more time to recover from the loss of a replica).</p>
+
+<h2 id="static-provisioning-with-external-volumes">Static provisioning with external volumes</h2>
+
+<p>With SolidFire, ONTAP and E-Series we could keep data on a dedicated volume or volumes.</p>
+
+<p>With static provisioning we create and assign a LUN to the host, use OS commands to access that volume, create a filesystem on it, and modify filesystem permissions to allow Docker to access that location (/esdata01). (NFS shares would work similarly, just without host-side formatting step because NFS is a network file system formatted on NFS server).</p>
+
+<p>If you created that es01 container earlier, stop it and then delete it. Then create another one just like it, but with Elasticsearch data in /esdata01:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker run <span class="nt">--name</span> es01 <span class="nt">--net</span> elastic <span class="se">\</span>
+  <span class="nt">-v</span> /esdata01:/usr/share/elasticsearch/data <span class="se">\</span>
+  <span class="nt">-p</span> 9200:9200 <span class="nt">-p</span> 9300:9300 <span class="se">\</span>
+  <span class="nt">-it</span> docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+</code></pre></div></div>
+
+<p>We could also create a small volume for configuration files and another one for TLS certificates or have multiple data volumes (not shown to keep the configuration simpler to read and, as mentioned earlier, that would require a custom Elaticsearch config file).</p>
+
+<p>Why use static provisioning when we can use dynamic provisioning? One use case could be for large ELK deployments with E-Series, especially with physical servers - in those cases you may have Elasticsearch servers directly attached (no SAN) to E-Series arrays and there would be no need to dynamically provision storage. Also Elastic may do its own replication (RF2) so the ability to failover storage would not be required either (hence DAS, rather than SAN). Another way to take advantage of static provisioning is to use Kubernetes and something like <a href="https://github.com/rancher/local-path-provisioner">Rancher Local Path Provisioner</a>.</p>
+
+<h2 id="dynamic-provisioning-with-external-volumes">Dynamic provisioning with external volumes</h2>
+
+<p>Dynamic provisioning from Docker or Kubernetes makes using external storage easier as most of the extra steps (rescan, login, mount, format, change permissions) are taken care of by the plugin.</p>
+
+<p>For that use Astra Trident plugin for Docker here because it's best supported plugin for ONTAP iSCSI and SolidFire.</p>
+
+<p>Kubernetes users would use Astra Trident CSI, which is the same thing as Trident volume plugin for Docker, but for CSI environments. Kubernetes-on-Openstack users could also use Cinder CSI which proxies requests to standard Cinder driver (if you're interested in that approach, see two posts in <a href="/2022/02/22/openstack-solidfire.html">this series</a>).</p>
+
+<p>The Elasticsearch documentation mentioned earlier has an example of a Docker Compose file. To keep this post shorter, I'll just show the relevant changes that we'd use with Docker and Trident volume plugin:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">es01</span><span class="pi">:</span>
+  <span class="na">depends_on</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">es01</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/elasticsearch/elasticsearch:8.0.1</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">esdata01:/usr/share/elasticsearch/data</span>
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">esdata01</span><span class="pi">:</span>
+    <span class="na">driver</span><span class="pi">:</span> <span class="s">trident</span>
+</code></pre></div></div>
+
+<p>Above we instruct Docker to use volume esdata01 for container es01. We also tell it that esdata01 should be created by the plugin named <code class="language-plaintext highlighter-rouge">trident</code> (it's just a name/alias we give the plugin when we install - we could have named it <code class="language-plaintext highlighter-rouge">shampoo</code>, <code class="language-plaintext highlighter-rouge">solidfire</code>, <code class="language-plaintext highlighter-rouge">ontap-iscsi</code> or something else).</p>
+
+<p>Since recently Astra Trident has a new documentation site, but the outdated old site is still better to use. We need to make sure our client has iSCSI client software and can reach storage service (iSCSI) and management IPs.</p>
+
+<p>Then we follow <a href="https://netapp-trident.readthedocs.io/en/stable-v21.07/docker/deploying.html">these steps</a> for v21.07 to install a recent version of Trident for Docker:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo mkdir /etc/netappdvp
+$ sudo touch /etc/netappdvp/config.json
+$ sudo chmod 0600 /etc/netappdvp/config.json # protect this file from "others"
+</code></pre></div></div>
+
+<p>We need to edit this file (/etc/netappdvp/config.json). You could have multiple config files - for example ontap01.json for one ONTAP appliance, and ontap02.json for another.</p>
+
+<p>For ONTAP iSCSI you'd use a storageDriverName for iSCSI (<code class="language-plaintext highlighter-rouge">ontap-san</code> - check all options and config file examples in latest Trident documentation; the old site has some samples for ONTAP <a href="https://netapp-trident.readthedocs.io/en/stable-v21.07/docker/install/ndvp_ontap_config.html#example-ontap-config-files">here</a> and for SolidFire <a href="https://netapp-trident.readthedocs.io/en/stable-v21.07/docker/install/ndvp_sf_config.html">here</a>). For SolidFire, we use <code class="language-plaintext highlighter-rouge">solidfire-san</code> and other SolidFire specific options.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"storageDriverName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solidfire-san"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://admin:admin@192.168.1.34/json-rpc/12.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenantName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"elk"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"svip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.103.34"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Endpoint is SolidFire cluster's management IP ("MVIP") and SVIP is where iSCSI service is exposed. ONTAP config files have Management LIF and Data LIF for the same purpose. Volumes provisioned by this plugin will be assigned to a newly created storage tenant account "elk".</p>
+
+<p>As you can see there's a SolidFire cluster password in plaintext there. That can be stored in secrets, but even so - it's a good idea to not allow users (such as ELK stack operator) login to the guest VM or host/worker running that container. ELK admins who are also entrusted with storage management could use Docker volume plugin, but don't necessarily need to be able to read that configuration file. A best practice is to have some "admin" dude who manages storage, while Elasticsearch administrators can only deploy workloads.</p>
+
+<p>Tenant name (here we use "elk") can be preexisting (manually created on SolidFire or ONTAP), but if it does not exist it will be created by Trident via the storage API. Because you've presumably prepared your iSCSI client for Docker host, you probably also created a new CHAP (tenant, storage) account on ONTAP/SolidFire at that time, but if you're going to create iSCSI client configuration later, you must visit the ONTAP or SolidFire UI and find out what random password Trident config gave to this user in config.json, and populate your iSCSI client's iscsid.conf with that account and credentials.</p>
+
+<p>If we get everything right we can install that plugin and give it an alias (or name) that I mentioned earlier.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker plugin <span class="nb">install </span>netapp/trident-plugin:latest <span class="nt">--alias</span> trident <span class="nt">--grant-all-permissions</span> <span class="nv">config</span><span class="o">=</span>config.json
+</code></pre></div></div>
+
+<p>Note how config file name is specified at the end - that's optional if the config file is named "config.json" but mandatory if it's not. If you used a different name (such as ontap.json) earlier, provide that file name name here, too. If you need to undo mistakes in config.json, use "docker plugin" commands to disable and enable the plugin to refresh its settings.</p>
+
+<p>When you use the driver, remember the alias you gave it because it's required to tell Docker which back-end to use (Docker defaults to local volume driver).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker plugin <span class="nb">ls
+</span>ID             NAME             DESCRIPTION                             ENABLED
+8ea75dac1aab   trident:latest   Trident - NetApp Docker Volume Plugin   <span class="nb">true</span>
+</code></pre></div></div>
+
+<p>Create a test volume to see if everything works.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker volume create <span class="nt">-d</span> trident <span class="nt">--name</span> dockertest <span class="nt">--opt</span> <span class="nv">size</span><span class="o">=</span>2G
+<span class="nv">$ </span><span class="nb">sudo </span>docker volume <span class="nb">ls
+</span>DRIVER           VOLUME NAME
+trident:latest   dockertest
+</code></pre></div></div>
+
+<p>This command doesn't use iSCSI network - it only uses Docker plugin and management API of storage array. It should work and you should see the new volume in the storage UI.</p>
+
+<p>Before we attempt to use the new volume to store data we must ensure our iSCSI client can access it. Configure iSCSI according to ONTAP or SolidFire documentation and KB's, access the new volume and make sure you can use it. Once that is confirmed to work, unmount it, logout from iSCSI target and delete the volume with (sudo) <code class="language-plaintext highlighter-rouge">docker volume rm</code>.</p>
+
+<p>If it didn't work, troubleshoot your network, iSCSI client, <a href="https://netapp-trident.readthedocs.io/en/stable-v21.07/docker/troubleshooting.html">or Trident</a> until you fix it.</p>
+
+<p>We're now ready to deploy Elasticsearch with Trident. Delete previous container with the same name, create a new volume, and run the now familiar command with a small change (<code class="language-plaintext highlighter-rouge">--volume-driver</code>).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker volume create <span class="nt">-d</span> trident <span class="nt">--name</span> esdata01 <span class="nt">--opt</span> <span class="nv">size</span><span class="o">=</span>2G <span class="nt">--opt</span> <span class="nv">fileSystemType</span><span class="o">=</span>xfs
+
+<span class="nv">$ </span><span class="nb">sudo </span>docker run <span class="nt">--name</span> es01 <span class="nt">--net</span> elastic <span class="se">\</span>
+  <span class="nt">--volume-driver</span> trident <span class="se">\</span>
+  <span class="nt">-v</span> esdata01:/usr/share/elasticsearch/data <span class="se">\</span>
+  <span class="nt">-e</span> discovery.type<span class="o">=</span><span class="s1">'single-node'</span> <span class="se">\</span>
+  <span class="nt">-e</span> xpack.security.http.ssl.enabled<span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
+  <span class="nt">-e</span> xpack.security.enabled<span class="o">=</span><span class="nb">false</span> <span class="se">\</span>
+  <span class="nt">-p</span> 9200:9200 <span class="nt">-p</span> 9300:9300 <span class="se">\</span>
+  <span class="nt">-it</span> docker.elastic.co/elasticsearch/elasticsearch:8.0.1
+</code></pre></div></div>
+
+<p>The extra <code class="language-plaintext highlighter-rouge">-e</code> stuff is there to allow the container to restart (if you stop it and want to start it again without recreating Elasticsearch data).</p>
+
+<p>The volume-related lines do the same thing as before, but now using a specific plugin (<code class="language-plaintext highlighter-rouge">trident</code>) which creates a volume on the back end defined in Trident's config file (config.json).</p>
+
+<p>To create a multi-node cluster, we need to have multiple "esdata" volumes and start multiple containers. But Docker commands for subsequent nodes would have to be changed. That can get complicated, so if you want to run multiple nodes I recommend to instead modify original multi-node Docker Compose file from the Elasticsearch 8.0.1 documentation (linked earlier). It's easier to add appropriate Trident volume settings to that compose file, than figure out how to create long Docker commands.</p>
+
+<p>Using Elastic's original Docker Compose I encountered a Docker Compose problem (see <a href="https://stackoverflow.com/questions/69464001/docker-compose-container-name-use-dash-instead-of-underscore">this</a> question - these workarounds didn't work for me).</p>
+
+<p>I finally worked around that problem by modifying Elastic's Docker Compose file, but it only works when Trident volumes be created beforehand (before Compose runs). You can find my modified Docker Compose file in Appendix A. I removed Elasticsearch nodes 2 and 3 from it because I didn't want to overload my SolidFire Demo VM.</p>
+
+<ul>
+  <li>single node Elasticsearch 8.0.1 with Docker Compose: use file from Appendix A (trimmed down and modified from Elasticsearch 8.0.1 documentation)</li>
+  <li>three node Elasticsearch 8.0.1 with Docker Compose: create volumes beforehand, use original Docker Compose from Elasticsearch 8.0.1 documentation but adjust its <code class="language-plaintext highlighter-rouge">volumes</code> related settings by referencing sample modifications I made in Appendix A</li>
+</ul>
+
+<h2 id="elastic-on-kubernetes-with-trident-csi-and-cinder-csi">Elastic on Kubernetes with Trident CSI and Cinder CSI</h2>
+
+<p>Kubernetes is a special case of dynamic provisioning with external volumes, but I mention it separately because … it's complicated.</p>
+
+<p>First, even though Trident CSI is most popular provision for NetApp, it's not the only provisioner. As noted above you could also use BeeGFS CSI or Rancher Local Path Provisioner with E-Series. Second, even NetApp Astra Trident has a version for CSI which is different from what we used earlier (Trident Docker volume plugin). That's why I decided to separate Kubernetes from Docker.</p>
+
+<p>I happen to have two Kubernetes clusters at hand, so I'll also split this Kubernetes section in two parts:</p>
+<ul>
+  <li>arm64-based with Trident CSI (three smaller nodes)</li>
+  <li>amd64-based with Cinder CSI (single larger node)</li>
+</ul>
+
+<h3 id="trident-csi">Trident CSI</h3>
+
+<p>Most NetApp customers use Trident CSI so we'll start with that (I should mention that Trident still doesn't officially support ARM64 - I <a href="/2021/02/24/netapp-trident-on-arm64.html">built</a> it on my own for my ARM64 cluster and you can download several 2022 releases patched for ARM64 <a href="https://hub.docker.com/r/scaleoutsean/trident-arm64">here</a>). This cluster has three nodes, all Ubuntu 20.04-based, running vanilla Kubernetes 1.23.4. (These screenshots can be opened in a new tab.)</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-trident-csi-sc-01.png" alt="ARM64-based cluster with Trident CSI" /></p>
+
+<p>We'd first install and configure Trident CSI. Once Trident CSI is in place we need to create a Storage Class (SC) - or a volume "profile" - that makes use of a Trident back-end. The process of installing Trident CSI and creating a storage class part is similar to deploying and configuring Trident Docker plugin. In this example below Trident CSI uses ext4 filesystem (with Trident Docker plugin earlier we specified to use XFS).</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-trident-csi-sc-02.png" alt="Storage Class with Trident CSI" /></p>
+
+<p>Various Storage Class examples for ONTAP and SolidFire can be found in the Trident CSI documentation.</p>
+
+<p>With that ready, we can install Elasticsearch using one of the official Elastic <a href="https://github.com/elastic/helm-charts">Helm charts</a>. Pick one you like and check its settings.</p>
+
+<p>For this cluster the only difference from default Elastic Helm chart settings was storageClassName name needed to request a Trident CSI backed storage class. On this cluster that is "iscsi-bronze".</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-trident-csi-sc-03.png" alt="PVC with Trident CSI" /></p>
+
+<p>I used Helm to deploy this chart, and Kubernetes deployed a Stateful Set with one Elasticsearch 8 pod onto the second node ("k2") of this cluster. (Normally, we'd use a non-default namespace).</p>
+
+<p>Container shell at the bottom shows a PV mounted to /usr/share/elasticsearch/data.</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-trident-csi-sc-04.png" alt="Elastic pod running on K8s" /></p>
+
+<p>The Storage UI on the back-end should show the same PV.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc
+NAME                                          STATUS   VOLUME                                     CAPACITY    ACCESS MODES   STORAGECLASS   AGE
+elasticsearch-master-elasticsearch-master-0   Bound    pvc-0ad9a257-a23a-467f-b083-e57ece06b1bc   1953125Ki   RWO            iscsi-bronze   89m
+
+<span class="nv">$ </span>kubectl get pv
+NAME                                       CAPACITY    ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                                 STORAGECLASS   REASON   AGE
+pvc-0ad9a257-a23a-467f-b083-e57ece06b1bc   1953125Ki   RWO            Delete           Bound    default/elasticsearch-master-elasticsearch-master-0   iscsi-bronze            89m
+</code></pre></div></div>
+
+<p>In the SolidFire Web UI, the name matches. On the right-hand side we can see that Storage Class used for this volume had non-default QoS settings. These settings come from Trident back-end configuration file used when we installed Trident (refer to the Trident docs for back-end settings and parameters).</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-trident-csi-sc-05.png" alt="Sample Storage Class with Trident CSI" /></p>
+
+<p>The only change from the official Helm chart template values was a custom Storage Class, in this case "iscsi-bronze" (shown three screenshots ago) at the bottom of the Help values file:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">volumeClaimTemplate</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span> <span class="pi">[</span> <span class="s2">"</span><span class="s">ReadWriteOnce"</span> <span class="pi">]</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">iscsi-bronze"</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">2Gi</span>
+</code></pre></div></div>
+
+<p>Appendix B has a sample values file for Cinder CSI which also has the same change made for Cinder CSI using its own SC name.</p>
+
+<p>One thing I want to mention is Elastic Helm charts allow the use of unused <em>existing</em> volume claims (PVC's) which could be pre-created for Helm using simple PVC YAML templates. This could also be useful if you wanted to create volumes with different settings, which would not be possible if we were to use one storage class which would result in the same back-end and same Storage Class for all volumes.</p>
+
+<p>Here's how to pre-create a PVC for a specific Storage Class (here "iscsi-bronze"). It's like a Kubernetes version of "docker volume create -o Type=Silver" for solidfire-san back end with Trident Docker volume plugin:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get sc
+NAME           PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+iscsi-bronze   csi.trident.netapp.io   Delete          Immediate           <span class="nb">false                  </span>237d
+
+<span class="nv">$ </span><span class="nb">cat </span>pvc-esdata01.yaml 
+<span class="nt">---</span>
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: esdata01 
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: iscsi-bronze
+
+<span class="nv">$ </span>kubectl apply <span class="nt">-f</span> pvc-esdata01.yaml 
+persistentvolumeclaim/esdata01 created
+
+<span class="nv">$ </span>kubectl get pvc
+NAME       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+esdata01   Bound    pvc-7759cb6a-9884-45f0-bc51-ee589bda8c94   1Gi        RWO            iscsi-bronze   3s
+</code></pre></div></div>
+
+<p>That PVC name (esdata01) could then be specified in your Helm chart. Of course, you'd need several PVs for a larger Elasticsearch cluster. And we'd likely use some other namespace (not "default").</p>
+
+<p>Because Helm charts differ from source to source and change over time, it's recommended to use official Helm charts provided by Elastic in order to have a supported environment and eliminate problems with maintenance and upgrades.</p>
+
+<h3 id="cinder-csi-on-openstack-vm">Cinder CSI on Openstack VM</h3>
+
+<p>The cluster is also vanilla Kubernetes.io installed with kubeadm and uses Cinder CSI to provision storage on Openstack which in turn consumes storage via Openstack Cinder driver of which I have two - one LVM (for local storage in Nova compute instances aka K8s workers) and another SolidFire Cinder driver configured to use external storage - SolidFire iSCSI. If you are interested in Cinder CSI, see <a href="/2022/02/22/openstack-solidfire.html">this post</a> where I explain</p>
+
+<ul>
+  <li>how Cinder CSI differs from Trident CSI (Part 1),</li>
+  <li>how to configure Cinder QoS (Part 1) and Cinder CSI Service Class (Part 2), and</li>
+  <li>discuss supportability of Cinder CSI</li>
+</ul>
+
+<p>Some details about this environment:</p>
+
+<ul>
+  <li>Debian 10 x86_64</li>
+  <li>Kubernetes 1.23.4</li>
+  <li>Cinder CSI driver <a href="https://github.com/kubernetes/cloud-provider-openstack/releases/tag/openstack-cinder-csi-1.3.9">1.3.9</a>
+    <ul>
+      <li>Storage Class tied to Cinder Volume Type in Openstack cluster</li>
+    </ul>
+  </li>
+  <li>Helm v3.8.0
+    <ul>
+      <li>Official Elastic Helm charts and used the minikube example</li>
+      <li>Volumes-related variables (see Appendix B for values.yaml) edited to use Cinder CSI SC for SolidFire</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Helm chart installation was smooth, following the exact same process as with Trident CSI (and using values.yaml from Appendix B).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>make <span class="nb">install
+</span>helm upgrade <span class="nt">--wait</span> <span class="nt">--timeout</span><span class="o">=</span>1200s <span class="nt">--install</span> <span class="nt">--values</span> values.yaml helm-es-minikube ../../
+Release <span class="s2">"helm-es-minikube"</span> has been upgraded. Happy Helming!
+NAME: helm-es-minikube
+LAST DEPLOYED: Mon Mar  7 17:45:49 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 3
+</code></pre></div></div>
+
+<p>Moments later Cinder CSI created a PV on Cinder SolidFire back-end:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc
+NAME                                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                    AGE
+elasticsearch-master-elasticsearch-master-0   Bound    pvc-7e42dbfe-df6d-4272-a950-7a96a3e23955   2Gi        RWO            csi-sc-cinderplugin-solidfire   87m
+</code></pre></div></div>
+
+<p>That was step (1) in screenshot below (open it in new tab for better view). In step (2) I confirmed service was up and in step (3) I checked if PV was created with the SC that uses SolidFire Cinder driver. In the background you can see the Cinder volume in Openstack corresponds to the Kubernetes PVC name.</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-cinder-csi-helm-chart-01.png" alt="Elasticsearch Helm chart with Cinder CSI and SolidFire" /></p>
+
+<p>In Openstack dashboard we can find the mapping between Cinder Volume Name and Cinder Volume ID. Further below we see Kuberntes metadata related to this volume.</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-cinder-csi-helm-chart-02.png" alt="Openstack Cinder volume created for PVC by Cinder CSI" /></p>
+
+<p>Cinder Volume ID f89bcc82-6e39-47cf-9846-9d52a58b959 maps to SolidFire Volume Name UUID-f89bcc82-6e39-47cf-9846-9d52a58b959:</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-cinder-csi-helm-chart-03.png" alt="Cinder CSI PVC in SolidFire Web UI" /></p>
+
+<p>Unlike with Docker-Compose, storage account name is auto-generated as well as is based on Openstack Cinder settings (I configured Cinder to use a prefix ("os"), while Openstack appended Project ID).</p>
+
+<p><img src="/assets/images/elasticsearch-with-ontap-and-solidfire-cinder-csi-helm-chart-04.png" alt="SolidFire Name and Tenant map to Cinder Volume ID and Project ID" /></p>
+
+<p>Notice the rectangle on the right-hand side contains "unusual" QoS settings (Min 100/Max 300/Burst 750). I set those in Openstack's Cinder Volume Type which was used as the base for Cinder CSI in Kubernetes. This is similar to back-end specification in Trident CSI demonstrated earlier. (Recall that we didn't specify storage QoS settings in Trident Docker plugin in order to keep it simple.)</p>
+
+<h3 id="other-csi-resources-for-netapp-storage">Other CSI resources for NetApp storage</h3>
+
+<p>There are many Trident CSI demos out there, for both ONTAP and SolidFire. One SolidFire-related demo with Rancher (RKE) can be found <a href="https://www.youtube.com/watch?v=pQbt_TzFqwU">here</a>.</p>
+
+<p>Cloud Volumes ONTAP has a Web management UI (Cloud Manager) with an integrated installer for Trident, so if you haven't used ONTAP, doing a test in the cloud may be easier if you don't have anyone to help you with ONTAP.</p>
+
+<h2 id="demos">Demos</h2>
+
+<ul>
+  <li><a href="https://rumble.com/vwsnpf-elasticsearch-8-in-docker-containers-with-netapp-block-storage.html">Elasticsearch 8 in Docker containers with Docker Trident plugin</a> - 2m57s</li>
+  <li><a href="https://rumble.com/vwso1d-elasticsearch-8-kubernetes-1.23-with-trident-csi-and-cinder-csi-with-netapp.html">Elasticsearch 8 on Kubernetes with Trident CSI (by NetApp) and Cinder CSI (by Openstack)</a> - 3m46s</li>
+</ul>
+
+<h2 id="appendix-a---docker-compose-setup-with-trident-docker-plugin">Appendix A - Docker Compose setup with Trident Docker plugin</h2>
+
+<ul>
+  <li>Create Trident volumes (in this demo the Kibana volume was left out to be created on-demand locally for the sake of a demonstration, but you can change the configuration if you want all volumes on a Trident back-end). Both all-flash ONTAP and SolidFire volumes are thin-provisioned, so having a 1Gi large certs volume won't result in wasted capacity. Syntax for QoS policies and other settings slightly differs between SolidFire and ONTAP, so that's not addressed in these examples to make these examples generic.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>docker volume create <span class="nt">-d</span> trident <span class="nt">--name</span> certs <span class="nt">--opt</span> <span class="nv">size</span><span class="o">=</span>1Gi <span class="nt">--opt</span> <span class="nv">fileSystemType</span><span class="o">=</span>xfs
+<span class="nv">$ </span><span class="nb">sudo </span>docker volume create <span class="nt">-d</span> trident <span class="nt">--name</span> esdata01 <span class="nt">--opt</span> <span class="nv">size</span><span class="o">=</span>5Gi <span class="nt">--opt</span> <span class="nv">fileSystemType</span><span class="o">=</span>xfs
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Create <code class="language-plaintext highlighter-rouge">.env</code> file as per the Elasticsearch <a href="https://www.elastic.co/guide/en/elasticsearch/reference/8.0/docker.html">example</a> and modify as you wish</p>
+  </li>
+  <li>
+    <p>Run (sudo) <code class="language-plaintext highlighter-rouge">docker-compose up</code> with <code class="language-plaintext highlighter-rouge">.env</code> and docker-compose.yml (below) in the same directory:</p>
+  </li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2.2"</span>
+
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">setup</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">certs:/usr/share/elasticsearch/config/certs</span>
+    <span class="na">user</span><span class="pi">:</span> <span class="s2">"</span><span class="s">0"</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="pi">&gt;</span>
+      <span class="s">bash -c '</span>
+        <span class="s">if [ x${ELASTIC_PASSWORD} == x ]; then</span>
+          <span class="s">echo "Set the ELASTIC_PASSWORD environment variable in the .env file";</span>
+          <span class="s">exit 1;</span>
+        <span class="s">elif [ x${KIBANA_PASSWORD} == x ]; then</span>
+          <span class="s">echo "Set the KIBANA_PASSWORD environment variable in the .env file";</span>
+          <span class="s">exit 1;</span>
+        <span class="s">fi;</span>
+        <span class="s">if [ ! -f certs/ca.zip ]; then</span>
+          <span class="s">echo "Creating CA";</span>
+          <span class="s">bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;</span>
+          <span class="s">unzip config/certs/ca.zip -d config/certs;</span>
+        <span class="s">fi;</span>
+        <span class="s">if [ ! -f certs/certs.zip ]; then</span>
+          <span class="s">echo "Creating certs";</span>
+          <span class="s">echo -ne \</span>
+          <span class="s">"instances:\n"\</span>
+          <span class="s">"  - name: es01\n"\</span>
+          <span class="s">"    dns:\n"\</span>
+          <span class="s">"      - es01\n"\</span>
+          <span class="s">"      - localhost\n"\</span>
+          <span class="s">"    ip:\n"\</span>
+          <span class="s">"      - 127.0.0.1\n"\</span>
+          <span class="s">&gt; config/certs/instances.yml;</span>
+          <span class="s">bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;</span>
+          <span class="s">unzip config/certs/certs.zip -d config/certs;</span>
+        <span class="s">fi;</span>
+        <span class="s">echo "Setting file permissions"</span>
+        <span class="s">chown -R root:root config/certs;</span>
+        <span class="s">find . -type d -exec chmod 750 \{\} \;;</span>
+        <span class="s">find . -type f -exec chmod 640 \{\} \;;</span>
+        <span class="s">until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;</span>
+        <span class="s">echo "Setting kibana_system password";</span>
+        <span class="s">until curl -s -X POST --cacert config/certs/ca/ca.crt -u elastic:${ELASTIC_PASSWORD} -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;</span>
+        <span class="s">echo "All done!";</span>
+      <span class="s">'</span>
+    <span class="na">healthcheck</span><span class="pi">:</span>
+      <span class="na">test</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">CMD-SHELL"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">[</span><span class="nv"> </span><span class="s">-f</span><span class="nv"> </span><span class="s">config/certs/es01/es01.crt</span><span class="nv"> </span><span class="s">]"</span><span class="pi">]</span>
+      <span class="na">interval</span><span class="pi">:</span> <span class="s">1s</span>
+      <span class="na">timeout</span><span class="pi">:</span> <span class="s">5s</span>
+      <span class="na">retries</span><span class="pi">:</span> <span class="m">120</span>
+
+  <span class="na">es01</span><span class="pi">:</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
+      <span class="na">setup</span><span class="pi">:</span>
+        <span class="na">condition</span><span class="pi">:</span> <span class="s">service_healthy</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">certs:/usr/share/elasticsearch/config/certs</span>
+      <span class="pi">-</span> <span class="s">esdata01:/usr/share/elasticsearch/data</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">${ES_PORT}:9200</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">node.name=es01</span>
+      <span class="pi">-</span> <span class="s">cluster.name=${CLUSTER_NAME}</span>
+      <span class="pi">-</span> <span class="s">cluster.initial_master_nodes=es01</span>
+      <span class="pi">-</span> <span class="s">ELASTIC_PASSWORD=${ELASTIC_PASSWORD}</span>
+      <span class="pi">-</span> <span class="s">bootstrap.memory_lock=true</span>
+      <span class="pi">-</span> <span class="s">xpack.security.enabled=true</span>
+      <span class="pi">-</span> <span class="s">xpack.security.http.ssl.enabled=true</span>
+      <span class="pi">-</span> <span class="s">xpack.security.http.ssl.key=certs/es01/es01.key</span>
+      <span class="pi">-</span> <span class="s">xpack.security.http.ssl.certificate=certs/es01/es01.crt</span>
+      <span class="pi">-</span> <span class="s">xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt</span>
+      <span class="pi">-</span> <span class="s">xpack.security.http.ssl.verification_mode=certificate</span>
+      <span class="pi">-</span> <span class="s">xpack.security.transport.ssl.enabled=true</span>
+      <span class="pi">-</span> <span class="s">xpack.security.transport.ssl.key=certs/es01/es01.key</span>
+      <span class="pi">-</span> <span class="s">xpack.security.transport.ssl.certificate=certs/es01/es01.crt</span>
+      <span class="pi">-</span> <span class="s">xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt</span>
+      <span class="pi">-</span> <span class="s">xpack.security.transport.ssl.verification_mode=certificate</span>
+      <span class="pi">-</span> <span class="s">xpack.license.self_generated.type=${LICENSE}</span>
+    <span class="na">mem_limit</span><span class="pi">:</span> <span class="s">${MEM_LIMIT}</span>
+    <span class="na">ulimits</span><span class="pi">:</span>
+      <span class="na">memlock</span><span class="pi">:</span>
+        <span class="na">soft</span><span class="pi">:</span> <span class="s">-1</span>
+        <span class="na">hard</span><span class="pi">:</span> <span class="s">-1</span>
+    <span class="na">healthcheck</span><span class="pi">:</span>
+      <span class="na">test</span><span class="pi">:</span>
+        <span class="pi">[</span>
+          <span class="s2">"</span><span class="s">CMD-SHELL"</span><span class="pi">,</span>
+          <span class="s2">"</span><span class="s">curl</span><span class="nv"> </span><span class="s">-s</span><span class="nv"> </span><span class="s">--cacert</span><span class="nv"> </span><span class="s">config/certs/ca/ca.crt</span><span class="nv"> </span><span class="s">https://localhost:9200</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">grep</span><span class="nv"> </span><span class="s">-q</span><span class="nv"> </span><span class="s">'missing</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">credentials'"</span><span class="pi">,</span>
+        <span class="pi">]</span>
+      <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+      <span class="na">timeout</span><span class="pi">:</span> <span class="s">10s</span>
+      <span class="na">retries</span><span class="pi">:</span> <span class="m">120</span>
+
+  <span class="na">kibana</span><span class="pi">:</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
+      <span class="na">es01</span><span class="pi">:</span>
+        <span class="na">condition</span><span class="pi">:</span> <span class="s">service_healthy</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/kibana/kibana:${STACK_VERSION}</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">certs:/usr/share/kibana/config/certs</span>
+      <span class="pi">-</span> <span class="s">kibanadata:/usr/share/kibana/data</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">${KIBANA_PORT}:5601</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">SERVERNAME=kibana</span>
+      <span class="pi">-</span> <span class="s">ELASTICSEARCH_HOSTS=https://es01:9200</span>
+      <span class="pi">-</span> <span class="s">ELASTICSEARCH_USERNAME=kibana_system</span>
+      <span class="pi">-</span> <span class="s">ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}</span>
+      <span class="pi">-</span> <span class="s">ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt</span>
+    <span class="na">mem_limit</span><span class="pi">:</span> <span class="s">${MEM_LIMIT}</span>
+    <span class="na">healthcheck</span><span class="pi">:</span>
+      <span class="na">test</span><span class="pi">:</span>
+        <span class="pi">[</span>
+          <span class="s2">"</span><span class="s">CMD-SHELL"</span><span class="pi">,</span>
+          <span class="s2">"</span><span class="s">curl</span><span class="nv"> </span><span class="s">-s</span><span class="nv"> </span><span class="s">-I</span><span class="nv"> </span><span class="s">http://localhost:5601</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">grep</span><span class="nv"> </span><span class="s">-q</span><span class="nv"> </span><span class="s">'HTTP/1.1</span><span class="nv"> </span><span class="s">302</span><span class="nv"> </span><span class="s">Found'"</span><span class="pi">,</span>
+        <span class="pi">]</span>
+      <span class="na">interval</span><span class="pi">:</span> <span class="s">10s</span>
+      <span class="na">timeout</span><span class="pi">:</span> <span class="s">10s</span>
+      <span class="na">retries</span><span class="pi">:</span> <span class="m">120</span>
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">certs</span><span class="pi">:</span>
+    <span class="na">external</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="na">esdata01</span><span class="pi">:</span>
+    <span class="na">external</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="na">kibanadata</span><span class="pi">:</span>
+    <span class="na">driver</span><span class="pi">:</span> <span class="s">local</span>
+</code></pre></div></div>
+
+<h2 id="appendix-b-kubernetes-helm-chart-for-trident-and-cinder-csi">Appendix B: Kubernetes Helm Chart for Trident and Cinder CSI</h2>
+
+<ul>
+  <li>Unlike the Docker example from Appendix A, this particular example has no Kibana - it's just Elasticsearch (I didn't have a lot of RAM) but Elastic has Helm charts for larger configurations</li>
+  <li>To use this with Trident CSI, identify Trident Storage Class to be used used by Elasticsearch, and configure Helm storage class name accordingly. Then the chart should work with Trident CSI without other changes</li>
+  <li>Cinder CSI Storage Class configured to use SolidFire Cinder driver was named "csi-sc-cinderplugin-solidfire":</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get sc
+NAME                            PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+csi-sc-cinderplugin             cinder.csi.openstack.org   Delete          Immediate           <span class="nb">false                  </span>6d
+csi-sc-cinderplugin-solidfire   cinder.csi.openstack.org   Delete          Immediate           <span class="nb">false                  </span>5d13h
+</code></pre></div></div>
+
+<ul>
+  <li>values.yaml from official <a href="https://github.com/elastic/helm-charts/">Elasticsearch Helm chart for minikube</a> modified for Cinder CSI Storage Class as configured above:</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="c1"># Permit co-located instances for solitary minikube virtual machines.</span>
+<span class="na">antiAffinity</span><span class="pi">:</span> <span class="s2">"</span><span class="s">soft"</span>
+
+<span class="c1"># Shrink default JVM heap.</span>
+<span class="na">esJavaOpts</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-Xmx128m</span><span class="nv"> </span><span class="s">-Xms128m"</span>
+
+<span class="na">replicas</span><span class="pi">:</span> <span class="m">1</span>
+<span class="na">minimumMasterNodes</span><span class="pi">:</span> <span class="m">1</span>
+
+<span class="c1"># Allocate smaller chunks of memory per pod.</span>
+<span class="na">resources</span><span class="pi">:</span>
+  <span class="na">requests</span><span class="pi">:</span>
+    <span class="na">cpu</span><span class="pi">:</span> <span class="s2">"</span><span class="s">100m"</span>
+    <span class="na">memory</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512M"</span>
+  <span class="na">limits</span><span class="pi">:</span>
+    <span class="na">cpu</span><span class="pi">:</span> <span class="s2">"</span><span class="s">1000m"</span>
+    <span class="na">memory</span><span class="pi">:</span> <span class="s2">"</span><span class="s">512M"</span>
+
+<span class="na">image</span><span class="pi">:</span> <span class="s2">"</span><span class="s">docker.elastic.co/elasticsearch/elasticsearch"</span>
+<span class="na">imageTag</span><span class="pi">:</span> <span class="s2">"</span><span class="s">8.0.0-SNAPSHOT"</span>
+<span class="na">imagePullPolicy</span><span class="pi">:</span> <span class="s2">"</span><span class="s">IfNotPresent"</span>
+
+<span class="na">protocol</span><span class="pi">:</span> <span class="s">https</span>
+<span class="na">httpPort</span><span class="pi">:</span> <span class="m">9200</span>
+<span class="na">transportPort</span><span class="pi">:</span> <span class="m">9300</span>
+
+<span class="c1"># Request persistent volumes of appropriate storage class.</span>
+<span class="na">volumeClaimTemplate</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span> <span class="pi">[</span> <span class="s2">"</span><span class="s">ReadWriteOnce"</span> <span class="pi">]</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">csi-sc-cinderplugin-solidfire"</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">2G</span>
+</code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/audit" class="page__taxonomy-item p-category" rel="tag">audit</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/elasticsearch" class="page__taxonomy-item p-category" rel="tag">elasticsearch</a><span class="sep">, </span>
+    
+      <a href="/tags/elk" class="page__taxonomy-item p-category" rel="tag">elk</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/log" class="page__taxonomy-item p-category" rel="tag">log</a><span class="sep">, </span>
+    
+      <a href="/tags/logging" class="page__taxonomy-item p-category" rel="tag">logging</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/ontap" class="page__taxonomy-item p-category" rel="tag">ontap</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/visualization" class="page__taxonomy-item p-category" rel="tag">visualization</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/containers" class="page__taxonomy-item p-category" rel="tag">containers</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-03-06T00:00:00+08:00">2022-03-06 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Elasticsearch+8+with+NetApp+storage%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F03%2F06%2Felastic-elk-stack-on-netapp.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/03/06/elastic-elk-stack-on-netapp.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/03/04/storagegrid-s3-select.html" class="pagination--pager" title="S3 Select and other new features of NetApp StorageGRID 11.6">Previous</a>
+    
+    
+      <a href="/2022/03/10/s3-select-vs-remote-csv-over-fuse.html" class="pagination--pager" title="S3 Select vs. remote SQL access to CSV over FUSE">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | License: CC BY 2.0.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
