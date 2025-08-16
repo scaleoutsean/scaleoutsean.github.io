@@ -1,128 +1,309 @@
 <!doctype html>
-<html lang="en">
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
   <head>
-        <meta charset="UTF-8">
-    <meta http-equiv="content-language" content="en">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="googlebot" content="max-snippet:60">
-    <meta name="googlebot" content="max-image-preview:small">
-    <meta name="bingbot" content="max-snippet:60">
-    <meta name="bingbot" content="max-image-preview:small">
-    <meta name="robots" content="max-snippet:60">
-    <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+    <meta charset="utf-8">
 
-    <!-- LINK TO ATOM FEED FOR SEO -->
-    <link rel="alternate" type="application/atom+xml" href="https://scaleoutsean.github.io/feed.xml" />
+<!-- begin _includes/seo.html --><title>Nomad batch jobs with BeeGFS and E-Series | Acting Technologist</title>
+<meta name="description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
 
-    <!-- FAVICON -->
-    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/syntax.css">
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
 
-    <link href="/_pagefind/pagefind-ui.css" rel="stylesheet">
-    <script src="/_pagefind/pagefind-ui.js" type="text/javascript"></script>
-    <div id="search"></div>
-    <script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            new PagefindUI({ element: "#search" });
-        });
-    </script>
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Nomad batch jobs with BeeGFS and E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
 
-    <!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Nomad batch jobs with BeeGFS and E-Series | Acting Technologist</title>
-<meta name="generator" content="Jekyll v4.3.4" />
-<meta property="og:title" content="Nomad batch jobs with BeeGFS and E-Series" />
-<meta name="author" content="scaleoutSean" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume" />
-<meta property="og:description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume" />
-<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" />
-<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" />
-<meta property="og:site_name" content="Acting Technologist" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2022-04-05T00:00:00+08:00" />
-<script type="application/ld+json">
-{"mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html"},"author":{"@type":"Person","name":"scaleoutSean"},"description":"IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume","@type":"BlogPosting","url":"https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html","headline":"Nomad batch jobs with BeeGFS and E-Series","dateModified":"2022-04-05T00:00:00+08:00","datePublished":"2022-04-05T00:00:00+08:00","@context":"https://schema.org"}</script>
-<!-- End Jekyll SEO tag -->
+
+  <meta property="og:description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Nomad batch jobs with BeeGFS and E-Series">
+  <meta name="twitter:description" content="IO-intensive Nomad batch jobs on an E-Series-backed BeeGFS Host Volume">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-04-05T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
 
   </head>
 
-<body>
-
-  <div class="container">
-    <header id="header">
-	<div id = site_title>
-		<a href="https://scaleoutsean.github.io/">
-		<h2 style="font-size:1.8em;">Acting Technologist</h2>
-		</a>
-		
-		<h3>
-			civilizations are created by individuals
-		</h3>
-		
-	</div>
-
-	<div id="subheader">
-		
-		<nav class="pages">
-<a href="/about.html">About</a>
-
-<a href="/archive.html">Archive</a>
-
-<a href="/categories/">Categories</a>
-
-<a href="/projects.html">Projects</a>
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
 </nav>
-		
-		
-		<nav class="social">
-			
-  
-    <a href="https://www.github.com/scaleoutsean" target="_blank" id="github"><i class="fab fa-github" aria-hidden="true"></i></a>
-  
-   
 
-  
-    <a href="https://twitter.com/scaleoutsean" target="_blank" id="twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
-  
-   
+    
 
-  
-  
-    <a href="/feed.xml" target="_blank" id="rss"><i class="fas fa-rss" aria-hidden="true"></i></a>
-   
-
-		</nav>
-		
-	</div>
-</header>
-
-
-    <div class="post-container">
-      <article id = "post">
-        <h1 id = "post-title">Nomad batch jobs with BeeGFS and E-Series</h1>
-
-  
-  <div class = "post-info">
-    <span>
-        <i class="far fa-calendar" aria-hidden="true"></i> <span>05 Apr 2022</span> - <i class="far fa-clock"></i> 
-
-
-  
-  
-    6 minute read
-  
-
-    </span>
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
   </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
   
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Nomad batch jobs with BeeGFS and E-Series">
+    <meta itemprop="description" content="  Introduction  Setup  Generic batch job with I/O to parallel filesystem  File format conversion  Summary  Demo">
+    <meta itemprop="datePublished" content="2022-04-05T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" itemprop="url">Nomad batch jobs with BeeGFS and E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-04-05T00:00:00+08:00">2022-04-05 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
         <ul>
   <li><a href="#introduction">Introduction</a></li>
   <li><a href="#setup">Setup</a></li>
@@ -136,23 +317,23 @@
 
 <p>When I wrote about <a href="/2022/03/23/nomad-solidfire-hostpath-volumes.html">HashiCorp Nomad with NetApp SolidFire</a> last week I mentioned how BeeGFS CSI with NetApp E-Series is of to-do items.</p>
 
-<p>This post isn’t about CSI, but an intermediate step.</p>
+<p>This post isn't about CSI, but an intermediate step.</p>
 
 <p>Now, there are many batch job schedulers out there. Some are HPC-focused and extremely good for that use case.</p>
 
 <p>But there are non-HPC use cases for BeeGFS, such as - for the sake of an example - data cleansing, video conversion and even backups (we could run <a href="/2022/04/03/restic-server-netapp-eseries.html">Restic backup</a> jobs for generic hosts and containers using Nomad).</p>
 
-<p>Some folks must use workflows specific to their organization or solution, but sometimes they can be initiated from another system, and other times they’re still executed the old way (crontab-driven shell scripts?).</p>
+<p>Some folks must use workflows specific to their organization or solution, but sometimes they can be initiated from another system, and other times they're still executed the old way (crontab-driven shell scripts?).</p>
 
 <p>BeeGFS with E-Series provides extreme scale-out in terms of performance and number of files.</p>
 
 <p>As noted in the first Nomad post, HashiCorp Nomad can schedule batch jobs, containers, VMs and more. It can also allocate desired resources to each job.</p>
 
-<p>The other point I made is we don’t always need CSI storage (and I am not saying this because I haven’t done it yet!).</p>
+<p>The other point I made is we don't always need CSI storage (and I am not saying this because I haven't done it yet!).</p>
 
 <h2 id="setup">Setup</h2>
 
-<p>These simple example is about running such jobs at a high speed. Normally we’d have multiple clients, but here I have just one.</p>
+<p>These simple example is about running such jobs at a high speed. Normally we'd have multiple clients, but here I have just one.</p>
 
 <ul>
   <li>BeeGFS cluster (VMs)
@@ -256,7 +437,7 @@ drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
 <span class="nt">-rw-r--r--</span> 1 nomad nomad  29597941 Mar 29 16:13 sample_1280x720_surfing_with_audio.m2v
 </code></pre></div></div>
 
-<p>When job gets allocated to b5, it consumes CPU (as expected), but very little IO (because it’s CPU-constrained).</p>
+<p>When job gets allocated to b5, it consumes CPU (as expected), but very little IO (because it's CPU-constrained).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>dstat <span class="nt">-tcn</span>
 <span class="nt">----system----</span> <span class="nt">--total-cpu-usage--</span> <span class="nt">-net</span>/total-
@@ -298,7 +479,7 @@ drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
 <span class="nt">-rw-r--r--</span> 1 nomad nomad   6815792 Apr  5 05:39 sample_1280x720_surfing_with_audio.mp4
 </code></pre></div></div>
 
-<p>I hard-coded video conversion parameters in the job (target resolution was smaller so the file name should have been sample_640x480…) - it’s not something to write home about but it worked for the purpose of this demonstration.</p>
+<p>I hard-coded video conversion parameters in the job (target resolution was smaller so the file name should have been sample_640x480…) - it's not something to write home about but it worked for the purpose of this demonstration.</p>
 
 <h2 id="summary">Summary</h2>
 
@@ -306,11 +487,11 @@ drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
 
 <p>If you have a workflow that can benefit from a better scheduler, you could dispatch jobs to Nomad which would schedule them for you.</p>
 
-<p>You may be tempted to try Kubernetes and that’s fine, but from a job scheduling perspective all you need is a single binary (nomad) that runs as server and client depending on its role. The entire setup for a VM-based cluster (provision and configure VMs, BeeGFS, Nomad clients and servers) - can be done in less than 20 minutes.</p>
+<p>You may be tempted to try Kubernetes and that's fine, but from a job scheduling perspective all you need is a single binary (nomad) that runs as server and client depending on its role. The entire setup for a VM-based cluster (provision and configure VMs, BeeGFS, Nomad clients and servers) - can be done in less than 20 minutes.</p>
 
-<p>BeeGFS with E-Series gives you the ability to access data from any client - whether it’s a VM, container, physical host - at a very high speed. Jobs in this post did not use Docker - I used the simplest approach, Nomad’s generic exec driver (which has “isolate” option for better security if you need it).</p>
+<p>BeeGFS with E-Series gives you the ability to access data from any client - whether it's a VM, container, physical host - at a very high speed. Jobs in this post did not use Docker - I used the simplest approach, Nomad's generic exec driver (which has "isolate" option for better security if you need it).</p>
 
-<p>BeeGFS CSI - a CSI-compatible driver for BeeGFS maintained by NetApp - is our next stop on this journey. BeeGFS CSI doesn’t officially support Nomad (as of April 2022), but BeeGFS CSI driver should be able to work with Nomad CSI. More on that in next Nomad-related post. Until then, you may be interested in <a href="/2022/04/09/beegfs-csi-introduction.html">BeeGFS CSI with Kubernetes</a>.</p>
+<p>BeeGFS CSI - a CSI-compatible driver for BeeGFS maintained by NetApp - is our next stop on this journey. BeeGFS CSI doesn't officially support Nomad (as of April 2022), but BeeGFS CSI driver should be able to work with Nomad CSI. More on that in next Nomad-related post. Until then, you may be interested in <a href="/2022/04/09/beegfs-csi-introduction.html">BeeGFS CSI with Kubernetes</a>.</p>
 
 <h2 id="demo">Demo</h2>
 
@@ -318,53 +499,393 @@ drwxrwxrwx 3 root  root          7 Apr  5 03:33 ../
   <li><a href="https://rumble.com/vzrphv-hashicorp-nomad-batch-jobs-with-beegfs-and-netapp-e-series.html">IO-intensive batch jobs with HashiCorp Nomad, ThinkParQ BeeGFS, and NetApp E-Series</a> - 3m6s</li>
 </ul>
 
-      </article>
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/hashicorp" class="page__taxonomy-item p-category" rel="tag">hashicorp</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/nomad" class="page__taxonomy-item p-category" rel="tag">nomad</a><span class="sep">, </span>
+    
+      <a href="/tags/workflow" class="page__taxonomy-item p-category" rel="tag">workflow</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/containers" class="page__taxonomy-item p-category" rel="tag">containers</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-04-05T00:00:00+08:00">2022-04-05 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Nomad+batch+jobs+with+BeeGFS+and+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F04%2F05%2Fnomad-beegfs-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/04/05/nomad-beegfs-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/04/03/restic-server-netapp-eseries.html" class="pagination--pager" title="Rest Server with NetApp E-Series">Previous</a>
+    
+    
+      <a href="/2022/04/05/proxmox-solidfire.html" class="pagination--pager" title="Consume SolidFire storage from Proxmox hosts">Next</a>
+    
+  </nav>
+
+
     </div>
+
     
-      <div class="categories">
-    <span><p>Categories:</p>
+  </article>
+
+  
+  
     
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
     
-      <a href="
-      /categories/#storage">storage</a>
-      &nbsp; 
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
     
-      <a href="
-      /categories/#containers">containers</a>
-      &nbsp; 
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
     
-      <a href="
-      /categories/#kubernetes">kubernetes</a>
-       
+
+  <p class="page__meta">
     
-  </span>
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
 </div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
     
 
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
   
-    <div>
-      <h3>Related Posts</h3>
-      <ul>
+  
+</div>
+
       
-        <li><a href="/2022/09/27/beegfs-csi-nomad-kubernetes.html">Speed of volume creation with BeeGFS CSI</a></li>
-      
-        <li><a href="/2022/04/24/nomad-batch-job-scale-out-parallel-filesystem-beegfs-e-netapp-series.html">Scaling out Nomad batch jobs with BeeGFS and NetApp E-Series</a></li>
-      
-        <li><a href="/2022/08/09/nomad-beegfs-minio-s3.html">Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO</a></li>
-      
-        <li><a href="/2022/06/14/batch-copy-files-beegfs.html">Copy files to or from BeeGFS before or after scheduled jobs</a></li>
-      
-        <li><a href="/2023/01/12/beegfs-eseries-hybrid-cloud-spot-ocean-spark.html">Burst on-prem GPU workloads from BeeGFS/E-Series clusters to Spot Ocean for Spark in the cloud</a></li>
-      
-      </ul>
     </div>
-  
 
     
-  </div><footer class= "footer">
-    <p>2025-08-16 01:21 </p>
-    <p>Copyright © 2025 scaleoutSean. Content is released under the CC BY license. Design: Alessio Franceschi</p>
-</footer>
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
 
-</body>
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
 </html>
