@@ -1,0 +1,941 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>MinIO Erasure Coding with NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="Thoughts on MinIO Erasure Coding recipes and E-Series disk arrays">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="MinIO Erasure Coding with NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">
+
+
+  <meta property="og:description" content="Thoughts on MinIO Erasure Coding recipes and E-Series disk arrays">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="MinIO Erasure Coding with NetApp E-Series">
+  <meta name="twitter:description" content="Thoughts on MinIO Erasure Coding recipes and E-Series disk arrays">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2023-09-03T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2023/09/03/minio-erasure-coding-and-netapp-e-series.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="MinIO Erasure Coding with NetApp E-Series">
+    <meta itemprop="description" content="  The concept  Recommendations          Single rack      Three racks      Non-standard EC:1 on VI/K8s with E-Series        Tolerance to disk loss  E-Series with unprotected media  MinIO without EC  Getting the most out of E-Series in MinIO EC environments  Appendix A">
+    <meta itemprop="datePublished" content="2023-09-03T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2023/09/03/minio-erasure-coding-and-netapp-e-series.html" itemprop="url">MinIO Erasure Coding with NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2023-09-03T00:00:00+08:00">2023-09-03 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          14 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <ul>
+  <li><a href="#the-concept">The concept</a></li>
+  <li><a href="#recommendations">Recommendations</a>
+    <ul>
+      <li><a href="#single-rack">Single rack</a></li>
+      <li><a href="#three-racks">Three racks</a></li>
+      <li><a href="#non-standard-ec1-on-vik8s-with-e-series">Non-standard EC:1 on VI/K8s with E-Series</a></li>
+    </ul>
+  </li>
+  <li><a href="#tolerance-to-disk-loss">Tolerance to disk loss</a></li>
+  <li><a href="#e-series-with-unprotected-media">E-Series with unprotected media</a></li>
+  <li><a href="#minio-without-ec">MinIO without EC</a></li>
+  <li><a href="#getting-the-most-out-of-e-series-in-minio-ec-environments">Getting the most out of E-Series in MinIO EC environments</a></li>
+  <li><a href="#appendix-a">Appendix A</a></li>
+</ul>
+
+<h2 id="the-concept">The concept</h2>
+
+<p>I've touched upon this in previous blog posts, but I wanted to write a post dedicated to MinIO Erasure Coding with E-Series because several E-Series users have asked about it.</p>
+
+<p>MinIO implements <a href="https://min.io/docs/minio/linux/operations/concepts/erasure-coding.html">EC</a> and the idea is to deploy X dumb servers with Y physical disks (the total number of disks Z=X*Y) and then apply EC to solve problems that need solving, plus some that don't (but MinIO thinks they do).</p>
+
+<p>Here's an image from the same page (image credit: MinIO).</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-00.png" alt="Excessive deduplication due to poorly generated synthetic data" /></p>
+
+<p>This hardware configuration above has 4 servers and 16 disks which means we can:</p>
+
+<ul>
+  <li>Use up to 8 disks for EC parity, which in MinIO's terminology means the minimum of EC:0 (no parity, which would equal RAID 0-like striping, although this isn't supported for production multi-node clusters) to EC:8 (Z/2=16/2=8 disks)</li>
+  <li>While that's up to us, it usually makes sense to be able to tolerate the loss of 1 server (with all its disks) or maybe 1 server + 1 disk from other servers (in MinIO speak, one server with four disks would mean E:4 and one server plus another disk from anywhere else would be E:5)</li>
+</ul>
+
+<p>When clusters with MinIO EC are designed:</p>
+
+<ul>
+  <li>For X servers with Y disks, use EC:Y. Example: 3 servers with 4 disks each would result in EC:4 (commonly described as EC 8+4, 12-disk stripe width with 8 data and 4 parity chunks)</li>
+  <li>N racks: use 3 servers per rack, so X (total number of servers) would normally be at least N x 3. If you have 1 rack, you'd use 3 servers. If you have 3 racks, you'd use 9 servers. Of course, we <em>can</em> use fewer servers and don't need 9 <em>physical</em> servers just for MinIO.</li>
+</ul>
+
+<p>Please also consider read vs. write quorum:</p>
+
+<ul>
+  <li>3 servers with 4 disks each: if 1 server goes down and takes 4 disks down with it, we can still read <em>and</em> write (!). Even after <a href="https://min.io/docs/minio/macos/operations/concepts/erasure-coding.html#erasure-parity-and-storage-efficiency">reading about it</a> I still find that risky because during that time you're effectively writing unprotected stripes. I expected there'd be a setting where write quorum can be optionally enforced at N+M level to disable writes.</li>
+  <li>The case where the number of parity disks equals Z/2 (half of all cluster disks), write quorum requires (Z/2 + 1). The reason for this is to ensure one side can win in the case of split brain which could happen with an even number of MinIO</li>
+</ul>
+
+<p>Requirements sometimes specify failure tolerance for write quorum and sometimes for read quorum:</p>
+
+<ul>
+  <li>if normal service availability is required, then we should design for write quorum. While performance and resilience may be reduced, full service must remain available</li>
+  <li>if significant impact - such as the inability to write - is allowed, then we can design for read quorum tolerance and save cost. Here the main objective is to avoid data loss even with reduced functionality (no writes or deletes possible)</li>
+</ul>
+
+<p>In enterprise environments that use VMs ("VI") or K8s and protected storage such as E-Series, it's very rare to lose volumes or (permanently) lose servers (especially with vSphere HA and datastores on SAN), so I'd normally design for "read quorum" which it wouldn't really be as both servers and storage would failover.</p>
+
+<p>It appears in most MinIO clusters servers and disks required for read &amp; write quorum are the same, which can be dangerous: if K+M is 12 and 4 disks are gone or 1 server goes down, it appears writes would be striped across K disks, with no parity at all. That means even after the failed server with 4 disks is back, if any disk that contains parity-less objects is lost, some object data may still be lost.</p>
+
+<p>Some object storage allows you to enforce write quorum on a per-bucket basis. I suppose, but I'm not sure, MinIO's workaround for this would be to change parity to something like 4+2 until the failed server (and failed 4 disks) are back, then change the cluster rule back to EC 8+4. But the 4+2 objects would remain that way, still exposed to server failures (but safe from single disk failure). If you're curious about this you can check their community, docs, and source code.</p>
+
+<p>Because in these two examples below we won't use EC sets where parity drives are 50% of stripe size <em>and</em> because MinIO doesn't insist on writing K+M chunks (full width stripe), read and write quorums will need the same number of disks.</p>
+
+<h2 id="recommendations">Recommendations</h2>
+
+<p>When MinIO with EC is used with E-Series, normally it's better to use protected E-Series volumes (RAID 6 disk groups or DDP (disk pools)) as that gives us the benefits of virtualized underlying physical disks.</p>
+
+<p>While direct access to non-protected physical disks (RAID 0 on E-Series, for example) has some advantages, it is not easy to manage. Consider this detail from the MinIO documentation:</p>
+
+<blockquote>
+  <p>Objects written with a given parity settings do not automatically update if you change the parity values later.</p>
+</blockquote>
+
+<p>We'll assume MinIO servers use protected volumes and that's what I'd recommended for MinIO with EC on E-Series.</p>
+
+<h3 id="single-rack">Single rack</h3>
+
+<p>Here's what their <a href="https://min.io/product/erasure-code-calculator">EC calculator</a> does with the approach when there's a single rack.</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-01.png" alt="MinIO EC; single rack; single EF300 array" /></p>
+
+<p>E-Series disk arrays are fully redundant, so we would most likely use just one storage array per rack.</p>
+
+<p>MinIO EC calculator is not aware of any redundant storage because it works with the assumption that servers use dumb JBOD devices, which is why we "need" three MinIO servers (we actually don't) and they recommend at least 4 disks per server (not relevant in the case of E-Series with protected volumes: we can create any number of disks (LUNs) for each of the servers).</p>
+
+<p>This shows how that works on E-Series (DDP example): disks 1-16 are used to construct a DDP (pool) which would normally use 2 disks of capacity overhead to protect the other 14 (14+2). Then on top of that we can create any number of volumes for each MinIO server. All volumes write parity-protected stripes (8+2) and rely on the underlying DDP (14+2) to protect data from disk loss.</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-server-02.png" alt="Single server can have an arbitrary number of volumes" /></p>
+
+<p>But, MinIO EC calculator does things its own way: it assumes each server has 4 physical disks and advises the following:</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-02.png" alt="MinIO EC; single rack; single EF300 array - capacity and resilience" /></p>
+
+<p>Although this doesn't take advantage of E-Series' features, it fortunately all applies to our E-Series environment:</p>
+
+<ul>
+  <li>Rack can't fail (this makes sense; we have only one rack)</li>
+  <li>Because each server has 4 disks and we're using EC 8:4 (stripe size: 12), we can't afford to lose more than 1 server (makes sense, too)</li>
+  <li>Also because of EC 8:4, we mustn't lose more than 4 disks either on a single server or across all three servers combined. On E-Series we won't lose 4 physical disks (more on that later), but we may lose a MinIO server (and if VI/K8s HA doesn't bring it back, you will have lost access to four E-Series volumes the server was attached to), so losing access to volumes is possible due to a server going down</li>
+</ul>
+
+<p>If we take a more redundant approach with multiple racks and multiple E-Series arrays, we'll likely use one array per rack.</p>
+
+<h3 id="three-racks">Three racks</h3>
+
+<p><img src="/assets/images/minio-ec-with-eseries-rack-01.png" alt="Multi-rack deployment with MinIO and EF-Series" /></p>
+
+<p>Again, we can use fewer servers, but this approach is fine. It seems like that's a lot of servers, but in this day and age you'd spin up 9 or 12 VMs or containers rather than buy a dozen 1U physical servers.</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-3-racks-03.png" alt="MinIO EC; single rack; single EF300 array" /></p>
+
+<p>Notice that we could use as few as 1 server per rack and use EC 2:1 (stripe size: 3). That would give us the same tolerance for rack failures (1) and server failures (1).</p>
+
+<p>But a major downside to this approach with few servers is that a downed server would make the cluster lose 33% of storage performance, so 3 servers per rack and 4 volumes per server gives us 12 disks and is suitable for EC 8:4.</p>
+
+<p>Going back to that recommended design, 3 racks, with 3 servers (4 disks per server) in each rack gives us this:</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-3-racks-04.png" alt="MinIO EC; three racks; three EF300 arrays - capacity and resilience" /></p>
+
+<h3 id="non-standard-ec1-on-vik8s-with-e-series">Non-standard EC:1 on VI/K8s with E-Series</h3>
+
+<p>I didn't know where to put this note. It applies to the following situations:</p>
+<ul>
+  <li>one MinIO server</li>
+  <li>four MinIO servers</li>
+  <li>four racks with one or more MinIO servers per rack</li>
+</ul>
+
+<p>Let's consider the second case:</p>
+
+<ul>
+  <li>Four physical servers with MinIO VMs or containers</li>
+  <li>Four volumes on DDP (one per MinIO server)</li>
+  <li>MinIO configured for EC:1</li>
+</ul>
+
+<p>MinIO doesn't "support" this configuration because with unprotected JBOD storage you'd be protected from one server failure or one disk failure which isn't much, especially with large disks based on NL-SAS. Using servers with internal JBOD or 20+ TB volumes, that would be risky.</p>
+
+<p>But with E-Series each volume is protected against multiple media failures, and with four servers attached to four volumes any one disk or server could be rebooted without impacting write quorum or data integrity.</p>
+
+<p>You'd need at least three (for server failover with VMware HA or K8s, for example) hypervisor nodes or Kubernetes workers, or four (HA with fixed affinity) virtual servers.</p>
+
+<p>In the first example (single server scenario, similar to MinIO without EC (EC:0), further below). EC:1 is still useful because it lowers the risk of data loss due to filesystem corruption. Any if any one filesystem becomes corrupt, object data would be recovered by MinIO.</p>
+
+<p>In my performance testing single server with 4 disks in EC:0 and EC:1 performed similarly, indicating there's no visible performance impact from using EC:1.</p>
+
+<p>Of course, at <em>some</em> point the overhead of EC:1 would matter, but for object stores that we'd virtualize and use for 200-300 TB large SmartStore, 4 x 64 TB or 4 x 128 TB with 2-10 GB/s in performance would be perfectly okay and in line with best configuration and performance practices E/EF Series uses for backup repositories, just with additional N+1 protection for compute and storage (provided by EC:1).</p>
+
+<h2 id="tolerance-to-disk-loss">Tolerance to disk loss</h2>
+
+<p>MinIO EC calculator usually indicates that Y (Number of Drives per Server) can be lost.</p>
+
+<p>As explained above, in an E-Series environment with protected storage (RAID or DDP) you're not supposed to lose any volumes due to storage issues, with MinIO or any other workload.</p>
+
+<p>At the same time, physical disk drives do fail. When they fail, it's usually one at a time: with DDP or SSD disks, recovery generally takes less than one day (it's much faster with flash).</p>
+
+<p>With RAID 6 or DDP, an E-Series array can lose 2 drives per each R6 disk group or DDP pool, and not lose any data.</p>
+
+<p>So, when configuring MinIO EC for E-Series, use RAID 6 (usually 10 disks per underlying R6 disk group) or DDP (11 or more disks per pool, usually just one big pool per disk size, type and array) and ignore the MinIO advice about the maximum number of disks you can lose: E-Series must't lose more than 2 at once and the risk of that happening is extremely small (thousands of mission critical customers use it like that).</p>
+
+<p>If you're still afraid of service downtime or data loss, deploy one E-Series per each rack; as you can see, both scenarios above can tolerate the loss of a single rack.</p>
+
+<p>Once again, the usefulness of "number of disks per server" in MinIO's sizing and best practices is misleading - when protected external RAID or DDP is used any number of disks may be provisioned. For EC 6+3 we'd provision 3 volumes per server, for EC 8+4 or 12+4 we could use 4 volumes per server. But underneath EC, it's all the same to E-Series administrator - RAID 6 and DDP design would usually not be impacted by EC details.</p>
+
+<p><img src="/assets/images/minio-ec-with-eseries-data-03.png" alt="MinIO with 1 volume per server" /></p>
+
+<p>Losing a server (say, to a failed OS or K8s upgrade) will lose all disks as if they were JBOD which is why it's recommended to have more servers per rack. Other than that, volumes themselves are extremely unlikely to become unavailable.</p>
+
+<h2 id="e-series-with-unprotected-media">E-Series with unprotected media</h2>
+
+<p>I've never heard of anyone who does this, but some users probably do: E-Series supports RAID 0, so it's possible.</p>
+
+<p>You can expose individual disks to MinIO servers. You'll have the benefits (or, in MinIO speak, overheads) of fully redundant E-Series controller and shelf design, read cache, mirrored write cache, and it a better set of security features.</p>
+
+<p>But each disk failure will result in a MinIO-side rebuild over LAN. You'd also have to replace the failed drive with a spare and instruct MinIO to start using it again, whereas RAID 6 and DDP would hide media failures from MinIO. RAID on on E-Series wouldn't, so you'd have to replace the disk and then fix up MinIO.</p>
+
+<p>In this RAID 0 case MinIO's EC estimate for drive tolerance make sense as each MinIO drive maps to a physical drive in E-Series.</p>
+
+<p>If you're interested in this approach from containers, check out MinIO's <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">DirectPV</a> which is a generic approach to the idea and it supports generic applications (not just MinIO).</p>
+
+<p>In my own estimate, RAID 0 isn't popular among E-Series users not because it's wasteful to own E-Series for RAID 0 (it's silly to assume one wouldn't use protected groups or pools for <em>other</em> applications using the same array), but because protected RAID and DDP save a lot of maintenance time and protect data well.</p>
+
+<p>Most rants against "RAID cards" are inspired by people who know only server-based RAID adapters and crappy JBOD disk enclosures - that's what server people with no access to good storage get to use and then assume enterprise disk arrays behave the same way. They don't. Not to mention that if you have just one <em>other</em> application that needs protected storage, you still need a SAN (or application-side replication, which means even more work managing storage).</p>
+
+<h2 id="minio-without-ec">MinIO without EC</h2>
+
+<p>Since I mentioned the unprotected approach (JBOD) for E-Series, I'll mention MinIO <em>without</em> EC as well.</p>
+
+<p>You get a big VM or container and attach one or more <em>protected</em> E-Series disks to it.</p>
+
+<ul>
+  <li>SNMD or "Standalone Multi-Drive": MinIO stripes data across E-Series volumes without EC, in a RAID 0-like fashion. You can still use EC in this scenario (e.g. EC:1) as of Nov '23, but MinIO doesn't highlight it thinking that with a JBOD and just one node, it wouldn't make sense - with protected storage it does in the sense that it protects you from filesystem corruption on one of the volumes.</li>
+  <li>SNSD or "Standalone Single-Drive": one big E-Series volume, no striping. This is easily doable with XFS filesystem on DDP volumes which can be huge.</li>
+</ul>
+
+<p>In both approaches downtime can happen if the server/container goes down or if any filesystem gets corrupt. Server/container fail-overs are also going to be more disruptive and there'd be no way to perform scheduled maintenance of individual servers.</p>
+
+<p>The main advantage is simplicity of deployment and administration which may be appropriate for environments that don't need five nines of uptime, minimal fail-overs impact or scale-out functionality.</p>
+
+<p>Think of DR site for MinIO (or even other S3 storage): one VM attached to an E-Series array can act as a reliable, low cost, low risk replication target for PBs of object storage, and requires very little effort.</p>
+
+<p>If you use stand-alone MinIO without EC, it's better to use multiple E-Series volumes (SNMD), say 4 volumes on top of a DDP pool. This can give you <a href="/2022/10/21/minio-performance-netapp-e-series.html">several GB/s</a> easily.</p>
+
+<h2 id="getting-the-most-out-of-e-series-in-minio-ec-environments">Getting the most out of E-Series in MinIO EC environments</h2>
+
+<ul>
+  <li>E-Series with disk media in <strong>protected RAID or DDP</strong>: it should be obvious that when using MinIO's EC calculator we don't need to care about calculator's estimates about failed physical disks, because that doesn't bother E/EF Series arrays. MinIO would use E-Series' "LUNs" or "volumes" protected by RAID 6. Server and rack failure calculations from MinIO's EC calculator are generally valid even when E-Series is used, so when considering both, N+1 (the EC:1 example above) is usually sufficient, or multiple racks for larger configurations.</li>
+  <li>E-Series in unprotected mode (<strong>without</strong> RAID/DDP protection): it's theoretically and practically possible, as demonstrated in that DirectPV post, but seems less valuable to me. In this case disks in MinIO EC calculator's equal physical disks in E-Series arrays, so EC Calculator would apply in this case.</li>
+  <li><strong>EC:1</strong> is a special case, not officially supported by MinIO, but it can provide N+1 HA for both service and data. Even though E-Series volumes don't need EC protection, EC can help prevent data loss due to a corrupt filesystem, and data downtime due to a failed node.</li>
+</ul>
+
+<p>I would generally recommend using DDP-based volumes.</p>
+
+<p>When I configure 2U controller shelves, I usually start with 14-16 2.5" disks to leave some room (8 disk slots) for future expansion (as opposed to maxing out all 24 slots with smaller disks).</p>
+
+<h2 id="appendix-a">Appendix A</h2>
+
+<p>Single MinIO server with four volumes configured with EC:1 can PUT large objects at few GB/s.</p>
+
+<p><img src="/assets/images/eseries-minio-erasure-coding-01.png" alt="MinIO with EC:1 on four E-Series RAID1/DDP volumes" /></p>
+
+<ul>
+  <li>16 threads with 750 MB objects</li>
+  <li>MinIO with 4 volumes (EC:1)</li>
+  <li>Ubuntu 22.04 with iSER</li>
+  <li>EF570 with RAID1-style volumes in DDP (16/2) with SSDs</li>
+  <li>Tested with S3Tester</li>
+</ul>
+
+<p>The same boxes with the same volumes, but MinIO storage class EC:0, performed similarly (EC:1 was also tested). The dots represent performance of each individual R1/DDP volume and their stacked height is the total (aggregate) performance achieved.</p>
+
+<p><img src="/assets/images/eseries-minio-erasure-coding-02.png" alt="MinIO with EC:0 and EC:1 on four E-Series RAID1/DDP volumes" /></p>
+
+<ul>
+  <li>Workload consisted of three runs (8, 16, 32 threads) with 750 MB objects</li>
+  <li>80% GET</li>
+  <li>10% PUT</li>
+  <li>5% STAT</li>
+  <li>5% DELETE</li>
+  <li>Tested with Warp</li>
+</ul>
+
+<p>This second workload was "combined" (mixed) with only 10% of PUTs, but both EC:0 and EC:1 were tested using the same benchmark (Warp) and parameters, and the difference observed from several runs was small.</p>
+
+<p>With multiple servers we would be able to eventually saturate storage (paths or controllers or disks), but for smaller object stores performance penalty of EC:1 is insignificant and with 4 volumes the main "cost" is 33% more capacity.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/dpp" class="page__taxonomy-item p-category" rel="tag">dpp</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/ec" class="page__taxonomy-item p-category" rel="tag">ec</a><span class="sep">, </span>
+    
+      <a href="/tags/ef300" class="page__taxonomy-item p-category" rel="tag">ef300</a><span class="sep">, </span>
+    
+      <a href="/tags/ef600" class="page__taxonomy-item p-category" rel="tag">ef600</a><span class="sep">, </span>
+    
+      <a href="/tags/erasure-coding" class="page__taxonomy-item p-category" rel="tag">erasure coding</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/minio" class="page__taxonomy-item p-category" rel="tag">minio</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2023-09-03T00:00:00+08:00">2023-09-03 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=MinIO+Erasure+Coding+with+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2023%2F09%2F03%2Fminio-erasure-coding-and-netapp-e-series.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2023/09/03/minio-erasure-coding-and-netapp-e-series.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2023/09/02/solidfire-test-volumes.html" class="pagination--pager" title="Using synthetic SolidFire S3 backups for Dev/Test purposes">Previous</a>
+    
+    
+      <a href="/2023/09/03/simplebackup-with-solidbackup.html" class="pagination--pager" title="Use Simple Backups to file-backup cloned SolidFire volumes to S3/B2">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

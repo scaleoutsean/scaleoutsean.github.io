@@ -1,0 +1,816 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes | Acting Technologist</title>
+<meta name="description" content="Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes">
+<meta property="og:url" content="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html">
+
+
+  <meta property="og:description" content="Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes">
+  <meta name="twitter:description" content="Create and use inline emphemeral volumes with E-Series (BeeGFS CSI) and SolidFire">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-04-29T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects/"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://scaleoutsean.github.io/" itemprop="url">scaleoutSean</a>
+    </h3>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes">
+    <meta itemprop="description" content="One of more obvious characteristics of Persistent Volumes is they persist, i.e. survive pod(s) that use them until the claim for the PV itself is deleted, assuming reclaim policy is set to Delete.">
+    <meta itemprop="datePublished" content="2022-04-29T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html" itemprop="url">Ephemeral volumes with BeeGFS CSI provisioner on Kubernetes
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2022-04-29T00:00:00+08:00">2022-04-29 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>One of more obvious characteristics of Persistent Volumes is they persist, i.e. survive pod(s) that use them until the claim for the PV itself is deleted, assuming reclaim policy is set to Delete.</p>
+
+<p>This isn't ideal for workloads where pods need a PVC only as long as they run, because sooner or later every PVC they use still has to be be deleted.</p>
+
+<p>Maybe you run hundreds of batch jobs which don't need persistent volumes, but you want to use BeeGFS backed by E-Series or even SolidFire, for example, and have those "EVCs" wiped out as soon as there's no pod that uses them.</p>
+
+<p>Assuming a BeeGFS CSI with a Storage Class <code class="language-plaintext highlighter-rouge">csi-beegfs-dyn-sc</code> in place, users of Kubernetes 1.23 can create ephemeral volume claims like so:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:alpine</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/data</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">eph</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">ephemeral</span><span class="pi">:</span>
+      <span class="na">volumeClaimTemplate</span><span class="pi">:</span>
+        <span class="na">spec</span><span class="pi">:</span>
+          <span class="na">accessModes</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="s">ReadWriteOnce</span>
+          <span class="na">resources</span><span class="pi">:</span>
+            <span class="na">requests</span><span class="pi">:</span>
+              <span class="na">storage</span><span class="pi">:</span> <span class="s">2Gi</span>
+          <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">csi-beegfs-dyn-sc</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">eph</span>
+</code></pre></div></div>
+
+<p>That fires up a pod and creates an ephermeral PVC $POD_NAME-eph (here: test-eph):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc 
+NAME                  STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+csi-beegfs-dyn-kvol   Bound    pvc-c6a814cf   2Gi        RWO            csi-beegfs-dyn-sc   14d
+csi-beegfs-dyn-pvc    Bound    pvc-f5bc5dfe   1Gi        RWX            csi-beegfs-dyn-sc   17d
+test-eph              Bound    pvc-f0830157   2Gi        RWO            csi-beegfs-dyn-sc   87s
+</code></pre></div></div>
+
+<p>The pod is using test-eph volume:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pod <span class="nb">test
+</span>Name:         <span class="nb">test
+</span>Namespace:    default
+Priority:     0
+Node:         k8s-n-1/192.168.105.12
+Start Time:   Fri, 29 Apr 2022 06:26:33 +0000
+Labels:       &lt;none&gt;
+Annotations:  cni.projectcalico.org/podIP: 192.168.122.45/32
+              cni.projectcalico.org/podIPs: 192.168.122.45/32
+Status:       Running
+IP:           192.168.122.45
+IPs:
+  IP:  192.168.122.45
+Containers:
+  <span class="nb">test</span>:
+    Container ID:   containerd://7b826304e2618ce43987d8bd2f00ab2251320a1018684380863f7b052c8c197e
+    Image:          nginx:alpine
+    Image ID:       docker.io/library/nginx@sha256:5a0df7fb7c8c03e4158ae9974bfbd6a15da2bdfdeded4fb694367ec812325d31
+    Port:           &lt;none&gt;
+    Host Port:      &lt;none&gt;
+    State:          Running
+      Started:      Fri, 29 Apr 2022 06:26:40 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    &lt;none&gt;
+    Mounts:
+      /data from eph <span class="o">(</span>rw<span class="o">)</span>
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kqj6r <span class="o">(</span>ro<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Ephemeral volume test-eph:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl describe pvc test-eph
+Name:          test-eph
+Namespace:     default
+StorageClass:  csi-beegfs-dyn-sc
+Status:        Bound
+Volume:        pvc-f0830157
+Labels:        &lt;none&gt;
+Annotations:   pv.kubernetes.io/bind-completed: <span class="nb">yes
+               </span>pv.kubernetes.io/bound-by-controller: <span class="nb">yes
+               </span>volume.beta.kubernetes.io/storage-provisioner: beegfs.csi.netapp.com
+               volume.kubernetes.io/storage-provisioner: beegfs.csi.netapp.com
+Finalizers:    <span class="o">[</span>kubernetes.io/pvc-protection]
+Capacity:      2Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Used By:       &lt;none&gt;
+Events:
+  Type    Reason                 Age   From                                                                Message
+  <span class="nt">----</span>    <span class="nt">------</span>                 <span class="nt">----</span>  <span class="nt">----</span>                                                                <span class="nt">-------</span>
+  Normal  ExternalProvisioning   2m5s  persistentvolume-controller                                         waiting <span class="k">for </span>a volume to be created, either by external provisioner <span class="s2">"beegfs.csi.netapp.com"</span> or manually created by system administrator
+  Normal  Provisioning           2m5s  beegfs.csi.netapp.com_k8s-m-1_9b56c472-bd1a-4ca9-823d-4f639c9c1f4d  External provisioner is provisioning volume <span class="k">for </span>claim <span class="s2">"default/test-eph"</span>
+  Normal  ProvisioningSucceeded  2m4s  beegfs.csi.netapp.com_k8s-m-1_9b56c472-bd1a-4ca9-823d-4f639c9c1f4d  Successfully provisioned volume pvc-f0830157
+</code></pre></div></div>
+
+<p>On a worker node that can see that filesystem, filesytem path /mnt/beegfs/k8s/name/dyn/pvc-f0830157 exists:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">dir</span> <span class="nt">-lat</span> /mnt/beegfs/k8s/name/dyn
+total 8
+drwxrwxrwx 16 root             root     14 Apr 29 06:26 <span class="nb">.</span>
+drwxrwxrwx  2 root             root      0 Apr 29 06:26 pvc-f0830157
+</code></pre></div></div>
+
+<p>And, as we would expect, here's what happens after we delete the pod.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl delete <span class="nt">-f</span> nginx-native.yml 
+pod <span class="s2">"test"</span> deleted
+
+<span class="nv">$ </span>kubectl get pvc
+NAME                  STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS        AGE
+csi-beegfs-dyn-kvol   Bound    pvc-c6a814cf   2Gi        RWO            csi-beegfs-dyn-sc   14d
+csi-beegfs-dyn-pvc    Bound    pvc-f5bc5dfe   1Gi        RWX            csi-beegfs-dyn-sc   17d
+</code></pre></div></div>
+
+<p>Ephemeral volume test-eph has been deleted as well.</p>
+
+<p>Interestingly, BeeGFS CSI v1.2.1 currently does not claim (CSI driver list and features at kubernetes.io) support for Ephemeral PVCs, although that clearly works. I'll ping the BeeGFS CSI team to verify that.</p>
+
+<p>I tried this with SolidFire iSCSI and Trident CSI and it worked the same way. I assume SolidFire CSI with Cinder CSI would work too, but I don't have it set up at this time.</p>
+
+<p>What about Kubernetes users with pre-v1.23 releases?</p>
+
+<p>Those can be handled with operators, but I haven't found one that works well so I'll stop short of making a recommendation. If you don't have long-running jobs, it may be simpler to schedule jobs to delete all PVCs in defined namespaces that meet certain conditions such as older than 1 hour and no matching pod name.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/ephemeral" class="page__taxonomy-item p-category" rel="tag">ephemeral</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/solidfire" class="page__taxonomy-item p-category" rel="tag">solidfire</a><span class="sep">, </span>
+    
+      <a href="/tags/trident" class="page__taxonomy-item p-category" rel="tag">trident</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2022-04-29T00:00:00+08:00">2022-04-29 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Ephemeral+volumes+with+BeeGFS+CSI+provisioner+on+Kubernetes%20https%3A%2F%2Fscaleoutsean.github.io%2F2022%2F04%2F29%2Fkubernetes-ephemeral-volumes-solidfire-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2022/04/29/kubernetes-ephemeral-volumes-solidfire-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2022/04/28/solidfire-operator-kubernetes.html" class="pagination--pager" title="SolidFire Operator for Kubernetes">Previous</a>
+    
+    
+      <a href="/2022/04/30/beegfs-csi-on-arm64.html" class="pagination--pager" title="BeeGFS and BeeGFS CSI on ARM64">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/epa-4-beta.html" rel="permalink">E-Series Performance Analyzer (EPA) v4 beta
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  EPA 4
+  EPA Collector-specific
+  Details related to storage requirements
+  What's next
+
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/11/bing-index-issue.html" rel="permalink">Got binged in July 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-11T00:00:00+08:00">2025-08-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/30/solidfire-windows-admin-center-extension.html" rel="permalink">SolidFire Extension for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-30T00:00:00+08:00">2025-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  Walk-through
+  And now…
+  Conclusion
+  Appendix A: demo
+    
+      Animated GIF (no playback control)
+      Video demo with voice-over
+    ...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/07/26/solidfire-windows-admin-center-gateway.html" rel="permalink">SolidFire Gateway for Windows Admin Center 2025
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-07-26T00:00:00+08:00">2025-07-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  Introduction
+  What it is
+  What it does
+  IIS Setup
+  Why this matters
+  What about it?
+  Conclusion
+
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
