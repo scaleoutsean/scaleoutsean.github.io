@@ -89,7 +89,7 @@ var store = [{
         "url": "/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html",
         "teaser": null
       },{
-        "title": "BeeGFS on NetApp HCI with EF280 for high-speed file access from Virtual Machines",
+        "title": "BeeGFS on NetApp HCI with EF280 for high-speed VM file sharing",
         "excerpt":"Summary Why and when run BeeGFS in NetApp HCI VMs Aren’t shared file systems complex to deploy and manage How do automation and virtualization help Performance Considerations What next References Update (Jan 05, 2021) Summary If you need fast sequential access from NetApp HCI VMs to a shared data pool...","categories": ["virtualization"],
         "tags": ["netapp","solidfire","e-series","eseries","beegfs","hci","performance"],
         "url": "/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html",
@@ -107,7 +107,7 @@ var store = [{
         "url": "/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html",
         "teaser": null
       },{
-        "title": "Virtualized StorageGRID for Splunk Smartstore on NetApp HCI and EF-Series array",
+        "title": "StorageGRID SDS for Splunk Smartstore on NetApp HCI, EF-Series",
         "excerpt":"If you’d like to deploy Splunk SmartStore with NetApp StorageGRID object storage but also want to “start small”, you can consider using smaller StorageGRID appliances or deploy StorageGRID as virtual machines. Which one is better? Both are great. Which one is better for you depends on your current, and (expected)...","categories": ["virtualization","analytics"],
         "tags": ["smartstore","splunk","netapp","hci","e-series","eseries","monitoring","visualization","storagegrid"],
         "url": "/2021/01/15/netapp-hci-storagegrid-splunk-smartstore-on-efseries.html",
@@ -143,7 +143,7 @@ var store = [{
         "url": "/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html",
         "teaser": null
       },{
-        "title": "Install NetApp Trident v21.01.01 with Helm v3 and configure a SolidFire back-end",
+        "title": "Install NetApp Trident v21.01 with Helm v3, SolidFire",
         "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. NetApp Trident v21.01.01 supports Helm. This makes Trident easier to install, especially if you have multiple clusters or stand up and destroy clusters on a regular basis. Download Trident from Github, decompress and change directory to...","categories": ["kubernetes","solidfire"],
         "tags": ["kubernetes","trident","netapp","helm","solidfire"],
         "url": "/2021/02/02/trident-21.01-install-with-helm-on-netapp-hci.html",
@@ -173,7 +173,7 @@ var store = [{
         "url": "/2021/02/09/kasten-netapp-storagegrid-cloud-storage-s3-provider.html",
         "teaser": null
       },{
-        "title": "Kubernetes data protection and storage management with NetApp SolidFire and Kasten K10",
+        "title": "NetApp SolidFire, Kasten K10, Kubernetes",
         "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. Introduction Improve storage management and data protection in a Kubernetes environment NetApp SolidFire NetApp Trident CSI Kasten by Veeam NetApp StorageGRID Data protection with Kasten in a NetApp HCI or SolidFire environment SolidFire QoS performance policies...","categories": ["kubernetes","solidfire"],
         "tags": ["kasten","backup","data protection","solidfire","s3","kubernetes"],
         "url": "/2021/02/12/kasten-solidfire-trident.html",
@@ -185,7 +185,7 @@ var store = [{
         "url": "/2021/02/17/storagegrid-s3-private-container-registry.html",
         "teaser": null
       },{
-        "title": "Limit CSI provisioner's blast radius for automatically provisioned ONTAP storage",
+        "title": "Limit CSI provisioner's blast radius for ONTAP storage",
         "excerpt":"Problem Solutions Demo Problem “We’d like to automate, but we don’t expose storage management interface to workload nodes”. Solutions There are several. For the maximum security in management, don’t use CSI. Provision manually. Problem solved! There’s no dynamic storage provisioning, that’s true, but you could automate out-of-band with Ansible and...","categories": ["kubernetes","storage"],
         "tags": ["ontap","trident","csi"],
         "url": "/2021/02/20/trident-csi-ontap-management-isolation.html",
@@ -257,7 +257,7 @@ var store = [{
         "url": "/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html",
         "teaser": null
       },{
-        "title": "Using StorageGRID CloudMirror to replicate objects to remote S3-compatible bucket",
+        "title": "StorageGRID with CloudMirror - replication to S3-compatible bucket",
         "excerpt":"What When CloudMirror is properly configured, StorageGRID places changes into a queue and copies modified objects to a remote S3 bucket. This remote bucket can be AWS S3, another StorageGRID or some other object store that adheres to the S3 API. Why If you need a persistent copy of your...","categories": ["analytics","cloud"],
         "tags": ["netapp","storagegrid","s3","cloudsync","cloud sync","replication","sync","cloud mirror"],
         "url": "/2021/04/29/storagegrid-cloudmirror-async-replication-to-remote-s3-bucket.html",
@@ -281,7 +281,7 @@ var store = [{
         "url": "/2021/05/06/using-solidfire-maintenancemode.html",
         "teaser": null
       },{
-        "title": "SolidBackup for data protection and workload mobility for SolidFire in Hybrid Cloud environments",
+        "title": "SolidBackup for SolidFire Data Protection in Hybrid Cloud",
         "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. Introduction First attempt Backup and Restore in KVM environments Data Migration Do we really want DIY approaches to protect our data Second attempt Create configuration and keep Src &amp; Dst (Clone) volumes in sync Backup to...","categories": ["automation"],
         "tags": [],
         "url": "/2021/05/08/revisiting-solidbackup.html",
@@ -293,7 +293,7 @@ var store = [{
         "url": "/2021/05/19/solidfire-exporter-monitor-solidfire-network-interfaces-with-prometheus-and-grafana.html",
         "teaser": null
       },{
-        "title": "Fetch Trident's SolidFire metrics from outside of your container environment",
+        "title": "Get Trident's SolidFire metrics from outside Kubernetes",
         "excerpt":"If I had a SolidFire array in a VM and container environment (which I do), I’d prefer to run Prometheus and Grafana in VMs, rather than cram the monitoring into Kubernetes. If you have that kind of a setup, you might prefer the same. Now, since newer releases of Trident...","categories": ["containers","kubernetes"],
         "tags": ["netapp","solidfire","trident","csi"],
         "url": "/2021/05/25/external-access-to-netapp-trident-solidfire-metrics.html",
@@ -323,7 +323,7 @@ var store = [{
         "url": "/2021/06/22/solidfire-backup-and-cloning-with-per-storage-node-queues.html",
         "teaser": null
       },{
-        "title": "Faster initialization and rebalancing with Dynamic Disk Pools on NetApp E-Series",
+        "title": "Faster initialization, rebalancing with DDP on NetApp E-Series",
         "excerpt":"RAID 6 vs DDP DDP expansion Disk media refresh with DDP pools Demo RAID 6 vs DDP Here I explained how Dynamic Disk Pools (DDP) work and how they differ from traditional RAID6 (or RAID5) data protection. Recently I had a query about the need for DDP for which I...","categories": ["storage"],
         "tags": ["netapp","eseries","e-series","ddp"],
         "url": "/2021/07/06/e-series-ddp-expansion-and-rebalancing.html",
@@ -335,7 +335,7 @@ var store = [{
         "url": "/2021/07/06/solidfire-protection-domains-data-path.html",
         "teaser": null
       },{
-        "title": "Improve SolidFire Support Bundle Log Generation and Upload with Automation and OneCollect",
+        "title": "SolidFire Support Bundle Log with Automation, OneCollect",
         "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. I don’t have any first hand information to say this is the case, but I believe that with the increased focus on container workloads and container-packaged SolidFire (NetApp eSDS), SolidFire management has slowly been increasingly containerized...","categories": ["automation","solidfire"],
         "tags": ["netapp","solidfire","onecollect","log"],
         "url": "/2021/07/07/solidfire-onecollect-and-scripted-supportbundle-automation.html",
@@ -383,7 +383,7 @@ var store = [{
         "url": "/2021/09/06/storagegrid-ilm-rule-for-paths.html",
         "teaser": null
       },{
-        "title": "Logical backup vs. storage-assisted backup with Kasten v4 and SolidFire 12",
+        "title": "Logical backup vs. storage-assisted backup with Kasten v4 and SolidFire",
         "excerpt":"To answer the question quickly: logical backups make sense. WTF is a K10 logical backup? Logical backups use application-aware backup commands to backup data (and restore, when restoring). K10 uses Kanister which uses Blueprints to define application-specific workflows. “Applications” currently means popular databases: PostgreSQL mySQL MongoDB Elasticsearch There are no...","categories": ["storage","kubernetes"],
         "tags": ["netapp","kasten","solidfire","backup","data protection","trident"],
         "url": "/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html",
@@ -539,13 +539,13 @@ var store = [{
         "url": "/2022/02/14/middle-class-rbac-solidfire-ansible.html",
         "teaser": null
       },{
-        "title": "Create and maintain SolidFire volumes and accounts with Terraform",
+        "title": "Create SolidFire volumes and accounts with Terraform",
         "excerpt":"NOTICE: all credentials and tokens on this page are samples, not leaked. My previous post on Terraform with SolidFire used the updated example from the NetApp ElementSW Provider repo on Github. This post is for folks who’ve tried (or at least reviewed) that approach, so that we can jump straight...","categories": ["automation","solidfire"],
         "tags": ["netapp","solidfire","go","terraform","plugin","provider","devops","gitops"],
         "url": "/2022/02/17/create-maintain-solidfire-volumes-accounts-with-terraform.html",
         "teaser": null
       },{
-        "title": "Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3 - Part 1",
+        "title": "Kubernetes with Cinder CSI on Openstack and SolidFire - Part 1",
         "excerpt":"NOTICE: all credentials and tokens on this page are samples, not leaked. Posts in “Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3” series (this post) Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3 - Part 1 Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena...","categories": ["virtualization","kubernetes","solidfire"],
         "tags": ["netapp","solidfire","openstack","cinder","xena","provisioning","driver","csi"],
         "url": "/2022/02/22/openstack-solidfire.html",
@@ -557,7 +557,7 @@ var store = [{
         "url": "/2022/03/01/trident-login-kubernetes.html",
         "teaser": null
       },{
-        "title": "Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3 - Part 2",
+        "title": "Kubernetes with Cinder CSI on Openstack and SolidFire - Part 2",
         "excerpt":"NOTICE: all credentials and tokens on this page are samples, not leaked. Posts in “Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3” series Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena with SolidFire 12.3 - Part 1 (this post) Kubernetes with Cinder CSI Plugin on Openstack Yoga/Xena...","categories": ["virtualization","kubernetes","openstack","solidfire","storage"],
         "tags": [],
         "url": "/2022/03/02/openstack-solidfire-part-2.html",
@@ -791,7 +791,7 @@ var store = [{
         "url": "/2022/07/10/xcp-ng-with-netapp-solidfire-iscsi.html",
         "teaser": null
       },{
-        "title": "Display per-storage node performance guarantees of SolidFire nodes",
+        "title": "Show per-node performance guarantees of SolidFire storage nodes",
         "excerpt":"There’s a PowerShell script sfvid2nid.ps1 in my Awesome SolidFire repository on Github. It produces a table that shows the mapping of volume IDs to node IDs. SolidFire users sometimes ask about checking if their volumes are well-balanced. SolidFire has its own definition of “well” means and users have no direct...","categories": ["solidfire"],
         "tags": ["netapp","solidfire","visualize","api","performance","QoS"],
         "url": "/2022/08/04/solidfire-volume-to-node-and-min-guarantees-per-node.html",
@@ -803,7 +803,7 @@ var store = [{
         "url": "/2022/08/08/apptainer-with-beegfs-mounts.html",
         "teaser": null
       },{
-        "title": "Simple S3 service endpoint for BeeGFS using Hashicorp Nomad and stand-alone MinIO",
+        "title": "S3 service for BeeGFS using Hashicorp Nomad and MinIO gateway",
         "excerpt":"I have a small Nomad cluster which can access a BeeGFS filesystem. One of these host runs Nomad server and client, another runs just Nomad client. Both are also BeeGFS clients. I want to make a BeeGFS directory accessible via S3. Download MinIO, accept the license, etc. Then run this...","categories": ["storage"],
         "tags": ["minio","eseries","nomad","hashicorp","s3","eseries","e-series","netapp"],
         "url": "/2022/08/09/nomad-beegfs-minio-s3.html",
@@ -821,13 +821,13 @@ var store = [{
         "url": "/2022/08/11/nomad-pack-influxdb-beegfs.html",
         "teaser": null
       },{
-        "title": "Send BeeGFS and NetApp E-Series performance metrics to InfluxDB v2 or scrape them form Prometheus",
+        "title": "BeeGFS and NetApp E-Series metrics in InfluxDB v2 or Prometheus",
         "excerpt":"NOTE: Since BeeGFS v7.3.3 there’s an improved and self-contained monitoring package. There’s no need to use this approach on BeeGFS v7.3.3 and beyond. See the docs. NetApp has a BeeGFS solution which consists of ThinqParQ BeeGFS and NetApp E-Series arrays. Servers that run BeeGFS are purchased separately from one of...","categories": ["storage","analytics"],
         "tags": ["netapp","e-series","eseries","beegfs","influxdb","prometheus","visualize","monitoring"],
         "url": "/2022/08/15/monitoring-beegfs-and-netapp-eseries-grafana.html",
         "teaser": null
       },{
-        "title": "Rocky Linux 8 and 9 with NetApp Trident Docker volume plugin and SolidFire 12 iSCSI storage",
+        "title": "Rocky Linux 8, 9 with NetApp Trident for Docker and SolidFire 12",
         "excerpt":"The official Trident documentation is okay, but it mentions no Rocky Linux. The other problem is Red Hat-like distributions tend to default to Podman, but I couldn’t install Trident Docker volume plugin with Podman. At this time the plugin seems to work only with Docker. Trident Docker volume driver for...","categories": ["storage","linux","solidfire"],
         "tags": ["rocky linux","rocky","linux","trident","docker","solidfire","iscsi"],
         "url": "/2022/08/21/rocky-linux-docker-netapp-trident-solidfire.html",
@@ -971,13 +971,13 @@ var store = [{
         "url": "/2022/11/11/netapp-spot-instaclustr-eseries.html",
         "teaser": null
       },{
-        "title": "PowerShell password change script for local user account on E-Series SANtricity OS",
+        "title": "PowerShell password change for local E-Series SANtricity OS users",
         "excerpt":"Long story short, password rotation scripts should directly use the SANtricity (or Web Services Proxy, if you can’t get directly to SANtricity) API and not the CLI. My script can pick either controller and optionally validate the new password. Here I use the admin credentials to set a new password...","categories": ["automation","storage"],
         "tags": ["netapp","e-series","eseries","powershell","api","script","password","santricity"],
         "url": "/2022/12/07/eseries-password-change-powershell.html",
         "teaser": null
       },{
-        "title": "E-Series in a Kubernetes environment with DirectPV, TopoLVM, CSI Driver LVM CSI drivers",
+        "title": "Kubernetes and E-Series - DirectPV, TopoLVM, CSI Driver LVM CSI",
         "excerpt":"CSI choices for E-Series in a Kubernetes environment What’s out there in terms of DAS CSI for Kubernetes Unique DAS approaches How does it work? Advantages of using DAS CSI with E-Series disk arrays Redundancy and data protection with DAS CSI and E-Series Client connectivity RAID level or DDP Volume...","categories": ["kubernetes","storage"],
         "tags": ["netapp","e-series","eseries","directpv","csi","topolvm","lvm csi"],
         "url": "/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html",
@@ -1019,19 +1019,19 @@ var store = [{
         "url": "/2022/12/22/solidfire-12.7.html",
         "teaser": null
       },{
-        "title": "Monitor wear level of NetApp E-Series flash drives via the API and from the CLI",
+        "title": "Monitor wear level of NetApp E-Series SSDs with API and CLI",
         "excerpt":"At some point (I couldn’t find the exact release in the documentation, but I’ve found it v11.52) E-Series Engineering added SSD wear level metrics to the SANtricity API. Recently I made a short post on where to find that indicator in the SANtricity Web UI. This post is about getting...","categories": ["storage"],
         "tags": ["netapp","eseries","e-series","flash","epa","monitoring","wear","visualization","santricity","grafana"],
         "url": "/2023/01/08/eseries-flash-ssd-wear-level-monitoring.html",
         "teaser": null
       },{
-        "title": "Burst on-prem GPU workloads from BeeGFS/E-Series clusters to Spot Ocean for Spark in the cloud",
+        "title": "Burst on-premises BeeGFS/E-Series to Spot Ocean in the cloud",
         "excerpt":"Problem statement Data replication Storage CSI drivers GPU compute nodes Performance monitoring Workflow Problem statement Enterprises with analytics, HPC and Deep Learning workloads that have high-bandwidth storage requirements use BeeGFS with NetApp E-Series. For various reasons they may need to burst-to-cloud. Some of the main challenges in this process: Data...","categories": ["storage","cloud"],
         "tags": ["spot.io","spot","analytics","beegfs","eseries","e-series","instaclustr","hybrid cloud"],
         "url": "/2023/01/12/beegfs-eseries-hybrid-cloud-spot-ocean-spark.html",
         "teaser": null
       },{
-        "title": "NetApp E-Series Performance Analyzer in orchestrated container environments",
+        "title": "NetApp E-Series Performance Analyzer in container environments",
         "excerpt":"EPA on Kubernetes and Nomad is here It took some time to find the time… But it’s almost ready now: in EPA 3.1.0, E-Series metrics collector is completely disentangled from InfluxDB management and operation, and can run on its own (in a shell, Docker, Kubernetes, Nomad). I’m still working on...","categories": ["storage","containers"],
         "tags": ["netapp","epa","e-series","eseries","grafana","influxdb","python","kubernetes","nomad","monitoring","visualization"],
         "url": "/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html",
@@ -1109,7 +1109,7 @@ var store = [{
         "url": "/2023/02/25/elasticsearch-eseries-performance.html",
         "teaser": null
       },{
-        "title": "Protect multi-volume Kubernetes applications with NetApp Trident and SolidFire",
+        "title": "Protect multi-PVC Kubernetes apps with NetApp Trident, SolidFire",
         "excerpt":"Introduction Cold multi-volume backup without snapshots Group Snapshot-assisted multi-volume backup Backup multi-volume snapshot to S3 with built-in backup-to-S3 Using other methods to backup data from storage snapshots Application-integrated backups Application-consistent snapshots vs. multi-volume storage snapshots Injecting storage snapshot into application-aware workflows Sub-volume partitioning and other tricks Conclusion Introduction Recently I...","categories": ["kubernetes","storage"],
         "tags": ["SolidFire","backup","CSI","trident","Kanister","NetApp"],
         "url": "/2023/02/27/group-multi-volume-backup-solidfire-kubernetes-trident.html",
@@ -1169,7 +1169,7 @@ var store = [{
         "url": "/2023/07/26/ontap-s3-as-velero-object-store.html",
         "teaser": null
       },{
-        "title": "Thanos with different S3 backends - StorageGRID, ONTAP S3 and MinIO on E-Series",
+        "title": "Thanos with StorageGRID, ONTAP S3 and MinIO on E-Series",
         "excerpt":"Introduction Thanos’ object storage component seems to use S3-compliant object stores in reasonably simple ways which lead me to believe it should be easy to get working. In this post I examine different choices and mention some high-level guidelines to help NetApp customers determine what may be better for them....","categories": ["storage","analytics"],
         "tags": ["s3","prometheus","object store","thanos","e-series","eseries","minio","ontap","storagegrid","netapp","s3","eseries"],
         "url": "/2023/07/28/thanos-with-minio-eseries-or-ontap-s3.html",
@@ -1235,7 +1235,7 @@ var store = [{
         "url": "/2023/08/29/introduction-to-memphis-message-broker.html",
         "teaser": null
       },{
-        "title": "Use SolidFire API to monitor clone and backup jobs for profit and pleasure",
+        "title": "Monitor SolidFire clone and backup jobs through API",
         "excerpt":"Problem API methods Finding SolidFire API limits Clone jobs Slice sync jobs Clone sync jobs Remote sync jobs Bulk (backup, restore) jobs Opportunities for improvements and integrations Faster access to volume clones Faster multiple clones from a single volume Auto-adjust QoS on volumes involved in bulk jobs Get available bulk...","categories": ["solidfire","automation"],
         "tags": ["netapp","solidfire","api","powershell","python","clone","backup","sync","data protection"],
         "url": "/2023/08/30/monitoring-solidfire-clone-and-backup-jobs.html",
@@ -1295,7 +1295,7 @@ var store = [{
         "url": "/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html",
         "teaser": null
       },{
-        "title": "Event monitoring with SNMP trap notifications from NetApp E-Series arrays",
+        "title": "Event monitoring with SNMP traps from NetApp E-Series arrays",
         "excerpt":"Introduction Configure SNMP trap destination in SANtricity OS Get E-Series MIB files and OID SANtricity SNMP walk SANtricity SNMP traps and trap examples E-Series-specific SM10-R3-MIB and ES-NETAPP Generic Other approaches to delivering notifications to SNMP trap destinations Forwarding notifications to other SNMP and non-SNMP destinations Conclusion Appendix A - E-Series...","categories": ["storage"],
         "tags": ["e-series","eseries","netapp","observability","mib","oid","monitoring","INF-01-00"],
         "url": "/2023/09/17/netapp-e-series-snmp-trap-notifications.html",
@@ -1715,13 +1715,13 @@ var store = [{
         "url": "/2024/06/28/growing-solidfire-volumes-paired-for-replication.html",
         "teaser": null
       },{
-        "title": "Extract SolidFire volume attributes created by Trident or other apps",
+        "title": "Get SolidFire volume attributes created by Trident, other apps",
         "excerpt":"This series of posts has several parts: Part 1 - Kubernetes, Trident and SolidFire configuration visibility Part 2 - Kubernetes, Trident and SolidFire configuration - part 2 Part 3 - this post Introduction How Trident creates SolidFire volume attributes What’s in volume attributes How to use volume attributes Getting SolidFire...","categories": ["storage","solidfire","automation","kubernetes"],
         "tags": ["netapp","solidfire","api","devops","trident","dr","replication","csi"],
         "url": "/2024/07/02/solidfire-volume-attributes-from-trident-and-other-apps.html",
         "teaser": null
       },{
-        "title": "Kubefire - tools and recipes for Kubernetes failover/failback with SolidFire",
+        "title": "Kubefire for Kubernetes failover/failback with SolidFire",
         "excerpt":"Introduction Kubefire Simplified version of Longhorny focused on Kubernetes Automated replication service for SolidFire replication in a Kubernetes environment Conclusion Appendix A - implementation ideas Introduction In this post I described how SolidFire Collector collects and stores volume attributes from NetApp Trident CSI. It’s one of several pieces of the...","categories": ["storage","kubernetes","solidfire","projects"],
         "tags": ["trident","solidfire","python","automation","netapp","replication","failover","failback"],
         "url": "/2024/07/05/kubefire-for-failover-failback-of-kubernetes-with-solidfire-backend.html",
@@ -1829,7 +1829,7 @@ var store = [{
         "url": "/2025/06/06/whats-minio-up-to.html",
         "teaser": null
       },{
-        "title": "Fix slow PowerShell startup time on Linux due to misconfigured environment",
+        "title": "Speed up PowerShell startup time on Linux with environment",
         "excerpt":"Problem Background Solution(s) Epilogue Problem Recently, whenever I ran a PowerShell script, it’s seemed a bit slow. PowerShell 7.4 and 7.5 Ubuntu LTS 24.04 I executed those from Bash so I didn’t really think much of it, except that it seemed a bit slow which was probably “some snapd or...","categories": ["random"],
         "tags": ["linux","powershell","automation"],
         "url": "/2025/06/07/powershell-linux-long-startup-time-history-file.html",
