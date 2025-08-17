@@ -71,7 +71,7 @@ var store = [{
         "url": "/2020/12/19/solidfire-powershell-python-cli-sdk-1.7.html",
         "teaser": null
       },{
-        "title": "Protect your Kubernetes applications and data with Kasten and SolidFire",
+        "title": "Protect your Kubernetes with Kasten and SolidFire",
         "excerpt":"Rancher and other Kubernetes users want to protect their applications and data. NetApp HCI and its underlying SolidFire storage are used by NetApp Trident to provide a CSI-compatible API to Kubernetes-based orchestrators. Kubernetes CSI Snapshots NetApp Trident lets Kuberntes users take snapshots and import existing volumes to Kubernetes. In order...","categories": ["kubernetes"],
         "tags": ["netapp","solidfire","kasten","backup","data protection","trident","k10","kanister"],
         "url": "/2020/12/21/kasten-rancher-netapp-hci-solidfire-k8s-backup.html",
@@ -137,7 +137,7 @@ var store = [{
         "url": "/2021/01/29/get-rancher-deployment-log-from-netapp-hci-hcc.html",
         "teaser": null
       },{
-        "title": "Backup and restore Rancher cluster configuration to NetApp StorageGRID",
+        "title": "Backup Rancher cluster configuration to NetApp StorageGRID",
         "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. Summary Backup and restore etcd configuration in Rancher on NetApp HCI Prepare a bucket Use it when deploying a cluster View your backups with an S3 browser Restore a cluster configuration backup Object storage organization What...","categories": ["kubernetes"],
         "tags": ["kubernetes","rancher","data protection","storagegrid","s3","backup"],
         "url": "/2021/02/01/backup-rancher-on-hci-to-storagegrid-s3.html",
@@ -197,7 +197,7 @@ var store = [{
         "url": "/2021/02/24/netapp-trident-on-arm64.html",
         "teaser": null
       },{
-        "title": "NetApp StorageGRID object store for Vertica EON Mode",
+        "title": "NetApp StorageGRID for Vertica EON Mode",
         "excerpt":"WTF is EON Mode What do I need to do to get Vertica EON Mode work with StorageGRID TLS certificate for HTTPS IP address for S3 API endpoint S3 bucket and region name Configuration details for Object Storage Backup to S3 Export data to S3 StorageGRID sizing for performance and...","categories": ["analytics"],
         "tags": ["vertica","database","netapp","storagegrid","s3"],
         "url": "/2021/02/27/storagegrid-s3-as-vertica-communal-storage.html",
@@ -227,7 +227,7 @@ var store = [{
         "url": "/2021/03/24/netapp-hci-compute-node-local-hardware-monitoring.html",
         "teaser": null
       },{
-        "title": "Experimenting with Edge-to-DC integrations with Photon IoT and ONTAP",
+        "title": "Testing Edge-to-DC using Photon IoT and ONTAP",
         "excerpt":"Introduction What does it do Storing and protecting your IoT data Object Stores for Photon IoT C2C (Cloud to Container) How to process IoT data uploaded to the cloud? Restore Photon IoT snapshots to ONTAP in the cloud or on-premises Copy Photon IoT data to other systems in the cloud...","categories": ["random"],
         "tags": ["netapp","ontap","edge","photon iot","arm64","trident"],
         "url": "/2021/03/27/photon-ontap-on-arm64-iot-edge.html",
@@ -443,7 +443,7 @@ var store = [{
         "url": "/2021/12/07/flatcar-linux-with-solidfire-iscsi.html",
         "teaser": null
       },{
-        "title": "How to find unused S3 (access) keys and accounts on NetApp StorageGRID",
+        "title": "Find unused S3 (access) keys and accounts on NetApp StorageGRID",
         "excerpt":"Problem What to do Approach A Delete access key by id Delete access key by displayName Approach B Risks Summary NOTICE: all credentials and tokens on this page are samples, not leaked. Problem Users apply for - or get given by default - an S3 key pair. Then they don’t...","categories": ["storage"],
         "tags": ["netapp","s3","storagegrid"],
         "url": "/2021/12/12/finding-unused-storagegrid-accounts.html",
@@ -455,7 +455,7 @@ var store = [{
         "url": "/2021/12/14/integrate-solidfire-with-servicenow.html",
         "teaser": null
       },{
-        "title": "Hadoop with Multi-Tiered Read-Write S3 cache using Alluxio and NetApp StorageGRID",
+        "title": "Hadoop Multi-Tiered Read-Write S3 cache Alluxio and NetApp StorageGRID",
         "excerpt":"Introduction Setup Underlay Storage (S3) Multi-tiered S3 Cache Hadoop (MapReduce) Compute Layer Configuration Results Hot Read Cache (including pinned and pre-loaded content) Cold Cache (including free’d and evicted) Observations Related to SSD Cache Benefits and Conclusion Demo NOTICE: all credentials and tokens on this page are samples, not leaked. Introduction...","categories": ["analytics","storage"],
         "tags": ["netapp","storagegrid","ontap","analytics","ram cache","caching","alluxio"],
         "url": "/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html",
@@ -743,7 +743,7 @@ var store = [{
         "url": "/2022/06/07/kasten-k10-v5-with-netapp-solidfire.html",
         "teaser": null
       },{
-        "title": "Copy files to or from BeeGFS before or after scheduled jobs",
+        "title": "Copy files to/from BeeGFS before or after scheduled jobs",
         "excerpt":"While the ability to move files (or blocks) from and to other filesystems is nice, it isn’t always necessary or desirable. To keep this short, let’s say we have the following situation: Data ($HOME, etc.) lives on ONTAP NFS or StorageGRID S3 Some compute jobs must run, or simply run...","categories": ["analytics"],
         "tags": ["netapp","beegfs","eseries","e-series","workflow","automation"],
         "url": "/2022/06/14/batch-copy-files-beegfs.html",
@@ -1061,7 +1061,7 @@ var store = [{
         "url": "/2023/02/01/solidfire-vs-ransomware.html",
         "teaser": null
       },{
-        "title": "Use Cloud Sync API and Elasticsearch to improve data replication management",
+        "title": "Use Cloud Sync API and Elasticsearch to improve data replication",
         "excerpt":"Why and when automate Cloud Sync? Some NetApp Cloud Sync users have many sync relationships (as in dozens). (As of recently the new name for Cloud Sync is “BlueXP Copy and Sync”, but I won’t use it.) At that scale, the use of the Cloud Sync API can become justified....","categories": ["automation"],
         "tags": ["Cloud Sync","CloudSync","monitoring","metrics","ELK","Elastic","Elasticsearch","visualization"],
         "url": "/2023/02/06/cloud-sync-elasticsearch.html",
@@ -1073,7 +1073,7 @@ var store = [{
         "url": "/2023/02/09/veeam-eseries-nfs-storage-provider.html",
         "teaser": null
       },{
-        "title": "Backup and restore E-Series Performance Analyzer with Kasten K10",
+        "title": "Backup/restore E-Series Performance Analyzer with Kasten K10",
         "excerpt":"Introduction Backup Customizing backup scripts Restore Scenario 1: delete deployments, PVCs and PVs, restore from repository Scenario 2: force delete Trident/SolidFire volumes, followed by the entire epa namespace Scenario 3: revert to a Kasten/Trident snapshot Quirks and fine-tuning Demo Summary Introduction Yesterday’s post on using Kasten with various backup repositories...","categories": ["kubernetes"],
         "tags": ["E-Series","Kasten","eseries","backup","k8s","Kubernetes","epa","influxdb","netapp","data protection"],
         "url": "/2023/02/10/backup-epa-data-on-kubernetes.html",
@@ -1097,7 +1097,7 @@ var store = [{
         "url": "/2023/02/17/velero-1-10-with-trident-solidfire.html",
         "teaser": null
       },{
-        "title": "Gather and visualize E-Series temperature and power consumption metrics with EPA",
+        "title": "Visualize E-Series temperature and power consumption metrics with EPA",
         "excerpt":"EPA v3.3.0 will be the next release of EPA and I’m aiming for two small improvements: Environmental sensor monitoring Power consumption monitoring The first is most likely going to be temperature sensors. I’m still trying to figure out what they mean. The second is total power consumption of the array....","categories": ["storage"],
         "tags": ["E-Series","eseries","monitoring","projects","epa","NetApp","monitoring","visualization"],
         "url": "/2023/02/18/epa-eseries-monitor-sensors-psu-power-consumption.html",
@@ -1337,7 +1337,7 @@ var store = [{
         "url": "/2023/10/12/snapshot-clone-repository-monitoring-in-eseries.html",
         "teaser": null
       },{
-        "title": "PostgreSQL performance improvements with DDP-based RAID 1 compared to DDP-based RAID 6",
+        "title": "Faster PostgreSQL with DDP-based RAID 1 compared to DDP-based RAID 6",
         "excerpt":"Introduction Environment Tests Results Other performance views Conclusion Introduction In the post Benefits of RAID 1 in E-Series DDP I highlighted the performance benefit of DDP-based RAID 1 over DDP-based RAID 6 using a synthetic performance test (fio). This post attempts to make that comparison more “real-life” by running a...","categories": ["storage"],
         "tags": ["netapp","e-series","eseries","RAID 1","RAID 6","R1","performance","pgbench","postgresql"],
         "url": "/2023/10/17/netapp-eseries-raid1-vs-raid6-ddp-comparison.html",
