@@ -1902,7 +1902,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SolidFire Gateway for Windows Admin Center 2025",
-        "excerpt":"Introduction What it is What it does IIS Setup Why this matters What about it? Conclusion Introduction Yet another “extra gloves” flashback today. I won’t say who I think “Dumber” is, but I have a very accurate list of suspects. What it is SolidFire WAC Gateway is an API gateway...","categories": ["automation","solidfire"],
+        "excerpt":"Introduction What it is What it does IIS Setup Why this matters What about it? Conclusion Appendix: Introduction Yet another “extra gloves” flashback today. I won’t say who I think “Dumber” is, but I have a very accurate list of suspects. What it is SolidFire WAC Gateway is an API...","categories": ["automation","solidfire"],
         "tags": ["netapp","solidfire","windows","hyper-v","windows admin center"],
         "url": "/2025/07/26/solidfire-windows-admin-center-gateway.html",
         "teaser": null
@@ -1920,9 +1920,15 @@ var store = [{
         "teaser": null
       },{
         "title": "E-Series Performance Analyzer (EPA) v4 beta",
-        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the time: Insta-eliminate the SANtricity...","categories": ["e-series","storage"],
+        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: Progress update Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the...","categories": ["e-series","storage"],
         "tags": ["e-series","monitoring","grafana","netapp","performance","EPA"],
         "url": "/2025/08/11/epa-4-beta.html",
+        "teaser": null
+      },{
+        "title": "E-Config v2 updated for QLC drives",
+        "excerpt":"Introduction I don’t write much about E-Config (see it in Projects), but among my projects I like, this is one of the few that I use on a regular basis. I also like Firemox very much, for example, but I haven’t used it since I posted the source code to...","categories": ["e-series","storage"],
+        "tags": ["e-series","sizing","qlc","raid6","ddp"],
+        "url": "/2025/08/20/econfig-v2-updates.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -1938,7 +1944,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 8 minute read Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Got binged in July 2025 2025-08-11 00:00 3 minute read I don’t track users (see Privacy page), don’t have ads and don’t care about “likes” or “followers”,...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away and made overdue updates to E-Config E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: Progress update Got binged...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
