@@ -180,7 +180,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="SolidFire Maintenance Mode">
-    <meta itemprop="description" content="Maintenance Mode is a relatively new SolidFire feature that takes a node in and out of the neutral. In other words, it nicely moves a node's services to remaining cluster nodes, making servicing less disruptive to iSCSI clients, and makes it eligible for service scheduling when node leaves Maintenance Mode (i.e. returns to full service).The SolidFire documentation (link above) currently doesn't tell you how to check Maintenance Mode status of a node. I opened a documentation bug for that so that will soon be improved, but in any case it's good to have this described in more detail. One of the several reasons for this is you can't try this on SolidFire Demo Node (which has only one node to begin with).Maintenance Mode doesn't automagically protect cluster from data loss in the case of a node or disk failure while a node is offline. It still (temporarily) makes it run with (1-(n-1)/n) of data without recreating the second copy of the blocks on the node that's in mainenance mode. Its purpose is simply to make node or cluster maintenance during busy hours less disruptive to existing clients.You're not supposed to put an unstable node in maintenance mode while Support is trying to figure it out. If a node is that unstable, you will probably want to remove it from the cluster (that way cluster will reprotect all data with Helix/RF2, assuming you have sufficient capacity left).On SolidFire 12.2 or 12.3 we can find the current maintenance status by listing all nodes (ListAllNodes) and looking at maintenanceMode of each. ListActiveNodes also responds with this information.Example:Name                           Value----                           -----fibreChannelTargetPortGroupcip                            10.12.5.51sipi                           Bond10Gmipi                           Bond1GnodeSlot                       DplatformInfo                   {chassisType, platformConfigVersion, containerized, nodeType...}role                           StoragevirtualNetworks                {System.Collections.Hashtable}customProtectionDomainName     __default__chassisName                    002170800051cipi                           Bond10GnodeID                         1sip                            10.12.5.51softwareVersion                12.3.0.958mip                            10.12.5.54associatedMasterServiceID      1uuid                           00000000-0000-0000-0000-0CC47AF2DC12associatedFServiceID           0attributes                     {}name                           hci-s1maintenanceMode                DisabledTo put node ID 4 (ID obtained from Cluster &gt; Nodes &gt; Active &gt; Node ID) into Maintenance Mode, we use EnableMaintenanceMode and pass it the node ID like this {&quot;nodes&quot; = [4]}.We can't provide more than one node ID in method params or run the command twice for different nodes (it won't work the second time if it's worked the first time) because RF2 can tolerate only one node being offline at a time (well, we could put more than one node from a Protection Domain in MaintenanceMode if the method understood Protection Domains, but currently (version 12.3) it's not there yet).This returns an asyncHandle ID (e.g. 492) which we can use to watch its progress:Name                           Value----                           -----asyncHandle                    492requestedMode                  ReadyForMaintenancecurrentMode                    PreparingForMaintenanceWe can use that handle to watch the progress:Name                           Value----                           -----createTime                     5/6/2021 6:59:02 AMstatus                         runningdetails                        {message, action, nodes}resultType                     MaintenanceModelastUpdateTime                 5/6/2021 6:59:07 AMOnce done, it will look similar to this (before it disappears):Name                           Value----                           -----createTime                     5/6/2021 6:59:02 AMstatus                         completeresult                         {message, action, nodes}lastUpdateTime                 5/6/2021 7:00:07 AMresultType                     MaintenanceModeIt can take a few minutes for SolidFire Web UI to start indicating that a node is under maintenance.Now ListActiveNodes or ListAllNodes would show one of the nodes as ReadyForMaintenance. Notice that this is not node ID 3.$r.nodes[3].maintenanceModeReadyForMaintenance$r.nodes[3].nodeID4To go back and enable the node (or, disable Maintenance Mode), use the DisableMaintenanceMode method with params for the node ID ({&quot;nodes&quot; = [4]}).Name                           Value----                           -----createTime                     5/6/2021 7:03:50 AMstatus                         runningdetails                        {nodes, action}resultType                     MaintenanceModelastUpdateTime                 5/6/2021 7:03:50 AMDuring that time the node leaving Maintenance Mode resyncs its Metadata with the Primary copy to catch up with the changes that happened while Maintenance Mode was enabled. Transient errors and warnings may appear but shouldn't persist.A node is considered to be in Maintenance Mode until it completes leaving it.Eventually the async job status would indicate job completion:Name                           Value----                           -----createTime                     5/6/2021 7:03:50 AMstatus                         completeresult                         {message, action, nodes}lastUpdateTime                 5/6/2021 7:06:07 AMresultType                     MaintenanceModeYou could also find this information in SolidFire events or SNMP logs if you forward those to external destination. Or use ListAllNodes and confirm that no node has maintenanceMode Enabled.Note (see the documentation link at the top) that the maintenance mode methods return currentMode and requestedMode, but because the nodes parameter is mandatory I don't like the idea of using these methods to check node status (I'd rather List(All)Nodes as shown above).Secondly, possible values aren't just Enabled and Disabled - there's FailedToRecover, PreparingForMaintenance, and more. See the documentation link for the details!">
+    <meta itemprop="description" content="Using Maintenance Mode in SolidFire 12.2 and 12.3">
     <meta itemprop="datePublished" content="2021-05-06T00:00:00+08:00">
     
 
@@ -476,7 +476,7 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">I got carried away and made overdue updates to E-Config
+    <p class="archive__item-excerpt" itemprop="description">I got carried away while making overdue updates to E-Config and added a new feature
 </p>
   </article>
 </div>
@@ -524,14 +524,7 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">
-  Introduction
-  EPA 4
-  EPA Collector-specific
-  Details related to storage requirements
-  What's next
-  Appendix A: Progress update
-
+    <p class="archive__item-excerpt" itemprop="description">E-Series Performance Analyzer 4
 </p>
   </article>
 </div>
@@ -579,7 +572,8 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">I don't track users (see Privacy page), don't have ads and don't care about "likes" or "followers", but generally I want my content to be in search engine in...</p>
+    <p class="archive__item-excerpt" itemprop="description">How I got binged out of Bing in July 2025
+</p>
   </article>
 </div>
 
@@ -626,16 +620,8 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">
-  Introduction
-  Walk-through
-  And now…
-  Conclusion
-  Appendix A: demo
-    
-      Animated GIF (no playback control)
-      Video demo with voice-over
-    ...</p>
+    <p class="archive__item-excerpt" itemprop="description">More on that extra pair of gloves…
+</p>
   </article>
 </div>
 

@@ -1944,7 +1944,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away and made overdue updates to E-Config E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: Progress update Got binged...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away while making overdue updates to E-Config and added a new feature E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read E-Series Performance Analyzer 4 Got binged in July 2025 2025-08-11 00:00 3 minute...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
