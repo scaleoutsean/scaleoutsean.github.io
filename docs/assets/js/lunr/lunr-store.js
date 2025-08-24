@@ -1920,7 +1920,7 @@ var store = [{
         "teaser": null
       },{
         "title": "E-Series Performance Analyzer (EPA) v4 beta",
-        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: Progress update Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the...","categories": ["e-series","storage"],
+        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: updates Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the time:...","categories": ["e-series","storage"],
         "tags": ["e-series","monitoring","grafana","netapp","performance","EPA"],
         "url": "/2025/08/11/epa-4-beta.html",
         "teaser": null
@@ -1929,6 +1929,12 @@ var store = [{
         "excerpt":"Introduction I don’t write much about E-Config (see it in Projects), but among my projects I like, this is one of the few that I use on a regular basis. I also like Firemox very much, for example, but I haven’t used it since I posted the source code to...","categories": ["e-series","storage"],
         "tags": ["e-series","sizing","qlc","raid6","ddp"],
         "url": "/2025/08/20/econfig-v2-updates.html",
+        "teaser": null
+      },{
+        "title": "EPA version 3.4.0",
+        "excerpt":"How it started … This came as a little unexpected detour in my recent attempts to upgrade E-Series Performance Analyzer to version 4. Surprisingly, this “simple” refresh from 3.3 to 3.4 took me several days of work. I still can’t believe it. I mean, I couldn’t believe it after 2...","categories": ["e-series","storage","projects"],
+        "tags": ["e-series","monitoring","grafana"],
+        "url": "/2025/08/24/epa-version-3-dot-4.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -1944,7 +1950,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away while making overdue updates to E-Config and added a new feature E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read E-Series Performance Analyzer 4 Got binged in July 2025 2025-08-11 00:00 3 minute...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"EPA version 3.4.0 2025-08-24 00:00 5 minute read What’s new in EPA v3.4.0 E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away while making overdue updates to E-Config and added a new feature E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
