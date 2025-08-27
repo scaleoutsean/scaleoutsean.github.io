@@ -1842,8 +1842,8 @@ var store = [{
         "teaser": null
       },{
         "title": "SFC (SolidFire Collector) 2.1",
-        "excerpt":"Introduction SFC 2.1 Queries Summary Introduction tldr; My SolidFire metrics collector, SFC, was posted to Github last year. v2 was a complete rewrite; I changed back-end to InfluxDB 1, made performance improvements so that it could scale to mid-sized clusters (or better), and eliminated SolidFire SDK As I’ve blogged at...","categories": ["solidfire","storage"],
-        "tags": ["solidfire","monitoring","grafana"],
+        "excerpt":"Introduction SFC 2.1 Queries Summary Introduction tldr; My SolidFire metrics collector, SFC, was posted to Github last year. v2 was a complete rewrite; I changed back-end to InfluxDB 1, made performance improvements so that it could scale to mid-sized clusters (or better), and eliminated SolidFire SDK As I’ve blogged at...","categories": ["solidfire","storage","projects"],
+        "tags": ["solidfire","monitoring","grafana","python"],
         "url": "/2025/06/18/sfc-2-dot-1.html",
         "teaser": null
       },{
@@ -1872,7 +1872,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Firemox - an anti-plugin for Proxmox PVE with NetApp SolidFire",
-        "excerpt":"Background Firemox What it does, and doesn’t (Stopping) scope creep Known issues and limitations Conclusion Demo and source code Appendix A: Feature creep continues (2025/07/09) Background In “Do we need a NetApp SolidFire plugin for Proxmox” in looked into storage plugins for Proxmox and explained why I didn’t like the...","categories": ["automation","solidfire","virtualization"],
+        "excerpt":"Background Firemox What it does, and doesn’t (Stopping) scope creep Known issues and limitations Conclusion Demo and source code Appendix A: Feature creep continues (2025/07/09) Background In “Do we need a NetApp SolidFire plugin for Proxmox” in looked into storage plugins for Proxmox and explained why I didn’t like the...","categories": ["automation","solidfire","virtualization","projects"],
         "tags": ["netapp","solidfire","powershell","proxmox","pve"],
         "url": "/2025/07/07/firemox.html",
         "teaser": null
@@ -1896,19 +1896,19 @@ var store = [{
         "teaser": null
       },{
         "title": "Updated Terraform provider for SolidFire",
-        "excerpt":"Introduction What’s new in 2025 Next steps Introduction Prior to NetApp’s acquisition SolidFire had a Terraform provider for SolidFire for internal use. It was posted on Github, but never promoted to external users. After SolidFire got acquired, I fought for it to be adopted and kept around as a “community”...","categories": ["automation","solidfire"],
+        "excerpt":"Introduction What’s new in 2025 Next steps Introduction Prior to NetApp’s acquisition SolidFire had a Terraform provider for SolidFire for internal use. It was posted on Github, but never promoted to external users. After SolidFire got acquired, I fought for it to be adopted and kept around as a “community”...","categories": ["automation","solidfire","projects"],
         "tags": ["netapp","solidfire","terraform","hcl"],
         "url": "/2025/07/25/terraform-solidfire-provider-update.html",
         "teaser": null
       },{
         "title": "SolidFire Gateway for Windows Admin Center 2025",
-        "excerpt":"Introduction What it is What it does IIS Setup Why this matters What about it? Conclusion Appendix: Introduction Yet another “extra gloves” flashback today. I won’t say who I think “Dumber” is, but I have a very accurate list of suspects. What it is SolidFire WAC Gateway is an API...","categories": ["automation","solidfire"],
+        "excerpt":"Introduction What it is What it does IIS Setup Why this matters What about it? Conclusion Appendix: Introduction Yet another “extra gloves” flashback today. I won’t say who I think “Dumber” is, but I have a very accurate list of suspects. What it is SolidFire WAC Gateway is an API...","categories": ["automation","solidfire","projects"],
         "tags": ["netapp","solidfire","windows","hyper-v","windows admin center"],
         "url": "/2025/07/26/solidfire-windows-admin-center-gateway.html",
         "teaser": null
       },{
         "title": "SolidFire Extension for Windows Admin Center 2025",
-        "excerpt":"Introduction Walk-through And now… Conclusion Appendix A: demo Animated GIF (no playback control) Video demo with voice-over Introduction Continuing our “Dumb &amp; Dumber in Tech” series, I’m pleased to report that I can add another episode following that SolidFire WAC Gateway post. I’ve kept cracking and have something to share....","categories": ["automation","solidfire"],
+        "excerpt":"Introduction Walk-through And now… Conclusion Appendix A: demo Animated GIF (no playback control) Video demo with voice-over Introduction Continuing our “Dumb &amp; Dumber in Tech” series, I’m pleased to report that I can add another episode following that SolidFire WAC Gateway post. I’ve kept cracking and have something to share....","categories": ["automation","solidfire","projects"],
         "tags": ["netapp","solidfire","windows","hyper-v","windows admin center"],
         "url": "/2025/07/30/solidfire-windows-admin-center-extension.html",
         "teaser": null
@@ -1920,13 +1920,13 @@ var store = [{
         "teaser": null
       },{
         "title": "E-Series Performance Analyzer (EPA) v4 beta",
-        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: updates Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the time:...","categories": ["e-series","storage"],
+        "excerpt":"Introduction EPA 4 EPA Collector-specific Details related to storage requirements What’s next Appendix A: updates Introduction In 2023 I forked the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. I accomplished all of the goals I set for it at the time:...","categories": ["e-series","storage","projects"],
         "tags": ["e-series","monitoring","grafana","netapp","performance","EPA"],
         "url": "/2025/08/11/epa-4-beta.html",
         "teaser": null
       },{
         "title": "E-Config v2 updated for QLC drives",
-        "excerpt":"Introduction I don’t write much about E-Config (see it in Projects), but among my projects I like, this is one of the few that I use on a regular basis. I also like Firemox very much, for example, but I haven’t used it since I posted the source code to...","categories": ["e-series","storage"],
+        "excerpt":"Introduction I don’t write much about E-Config (see it in Projects), but among my projects I like, this is one of the few that I use on a regular basis. I also like Firemox very much, for example, but I haven’t used it since I posted the source code to...","categories": ["e-series","storage","projects"],
         "tags": ["e-series","sizing","qlc","raid6","ddp"],
         "url": "/2025/08/20/econfig-v2-updates.html",
         "teaser": null
@@ -1935,6 +1935,12 @@ var store = [{
         "excerpt":"How it started … This came as a little unexpected detour in my recent attempts to upgrade E-Series Performance Analyzer to version 4. Surprisingly, this “simple” refresh from 3.3 to 3.4 took me several days of work. I still can’t believe it. I mean, I couldn’t believe it after 2...","categories": ["e-series","storage","projects"],
         "tags": ["e-series","monitoring","grafana"],
         "url": "/2025/08/24/epa-version-3-dot-4.html",
+        "teaser": null
+      },{
+        "title": "EPA version 3.4.1",
+        "excerpt":"What’s new in EPA v3.4.1 3.4.0 was released days ago but based on user feedback this week, two micro-features have been added in version 3.4.1. Include metrics If you don’t need all of the metrics that EPA 3 collects, you can specify just a subset and keep your InfluxDB v1...","categories": ["e-series","storage","projects"],
+        "tags": ["e-series","monitoring","grafana"],
+        "url": "/2025/08/27/epa-version-3-dot-4-dot-1.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -1950,7 +1956,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"EPA version 3.4.0 2025-08-24 00:00 5 minute read What’s new in EPA v3.4.0 E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away while making overdue updates to E-Config and added a new feature E-Series Performance Analyzer (EPA) v4 beta 2025-08-11 00:00 9 minute read...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"EPA version 3.4.1 2025-08-27 00:00 3 minute read What’s new in EPA v3.4.1 EPA version 3.4.0 2025-08-24 00:00 5 minute read What’s new in EPA v3.4.0 E-Config v2 updated for QLC drives 2025-08-20 00:00 4 minute read I got carried away while making overdue updates to E-Config and added a...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
