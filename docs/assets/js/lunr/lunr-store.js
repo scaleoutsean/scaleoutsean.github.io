@@ -396,7 +396,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Red Hat Quay with NetApp StorageGRID S3 Back End",
-        "excerpt":"Create a bucket, say quay, and a set of S3 keys for one of your S3 users to use with this bucket. Pick Amazon S3-compatible storage, enter the required info, validate. Then download your config file, and save it for use with “real” Red Hat Quay service. Here’s an example...","categories": ["containers","kubernetes"],
+        "excerpt":"Create a bucket, say quay, and a set of S3 keys for one of your S3 users to use with this bucket. Pick Amazon S3-compatible storage, enter the required info, validate. (Note: I’ve had several people who picked another type ask my why my blog post “doesn’t work”, so now...","categories": ["containers","kubernetes"],
         "tags": ["netapp","redhat","quay","container registry","registry","s3","storagegrid"],
         "url": "/2021/10/14/storagegrid-s3-with-red-hat-quay.html",
         "teaser": null
