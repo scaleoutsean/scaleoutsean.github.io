@@ -1968,7 +1968,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SolidFire Collector v2.1.0 2025-09-04 00:00 3 minute read Stack complete and tagged EPA version 3.5.0 2025-08-31 00:00 5 minute read What’s new in EPA v3.5.0 EPA version 3.4.1 2025-08-27 00:00 3 minute read What’s new in EPA v3.4.1 EPA version 3.4.0 2025-08-24 00:00 5 minute read What’s new in EPA...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"SolidFire Collector v2.1.0 2025-09-04 00:00 4 minute read Stack complete and tagged EPA version 3.5.0 2025-08-31 00:00 5 minute read What’s new in EPA v3.5.0 EPA version 3.4.1 2025-08-27 00:00 3 minute read What’s new in EPA v3.4.1 EPA version 3.4.0 2025-08-24 00:00 5 minute read What’s new in EPA...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
