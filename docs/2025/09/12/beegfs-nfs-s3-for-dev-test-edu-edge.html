@@ -287,7 +287,17 @@ beegfs-storage           ghcr.io/thinkparq/beegfs-storage:8.1       <span class=
 
 <p>But you may also want something like this: <code class="language-plaintext highlighter-rouge">git clone</code> this "All-in-One" BeeGFS-NFS-S3 repo, <code class="language-plaintext highlighter-rouge">docker compose up</code> in under 60s, and then you move on to deal with other problems. The OPEA approach.</p>
 
-<p>What's "best"? It depends. For Edge AI, high-performance inferencing and several other use cases I would gravitate towards BeeGFS + S3.</p>
+<p>What's "best"? It depends. What I'd look for for OPEA use cases:</p>
+
+<ul>
+  <li>Edge AI (factories, remote sites)</li>
+  <li>High-performance inferencing (e.g. 20 GB/s in 2U)</li>
+  <li>High-performance vector databases</li>
+  <li>Compact deployments (5RU for 3 x 1U server + 1 x 2U E-Series array)</li>
+  <li>OPEA deployments with hybrid storage requirements (e.g. 1 PB with 95% NL-SAS)</li>
+  <li>Servicable OPEA deployments (E-Series has infrequent security updates, once configured, no management access from client is required)</li>
+  <li>S3-centric external access (where staging and replication is S3-dominated; whether you use Versity S3 gateway or NetApp StorageGRID)</li>
+</ul>
 
 <h2 id="support">Support</h2>
 
@@ -324,18 +334,22 @@ beegfs-storage           ghcr.io/thinkparq/beegfs-storage:8.1       <span class=
   <li>VM3: Versity S3 gateway service (and BeeGFS client) - for data upload and replication/backup</li>
 </ul>
 
+<p>Notice that this All-in-One "template" is easy to change and swap out any component or use it to create separate services (such as containerized BeeGFS cluster, container with Versity S3 Gateway), so you end up having doing the same thing that OPEA stack does - mixing and matching OSS containers to build services you need.</p>
+
+<p>If you think that's not supportable, how could OPEA be supportable?</p>
+
 <h2 id="whats-missing">What's missing</h2>
 
 <ul>
-  <li><strong>No TLS for S3 gateway</strong>: that's deliberate. TLS should be terminated on a reverse proxy. Kubernetes has theirs, VMs have theirs, etc. Use whichever you like. Versity S3 Gateway can provide TLS natively, but I didn't want to do it because in this All-in-One mode that shouldn't be done that way</li>
+  <li><strong>No TLS for S3 gateway</strong>: that's deliberate. TLS should be terminated on a reverse proxy sitting in front of Vesity S3 Gateway. Kubernetes has theirs, VMs have theirs, etc. Use whichever you like. Versity S3 Gateway can provide TLS natively, but I didn't want to do it because in this All-in-One mode that shouldn't be done that way</li>
   <li><strong>No special attention paid to NFSv4 ACLs</strong>: this is because I'd have to set up Kerberos and come up with some "scenarios", but I don't know what those "scenarios" in which NFS is required might be. In my mind, S3/TLS should be used for ingress (upload of data from inferencing clients) and egress (e.g. replication of data to the HQs with <code class="language-plaintext highlighter-rouge">rclone</code> or similar) and native BeeGFS (including Kubernetes with BeeGFS CSI) for inferencing and other OPEA workloads. If you need it here and there, the way it's set up is probably good enough. Or you could set up a stand-alone VM with NFS v4.</li>
 </ul>
 
 <p>Note on OS firewall configuration: as I mentioned above, NFS and S3 services are already listening on host ports, but those ports should be closed on OS firewall if there's no intent to expose them. To expose them:</p>
 
 <ul>
-  <li>Open 111 and 2049 for NFSv4. Of course, you should examine if LAN clients are trusted or if you want to apply Kerberos and other security measures</li>
-  <li>Add a reverse TLS-terminating HTTP proxy on (say) port 8443 and forward to Versity S3 gateway port on 127.0.0.1:7070 (no need to serve S3 over HTTP unless you want)</li>
+  <li>Open ports 111 and 2049 for NFSv4. Of course, you should examine if LAN clients are trusted or if you want to apply Kerberos and other security measures</li>
+  <li>Add a reverse TLS-terminating HTTP proxy on (say) port 8443 and forward to Versity S3 gateway port on 127.0.0.1:7070 (no need to serve S3 over HTTP)</li>
 </ul>
 
 <h2 id="takeaways">Takeaways</h2>
