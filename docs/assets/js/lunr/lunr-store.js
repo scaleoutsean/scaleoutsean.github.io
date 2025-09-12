@@ -1967,6 +1967,12 @@ var store = [{
         "url": "/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html",
         "teaser": null
       },{
+        "title": "MCP Server for NetApp E-Series arrays",
+        "excerpt":"Introduction As I’m gradually getting out of “EPA hell” (weeks of work on E-Series Performance Analyzer 3 and 4), I’m thinking about other things I could do. Months ago I created a simple proof-of-concept MCP server for SolidFire, then another, slightly more featured one for file system analytics, and I’ve...","categories": ["netapp","storage","projects","ai"],
+        "tags": ["ai","mcp","agents","netapp","e-series","automation"],
+        "url": "/2025/09/13/mcp-for-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -1980,7 +1986,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Containerized BeeGFS with NFSv4 and S3 2025-09-12 00:00 7 minute read Revisiting that old idea for All-in-One BeeGFS stack SolidFire WAC Gateway Client (PowerShell) 2025-09-08 00:00 1 minute read About that thing that should have been done in 2016 SolidFire Collector v2.1.0 2025-09-04 00:00 4 minute read Stack complete and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"MCP Server for NetApp E-Series arrays 2025-09-13 00:00 8 minute read Use case for MCP server for NetApp E-Series arrays Containerized BeeGFS with NFSv4 and S3 2025-09-12 00:00 8 minute read Revisiting that old idea for All-in-One BeeGFS stack SolidFire WAC Gateway Client (PowerShell) 2025-09-08 00:00 1 minute read About...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS All-in-One BeeGFS stack (BeeGFS, NFSv4,...","url": "https://scaleoutsean.github.io/projects.html"
