@@ -1,0 +1,733 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Containerized BeeGFS with NFSv4 and S3 | Acting Technologist</title>
+<meta name="description" content="It's finally done - fully containerized BeeGFS with NFSv4 and S3">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Containerized BeeGFS with NFSv4 and S3">
+<meta property="og:url" content="https://scaleoutsean.github.io/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html">
+
+
+  <meta property="og:description" content="It's finally done - fully containerized BeeGFS with NFSv4 and S3">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/beegfs-8-nfsv4-s3.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Containerized BeeGFS with NFSv4 and S3">
+  <meta name="twitter:description" content="It's finally done - fully containerized BeeGFS with NFSv4 and S3">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/beegfs-8-nfsv4-s3.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2025-09-12T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Containerized BeeGFS with NFSv4 and S3">
+    <meta itemprop="description" content="Revisiting that old idea for All-in-One BeeGFS stack">
+    <meta itemprop="datePublished" content="2025-09-12T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html" itemprop="url">Containerized BeeGFS with NFSv4 and S3
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-09-12T00:00:00+08:00">2025-09-12 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#mission-accomplished">Mission accomplished</a></li><li><a href="#what-this-has-to-do-with-opea">What this has to do with OPEA?</a></li><li><a href="#support">Support</a></li><li><a href="#whats-missing">What's missing</a></li><li><a href="#takeaways">Takeaways</a></li><li><a href="#next-steps">Next steps</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>Almost a year and a half ago I <a href="/2023/12/02/containerized-beegfs-with-netapp-eseries.html">blogged</a> about a combined dockerized BeeGFS/NFS/S3 stack for E-Series.</p>
+
+<p>As anyone who clicks on a few linkes can notice, I haven't been idle… The idea was mostly for dev/test environments and as such I put in on a lower-priority wish list.</p>
+
+<p>But then NetApp joined <a href="/2025/05/21/opean-ai-with-netapp-eseries.html">OPEA</a>, so I figured I might revisit this and do my job, which is solutioning.</p>
+
+<h2 id="mission-accomplished">Mission accomplished</h2>
+
+<p>I got it done today.</p>
+
+<p><img src="/assets/images/beegfs-8-nfsv4-s3.png" alt="SolidFire WAC Gateway" /></p>
+
+<p>What's inside:</p>
+
+<ul>
+  <li>In-Docker BeeGFS cluster, inherited from <a href="https://github.com/ThinkParQ/beegfs-containers">upstream</a>)</li>
+  <li>In-Docker BeeGFS client, a complicated addition with inevitable limitations (see README.md in the Github repository)</li>
+  <li>In-Docker NFSv4 kernel-based server: exports BeeGFS client's mount via NFS</li>
+  <li>In-Docker S3 gateway: an <a href="https://github.com/versity/versitygw">S3 gateway from Versity</a> that makes BeeGFS accessible via S3</li>
+</ul>
+
+<p>(Adding these extras was in fact painful. If it wasn't, someone would have done it by now.)</p>
+
+<p>NFS and S3 are exposed on the Docker host, but for local experimentation it is recommended to simply close those firewall ports (111, 2049, 7070) and you'll be fine. But if you want to provide services externally, open those ports and they'll be available on LAN.</p>
+
+<p>This is a combined mode, where NFS and S3 run in the same BeeGFS client container.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker compose ps 
+NAME                     IMAGE                                      COMMAND                  SERVICE                  CREATED       STATUS       PORTS
+beegfs-client-combined   beegfs-containers-beegfs-client-combined   <span class="s2">"/combined-entrypoin…"</span>   beegfs-client-combined   2 hours ago   Up 2 hours   
+beegfs-meta              ghcr.io/thinkparq/beegfs-meta:8.1          <span class="s2">"/root/start.sh stor…"</span>   beegfs-meta              5 hours ago   Up 5 hours   
+beegfs-mgmtd             ghcr.io/thinkparq/beegfs-mgmtd:8.1         <span class="s2">"/root/start.sh --db…"</span>   beegfs-management        5 hours ago   Up 5 hours   
+beegfs-storage           ghcr.io/thinkparq/beegfs-storage:8.1       <span class="s2">"/root/start.sh stor…"</span>   beegfs-storage           5 hours ago   Up 5 hours   
+
+</code></pre></div></div>
+
+<h2 id="what-this-has-to-do-with-opea">What this has to do with OPEA?</h2>
+
+<p>Nothing directly, but the benefits of what I blogged about last year are the same and very pertinent.</p>
+
+<p>If you read the OPEA post you'll see why E-Series is a good choice for OPEA: folks who run heavily Linux-focused stacks (which OPEA most certainly is) like the simplicity of E-Series.</p>
+
+<p>I don't need anyone to tell me that. I know that because I <em>am</em> a Linux guy.</p>
+
+<p>Anyway, the idea is you get disks that are fast, protected and available, and you take care of the rest.</p>
+
+<p>What is seemingly "missing" in  E-Series file/object service and you get "just" the block storage.</p>
+
+<p>But, as I wrote in the OPEA post lined above, that's not true. You can deploy NetApp StorageGRID in KVM VMs, for example, and even ONTAP Select as KVM-based NFS/SMB/S3 storage appliance. And you can deploy BeeGFS and use it natively from Kubernetes containers, or export it via NFSv4.</p>
+
+<p>But you may also want something like this: <code class="language-plaintext highlighter-rouge">git clone</code> this "All-in-One" BeeGFS-NFS-S3 repo, <code class="language-plaintext highlighter-rouge">docker compose up</code> in under 60s, and then you move on to deal with other problems. The OPEA approach.</p>
+
+<h2 id="support">Support</h2>
+
+<p>Let's continue with concern trolling.</p>
+
+<p>Support! OMG!</p>
+
+<p>First, let's see what comes from where:</p>
+
+<ul>
+  <li>OS container: Ubuntu (commercial support available)</li>
+  <li>BeeGFS: ThinkParQ (commercial support available)</li>
+  <li>NFS kernel server: Ubuntu (commercial support available)</li>
+  <li>S3 gateway from Versity (commercial support available)</li>
+</ul>
+
+<p>The funny (or maybe not funny) part is NetApp itself doesn't support this approach, as this is based on BeeGFS version 8 and runs in containers. The NetApp BeeGFS solution for E-Series still deploys old version 7. Also, it doesn't deploy it to VMs, let alone containers.</p>
+
+<p>But the stack is free and doesn't enable any features that require special licenses (both BeeGFS and Versity S3 Gateway), so this makes the problem less significant.</p>
+
+<p>It's a good idea to buy support from the software vendors, but you don't need anything to be "supported".</p>
+
+<p>What I am <em>not</em> saying is that they support or not support this specific combination/integration. It happens to work and Versity generally supports any POSIX-compatible filesystems and so far I haven't seen major problems with this combination.</p>
+
+<p>Exporting BeeGFS filesystems via NFS v4 is officially supported by ThinkParQ.</p>
+
+<p>If you need both (NFS and S3), it's safest (in terms of protocol limitations) to not share the same directories via both S3 and NFS (and BeeGFS). If you do use them on same data, I would recommend to use one protocol for read-based workload and another for write. That way you're less likely to encounter NFS/S3 cross-protocol limitations which simply cannot be "resolved" by some "workarounds".</p>
+
+<p>What I would do in production might be exactly this stack, but in case of any problem, I'd deploy the same services in 3 VMs on KVM:</p>
+
+<ul>
+  <li>VM1: BeeGFS management-meta-storage - direct BeeGFS access by containers, with BeeGFS CSI</li>
+  <li>VM2: NFSv4 server (and BeeGFS client) - for data upload (ingress)</li>
+  <li>VM3: Versity S3 gateway service (and BeeGFS client) - for data upload and replication/backup</li>
+</ul>
+
+<h2 id="whats-missing">What's missing</h2>
+
+<ul>
+  <li><strong>No TLS for S3 gateway</strong>: that's deliberate. TLS should be terminated on a reverse proxy. Kubernetes has theirs, VMs have theirs, etc. Use whichever you like. Versity S3 Gateway can provide TLS natively, but I didn't want to do it because in this All-in-One mode that shouldn't be done that way</li>
+  <li><strong>No special attention paid to NFSv4 ACLs</strong>: this is because I'd have to set up Kerberos and come up with some "scenarios", but I don't know what those "scenarios" in which NFS is required might be. In my mind, S3/TLS should be used for ingress (upload of data from inferencing clients) and egress (e.g. replication of data to the HQs with <code class="language-plaintext highlighter-rouge">rclone</code> or similar) and native BeeGFS (including Kubernetes with BeeGFS CSI) for inferencing and other OPEA workloads. If you need it here and there, the way it's set up is probably good enough. Or you could set up a stand-alone VM with NFS v4.</li>
+</ul>
+
+<p>Note on OS firewall configuration: as I mentioned above, NFS and S3 services are already listening on host ports, but those ports should be closed on OS firewall if there's no intent to expose them. To expose them:</p>
+
+<ul>
+  <li>Open 111 and 2049 for NFSv4. Of course, you should examine if LAN clients are trusted or if you want to apply Kerberos and other security measures</li>
+  <li>Add a reverse TLS-terminating HTTP proxy on (say) port 8443 and forward to Versity S3 gateway port on 127.0.0.1:7070 (no need to serve S3 over HTTP unless you want)</li>
+</ul>
+
+<h2 id="takeaways">Takeaways</h2>
+
+<p>This all-in-one approach makes testing and development easy.</p>
+
+<p>Depending on the use case and environment, it may be even usable in production. But even if it's not deployed exactly the same way (say, we use All-in-One for dev/test, and VMs for production), the ability to do dev/test at will is precious.</p>
+
+<p>Combine that with hybrid E-Series arrays (EF300, EF600), and you can serve decently big inferencing workloads with this stack. Need a fast RAID 10 on SSDs for vector DB workloads? <a href="/2023/10/17/netapp-eseries-raid1-vs-raid6-ddp-comparison.html">Sure!</a>. Need RAID 6 on NL-SAS for 10 GB/s of BeeGFS workloads? <a href="/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html">Easy</a>.</p>
+
+<p>The other big win is (in my opinion) is S3. It lets you eliminate traditional file sharing and you get TLS encryption for free (simply add an NGINX HTTPS reverse proxy in front of Versity S3 service).</p>
+
+<p>Then you create buckets for individual users or groups and you don't have to manage filesystem either. Replicate data with <code class="language-plaintext highlighter-rouge">rclone</code> to infrequent access S3 archives with Object Lock daily and you have a DR replica. (BeeGFS )</p>
+
+<p>Once files are uploaded to a directory, job schedulers <a href="/2022/06/14/batch-copy-files-beegfs.html">can move or copy them</a> elsewhere but in many cases you may be able to just leave them there.</p>
+
+<p>If you need "traditional" block services for databases or even "regular" NFS on XFS or ext4, just create regular iSCSI devices for KVM VMs. With <a href="/2024/02/28/incus-zfs-netapp-eseries.html">ZFS</a> you can also offload cloning and other tasks from storage. If Pacemaker/Corosync are too hard to set up for KVM HA, consider KubeVirt or <a href="/2022/09/02/lxd-containers-vms-on-beegfs.html">LXD</a>.</p>
+
+<p>My All-in-One BeeGFS/NFSv4/S3 stack will be posted to Github this weekend.</p>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>I've been using Versity Gateway with BeeGFS in <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">data pipeline</a> scenarios and also with "single-host" filesystems and Versity S3 Gateway has shown <a href="/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html">good performance</a> even with small files. Most recently I also got InfluxDB with tiering to S3 (Versity S3 Gateway), and my experience with it has been good. I plan to do some stress testing with InfluxDB and Versity S3 Gateway, which would be the 3rd kind of workload tried with Versity S3 gateway (native data pipelines, small object workloads, and lately data analytics (with InfluxDB tiering to/from S3)).</p>
+
+<p>This gives me the flexibility of deploying the same container/service on BeeGFS or single-host file system for different workloads. All I need to do is decide what's most suitable for my use case.</p>
+
+<p>I'd like to do some testing with OPEA solutions, but they require high-end Intel CPUs which I do not have. But I'll take a look at that as well - as long as services can start, that's already something!</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/gateway" class="page__taxonomy-item p-category" rel="tag">gateway</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/nfs" class="page__taxonomy-item p-category" rel="tag">nfs</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/versity" class="page__taxonomy-item p-category" rel="tag">versity</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/projects" class="page__taxonomy-item p-category" rel="tag">projects</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2025-09-12T00:00:00+08:00">2025-09-12 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Containerized+BeeGFS+with+NFSv4+and+S3%20https%3A%2F%2Fscaleoutsean.github.io%2F2025%2F09%2F12%2Fbeegfs-nfs-s3-for-dev-test-edu-edge.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2025/09/08/solidfire-wac-gateway-client-powershell.html" class="pagination--pager" title="SolidFire WAC Gateway Client (PowerShell)">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/09/08/solidfire-wac-gateway-client-powershell.html" rel="permalink">SolidFire WAC Gateway Client (PowerShell)
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-09-08T00:00:00+08:00">2025-09-08 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">About that thing that should have been done in 2016
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/09/04/sfc-solidfire-collector-v2-dot-1-dot-0.html" rel="permalink">SolidFire Collector v2.1.0
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-09-04T00:00:00+08:00">2025-09-04 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Stack complete and tagged
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/31/epa-version-3-dot-5.html" rel="permalink">EPA version 3.5.0
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-31T00:00:00+08:00">2025-08-31 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What's new in EPA v3.5.0
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/08/27/epa-version-3-dot-4-dot-1.html" rel="permalink">EPA version 3.4.1
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-08-27T00:00:00+08:00">2025-08-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What's new in EPA v3.4.1
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

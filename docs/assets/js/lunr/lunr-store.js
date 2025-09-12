@@ -1579,7 +1579,7 @@ var store = [{
       },{
         "title": "NetApp E-Series with containerized BeeGFS, NFS, S3",
         "excerpt":"Introduction Reinventing the wheel Components Workflow Expected outcome Next steps Security Quotas and ACLs Monitoring Conclusion Introduction Everyone likes to say their storage platform makes AI easy to automate, get started in no time, and so on. Well, I am 100% sure that is the case with NetApp SolidFire. Related...","categories": ["kubernetes","storage","ai"],
-        "tags": ["kubernetes","csi","beegfs csi","e-series","eseries","ai"],
+        "tags": ["kubernetes","csi","beegfs csi","e-series","eseries","ai","beegfs","versity"],
         "url": "/2024/04/11/netapp-eseries-containerized-beegfs-nfs-s3-all-in-one.html",
         "teaser": null
       },{
@@ -1961,6 +1961,12 @@ var store = [{
         "url": "/2025/09/08/solidfire-wac-gateway-client-powershell.html",
         "teaser": null
       },{
+        "title": "Containerized BeeGFS with NFSv4 and S3",
+        "excerpt":"Introduction Almost a year and a half ago I blogged about a combined dockerized BeeGFS/NFS/S3 stack for E-Series. As anyone who clicks on a few linkes can notice, I haven’t been idle… The idea was mostly for dev/test environments and as such I put in on a lower-priority wish list....","categories": ["netapp","storage","projects","ai"],
+        "tags": ["s3","gateway","nfs","netapp","e-series","versity","beegfs"],
+        "url": "/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -1974,10 +1980,10 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SolidFire WAC Gateway Client (PowerShell) 2025-09-08 00:00 1 minute read About that thing that should have been done in 2016 SolidFire Collector v2.1.0 2025-09-04 00:00 4 minute read Stack complete and tagged EPA version 3.5.0 2025-08-31 00:00 5 minute read What’s new in EPA v3.5.0 EPA version 3.4.1 2025-08-27 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Containerized BeeGFS with NFSv4 and S3 2025-09-12 00:00 7 minute read Revisiting that old idea for All-in-One BeeGFS stack SolidFire WAC Gateway Client (PowerShell) 2025-09-08 00:00 1 minute read About that thing that should have been done in 2016 SolidFire Collector v2.1.0 2025-09-04 00:00 4 minute read Stack complete and...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
-    "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description Awesome Solidfire SolidFire-related resources (docs, curation, Python...","url": "https://scaleoutsean.github.io/projects.html"
+    "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS All-in-One BeeGFS stack (BeeGFS, NFSv4,...","url": "https://scaleoutsean.github.io/projects.html"
   },{
     "title": "Posts by Tag",
     "excerpt":" ","url": "https://scaleoutsean.github.io/tags/"
