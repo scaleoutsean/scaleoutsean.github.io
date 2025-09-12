@@ -1962,7 +1962,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Containerized BeeGFS with NFSv4 and S3",
-        "excerpt":"Introduction Almost a year and a half ago I blogged about a combined dockerized BeeGFS/NFS/S3 stack for E-Series. As anyone who clicks on a few linkes can notice, I haven’t been idle… The idea was mostly for dev/test environments and as such I put in on a lower-priority wish list....","categories": ["netapp","storage","projects","ai"],
+        "excerpt":"Introduction Almost a year and a half ago I blogged about a combined dockerized BeeGFS/NFS/S3 stack for E-Series. As anyone who follows this blog can notice, I haven’t been idle… The idea was meant mostly for dev/test environments and as such I put in on a lower-priority personal wish list....","categories": ["netapp","storage","projects","ai"],
         "tags": ["s3","gateway","nfs","netapp","e-series","versity","beegfs"],
         "url": "/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html",
         "teaser": null
