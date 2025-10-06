@@ -1973,6 +1973,12 @@ var store = [{
         "url": "/2025/09/13/mcp-for-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "E-Series Perfomance Anlyzer (E-Series SANtricity Collector)",
+        "excerpt":"Introduction It’s been a while since I posted EPA 4 beta- almost eight weeks by now. As usual, I’ve received a ton of feedback (zilch) from our fanatical Open Source community, so time has come to simply tag that last beta commit and release. Well, not really. What happpened is...","categories": ["netapp","storage","projects","ai"],
+        "tags": ["ai","mcp","netapp","e-series","automation"],
+        "url": "/2025/10/07/ecp-eseries-performance-analyzer-aka-collector.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -1986,7 +1992,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"MCP Server for NetApp E-Series arrays 2025-09-13 00:00 8 minute read Use case for MCP server for NetApp E-Series arrays Containerized BeeGFS with NFSv4 and S3 2025-09-12 00:00 8 minute read Revisiting that old idea for All-in-One BeeGFS stack SolidFire WAC Gateway Client (PowerShell) 2025-09-08 00:00 1 minute read About...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"E-Series Perfomance Anlyzer (E-Series SANtricity Collector) 2025-10-07 00:00 8 minute read About EPA 4 (aka ESC 4) and how to pick the right one for you MCP Server for NetApp E-Series arrays 2025-09-13 00:00 8 minute read Use case for MCP server for NetApp E-Series arrays Containerized BeeGFS with NFSv4...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
