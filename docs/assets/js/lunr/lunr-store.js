@@ -1974,9 +1974,15 @@ var store = [{
         "teaser": null
       },{
         "title": "E-Series SANtricity Collector (ESC 4)",
-        "excerpt":"Introduction It’s been a while since I posted EPA 4 beta- almost eight weeks by now. As usual, I’ve received a ton of feedback (zilch) from our fanatical Open Source community, so time has come to simply tag that last beta commit and release. Well, not really. What happpened is...","categories": ["netapp","storage","projects","ai"],
-        "tags": ["ai","mcp","netapp","e-series","automation"],
+        "excerpt":"Introduction It’s been a while since I posted EPA 4 beta - almost eight weeks by now. As usual, I’ve received a ton of feedback (zilch) from our fanatical Open Source community, so time has come to simply tag that last beta commit and release. Well, not really. What happpened...","categories": ["netapp","storage","projects"],
+        "tags": ["netapp","e-series","influxdb","prometheus","epa","ai"],
         "url": "/2025/10/07/ecp-eseries-performance-analyzer-aka-collector.html",
+        "teaser": null
+      },{
+        "title": "E-Series Performance Analyzer v3.5.1",
+        "excerpt":"EPA v3.5.1 E-Series Performance Analyzer aka EPA v3.5.1 was released today. Unresolved E-Series system failure events are now exported as Prometheus alets InfluxDB was updated to latest and greatest 1.12.2 Minor optimization of docker-compose.yml Unresolved or “active” system failures were already gathered in 3.5.0 and before, but they weren’t exported...","categories": ["netapp","storage","projects"],
+        "tags": ["netapp","e-series","prometheus","epa"],
+        "url": "/2025/10/08/epa-3.5.1.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -1992,7 +1998,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Series SANtricity Collector (ESC 4) 2025-10-07 00:00 8 minute read About EPA 4 (aka ESC 4) and how to pick the right one for you MCP Server for NetApp E-Series arrays 2025-09-13 00:00 8 minute read Use case for MCP server for NetApp E-Series arrays Containerized BeeGFS with NFSv4 and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"E-Series Performance Analyzer v3.5.1 2025-10-08 00:00 1 minute read E-Series Performance Analyzer v3.5.1 has been released with minor improvements E-Series SANtricity Collector (ESC 4) 2025-10-07 00:00 8 minute read About EPA 4 (aka ESC 4) and how to pick the right one for you MCP Server for NetApp E-Series arrays...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -2260,4 +2266,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page66/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
   }]
