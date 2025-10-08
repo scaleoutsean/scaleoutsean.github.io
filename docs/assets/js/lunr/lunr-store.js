@@ -1985,6 +1985,12 @@ var store = [{
         "url": "/2025/10/08/epa-3.5.1.html",
         "teaser": null
       },{
+        "title": "StorageGRID Branch Buckets and Read Cache",
+        "excerpt":"Introduction This posts talks about two new features in NetApp StorageGRID 12.0: branch buckets and S3 cache. From what I’ve seen and heard so far, some seem rather confused by all this and aren’t sure what it all means… Here’s what I think it means. Branch what? Yeah. That’s what...","categories": ["netapp","storage","analytics"],
+        "tags": ["netapp","e-series","storagegrid","beeond","beegfs","beegfs","eseries","s3","object"],
+        "url": "/2025/10/09/storagegrid-s3-cache-branch-buckets.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -1998,7 +2004,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Series Performance Analyzer v3.5.1 2025-10-08 00:00 1 minute read E-Series Performance Analyzer v3.5.1 has been released with minor improvements E-Series SANtricity Collector (ESC 4) 2025-10-07 00:00 8 minute read About EPA 4 (aka ESC 4) and how to pick the right one for you MCP Server for NetApp E-Series arrays...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1 2025-10-08 00:00 1 minute read E-Series Performance Analyzer v3.5.1 has been released with minor improvements E-Series SANtricity Collector (ESC 4) 2025-10-07 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"

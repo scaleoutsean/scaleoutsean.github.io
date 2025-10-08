@@ -1,0 +1,783 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>StorageGRID Branch Buckets and Read Cache | Acting Technologist</title>
+<meta name="description" content="How to make StorageGRID Branch Buckets and Read Cache work for you">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="StorageGRID Branch Buckets and Read Cache">
+<meta property="og:url" content="https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html">
+
+
+  <meta property="og:description" content="How to make StorageGRID Branch Buckets and Read Cache work for you">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/storagegrid-cache-and-beegfs-beond-eseries.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="StorageGRID Branch Buckets and Read Cache">
+  <meta name="twitter:description" content="How to make StorageGRID Branch Buckets and Read Cache work for you">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/storagegrid-cache-and-beegfs-beond-eseries.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2025-10-09T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="StorageGRID Branch Buckets and Read Cache">
+    <meta itemprop="description" content="Some ways to take better advantage of the new features in StorageGRID 12">
+    <meta itemprop="datePublished" content="2025-10-09T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html" itemprop="url">StorageGRID Branch Buckets and Read Cache
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-10-09T00:00:00+08:00">2025-10-09 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#branch-what">Branch what?</a></li><li><a href="#s3-cache">S3 Cache</a></li><li><a href="#does-this-help-us-and-how">Does this help us and how?</a></li><li><a href="#so-how-is-it-supposed-to-be-used">So, how IS it supposed to be used?</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>This posts talks about two new features in NetApp StorageGRID <a href="https://docs.netapp.com/us-en/storagegrid-120/upgrade/whats-new.html">12.0</a>: branch buckets and S3 cache.</p>
+
+<p>From what I've seen and heard so far, some seem rather confused by all this and aren't sure what it all means…</p>
+
+<p>Here's what <em>I</em> think it means.</p>
+
+<h2 id="branch-what">Branch what?</h2>
+
+<p>Yeah. That's what they call them. Like Git branches. Of course, stupid me, how did I not tink of that!</p>
+
+<p>There's a page called <a href="https://docs.netapp.com/us-en/storagegrid/tenant/what-is-branch-bucket.html">What is a branch bucket?</a>, but it sadly contains no answer to that question.</p>
+
+<p>So we can only guess. Let us try!</p>
+
+<p>Is a branch bucket a point-in-time clone of a versioning-enabled source bucket's Cassandra table exposed to tenant as an independent, read-only or read-write, bucket?</p>
+
+<p>Perhaps.</p>
+
+<p>Then there's this, from TFM:</p>
+
+<blockquote>
+  <p>A GET object operation on a branch bucket retrieves an object from the branch. If the object doesn't exist in the branch bucket, the object is retrieved from the base bucket.</p>
+</blockquote>
+
+<p>The Git analogy isn't helping. This isn't "<code class="language-plaintext highlighter-rouge">git log --graph --oneline --all</code>" where you have transparent access to and visibility into other branches.</p>
+
+<p>In fact, as a user, your horizon doesn't even extend beyond point-in-time at which your bucket was cloned. As a bucket-cloning admin, maybe you feel like a Git user, but as an S3 user you probably don't. You can get - by way of "reference" - access to an object from the source, but you don't know if the object came from there.</p>
+
+<p>Let's talk about some use cases:</p>
+
+<ul>
+  <li>Create and retain a read-only bucket clone of an old bucket</li>
+  <li>Create a read-write clone of a bucket for several teams who may need to make modifications to data before they use it</li>
+</ul>
+
+<p>The maximum number of these clonese per tenant is (MAX_NUMBER_OF_BUCKETS_PER_TENANT - 1) beause we need one base bucket to bootstrap the thing. This means you can have <strong>thousands</strong> of these things.</p>
+
+<p>The other potentially unexpected thing is you can create them retroactively. What does that mean?</p>
+
+<p>It means you enable Object Versioning and sit tight. Every version gets retained up to whatever limit is available. At some point, but before object versions expire or get rotated out, you may pick a point-in-time and create a clone.</p>
+
+<p>On the one hand, you consume space with every object version.</p>
+
+<p>On the other, that space isn't expensive <em>and</em> you have top-notch granularity for your restore points.</p>
+
+<p>You could, for example, create 3600 clones from the hour in which your bucket fell prey to malware infestation. It's not "zero data loss" but it's "(up to) 1 second data loss" as soon as you identify the last clean bucket and restore all infected files from that time.</p>
+
+<h2 id="s3-cache">S3 Cache</h2>
+
+<p>I thought we'd have better luck trying to find a definition or description of this thing, but that's missing, too. After some search, I was able to find about <a href="https://docs.netapp.com/us-en/storagegrid/admin/managing-load-balancing.html#considerations-for-load-balancer-caching">Considerations for load balancer caching</a> (seaching for <code class="language-plaintext highlighter-rouge">S3 cache</code> yielded nothing useful):</p>
+
+<blockquote>
+  <p>Enable caching only for workloads that are cacheable</p>
+</blockquote>
+
+<p>All right, now we're talking!</p>
+
+<p>What's cachable may be a predominantly read workload such as those we have in AI and analytics. You may also see this on read-only bucket clones.</p>
+
+<p>How to know?</p>
+
+<blockquote>
+  <p>Review audit logs to determine if an existing workload would be a good candidate for caching.</p>
+</blockquote>
+
+<p>As an aside: with the just completed <a href="/2025/10/07/ecp-eseries-performance-analyzer-aka-collector.html">E-Series SANtricity Collector</a>, I can use AI/ML on SANtricity metrics gathered in InfluxDB to avoid having to check audit logs. Not for StorageGRID and S3 caching, but for E-Series block workloads and Flash Cache (a SANtricity SSD-caching feature).</p>
+
+<p>With SG, you have to figure it out, with E-Series you can not only have an AI tell you, but it can <a href="/2025/09/13/mcp-for-netapp-eseries.html#analytics-and-optimization">do it for you</a>, turning it on when it's helpful and turn it off when it's not. You don't even need to know!</p>
+
+<p>This S3 caching is a bit manual, but think it's a good example of how it could be done. The other point is what I've said several times here on the topic of performance monitoring: some people still gather data for dashboards. I gather it for AIs.</p>
+
+<blockquote>
+  <p>Evaluate a potential cacheable workload by directing it to the cache-enabled endpoint. Monitor and verify the cache hit rate to determine the suitability of the workload for caching.</p>
+</blockquote>
+
+<p>Yes. If anyone needs help making Flash Cache fully automated on E-Series this way, check out ESC 4.</p>
+
+<p>That aside, S3 cache is there and can greatly speed up repeated reads that can be served from multi-tier (that is, RAM and disk) load-balancer cache.</p>
+
+<p>That can be great for AI and much of analytics, *especially** when one considers that - unlike on most enterprise arrays - cache can be selectively enabled on a per-bucket basis.  Such as for a cloned read-only bucket. Great stuff!</p>
+
+<p>This caching has one strong point and that is that access logging, authentication and authorization are all in the same system. You don't lose any of that and don't have to re-implement and cross-reference two systems to audit it.</p>
+
+<h2 id="does-this-help-us-and-how">Does this help us and how?</h2>
+
+<p>Oh, yes!</p>
+
+<p>Bucket clones give us sub-second maximum data loss from malware or accidental deletion with practically <em>unlimited</em> ability to recover.</p>
+
+<p>Yes, I've said there's a limit (MAX_BUCKETS - 1) that amounts to several thousand clones, but for the most part you <em>don't have to take any until you need them</em>! That is extremely powerful and that is why you can recover with not 900 or 300 seconds of lost data, but with 1 second or less. (I haven't actually seen the Web UI, so I don't know if PIT daate-time picker is so granular, but StorageGRID is extremely meticulous about time, so I expect second-level granularity.)</p>
+
+<p>The main point of this paragraph above is that it makes some workarounds unnecessary. Whereas earlier StorageGRID versions let you access all object versions, you can't examine them in an "all at once at point-in-time" way. Object Versioning with Bucket Clones does. That is a big step forward for StorageGRID's data manageability (and this doesn't even have to do anything with AI).</p>
+
+<p>My assessment of StorageGRID S3 caching feature in 12.0 is: it is moderately helpful.</p>
+
+<p>There's no automation as I mentioned above, and there's no scale-out in this initial version. Both of these will be improved, but no matter how it's done, it will remain much slower for years to come. It may be <em>the</em> solution for StorageGRID users with 4 SG6160's who needed 15 GB/s read performance that they couldn't get. For others, it may solve just a fraction of read performance challenges.</p>
+
+<h2 id="so-how-is-it-supposed-to-be-used">So, how IS it supposed to be used?</h2>
+
+<p>Like this.</p>
+
+<p><img src="/assets/images/storagegrid-cache-and-beegfs-beond-eseries.png" alt="StorageGRID 12 and BeeGFS" /></p>
+
+<p>This is a v1 diagram that I may improve on later, but it's enough to explain the idea:</p>
+
+<ul>
+  <li>StorageGRID gives you PB's of
+    <ul>
+      <li>versioned content with sub-second point-in-time restore</li>
+      <li>async replication (Cloud Mirror to any public cloud or another StorageGRID)</li>
+      <li>DR (Cross-Grid Replication)</li>
+      <li>Business Continuity (A-A-A, or A-A with a "witness" like node at a 3rd site) with the ability to rewind-and-clone any bucket in minutes</li>
+      <li>near real-time <a href="/2025/06/15/pipeline-with-beegfs-file-system-notifications-v2.html#bonus-lightweight-approach-with-web-hooks">data pipelines with Webhooks</a> or other supported notifications</li>
+      <li>near real-time search and embedding (see <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">examples</a>)</li>
+      <li>effortless hybrid cloud readiness</li>
+    </ul>
+  </li>
+  <li>Use StorageGRID appliances with NL-SAS or QLC disks and enable S3 cache on a StorageGRID load balancer</li>
+  <li>With all that, what you need in terms of Tier 1 or Tier 0 storage is little
+    <ul>
+      <li>Add fast and disposable read-write block layer with BeeGFS. There's a CSI driver and blazingly fast filesystem notifiations (see the two links above)</li>
+      <li>Add another level of S3 cache backed by DAS (E-Series or internal)</li>
+      <li>If you get fast, protected block storage like E-Series, you can use it for both. If you've been paying attention, you know E-Series</li>
+    </ul>
+  </li>
+</ul>
+
+<p>StorageGRID has all data management features one needs.</p>
+
+<p>The only major thing that lacks is the Tier 0 or 1 kind of performance. If you need 50 or 500 GB/s from StorageGRID, it's available but expensive.</p>
+
+<p>But you can get that from E-Series and BeeGFS. I would even recommend a <em>non-managed</em> Tier 1 (or 0).</p>
+
+<p>My second related point is we can still make good use of S3 cache - even though it doesn't scale out yet (in 12.0) - by using multiple layers of S3 read cache.</p>
+
+<p>Last weekend I played with a DIY-patched version of Versity S3 Gateway.</p>
+
+<ul>
+  <li>It's a gateway for POSIX filesystems but also S3</li>
+  <li>I can point it to a StorageGRID 12 load balancer with a cached bucket back-end and now instead of loading data to Versity S3 at 2 GB/s, I may populate my cache at 15 GB/s</li>
+  <li>Then, if my Versity S3 Gateway cache hit rate is 20%, having 3 such gateways saves up to 60% of StorageGRID's caching throughput</li>
+</ul>
+
+<p>In effect, I can double my performance with this simple approach and read from S3 at 30 or 40 GB/s.</p>
+
+<p>Then I patched Versity S3 Gateway to overflow RAM cache to disk (LRU-based).</p>
+
+<p>That with EF300C back-end, would give me cache that can go up to tens of TBs QLC SSD (whether this disk-based cache is on BeeGFS or XFS or something else - it doesn't matter).</p>
+
+<p>It breaks the traceable access feature, but you can run Versity on loopback interface which effectively means it can't be anyone but the user with own, valid credentials.</p>
+
+<p>If you open this in new tab, you'll see it's running on 127.0.0.1 and cache hits reduce access time. For RAM-based cache hits I've seen sub-ms, for (local SSD) disk just a bit higher.</p>
+
+<p><img src="/assets/images/storagegrid-cache-and-versity-s3-cache.png" alt="Tier 2 S3 cache from Versity" /></p>
+
+<p>There are other ways (and out-of-box solutions including Vinyl or some of the newer open-source alternatives) to put this together but one thing is common: data is persisted (written) to S3.</p>
+
+<p>The second, BeeGFS-related example for that, is BeeOND. In short, it's a way to stand-up disposable cluster filesystems for your users' high-throughput computing needs. I wrote about it <a href="/2025/05/23/beegfs-data-pipeline.html#on-demand-filesystems">here</a>.</p>
+
+<p>I have a video demo of it somewhere on this blog: it literally takes 30 seconds to create one. Unlike Versity S3 Gateway operating in read-only mode, these are by default read-write, so one thing to remember is add an "upload to S3" step to your jobs.</p>
+
+<p>And BeeOND can extend to GPU nodes as Tier 0 cache.</p>
+
+<p>You have no Tier 1 to maintain, no filesystems to backup or manage. There's no "Infiniband" either. One thing you don't get with BeeGFS is snapshots, but most workloads can checkpoint to S3. Just hammer the same object and use Object Versions to recover. Most applications manage this on their own.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That's how bucket clones and S3 cache should be leveraged in many cases by StorageGRID users. Not by creating ever more complicated "stacks".</p>
+
+<p>These days we have an abundance of quality, high-performing OSS building blocks at our disposal - for example BeeGFS/BeeOND and Versity S3 Gateway.</p>
+
+<p>StorageGRID 12 is very complete in terms of data management features. If your S3 requirements are significant, maybe you don't need anything else for your AI and analytics data management.</p>
+
+<p>In some scenarios it can benefit from an additional boost in performance that is simple, inexpensive and doesn't create multiple data management locations.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/beeond" class="page__taxonomy-item p-category" rel="tag">beeond</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/object" class="page__taxonomy-item p-category" rel="tag">object</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2025-10-09T00:00:00+08:00">2025-10-09 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=StorageGRID+Branch+Buckets+and+Read+Cache%20https%3A%2F%2Fscaleoutsean.github.io%2F2025%2F10%2F09%2Fstoragegrid-s3-cache-branch-buckets.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2025/10/08/epa-3.5.1.html" class="pagination--pager" title="E-Series Performance Analyzer v3.5.1">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/10/08/epa-3.5.1.html" rel="permalink">E-Series Performance Analyzer v3.5.1
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-10-08T00:00:00+08:00">2025-10-08 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">E-Series Performance Analyzer v3.5.1 has been released with minor improvements
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/10/07/ecp-eseries-performance-analyzer-aka-collector.html" rel="permalink">E-Series SANtricity Collector (ESC 4)
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-10-07T00:00:00+08:00">2025-10-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">About EPA 4 (aka ESC 4) and how to pick the right one for you
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/09/13/mcp-for-netapp-eseries.html" rel="permalink">MCP Server for NetApp E-Series arrays
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-09-13T00:00:00+08:00">2025-09-13 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Use case for MCP server for NetApp E-Series arrays
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2025/09/12/beegfs-nfs-s3-for-dev-test-edu-edge.html" rel="permalink">Containerized BeeGFS with NFSv4 and S3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2025-09-12T00:00:00+08:00">2025-09-12 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Revisiting that old idea for All-in-One BeeGFS stack
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
