@@ -1991,6 +1991,12 @@ var store = [{
         "url": "/2025/10/09/storagegrid-s3-cache-branch-buckets.html",
         "teaser": null
       },{
+        "title": "Post-Quantum API proxy for E-Series and SolidFire",
+        "excerpt":"Introduction Do we want PQC on API endpoints? Yes! When do we want it? Now!!! Are E-Series and SolidFire API endpoints already vulnerable? Unlikely so. SolidFire may seem less of a problem because it’s going end-of-support relatively soon, but that way of thinking is entirely wrong. It is less of...","categories": ["netapp","storage","projects"],
+        "tags": ["netapp","e-series","storagegrid","solidfire","post-quantum","pq","pqc","security"],
+        "url": "/2025/10/10/post-quantum-crypto-proxy-for-solidfire-eseries-api.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2004,7 +2010,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1 2025-10-08 00:00 1 minute read E-Series Performance Analyzer v3.5.1 has been released with minor improvements E-Series SANtricity Collector (ESC 4) 2025-10-07 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00 8 minute read Enterprise-grade PQC TLS encryption for E-Series and SolidFire API endpoints StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
