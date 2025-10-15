@@ -1997,6 +1997,12 @@ var store = [{
         "url": "/2025/10/10/post-quantum-crypto-proxy-for-solidfire-eseries-api.html",
         "teaser": null
       },{
+        "title": "TAPOUT - MCP server for ONTAP to E-Series migration",
+        "excerpt":"Introduction This is another of MCP-related posts about E-Series. My first MCP server for E-Series, Easy-E, is about using MCP and AI agents to evaluate the suitability and effectiveness of various Disk Group/Pool and LUN configuration approaches for workloads that can benefit from micro-management. We want that when dealing with...","categories": ["netapp","storage","projects","ai"],
+        "tags": ["ai","mcp","agents","netapp","e-series","automation","iscsi"],
+        "url": "/2025/10/15/mcp-tapout.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2010,7 +2016,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00 9 minute read Enterprise-grade PQC TLS encryption for E-Series and SolidFire API endpoints StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"TAPOUT - MCP server for ONTAP to E-Series migration 2025-10-15 00:00 4 minute read Migrate to NetApp E-Series arrays with MCP Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00 9 minute read Enterprise-grade PQC TLS encryption for E-Series and SolidFire API endpoints StorageGRID Branch Buckets and Read Cache 2025-10-09...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
