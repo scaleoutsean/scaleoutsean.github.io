@@ -2010,7 +2010,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00 8 minute read Enterprise-grade PQC TLS encryption for E-Series and SolidFire API endpoints StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00 9 minute read Enterprise-grade PQC TLS encryption for E-Series and SolidFire API endpoints StorageGRID Branch Buckets and Read Cache 2025-10-09 00:00 9 minute read Some ways to take better advantage of the new features in StorageGRID 12 E-Series Performance Analyzer v3.5.1...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
