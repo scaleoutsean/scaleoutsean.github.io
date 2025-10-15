@@ -237,7 +237,7 @@
 
 <p>This is another of MCP-related posts about E-Series.</p>
 
-<p>My <a href="/2025/09/13/mcp-for-netapp-eseries.html">first MCP server for E-Series, Easy-E</a>, is about using MCP and AI agents to evaluate the suitability and effectiveness of various Disk Group/Pool and LUN configuration approaches for workloads that can benefit from micro-management.</p>
+<p>My <a href="/2025/09/13/mcp-for-netapp-eseries.html">first MCP server for E-Series, Easy-E</a> is about using MCP and AI agents to evaluate the suitability and effectiveness of various Disk Group/Pool and LUN configuration approaches for workloads that can benefit from micro-management.</p>
 
 <p>We want that when dealing with demanding workloads, where IOPS and MB/s matter, and when dealing with large workloads data capacity-wise, where cost optimization must be performed. As a reminder, Easy-E does the following:</p>
 
@@ -245,12 +245,12 @@
   <li>create volumes (LUNs) of desired RAID type and size on DDP</li>
   <li>present them to specified host(s) using host-side automation</li>
   <li>select suitable benchnmark for the workload and evaluate performance by running workloads on presented LUN</li>
-  <li>(TODO) agents run multiple workloads with different configuration parameters and suggest top alernatives</li>
+  <li>(TODO/WIP) agents run multiple workloads with different configuration parameters and suggest top alernatives</li>
 </ul>
 
 <p><img src="/assets/images/mcp-easy-e-01.png" alt="MCP Easy-E in action" /></p>
 
-<p>I later realized this can also useful for generic use cases: even if we're not running on E-Series, we can evaluate <em>application</em> options. So another use case is general workload optimization: you may want to take a workload from anywhere, and evaluate it with MCP Easy-E.</p>
+<p>I later realized this can also useful for generic use cases: even if we're not running on E-Series, we can evaluate <em>application</em> options. So another use case is general workload optimization: you may want to take a workload from anywhere, and evaluate it with agents in MCP Easy-E.</p>
 
 <p>But, that's not to say there are no merits in permanently moving data to E-Series: if your workload is in any of the categories I blog about in the context of E-Series/EF-Series, you may consider using MCP Easy-E to plan for migration and decide your optimal DG/Pool and LUN layout.</p>
 
@@ -273,9 +273,9 @@
   <li>Lets you choose LUNs to migrate via iSCSI</li>
   <li>Creates a temporary iGroup for our iSCSI Target Host</li>
   <li>Depending on chosen strategy, presents selected LUNs to a temporary iGroup with Target Host or clones the LUN to a new LUN presented to the same iGroup</li>
-  <li>Logins to Host, discovers LUN</li>
-  <li>Uses other MCP server, Easy-E, to create LUN of the same size (user is asked to pick desired VG/DDP)</li>
-  <li>Auto-detects FS on Source LUN and uses one of several mechanisms to copy data (SRC-&gt;TGT) on the host
+  <li>Logins to Host via SSH, discovers LUN and logs into target</li>
+  <li>Uses modules from other MCP server package (or calls its MCP API), Easy-E, to create LUN of the same size (user is asked to pick desired VG/DDP)</li>
+  <li>Auto-detects FS on Source LUN and uses one of several mechanisms to copy data (SRC-&gt;TGT) on the host with a fallback to binary device copy
     <ul>
       <li><code class="language-plaintext highlighter-rouge">rsync</code></li>
       <li><code class="language-plaintext highlighter-rouge">dd</code></li>
@@ -285,15 +285,15 @@
   <li>Cleans up temporary iGroup while the clone LUN (or a snapshot) is left for the ONTAP admin to delete once migration is confirmed successful</li>
 </ul>
 
-<p>If you're unsure which DG/Pool is better, you can repeat this twice to create one copy on most promising VG and Pool. Easy-E can run multiple bennchmarks and give you a comparison.</p>
+<p>If you're unsure which DG/Pool is better, you can repeat this twice to create one copy on more promising VG and Pool, or two kinds of volumes in the same pool. Easy-E can run multiple bennchmarks and give you a comparison.</p>
 
 <h2 id="current-status-and-next-steps">Current status and next steps</h2>
 
-<p>It works. You get a list of LUNs you can migrate and their sizes. TAPOUT helps you find best candidates (and this is a simulated selection as normally this is where MCP Easy-E would kick in to check E-Series VGs/DDPs, but I don't have E-Series in my environment). A snapshot or clone can be created for extra precaution.</p>
+<p>It works. You get a list of LUNs you can migrate and their sizes. TAPOUT helps you recommend best candidates among ready-made LUNs. Normally this is where MCP Easy-E would kick in to check E-Series VGs/DDPs and recommend where to create LUNs of the same size, but I don't have E-Series in this environment. A snapshot or clone of Source LUN can be created for extra precaution. Obviously at this point workload on Source LUN would be stopped.</p>
 
 <p><img src="/assets/images/mcp-tapout-02.png" alt="MCP Easy-E in action" /></p>
 
-<p>Once Source volume is accessible, we map it on the host that can access E-Series as well, Easy-E creates suitable LUN of hte same size, and then TAPOUT uses prferred approach to copy data from Source to Target disk.</p>
+<p>Once Source volume is accessible, we map it on the host that can access E-Series as well, Easy-E creates suitable LUN of the same size, and then TAPOUT uses your preferred approach to copy data from Source to Target.</p>
 
 <p><img src="/assets/images/mcp-tapout-03.png" alt="MCP Easy-E in action" /></p>
 
@@ -301,7 +301,7 @@
 
 <p><img src="/assets/images/mcp-tapout-04.png" alt="MCP Easy-E in action" /></p>
 
-<p>Once we're done, we perform validation, log out from the Source LUN, and clean up on ONTAP (delete temporary iGroup while snapshot/clone maybe deleted or left as they were).</p>
+<p>Once we're done, we perform validation, log out from the Source LUN, and clean up on ONTAP (delete temporary iGroup while snapshot/clone may be deleted or left as they were).</p>
 
 <p><img src="/assets/images/mcp-tapout-05.png" alt="MCP Easy-E in action" /></p>
 
@@ -309,7 +309,7 @@
 
 <p>I did take some shortcuts. For example, I use <code class="language-plaintext highlighter-rouge">dd</code> as the easiest strategy because I don't have to deal with filesystems. I used that with SolidFire as well, but that wan't great because SolidFire has efficiencies. E-Series does not and the more recent models don't even support Thin Provisioning, so there's nothing to be lost by performing a block copy!</p>
 
-<p>The other shortcut was lack of multipathing. As you can see in the screenshots, I didn't use it. I could, but why? In VMware, I get MPIO from VMware itself. It's a bit of extra work, it usually makes no difference, and it's usually not necessary for Source connection. I'd rather stick with single path and implement recovery/resumption than use multipathing. (As those who read this blog know, I have always recommended against both multipathing and partitioning on SolidFire, too. On E-Series it matters, but here it's the Target, not Source.)</p>
+<p>The other shortcut was lack of multipathing. As you can see in the screenshots, I didn't use it. I could, but why? Single path is good enough for one-off read-only sequence for the purpose of migration.</p>
 
 <p>I like how MCP TAPOUT leverages and hooks into MCP Easy-E and I'm happy to see that TBs of data can be easily migrated this way.</p>
 

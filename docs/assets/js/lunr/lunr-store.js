@@ -1998,7 +1998,7 @@ var store = [{
         "teaser": null
       },{
         "title": "TAPOUT - MCP server for ONTAP to E-Series migration",
-        "excerpt":"Introduction This is another of MCP-related posts about E-Series. My first MCP server for E-Series, Easy-E, is about using MCP and AI agents to evaluate the suitability and effectiveness of various Disk Group/Pool and LUN configuration approaches for workloads that can benefit from micro-management. We want that when dealing with...","categories": ["netapp","storage","projects","ai"],
+        "excerpt":"Introduction This is another of MCP-related posts about E-Series. My first MCP server for E-Series, Easy-E is about using MCP and AI agents to evaluate the suitability and effectiveness of various Disk Group/Pool and LUN configuration approaches for workloads that can benefit from micro-management. We want that when dealing with...","categories": ["netapp","storage","projects","ai"],
         "tags": ["ai","mcp","agents","netapp","e-series","automation","iscsi"],
         "url": "/2025/10/15/mcp-tapout.html",
         "teaser": null
