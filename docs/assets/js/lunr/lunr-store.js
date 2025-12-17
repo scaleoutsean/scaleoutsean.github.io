@@ -2009,6 +2009,12 @@ var store = [{
         "url": "/2025/12/05/eseries-santricity-lockout.html",
         "teaser": null
       },{
+        "title": "Resource Provisioning on E-Series SANtricity",
+        "excerpt":"Introduction What the heck is “resource provisioning” (or RP, for short) on SANtricity? From the documentation: Resource Provisioning is a feature available in the EF300 and EF600 storage arrays, which allows volumes to be put in use immediately with no background initialization process. There’s more at where that came from,...","categories": ["netapp","storage"],
+        "tags": ["netapp","e-series","santricity"],
+        "url": "/2025/12/17/eseries-santricity-resource-provisioned-vols-groups-pools.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2022,7 +2028,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Series SANtricity Web UI lockout 2025-12-05 00:00 2 minute read How to use (or not) lockout feature in E-Series SANtricity TAPOUT - MCP server for ONTAP to E-Series migration 2025-10-15 00:00 4 minute read Migrate to NetApp E-Series arrays with MCP Post-Quantum API proxy for E-Series and SolidFire 2025-10-10 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Resource Provisioning on E-Series SANtricity 2025-12-17 00:00 3 minute read About resource provsioned volumes and groups/pools E-Series SANtricity Web UI lockout 2025-12-05 00:00 2 minute read How to use (or not) lockout feature in E-Series SANtricity TAPOUT - MCP server for ONTAP to E-Series migration 2025-10-15 00:00 4 minute read...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -2293,4 +2299,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page68/"
   }]
