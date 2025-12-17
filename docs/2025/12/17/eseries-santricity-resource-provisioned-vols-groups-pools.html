@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -243,9 +243,9 @@
   <p>Resource Provisioning is a feature available in the EF300 and EF600 storage arrays, which allows volumes to be put in use immediately with no background initialization process.</p>
 </blockquote>
 
-<p>There's more at where that came from, but you get the idea: with RP volumes you don't have to wait for volume initialization.</p>
+<p>This doesn't mean that non-RP volumes are allocated before a volume is available - it's just that their allocation happens on-demand. See <a href="/2021/07/06/e-series-ddp-expansion-and-rebalancing.html">this post</a> about background allocation with non-RP volumes: it shows how non-RP volumes are available right away, but all stripes are pre-emptively initialized in the background.</p>
 
-<p>Here's how it looks like when it's enabled on a group or pool:</p>
+<p>Here's how it looks like when RP is enabled on a group or pool (with supported flash media):</p>
 
 <p><img src="/assets/images/eseries-santricity-resource-provisioned-01-dg-dpp.png" alt="Resource Provisioned DDP in action" /></p>
 
@@ -259,6 +259,8 @@
   <p>In addition, hosts can deallocate logical blocks in the volume using the NVMe Dataset Management command or the SCSI Unmap command.</p>
 </blockquote>
 
+<p>Additionally, unused space in RP volumes can be "deallocated" by hosts' <code class="language-plaintext highlighter-rouge">unmap</code> (iSCSI) or NVMe Dataset Management (NVMe) commands. This then makes empty stripes accessible for wear levelling (see about under-provisioning) which is helpful if you cut corners and don't <a href="/2023/01/17/eseries-ssd-overprovisioning.html">under-provision</a> enough.</p>
+
 <h2 id="how-much-does-it-cost">How much does it cost?</h2>
 
 <p>RP isn't free. The NetApp <a href="https://www.netapp.com/media/17009-tr4800.pdf">TR-4800</a> discussess these on page 15 (in current version).</p>
@@ -269,13 +271,11 @@
   <p>A resource-provisioned volume is a thick volume in an SSD volume group or pool where drive capacity is allocated (assigned to the volume) when the volume is created, but the drive blocks are deallocated (unmapped).</p>
 </blockquote>
 
-<p>So there you have it. If you give someone a 10TB volume, they may whine for days about "slower than expected" performance.</p>
+<p>So there you have it. If you give someone a 10TB volume, they may whine about "slower than expected" performance.</p>
 
-<p>Now, if this was SolidFire (which actually works similarly, but you wouldn't do it there because Thin Provisioning is always enabled), you could blast the volume until it's full and then assign the volume to a user - a manual non-RP workaround. But here there's no QoS so that approach may backfire and you may have 2 or 24 users start complaining rather than just one.</p>
+<p>The EF[3,6]00 arrays don't support Thin Provisioning, which means a DG (I prefer Disk Group over Volume Group, as a volume group can have no volumes or just one volume, but always has more than one disk so it is in fact considered a <em>group</em>) or pool can't gradually allocate drive blocks on demand. It's an all (non-RP, in background) or nothing (RP allocation-on-demand) approach to initial disk space allocation at creation.</p>
 
-<p>The EF[3,6]00 arrays don't support Thin Provisioning, which means a DG (I prefer Disk Group over Volume Group, as a volume group can have no volumes or just one volume, but always has more than one disk so it is in fact considered a <em>group</em>) or pool can't gradually allocate drive blocks on demand. It's an all (non-RP) or nothing (RP) approach to initial disk space allocation at creation.</p>
-
-<p>The user of a RP volume doesn't have to wait, but he pays the price. From the TR:</p>
+<p>The user doesn't have to wait either way, but there are trade-offs. From the TR:</p>
 
 <blockquote>
   <p>For random write workloads, the first write to each stripe has higher latency because the partial stripe writes are turned into a full-stripe operation.</p>
@@ -283,7 +283,27 @@
 
 <p><img src="/assets/images/eseries-santricity-resource-provisioned-02-volume.png" alt="Resource Provisioned Volume in action" /></p>
 
-<p>If this bothers you (it may not, but if it does), you can disable RP.</p>
+<p>Roughly speaking:</p>
+<ul>
+  <li>if you like "super-consistent" performance, disable RP on a volume and suffer a bit until blocks are allocated in background</li>
+  <li>if you didn't under-provision enough and have &gt;1 DWPD and/or don't mind the slight loss of performance on initial writes to a stripe, enable RP
+    <ul>
+      <li>if you additionally enable <code class="language-plaintext highlighter-rouge">unmap</code> or its NVMe equivalent, the RP allocation will happen regularly on repated allocation of unmapped volume regions (and physical disk regions RAID or DDP writes to)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>A semi-extreme database example:</p>
+
+<ul>
+  <li>Enable RP on the pool to be able to use RP (default with SSDs in EF600/EF300)</li>
+  <li>Enable RP on table volumes - just-in-time allocation is fine here</li>
+  <li>Enable RP on index volumes - more or less the same as with tables</li>
+  <li>Disable RP on log volumes - avoid slower first write</li>
+  <li>Enable RP on dump volume - here writes are sequential and infrequent</li>
+</ul>
+
+<p>In the extreme case, you'd disable RP on all DB volumes. Probably 90% of all database users could leave it enabled across the board.</p>
 
 <h2 id="what-if">What if…</h2>
 
@@ -297,13 +317,11 @@
 
 <h2 id="summary">Summary</h2>
 
-<p>(The confusingly named) Resource Provisioning cuts provisioning time, but user pays for it through slower performance on first random write to each yet-to-be-allocated-on-disk stripe. It has some benefits for flash media, so it is recommended to keep it enabled unless you absolutely need random writes to run at full speed from the moment of provisioning.</p>
+<p>(The confusingly named) Resource Provisioning eliminates the initial background churn after provisioning, but user pays for it through slower performance on first random write to each yet-to-be-allocated-on-disk (or de-alocated) stripe. RP has benefits benefits for flash media (wear leveling), so it is recommended to keep it enabled unless you absolutely need random writes to run at full speed on Day 2 and beyond.</p>
 
-<p>In that case you can disable RP on the pool or a volume as needed, but the host will need to wait until disk space provisioning completes.</p>
+<p>RP management is easier to do in the API. The API for RP isn't very intuitive (there are multiple endpoints, inconsistent keys), but if you find it in one place (such as a blog post), it makes sense.</p>
 
-<p>That is easier to do in the API. The API isn't that intuitive (multiple endpoints, inconsistent keys), but if you find it in one place (such as a blog post), it makes sense.</p>
-
-<p>The RP "penalty" isn't high and may not be apparent to most users. It is observable in repated consecutive runs of <code class="language-plaintext highlighter-rouge">fio</code> on a new volume, for example, but to 99% of users waits for full provisioning will be much more obvious than the slightly slower performance of freshly created RP volumes.</p>
+<p>The RP "penalty" isn't high and may not be apparent to most users. It is observable in repated consecutive runs of <code class="language-plaintext highlighter-rouge">fio</code> (random write and re-write) on a new volume, for example, but to 99% of users waits for background churn will be more obvious than the slightly slower performance of freshly created RP volumes or nightly unmap runs.</p>
 
         
       </section>
