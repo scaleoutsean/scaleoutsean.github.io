@@ -2015,6 +2015,12 @@ var store = [{
         "url": "/2025/12/17/eseries-santricity-resource-provisioned-vols-groups-pools.html",
         "teaser": null
       },{
+        "title": "Kinetica with NetApp E-Series",
+        "excerpt":"WTH is Kinetica? According to TFM for version 7.2: Kinetica is a scalable database for real-time analysis on large and streaming datasets. Kinetica’s vectorized processing delivers faster analytics than traditional databases, with the flexibility and ease of use of a relational database. Very well! Let’s see about its storage and...","categories": ["netapp","storage"],
+        "tags": ["netapp","e-series","santricity","kinetica","vector","database"],
+        "url": "/2025/12/22/kinetica-with-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2028,7 +2034,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Resource Provisioning on E-Series SANtricity 2025-12-17 00:00 4 minute read About resource provsioned volumes and groups/pools E-Series SANtricity Web UI lockout 2025-12-05 00:00 2 minute read How to use (or not) lockout feature in E-Series SANtricity TAPOUT - MCP server for ONTAP to E-Series migration 2025-10-15 00:00 4 minute read...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kinetica with NetApp E-Series 2025-12-22 00:00 4 minute read Why put Kinetic disk and persist tier on EF storage arrays Resource Provisioning on E-Series SANtricity 2025-12-17 00:00 4 minute read About resource provsioned volumes and groups/pools E-Series SANtricity Web UI lockout 2025-12-05 00:00 2 minute read How to use (or...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
