@@ -2022,7 +2022,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Reautomating E-Series",
-        "excerpt":"E-Series integrations Discharged/MIA/AWOL: Openstack Cinder: gone from NetApp Cinder since Rocky Kubernetes CSI: gone from NetApp Trident in v22.04 (disabled in v20.07) PowerShell Module (PowerShell 5): disappeared without notice Cloud Connector (backup to S3): gone In service: Ansible Used in E-Series-BeeGFS solution VMware (sort-of) BeeGFS CSI (indirect use E-Series) Handed...","categories": ["netapp","storage"],
+        "excerpt":"Introduction This page summarizes what’s available in terms of NetApp E-Series SANtricity plugins and integrations to make it easier for new builders and contributors to get started. E-Series integrations Discharged/MIA/AWOL: Openstack Cinder: gone from NetApp Cinder since Rocky Kubernetes CSI: gone from NetApp Trident in v22.04 (disabled in v20.07) PowerShell...","categories": ["netapp","storage"],
         "tags": ["netapp","e-series","santricity","api","automation"],
         "url": "/2025/12/22/reautomating-eseries.html",
         "teaser": null
@@ -2046,7 +2046,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is next Reautomating E-Series 2025-12-22 00:00 1 minute read Notes for E-Series automation Kinetica with NetApp E-Series 2025-12-22 00:00 5 minute read Why put Kinetic disk and persist tier on EF storage arrays Resource Provisioning on...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is next Reautomating E-Series 2025-12-22 00:00 2 minute read Notes for E-Series automation Kinetica with NetApp E-Series 2025-12-22 00:00 5 minute read Why put Kinetic disk and persist tier on EF storage arrays Resource Provisioning on...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
