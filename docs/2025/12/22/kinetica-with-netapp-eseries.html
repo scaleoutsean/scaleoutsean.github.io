@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          5 minute read
         
       </span>
     
@@ -316,11 +316,19 @@
 
 <p>This gives you:</p>
 <ul>
-  <li>RAID 10-like performance for <code class="language-plaintext highlighter-rouge">disk</code> tier</li>
-  <li>RAID 6 performance and protection for <code class="language-plaintext highlighter-rouge">persist</code> tier</li>
+  <li>RAID 10-like performance for <code class="language-plaintext highlighter-rouge">disk</code> tier. Notice each R1 stripe in the schematic is "split" in 2 halves to signify those are 5+5 (R10 on DDP) stripes</li>
+  <li>RAID 6 performance and protection for <code class="language-plaintext highlighter-rouge">persist</code> tier (8+2 stripes)</li>
 </ul>
 
-<p>We could get fancy and further micro-manage this for specific workload patterns. For example, separate media protection domains into <code class="language-plaintext highlighter-rouge">disk</code> on R10 and <code class="language-plaintext highlighter-rouge">persist</code> on classic Volume Groups or DDPs.</p>
+<p>The advantage of this approach is a single protected pool gives you two "tiers" of performance without micro-management. Assuming 700 MB/s of throughput in mixed "hot" (400 MB/s) and "cold" (300 MB/s) access, your <code class="language-plaintext highlighter-rouge">disk</code> tier would enjoy performance-focused RAID 10 access while <code class="language-plaintext highlighter-rouge">persist</code> would get relatively less IOPS but still have enough for bulk destaging and persisting for which RAID 6-like volumes are perfect.</p>
+
+<p><img src="/assets/images/kinetica-eseries-building-block-03.png" alt="IO distribution" /></p>
+
+<p>Note that 100 MB/s for <code class="language-plaintext highlighter-rouge">disk</code> volumes should realy be measured in IOPS as those requests would be smaller in size (e.g. 64KB) - still in "random IO" range as far as E-Series is concerned.</p>
+
+<p>And E-Series doesn't have QoS, so any node really gets the full performance of the DDP if other nodes are momentariliy not using it. Since Kinetica balances its IO workload, it is expected that over tens of seconds each of N <code class="language-plaintext highlighter-rouge">k</code> (Kinetica) nodes would average approximately 1/N of array performance.</p>
+
+<p>We could get fancy and further micro-manage this for specific workload patterns. For example, separate media protection domains into <code class="language-plaintext highlighter-rouge">disk</code> on R10 and <code class="language-plaintext highlighter-rouge">persist</code> on classic Volume Groups or DDPs, so that workloads are very clearly segregated which may be important for some use cases (e.g. traffic control).</p>
 
 <p>To achieve rack resilience and save ports on ToR storage switches, use "building blocks" <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html#how-does-it-work">similar to those in the CSI post</a>. With 3 Kinetica servers per one entry-level EF300 you can use switchless DAS connectivity with FC links, for example.</p>
 
