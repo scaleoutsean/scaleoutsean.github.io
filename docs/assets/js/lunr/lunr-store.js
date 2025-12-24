@@ -2033,6 +2033,12 @@ var store = [{
         "url": "/2025/12/22/this-blog-in-2025.html",
         "teaser": null
       },{
+        "title": "Trident concurrency with SolidFire",
+        "excerpt":"Here I blogged about the speed of PVC provisioning of PVCs with Trident and SolidFire. If you’re interested in BeeGFS CSI and Nomad CSI (as opposed to Kubernetes), check this post. Lately there’s a new “concurrency” feature in NetApp Trident CSI. To enable it, install with --enable-concurrency. sean@s159:~/trident-installer$ ./tridentctl -n...","categories": ["storage","solidfire","kubernetes"],
+        "tags": ["netapp","storage","solidfire","kubernetes"],
+        "url": "/2025/12/24/trident-enable-concurrency-solidfire.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2046,7 +2052,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series Home Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is next Reautomating E-Series 2025-12-22 00:00 2 minute read Notes for E-Series automation Kinetica with NetApp E-Series 2025-12-22 00:00 5 minute read Why put Kinetic disk and persist tier on EF storage arrays Resource Provisioning on...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read Let’s see how much faster we can go! This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is next Reautomating E-Series 2025-12-22 00:00 2 minute read Notes for E-Series automation Kinetica with NetApp E-Series 2025-12-22 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
