@@ -435,13 +435,17 @@
 
 <h2 id="deploy-in-seconds">Deploy in seconds</h2>
 
-<p>Small Ceph clusters can be deployed in seconds. Larger take longer, but it's just adding more building blocks.</p>
+<p>Small Ceph clusters can be deployed in seconds. Larger take longer, but it's just about adding more building blocks with some extra Placement Group considerations.</p>
 
 <p>Workflow for Ceph-on-E is normally installed with <a href="https://docs.ceph.com/projects/ceph-ansible/en/latest/">Ansible</a>. You know the drill: enter variables, run a playbook. There's a UI and upgrades are also done with Ansible. It's the same thing we do with <a href="https://github.com/netapp/beegfs">BeeGFS</a> except there's no Web UI for BeeGFS yet.</p>
 
-<p>Note that Ceph-Ansible won't do the storage part for you:</p>
+<p>Note that Ceph-Ansible won't configure E-Series for you:</p>
 <ul>
-  <li>If you deploy medium or large clusters, use the BeeGFS-on-E playbook to prepare storage and hosts for you</li>
+  <li>If you deploy medium or large clusters, use the BeeGFS-on-E playbook to prepare storage and hosts
+    <ul>
+      <li>Small clusters, unless you redeploy them or re-create them, aren't worth automating with complex tools. Use a CLI or Web UI to configure storage array.</li>
+    </ul>
+  </li>
   <li>Then use <code class="language-plaintext highlighter-rouge">ceph-ansible</code> to deploy Ceph</li>
 </ul>
 
@@ -488,7 +492,7 @@
 
 <p>Now we need to present each of these to a Ceph host. We may have a "group" where we present to a group ID, or individual hosts. We get both host and host groups with this command (whereas in the API and Ansible it's two different methods, one for hosts, another for host groups).</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>santricity hosts membership 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>santricity hosts membership 
 </code></pre></div></div>
 
 <p>The first host is <code class="language-plaintext highlighter-rouge">84000000600A098000E3C1B000302F0C650C2668</code> and our volume ID from above is <code class="language-plaintext highlighter-rouge">02000000600A098000E3C1B0000035B6694E542F</code>.</p>
@@ -515,9 +519,9 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>microceph <span class="nb">enable </span>rgw
 </code></pre></div></div>
 
-<p>Is that "in seconds"? It's not if you run each command manually, but if you're fast or use Ansible you could do deploy MicroCeph in under a minute.</p>
+<p>Is that "in seconds"? It's not if you run each command manually, but if you're fast or use Proxmox, you could do deploy MicroCeph in under a minute because stacks like Proxmox abstract MicroCeph and all you need to do is loop over three hosts to create and map volumes, and ensure they're visible to hosts.</p>
 
-<p>The fact is, <code class="language-plaintext highlighter-rouge">santricity</code> doesn't even exist "out there". But that's a Python CLI for essential (volumes, mappings) storage operations with E-Series that I've created this week for use cases like this (more about this in another post) - all you want is to create and present volumes without the hassle and overheads of Ansible.</p>
+<p>The fact is, the <code class="language-plaintext highlighter-rouge">santricity</code> CLI I use above doesn't even exist "out there". But that's a Python CLI for essential (volumes, mappings) storage operations with E-Series that I've created this week for use cases like this (more about this in another post) - all you want is to create and present volumes without the hassle and overheads of Ansible.</p>
 
 <p><img src="/assets/images/santricity-cli-03-mappings.png" alt="SANtricity Python 3 CLI - volume mappings command" /></p>
 
@@ -533,7 +537,7 @@
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Ceph with E-Series still makes sense.</p>
+<p>Ceph with E-Series still provides value.</p>
 
 <p>Not much has changed since TR-4549. Notable exceptions:</p>
 <ul>
@@ -547,8 +551,7 @@
 
 <p>What E-Series gives you is a rock-solid and versatile platform for any SDS while eliminating low-level, low-value added work of fiddling with disk and PERC firmware and patching (CVEs). Derisking includes the ability to switch to another SDS without writing off your storage investment.</p>
 
-<p>For smaller sites and/or basic three-node clusters E-Series has enough performance to drive multiple SDS options. One reliable, high performance platform with low mainteance for SDS, NOSQL, Big Data, AI.</p>
-
+<p>For smaller sites and/or basic three-node clusters E-Series has enough performance to drive multiple SDS options at the same time. <a href="/2024/02/28/incus-zfs-netapp-eseries.html">Use ZFS for some</a> and MicroCeph for other workloads? Why not! One reliable, high performance platform with low mainteance for SDS, NOSQL, Big Data, AI.</p>
 
         
       </section>
