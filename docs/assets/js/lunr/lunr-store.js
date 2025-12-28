@@ -2058,7 +2058,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ceph with NetApp E-Series 2025-12-28 00:00 16 minute read How to use Ceph with NetApp E-Series SANtricity storage Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read Let’s see how much faster we can go! This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Ceph with NetApp E-Series 2025-12-28 00:00 15 minute read How to use Ceph with NetApp E-Series SANtricity storage Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read Let’s see how much faster we can go! This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
