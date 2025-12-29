@@ -2045,6 +2045,12 @@ var store = [{
         "url": "/2025/12/28/ceph-with-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Python client library for E-Series SANtricity",
+        "excerpt":"Introduction Reautomating E-Series gives an overview of SANtricity automations and integrations in recent years. In order to get some of those integrations back, we first need to un-cripple SANtricity automation at lower levels. Python remains a great tool for those building blocks. The abandoned SANtricity SDK for Python 2 (and...","categories": ["storage","eseries"],
+        "tags": ["netapp","storage","santricity","python","library","cli"],
+        "url": "/2025/12/29/santricity-client.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2058,7 +2064,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ceph with NetApp E-Series 2025-12-28 00:00 15 minute read How to use Ceph with NetApp E-Series SANtricity storage Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read Let’s see how much faster we can go! This blog in 2025 2025-12-22 00:00 5 minute read What worked, what didn’t, what is...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Python client library for E-Series SANtricity 2025-12-29 00:00 3 minute read Access SANtricity from your shell or Python 3 for common storage operations Ceph with NetApp E-Series 2025-12-28 00:00 15 minute read How to use Ceph with NetApp E-Series SANtricity storage Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
