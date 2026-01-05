@@ -2046,13 +2046,25 @@ var store = [{
         "teaser": null
       },{
         "title": "Python client library for E-Series SANtricity",
-        "excerpt":"Introduction Reautomating E-Series gives an overview of SANtricity automations and integrations in recent years. In order to get some of those integrations back, we first need to un-cripple SANtricity automation at lower levels. Python remains a great tool for those building blocks. The abandoned SANtricity SDK for Python 2 (and...","categories": ["storage","eseries"],
+        "excerpt":"Introduction Reautomating E-Series gives an overview of SANtricity automations and integrations in recent years. In order to get some of those integrations back, we first need to un-cripple SANtricity automation at lower levels. Python remains a great tool for those building blocks. The abandoned (2016) SANtricity SDK for Python 2...","categories": ["storage","eseries"],
         "tags": ["netapp","storage","santricity","python","library","cli"],
         "url": "/2025/12/29/santricity-client.html",
         "teaser": null
       },{
+        "title": "Ansible community collection for NetApp SolidFire",
+        "excerpt":"Introduction I’m not a big fan of Ansible, so I rarely blog about it. Recently, however, while building a better mouse trap I decided to check the SSolidFire collection. Lo and behold - the damn thing was shelved in 2023! See here. Archive mode, baby! community.solidfire A working fork can...","categories": ["storage","automation","solidfire"],
+        "tags": ["netapp","storage","solidfire","python","ansible","devops"],
+        "url": "/2026/01/04/ansible-community-solidfire.html",
+        "teaser": null
+      },{
+        "title": "How to actually get started with E-Series SANtricity SMcli",
+        "excerpt":"Introduction Reautomating E-Series has more about SANtricity automations and integrations in recent years. In order to address some of those issues last week I created a minimal SANtricity client library for Python and explained its advantages. This week I’ve decided to check out SMcli to see what it’s about. I’ve...","categories": ["storage","eseries"],
+        "tags": ["netapp","storage","santricity","smcli","cli"],
+        "url": "/2026/01/05/eseries-santricity-smcli-client.html",
+        "teaser": null
+      },{
     "title": "About this site",
-    "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal and not necessarily shared by my employer. The site does not provide technical or other advice to my employer’s...","url": "https://scaleoutsean.github.io/about/"
+    "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
     "title": "Posts by Category",
     "excerpt":" ","url": "https://scaleoutsean.github.io/categories/"
@@ -2064,7 +2076,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Python client library for E-Series SANtricity 2025-12-29 00:00 3 minute read Access SANtricity from your shell or Python 3 for common storage operations Ceph with NetApp E-Series 2025-12-28 00:00 15 minute read How to use Ceph with NetApp E-Series SANtricity storage Trident concurrency with SolidFire 2025-12-24 00:00 1 minute read...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"How to actually get started with E-Series SANtricity SMcli 2026-01-05 00:00 8 minute read How to use SMcli and why you should not Ansible community collection for NetApp SolidFire 2026-01-04 00:00 1 minute read Users of Ansible 2.20 looking for a SolidFire collection, here you go Python client library for...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
