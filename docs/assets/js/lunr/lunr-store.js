@@ -2052,7 +2052,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Ansible community collection for NetApp SolidFire",
-        "excerpt":"Introduction I’m not a big fan of Ansible, so I rarely blog about it. Recently, however, while building a better mouse trap I decided to check the SSolidFire collection. Lo and behold - the damn thing was shelved in 2023! See here. Archive mode, baby! community.solidfire A working fork can...","categories": ["storage","automation","solidfire"],
+        "excerpt":"Introduction I’m not a big fan of Ansible, so I rarely blog about it. Recently, however, while building a better mouse trap I decided to check the SSolidFire collection. Lo and behold - the damn thing was shelved in 2023! See here. Archive mode, baby! Collection community.solidfire Yes, it’s available....","categories": ["storage","automation","solidfire"],
         "tags": ["netapp","storage","solidfire","python","ansible","devops"],
         "url": "/2026/01/04/ansible-community-solidfire.html",
         "teaser": null
