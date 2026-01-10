@@ -2069,7 +2069,7 @@ var store = [{
         "url": "/2026/01/06/eseries-santricity-powershell.html",
         "teaser": null
       },{
-        "title": "Windows ODX offload with E-Series SANtricity",
+        "title": "Windows ODX with E-Series SANtricity",
         "excerpt":"Introduction Windows Offloaded Data Transfer (ODX) is a Windows host equivalent of VMware’s VAAI. You actually don’t have to do anything in order to be able to use it with E-Series arrays because it’s enabled by default. But if it doesn’t work, you may want to check that it hasn’t...","categories": ["storage","eseries"],
         "tags": ["netapp","storage","santricity","odx","vaai"],
         "url": "/2026/01/10/eseries-santricity-odx-vaai.html",
@@ -2088,7 +2088,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Windows ODX offload with E-Series SANtricity 2026-01-10 00:00 2 minute read Windows Offloaded Data Transfer (ODX) with NetApp E-Series SANtricity santricity-powershell for Day 1+ E-Series automation 2026-01-06 00:00 2 minute read Replace SMcli for most Day 1+ operations How to actually get started with E-Series SANtricity SMcli 2026-01-05 00:00 9...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Windows ODX with E-Series SANtricity 2026-01-10 00:00 2 minute read Windows Offloaded Data Transfer (ODX) with NetApp E-Series SANtricity santricity-powershell for Day 1+ E-Series automation 2026-01-06 00:00 2 minute read Replace SMcli for most Day 1+ operations How to actually get started with E-Series SANtricity SMcli 2026-01-05 00:00 9 minute...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
