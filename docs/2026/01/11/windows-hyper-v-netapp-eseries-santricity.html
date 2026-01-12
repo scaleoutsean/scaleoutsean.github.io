@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-now">Why now</a></li><li><a href="#prepare-windows-for-hyper-v">Prepare Windows for Hyper-V</a><ul><li><a href="#iscsi">iSCSI</a></li><li><a href="#nvmeroce">NVMe/RoCE</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix---santricity-powershell-cmdlets">Appendix - santricity-powershell cmdlets</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-now">Why now</a></li><li><a href="#prepare-windows-for-hyper-v">Prepare Windows for Hyper-V</a><ul><li><a href="#iscsi">iSCSI</a></li><li><a href="#nvmerocev2">NVMe/RoCEv2</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix---santricity-powershell-cmdlets">Appendix - santricity-powershell cmdlets</a></li></ul>
             </nav>
           </aside>
         
@@ -288,7 +288,7 @@
 
 <h3 id="iscsi">iSCSI</h3>
 
-<p>Like many other arrays, SANtricity requires two networks ("dual fabric") for multipathing. Normally we'd create two or four iSCSI network interfaces on two networks (e.g. 192.168.10.0/24 and 192.168.20.0/24).</p>
+<p>Like many other arrays, SANtricity requires two networks ("dual fabric") for multipathing. Usually on each host attached to E-Series we'd create two or four iSCSI network interfaces (e.g. 192.168.10.0/24 and 192.168.20.0/24) on two physical networks.</p>
 
 <p>Use jumbo frames (<code class="language-plaintext highlighter-rouge">Set-NetAdapterAdvancedProperty</code>) if you wish, but don't max it out (e.g. try 8800) to leave room for the various virtualization overlays if you use those NICs not solely for iSCSI. You don't have to worry about "wasting" 50 bytes in every packet - even the difference between regular and jumbo frames isn't significant so it won't be noticeable at all.</p>
 
@@ -345,7 +345,7 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<h3 id="nvmeroce">NVMe/RoCE</h3>
+<h3 id="nvmerocev2">NVMe/RoCEv2</h3>
 
 <p><strong>TODO (additional, finalized details after Windows makes it to the NetApp IMT)</strong></p>
 
@@ -367,13 +367,15 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Of course, hardware support for NVMe should be present. This is commonly available on arrays with 100G or faster NICs (used as Host Interface cards aka "HICs"). Windows-specific instructions for hosts aren't yet available as I've mentioned earlier but physical connectivity requirements are likely to be the same as for <a href="https://docs.netapp.com/us-en/e-series/config-linux/nvme-roce-configure-storage-connections-task.html">Linux</a>.</p>
+<p>NVMe multipathing on Linux is done in kernel and the use of DM-MP is optional. The information on that with SANtricity and Windows Server is currently not available (Microsoft for now seems to be focused on internal DAS NVMe) and I don't have access to such hardware, I don't know how NVMe MPIO is going to work on Windows. Maybe SANtricity Windows DSM won't be neded for NVMe/RoCEv2.</p>
 
-<p>NVMe multipathing on Linux is done in kernel and the use of DM-MP is optional. Since the information on that with SANtricity and Windows is currently available (Microsoft currently seems focused on internal DAS media) and I don't have access to such hardware, I don't know how NVMe MPIO is going to work on Windows. Maybe SANtricity Windows DSM won't be neded for NVMe/RoCEv2.</p>
+<p>Some existing NVMe integrations for Windows rely on NVMe-to-SCSI translation and use "classic" MPIO. But there are indications (nvmedisk.sys, StorNVMe) Windows Server with NVMe/RoCEv2 may work differently. It would be nice it DSM drivers became unnecessary - that would make deployment and operations even simpler.</p>
+
+<p>Of course, hardware support for NVMe should be present on both clients and storage system. On E-Series EF arrays with 100G or faster NICs (Host Interface Cards aka "HICs") NVMe is available over both IB and Ethernet. Windows-specific instructions for NVMe/RoCEv2 hosts aren't yet available as I've mentioned earlier but physical connectivity requirements are likely to be the same as for <a href="https://docs.netapp.com/us-en/e-series/config-linux/nvme-roce-configure-storage-connections-task.html">Linux</a>.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Official NVMe/ROCEv2 storage support on Microsoft Windows Server 2025 couldn't come at a better time - just as I've started to do more work in this area.</p>
+<p>Official NVMe/RoCEv2 storage support on Microsoft Windows Server 2025 couldn't come at a better time - just as I've started to do more work in this area.</p>
 
 <p>If you like storage that delivers fast, reliable and protected volumes and gets out of your way, you'll like Windows Server (and Hyper-V) with E-Series.</p>
 
