@@ -2081,6 +2081,12 @@ var store = [{
         "url": "/2026/01/10/minio-aistor-eseries-patterns.html",
         "teaser": null
       },{
+        "title": "Windows Server 2025 and Hyper-V with NetApp E-Series",
+        "excerpt":"Introduction NetApp E-Series is a great shared storage platform for Windows Server 2025 integrations, whether it’s Hyper-V, SQL Server or other. You may find about it … nowhere, but the usual SANtricity stuff applies very much: Excellent performance (both throughput and latency, both single and multi-volume) Very good price/performance ODX...","categories": ["storage","eseries"],
+        "tags": ["netapp","storage","santricity","nvme","e-series","eseries","Hyper-V","iscsi","server","windows server"],
+        "url": "/2026/01/11/windows-hyper-v-netapp-eseries-santricity.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2094,7 +2100,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-Series and MinIO AIStor Enterprise Lite patterns 2026-01-10 00:00 8 minute read Why single node clusters are now an Enterprise approach and earlier E-Series patterns stil relevant Windows ODX with E-Series SANtricity 2026-01-10 00:00 2 minute read Windows Offloaded Data Transfer (ODX) with NetApp E-Series SANtricity santricity-powershell for Day 1+...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Windows Server 2025 and Hyper-V with NetApp E-Series 2026-01-11 00:00 6 minute read Notes on Windows Server 2025 and E-Series SANtricity arrays in iSCSI and NVMe/RoCEv2 environments E-Series and MinIO AIStor Enterprise Lite patterns 2026-01-10 00:00 8 minute read Why single node clusters are now an Enterprise approach and earlier...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
