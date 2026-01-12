@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          6 minute read
+          7 minute read
         
       </span>
     
@@ -335,9 +335,19 @@
 
 <p>iSCSI (without RoCEv2) is available on host-facing controlles with 10G and/or 25G ports.</p>
 
+<p>Host configuration-wise, iSCSI initiator is stored in node's <code class="language-plaintext highlighter-rouge">iscsiNodeName</code> key:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"nodeName"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"ioInterfaceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iscsi"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"iscsiNodeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iqn.2004-10.com.ubuntu:01:e7f6625b59c"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"remoteNodeWWN"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"nvmeNodeName"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
 <h3 id="nvmeroce">NVMe/RoCE</h3>
 
-<p><strong>TODO (after Windows makes it to the NetApp IMT)</strong></p>
+<p><strong>TODO (additional, finalized details after Windows makes it to the NetApp IMT)</strong></p>
 
 <p>This should be very similar to iSCSI - which is why I focus on these two - because there are only minimal differences between the two:</p>
 <ul>
@@ -347,9 +357,19 @@
 
 <p>The only difference should be that NVMe uses a different string (NQN vs IQN) and no CHAP in <code class="language-plaintext highlighter-rouge">New-SANtricityHost</code> parameters. Once hosts have been configured, create a group with <code class="language-plaintext highlighter-rouge">New-SANtricityHostGroup</code> and add your Windows server(s) to it.</p>
 
+<p>What that would do is simply create an NVMe entry when cmdlet uses <code class="language-plaintext highlighter-rouge">POST hosts</code> on back-end to populate <code class="language-plaintext highlighter-rouge">nvmeNodeName</code> instead of <code class="language-plaintext highlighter-rouge">iscsiNodeName</code> (with iSCSI, above).</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"nodeName"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"ioInterfaceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nvmeof"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"iscsiNodeName"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"remoteNodeWWN"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"nvmeNodeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nqn.2014-08.org.nvmexpress:uuid:7430905e-9836-11eb-a394-0a94efb9842b"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
 <p>Of course, hardware support for NVMe should be present. This is commonly available on arrays with 100G or faster NICs (used as Host Interface cards aka "HICs"). Windows-specific instructions for hosts aren't yet available as I've mentioned earlier but physical connectivity requirements are likely to be the same as for <a href="https://docs.netapp.com/us-en/e-series/config-linux/nvme-roce-configure-storage-connections-task.html">Linux</a>.</p>
 
-<p>NVMe multipathing on Linux is done in kernel and the use of DM-MP is optional. Since the information on that with SANtricity and Windows is unavailable (Microsoft currently seems focused on internal DAS media) and I don't have access to such hardware, I don't know how MPIO going to work. Maybe SANtricity Windows DSM won't be neded for NVMe/RoCEv2.</p>
+<p>NVMe multipathing on Linux is done in kernel and the use of DM-MP is optional. Since the information on that with SANtricity and Windows is currently available (Microsoft currently seems focused on internal DAS media) and I don't have access to such hardware, I don't know how NVMe MPIO is going to work on Windows. Maybe SANtricity Windows DSM won't be neded for NVMe/RoCEv2.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 

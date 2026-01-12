@@ -2100,7 +2100,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Windows Server 2025 and Hyper-V with NetApp E-Series 2026-01-11 00:00 6 minute read Notes on Windows Server 2025 and E-Series SANtricity arrays in iSCSI and NVMe/RoCEv2 environments E-Series and MinIO AIStor Enterprise Lite patterns 2026-01-10 00:00 8 minute read Why single node clusters are now an Enterprise approach and earlier...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Windows Server 2025 and Hyper-V with NetApp E-Series 2026-01-11 00:00 7 minute read Notes on Windows Server 2025 and E-Series SANtricity arrays in iSCSI and NVMe/RoCEv2 environments E-Series and MinIO AIStor Enterprise Lite patterns 2026-01-10 00:00 8 minute read Why single node clusters are now an Enterprise approach and earlier...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
