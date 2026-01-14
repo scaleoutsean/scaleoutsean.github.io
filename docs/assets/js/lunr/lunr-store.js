@@ -2099,7 +2099,7 @@ var store = [{
         "url": "/2026/01/14/e-series-santricity-clones-consistency-group-clones.html",
         "teaser": null
       },{
-        "title": "E-series SANtricity Go client for Day 1+ operations",
+        "title": "E-Series SANtricity Go client for Day 1+ operations",
         "excerpt":"Introduction Reautomating E-Series has the background. Since less than four weeks ago, I’ve “hand-crafted” a santricity-client (Python) and santricity-powershell (PowerShell) and have some other things “cooking”. Do we also need a Go language client? Of course we do. Do we have the resources? Let’s find out. santricity-go There are several...","categories": ["netapp","storage"],
         "tags": ["netapp","e-series","santricity","api","automation","golang","go","cli"],
         "url": "/2026/01/15/santricity-go-language-library-cli.html",
@@ -2118,7 +2118,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"E-series SANtricity Go client for Day 1+ operations 2026-01-15 00:00 1 minute read Permissive OSS client Go library and CLI for E-Series SANtricity storage systems NetApp E-Series single volume and consistency group clones 2026-01-14 00:00 12 minute read How to copy a volume into another, directly, from a snapshot, or...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"E-Series SANtricity Go client for Day 1+ operations 2026-01-15 00:00 1 minute read Permissive OSS client Go library and CLI for E-Series SANtricity storage systems NetApp E-Series single volume and consistency group clones 2026-01-14 00:00 12 minute read How to copy a volume into another, directly, from a snapshot, or...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
