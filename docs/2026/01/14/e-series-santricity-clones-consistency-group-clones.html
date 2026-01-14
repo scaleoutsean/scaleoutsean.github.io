@@ -1,0 +1,942 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>NetApp E-Series single volume and consistency group clones | Acting Technologist</title>
+<meta name="description" content="Workflows for creating volume clones from snapshots and other volumes">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="NetApp E-Series single volume and consistency group clones">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">
+
+
+  <meta property="og:description" content="Workflows for creating volume clones from snapshots and other volumes">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="NetApp E-Series single volume and consistency group clones">
+  <meta name="twitter:description" content="Workflows for creating volume clones from snapshots and other volumes">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-01-14T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="NetApp E-Series single volume and consistency group clones">
+    <meta itemprop="description" content="How to copy a volume into another, directly, from a snapshot, or from consistency group snapshot and more">
+    <meta itemprop="datePublished" content="2026-01-14T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/01/14/e-series-santricity-clones-consistency-group-clones.html" itemprop="url">NetApp E-Series single volume and consistency group clones
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-14T00:00:00+08:00">2026-01-14 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#summary-of-santricity-snapshots-clones-and-repositories">Summary of SANtricity snapshots, clones and repositories</a></li><li><a href="#online-vs-offline-volume-copies">Online vs. offline volume copies</a></li><li><a href="#single-snapshot-vs-cg-snapshot-clone">Single snapshot vs. CG snapshot clone</a></li><li><a href="#making-copies-of-snapshot-volumes">Making copies of "snapshot volumes"</a></li><li><a href="#workflow">Workflow</a><ul><li><a href="#consistency-group-extras">Consistency Group extras</a></li></ul></li><li><a href="#copy-clones-to-other-disk-groups">Copy clones to other disk groups</a></li><li><a href="#snapshot-scheduling">Snapshot scheduling</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>Years ago I created a marathon-post on <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html">SANtricity snapshots and consistency groups</a>.</p>
+
+<p>Not the most pleasant topic even for E-Series. Just reading that stuff causes headaches.</p>
+
+<p>But, since I've been making progress with client libraries, I want to make another post on this topic, specifically on the topic of cloning - making copies of snapshots.</p>
+
+<h2 id="summary-of-santricity-snapshots-clones-and-repositories">Summary of SANtricity snapshots, clones and repositories</h2>
+
+<p>If you are interested to the extent that you may want to use these things, you should RTFM and possibly the post linked above, but for the "skimmers":</p>
+
+<ul>
+  <li>SANtricity calls snapshots "snapshot images"</li>
+  <li>SANtricity calls snapshot-derived clone volumes "snapshot volumes"</li>
+  <li>SANtricity snapshots use Copy-on-Write (CoW) and therefore write-modified segments are "evacuated" from live source volume into extents called "repos" (short for repositories) that live in a grouping called Snapshot Group</li>
+  <li>"Snapshot Groups" are not snapshots of Consistency Groups! They're groups of "repositories", extents that hold overwritten segments from the source volume within allocations known as Snapshot Group Reserved Capacity (specified as reserved percentage value of source volume size; that's not deducted from the source volume size - it is extra reserve)</li>
+  <li>SANtricity also supports "Consistency Groups" (CGs) which are groups of volumes that can be snapshot at the same Point-in-Time (this "PIT" term comes up frequently in the API so it's better to get used to it)</li>
+  <li>"Snapshot volumes" (quasi-volumes cloned from snapshots) that are presented to host(s) as read-write quasi-volumes also need own reserve capacity. Read-only clones don't need any reserve capacity, but they may be less useful. There's no way to "promote" a clone to a "normal" volume that you'd see in <code class="language-plaintext highlighter-rouge">GET volumes</code> or the Volumes section of the UI. A snapshot volume is bound to underlying PIT snapshot view, in other words it's "thin". It may be writeable, but it's not realy broken-off from the base</li>
+</ul>
+
+<p>Some related official resources:</p>
+<ul>
+  <li>NetApp <a href="https://www.netapp.com/media/17167-tr4747.pdf">TR-4747</a>, "SANtricity Snapshot feature - Overview and deployment guide", for details on SANtricity snapshots</li>
+  <li>SANtricity documentation (jump directly to <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-storage/faq-snapshots.html">Snapshot FAQs</a>)</li>
+</ul>
+
+<p>Let's move on to clones.</p>
+
+<h2 id="online-vs-offline-volume-copies">Online vs. offline volume copies</h2>
+
+<ul>
+  <li>Online copies are real volumes made from "live" source volumes, not snapshots. You don't need to have a snapshot, but the volumes must have no host-side IO activity</li>
+  <li>Offline copies (clones) are created from snapshot "images" and are "snapshot volumes" (quasi-volumes)</li>
+</ul>
+
+<p>You may read about the conditions for online copies in the documentation, but those volumes aren't very interesting or useful and - once those restrictive conditions are met - the way they work is simple: create a destination volume of the same or larger size than source volume and kick off volume copy. Pick a source, pick a destination, and start copying.</p>
+
+<p>Offline copies are more useful and related to the topic of snapshots.</p>
+
+<p>Note that SANtricity has various restrictions for both approaches. You really need to RTFM. For example, you may not be able to copy volumes from NVMe LUNs (with 4096 byte sector sizes) to SAS-based SSDs or NL-SAS disks (no native 4096 sector size support).</p>
+
+<h2 id="single-snapshot-vs-cg-snapshot-clone">Single snapshot vs. CG snapshot clone</h2>
+
+<p>As I've mentioned above, in order to create a clone ("snapshot volume"), we create a read-only or read-write copy of a snapshot ("snapshot image").</p>
+
+<p>The SANtricity API endpoints are different for single vs. groups, but the way it works is the same:</p>
+
+<ul>
+  <li>We need a snapshot (created on schedule or manually), or can create one on-demand</li>
+  <li>We create a "snapshot volume" (clone). Snapshot volumes with read-write access need reserve space just like "snapshot images". When we create a "snapshot volume" from a Consistency Group Snapshot Image, the only difference is there's 2 or more volumes involved. In most cases "snapshot volumes" are read-write, but need less reservation capacity if they're used for testing or backup, because regular volumes are modified all the time and snapshots may be in dozens, whereas cloning happens on very few and clone volumes aren't written to the same extent as source volumes.</li>
+</ul>
+
+<p>Read requests on "snapshot volumes" go to:</p>
+<ul>
+  <li>Live volume for data that hasn't changed since base snapshot was taken</li>
+  <li>CoW-evacuated snapshot reserve area for data that has changed since base snapshot was taken</li>
+</ul>
+
+<p>Data written to writeable snapshot volumes is written to the snapshot volume's own reserve area.</p>
+
+<p>Like other objects in SANtricity, "snapshot volumes" can have their underlying resources "yanked" from underneath them. For example, you can (by mistake or deliberately) delete a snapshot that lies underneath a "snapshot volume" and kill that clone volume. Or you can delete a "snapshot group", which will wipe all reserve extents in it, and snapshot images and snapshot volumes that use them.</p>
+
+<h2 id="making-copies-of-snapshot-volumes">Making copies of "snapshot volumes"</h2>
+
+<p>As we've just seen above, snapshot volumes aren't stand-alone volumes that have been "broken off" from their ancestor snapshots.</p>
+
+<p>In order to get a clone volume's data into a "real" volume, you need to copy it to a "real" volume.</p>
+
+<p>Say we have a logical 1TB snapshot volume (clone). To get an independent volume:</p>
+<ul>
+  <li>Create a normal 1TB volume</li>
+  <li>Copy the clone to that new volume</li>
+  <li>Optionally, delete the clone and delete its snapshots (or let them expire on their own if they're configured to do that)</li>
+</ul>
+
+<h2 id="workflow">Workflow</h2>
+
+<ul>
+  <li>Go to Pools, create a volume (e.g. <code class="language-plaintext highlighter-rouge">cloneme</code>) for your cluster</li>
+  <li>Go to Volumes, select the volume and under <strong>Copy Services</strong>, select <strong>Create Instant Snapshot</strong>. The API equivalent is <code class="language-plaintext highlighter-rouge">POST /storage-systems/{system-id}/snapshot-groups</code>, which creates the super-confusingly named "snapshot group" (see the snapshot mega-post for screenshots). This "snapshot group" holds reserve extents for the evacuation of overwritten base volume segments (CoW). API payload for that would contain your volume ID and have some reserve- and other limits.</li>
+</ul>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"baseMappableObjectId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000E3C1B00000362A69657942"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sean_snap_group_01"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"repositoryPercentage"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"warningThreshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"autoDeleteLimit"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+<ul>
+  <li>That creates a <code class="language-plaintext highlighter-rouge">pitGroupRef</code> which the PIT acronym I mentioned earlier plus an abbreviation for "snapshot group". It will have the information about base volume, and repository "volume" (not really a volume you can use in any way) where CoW data will be evacuated to
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"pitGroupRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"baseVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"repositoryVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Repository utilization has to be watched so that Used vs. Available remains below the alert or maximum size.
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">GET snapshot-groups/repository-utilization
+</span></code></pre></div>    </div>
+  </li>
+  <li>That gives you total bytes used by the PIT group (snapshot group) by one or more snapshots:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="nl">"pitGroupBytesUsed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5767168"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"pitGroupBytesAvailable"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4288872448"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"groupRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33000000600A098000E3C1B00000362D69657993"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"pitUtilization"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"pitRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000E3C1B00063362F69657993"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"bytesUsed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2818048"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"pitRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000F637140063387669657FEC"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"bytesUsed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"131072"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>To ceate a snapshot ("snapshot image") we need to reference that <code class="language-plaintext highlighter-rouge">pitGroupRef</code>, i.e. choose which Snapshot Group and repository within it you want to use for new snapshot. If we don't choose, SANtricity selects it for us.
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"groupId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33000000600A098000E3C1B00000362D69657993"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+    <p>Example: POST the above payload to create a snapshot:</p>
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST snapshot-images
+</span></code></pre></div>    </div>
+  </li>
+  <li>That returns a snapshot object ( with ID, i.e. <code class="language-plaintext highlighter-rouge">pitRef</code>, <code class="language-plaintext highlighter-rouge">34000000600A098000E3C1B0006336326965852B</code>):
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"pitRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000E3C1B0006336326965852B"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"pitGroupRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"33000000600A098000E3C1B00000362D69657993"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"creationMethod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"pitTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1768284219"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"pitSequenceNumber"</span><span class="p">:</span><span class="w"> </span><span class="s2">"266"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"optimal"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"activeCOW"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+</span><span class="nl">"isRollbackSource"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+</span><span class="nl">"pitCapacity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1073741824"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"repositoryCapacityUtilization"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"baseVol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000E3C1B00000362A69657942"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"consistencyGroupId"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+</span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000E3C1B0006336326965852B"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Now we have a snapshot, and we want to make a clone ("snapshot volume"):
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST /storage-systems/{system-id}/snapshot-volumes
+</span></code></pre></div>    </div>
+  </li>
+  <li>Our payload for this is a snapshot ID. Notice that we're creating another reservation - this time for a clone - as this snapshot volume may be just one of serveral we will make from that snapshot. Payload for the above POST action:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"snapshotImageId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000E3C1B0006336326965852B"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"fullThreshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">85</span><span class="p">,</span><span class="w">
+</span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sean_clone"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"viewMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"readOnly"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"repositoryPercentage"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>That returns a large clone object:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"viewRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35000000600A098000E3C1B00000363469658649"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"worldWideName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"600A098000E3C1B00000363469658649"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"baseVol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02000000600A098000E3C1B00000362A69657942"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"basePIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"34000000600A098000E3C1B0006336326965852B"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"boundToPIT"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+</span><span class="nl">"accessMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"readOnly"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sean_clone"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"optimal"</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="nl">"repositoryVolume"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0000000000000000000000000000000000000000"</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="nl">"viewTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1768284506"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"viewSequenceNumber"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19"</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w"> 
+</span><span class="nl">"volumeHandle"</span><span class="p">:</span><span class="w"> </span><span class="mi">16386</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="nl">"membership"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"viewType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"individual"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"cgViewRef"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+</span><span class="p">},</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="nl">"objectType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pitView"</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35000000600A098000E3C1B00000363469658649"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Couple of points about this clone object
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">viewRef</code> - clone ID</li>
+      <li><code class="language-plaintext highlighter-rouge">baseVol</code> - base volume ID</li>
+      <li><code class="language-plaintext highlighter-rouge">basePIT</code> - base snapshot image ID</li>
+      <li><code class="language-plaintext highlighter-rouge">repositoryVolume</code> - the value <code class="language-plaintext highlighter-rouge">0000...000</code> seems like a SANtricity equivalent of <code class="language-plaintext highlighter-rouge">None</code> because the clone is read-only</li>
+      <li><code class="language-plaintext highlighter-rouge">viewTime</code> - time when clone was created</li>
+      <li><code class="language-plaintext highlighter-rouge">viewSequenceNumber</code> - these are incrementing integers that can help us sort clones by age</li>
+      <li><code class="language-plaintext highlighter-rouge">membership</code> - individual = not a Consistency Group snapshot member</li>
+      <li><code class="language-plaintext highlighter-rouge">objectType</code> - <code class="language-plaintext highlighter-rouge">pitView</code> is a clone</li>
+      <li><code class="language-plaintext highlighter-rouge">id</code> - same (duplicate) value as <code class="language-plaintext highlighter-rouge">viewRef</code>, i.e. clone ID</li>
+    </ul>
+  </li>
+  <li>It's possible to convert this clone to a read-write clone. <code class="language-plaintext highlighter-rouge">viewId</code> is <code class="language-plaintext highlighter-rouge">viewRef</code> or <code class="language-plaintext highlighter-rouge">id</code> from above. The payload is quite complicated so I'll skip that gruesome part.
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST snapshot-volumes/{viewId}/convertReadOnly
+</span></code></pre></div>    </div>
+  </li>
+  <li>Once a clone has been created, it may be presented ("mapped") to a host (which can be different from the host(s) using the source volume, as is normal with clone volumes). I seem to recall that <code class="language-plaintext highlighter-rouge">GET volume-mappings</code> shows these mappings there as well.
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+ </span><span class="err">...</span><span class="w">
+ </span><span class="nl">"listOfMappings"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="nl">"lunMappingRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8800000086000000000000000000000000000000"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"lun"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ssid"</span><span class="p">:</span><span class="w"> </span><span class="mi">16385</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"perms"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"volumeRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"35000000600A098000E3C1B00000363D69658DDD"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cluster"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"mapRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85000000600A098000E3C1B0003635EF695AFB56"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8800000086000000000000000000000000000000"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="p">],</span><span class="w">
+</span><span class="nl">"mapped"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+</span><span class="nl">"currentControllerId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"070000000000000000000002"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cloneme_SV_0001_in_sean_SG"</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Noteworthy details:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">ssid</code> - these tend to be over 16,384 for clone volumes (whereas normal volumes have <code class="language-plaintext highlighter-rouge">ssid</code> values below 16,384)</li>
+      <li><code class="language-plaintext highlighter-rouge">type</code> - we can see this clone is presented to a host group (<code class="language-plaintext highlighter-rouge">cluster</code>)</li>
+      <li><code class="language-plaintext highlighter-rouge">name</code> - clone name, here <code class="language-plaintext highlighter-rouge">cloneme_SV_0001_in_sean_SG</code> (SANtricity suggests "SV" and I kept that. It stands for snapshot volume i.e. clone)</li>
+    </ul>
+  </li>
+  <li>We can delete this clone. Payload has to contain a <code class="language-plaintext highlighter-rouge">viewRef</code>, i.e. snapshot volume ID:
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">DELETE snapshot-volumes/{id}
+</span></code></pre></div>    </div>
+  </li>
+  <li>Remember that you can't delete arbitrary snapshots. You need to sort by <code class="language-plaintext highlighter-rouge">pitTimestamp</code> (ascending) and delete the oldest before the second oldest, etc. It is better you get in the habit of deleting clones first, then snapshots. Otherise you may delete a snapshot and "disable" (orphan) your clone.</li>
+  <li>We can refresh a clone by stopping IO to it and updating it from either one of other "snapshot images" of the source volume or by creating a new, ad-hoc snapshot image. If we automated that, we'd query repository utilization for the snapshot group. Note that some of these are old <strong>SYMbolV2</strong> API paths (<code class="language-plaintext highlighter-rouge">/devmgr/v2/storage-systems/{system_id}/symbol/</code>) - as one might expect when the payload or method look … unusual. This is where things start getting ugly…
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST getPITGroupRepositoryUtilization?verboseErrorResponse=true
+</span></code></pre></div>    </div>
+  </li>
+  <li>Payload for that would be (list of) repository ID(s), I think: <code class="language-plaintext highlighter-rouge">{"pitGroupRef":["33000000600A098000E3C1B00000362D69657993","33000000600A098000E3C1B00000363769658CA4"]}</code></li>
+  <li>Then we can pick one with more unused capacity, for example. Say we pick <code class="language-plaintext highlighter-rouge">{"groupId":"33000000600A098000E3C1B00000363769658CA4"}</code> and POST <code class="language-plaintext highlighter-rouge">{"groupId":"33000000600A098000E3C1B00000363769658CA4"}</code> to create a new ad-hoc snapshot:
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST snapshot-images
+</span></code></pre></div>    </div>
+  </li>
+  <li>Now we need to stop and start this clone object to refresh it from an ad-hoc snapshot. <code class="language-plaintext highlighter-rouge">stopPitView</code> for <code class="language-plaintext highlighter-rouge">35000000600A098000E3C1B00000363469658649</code> (clone, aka snapshot volume, ID) which returns <code class="language-plaintext highlighter-rouge">"ok"</code> (including the quotes). Payload for that call is <code class="language-plaintext highlighter-rouge">PitView ID</code>, also a text string.
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST stopPITView?verboseErrorResponse=true
+</span></code></pre></div>    </div>
+  </li>
+  <li>Then we start that clone again by posting an update for <code class="language-plaintext highlighter-rouge">{"viewRef":"35000000600A098000E3C1B00000363469658649","basePIT":"34000000600A098000E3C1B0006336646965F562"}</code>
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST restartPITView?verboseErrorResponse=true
+</span></code></pre></div>    </div>
+  </li>
+  <li>Payload for that consists of <code class="language-plaintext highlighter-rouge">viewRef</code> (snapshot volume ID) and <code class="language-plaintext highlighter-rouge">basePIT</code> (base snapshot image ID).
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"viewRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"basePIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Once a clone is updated, we can re-mount it on the host to which it's mapped and take a backup, run tests, etc.</li>
+</ul>
+
+<p>These last few steps done in SYMbolV2 API are not documented, so the only way to figure it out is trial and error, and it has to be done for both individual and CG snapshots and clones.</p>
+
+<h3 id="consistency-group-extras">Consistency Group extras</h3>
+
+<p>To do this workflow for a consistency group (CG):</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">POST consistency-groups</code> - create a CG</li>
+  <li><code class="language-plaintext highlighter-rouge">POST consistency-groups/{cgId}</code> - add member volumes (with JSON payload)</li>
+  <li>The rest is the same, but we work with any of the member volumes and SANtricity automatically references the entire CG (<code class="language-plaintext highlighter-rouge">cgRef</code>) instead of individual volume</li>
+</ul>
+
+<h2 id="copy-clones-to-other-disk-groups">Copy clones to other disk groups</h2>
+
+<p>Clones and CG clones that live on a disk group can be copied to another:</p>
+<ul>
+  <li>Create target volume(s) of the same or larger size</li>
+  <li>Copy clones to these targets
+    <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST volume-copy-jobs
+</span></code></pre></div>    </div>
+  </li>
+  <li>Payload for this consists of source (clone ID) and target ("real" volume ID). We use offline copy as we clone from a dismounted clone volunme:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+</span><span class="nl">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"targetId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"copyPriority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"priority2"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"targetWriteProtected"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+</span><span class="nl">"onlineCopy"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+</span><span class="err">...</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li>Clones in DDP cannot be copied to destination outside of the sme DDP. We can copy copy a clone from a RAID 1 disk group to a RAID 6 disk group and then delete that source clone and source snapshot, which frees space on the source disk group, and gives us a low cost "copy of a clone volume" on RAID 6. But we may be able to clone a RAID 1 volume from DDP to a RAID 6 volume on DDP (which I haven't tried yet)</li>
+</ul>
+
+<h2 id="snapshot-scheduling">Snapshot scheduling</h2>
+
+<p>I wrote about that in the snapshots mega-post so I won't repeat that here.</p>
+
+<p>I will add, though, that creating a schedule <em>in the API</em> is a PITA (not PIT), so I suggest to create those in the UI or using Ansible or SMcli rather than attempt to do it in SYMbolV2 API.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>It's crazy how complicated this is.</p>
+
+<p>It would be easier if these IDs didn't look like cryptocurrency addresses, and why should they when limits are so much smaller? These IDs could be simple because supported limits are well below 32-bit integers, but because they're not <strong>and</strong> they all look alike, the API becomes extremely hard to use.</p>
+
+<p>Snapshots are easy to create, but the rest of the steps is a nightmare.</p>
+
+<p>A workaround (not realy a solution) is to use the UI (obviously), Ansible or some other way to automate. What that doesn't solve is repository monitoring and management, snapshot limits monitoring and management, and similar problems.</p>
+
+<p>It seems the right solution is to focus on Day 1 operations:</p>
+<ul>
+  <li>Do not attempt to automate the entire workflow because it's very difficult and even if it's automated, it's hard to understand how various bits and pieces fit together</li>
+  <li>What can work well is create Storage Groups and schedules on Day 0 or when new volumes (or groups of volumes) are created, and then run automated clone refresh operations</li>
+</ul>
+
+<p>This workflow is probably over 95% correct and just needs to be automated enough to reliably repeat the steps of re-creating snapshot clones and potentially copying them to a "real" volume for testing and other purposes.</p>
+
+<p>I hope to get some of these steps right and then add them to my PoweShell module and Python client for SANtricity.</p>
+
+<p>That would allow us to call these from snapshot-taking, cloning and volume copying scripts. Ages ago there were <a href="/2026/01/05/eseries-santricity-smcli-client.html">SMcli</a> scripts for such workflows circulating around (and maybe some folks still have and use them), but that now seems too inconvenient for my liking.</p>
+
+<p>Now I just need to run these workflows one more time to confirm their correctness and then I can build functions to automate them.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/api" class="page__taxonomy-item p-category" rel="tag">api</a><span class="sep">, </span>
+    
+      <a href="/tags/cg" class="page__taxonomy-item p-category" rel="tag">cg</a><span class="sep">, </span>
+    
+      <a href="/tags/clone" class="page__taxonomy-item p-category" rel="tag">clone</a><span class="sep">, </span>
+    
+      <a href="/tags/consistency-group" class="page__taxonomy-item p-category" rel="tag">consistency group</a><span class="sep">, </span>
+    
+      <a href="/tags/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/tags/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/tags/powershell" class="page__taxonomy-item p-category" rel="tag">powershell</a><span class="sep">, </span>
+    
+      <a href="/tags/python" class="page__taxonomy-item p-category" rel="tag">python</a><span class="sep">, </span>
+    
+      <a href="/tags/santricity" class="page__taxonomy-item p-category" rel="tag">santricity</a><span class="sep">, </span>
+    
+      <a href="/tags/snapshot" class="page__taxonomy-item p-category" rel="tag">snapshot</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/automation" class="page__taxonomy-item p-category" rel="tag">automation</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-01-14T00:00:00+08:00">2026-01-14 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=NetApp+E-Series+single+volume+and+consistency+group+clones%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F01%2F14%2Fe-series-santricity-clones-consistency-group-clones.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/01/14/e-series-santricity-clones-consistency-group-clones.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/01/14/e-series-disk-group-vg-raid-level-change.html" class="pagination--pager" title="Change disk group's RAID level on NetApp E-Series">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/01/14/e-series-disk-group-vg-raid-level-change.html" rel="permalink">Change disk group's RAID level on NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-14T00:00:00+08:00">2026-01-14 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to change a disk group's RAID protection schema on NetApp E-Series SANtricity arrays
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/01/11/windows-hyper-v-netapp-eseries-santricity.html" rel="permalink">Windows Server 2025 and Hyper-V with NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-11T00:00:00+08:00">2026-01-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Notes on Windows Server 2025 and E-Series SANtricity arrays in iSCSI and NVMe/RoCEv2 environments
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/01/10/minio-aistor-eseries-patterns.html" rel="permalink">E-Series and MinIO AIStor Enterprise Lite patterns
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-10T00:00:00+08:00">2026-01-10 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Why single node clusters are now an Enterprise approach and earlier E-Series patterns stil relevant
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/01/10/eseries-santricity-odx-vaai.html" rel="permalink">Windows ODX with E-Series SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-10T00:00:00+08:00">2026-01-10 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Windows Offloaded Data Transfer (ODX) with NetApp E-Series SANtricity
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2025 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
