@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          10 minute read
+          11 minute read
         
       </span>
     
@@ -245,7 +245,7 @@
 
 <p>It's an opinionated, slim CSI provider for SANtricity 11.90+ storage systems with iSCSI and NVMe/RoCE host interfaces.</p>
 
-<p>Why "opinionated"? Because I don't give a crap about FC, for example, or targeting weak use cases just because they're possible or because they make sense in some non-Kubernetes situation. If you need something else, the underlying SANtricity Go library is permissively licensed and you can use it to create your own or modify SANtricity CSI (also permissively licensed).</p>
+<p>Why "opinionated"? Because I don't give a crap about FC, for example, or targeting weak use cases just because they're possible (and I don't understand enough to correctly determine priorities) or because they make sense in some non-Kubernetes situation. If you need something else, that is perfectly fine - the underlying SANtricity Go library is permissively licensed and you can use it to create your own or modify SANtricity CSI (also permissively licensed).</p>
 
 <p>Why just these two protocols? Because they are the only ones that make sense. This (taken from the SANtricity Provider post) explains exactly what I'm after:</p>
 
@@ -258,12 +258,18 @@
 
 <p>Unlike in the picture, we target only DDP pools (no traditional/classic RAID). Storage pools with classic RAID (incorrectly called "volume groups") can be used just fine, but are not recommended and I don't care about them at this time.</p>
 
-<p>Note that there are <strong>other CSI drivers</strong> you can use with NetApp E-Series</p>
+<p>Imagine an EF600 with a single NVMe DDP pool. Configure SANtricity CSI with that pool ID and there's nothing else to do but monitor the thing (capacity, performance, events) and replace failed hardware components.</p>
+
+<p><img src="/assets/images/santricity-csi-03-positioning-diagram.png" alt="Storage provisioning with SANtricity CSI" /></p>
+
+<p>Note that there are <strong>other CSI drivers</strong> you can use with NetApp E-Series:</p>
 
 <ul>
   <li>non-HA CSI drivers, where Kubernetes simply uses E-Series volumes as directly attached disks that do not failover to other hosts. That's more than good enough - and extremely simple - for many workloads (stand-alone, replicated, NoSQL, NuSQL, Ceph, etc.). You can see <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">this post</a> and examples at the very bottom. These work with any storage protocol E-Series supports - as long as you can connect and mount, the rest is host-side stuff</li>
   <li>HA CSI for BeeGFS with NetApp E-SEries - relies on "Building Blocks" (from NetApp) for HA of BeeGFS services, uses <a href="https://github.com/ThinkParQ/beegfs-csi-driver/">BeeGFS CSI</a></li>
 </ul>
+
+<p>You can even use all of these at the same time.</p>
 
 <h2 id="features">Features</h2>
 
@@ -413,8 +419,8 @@ I0119 05:14:15.731044       1 controller.go:104] Creating volume pvc-8d2425bb-ec
 <p>Features-wise, some things on my wish-list:</p>
 
 <ul>
-  <li>Snapshots. Trident CSI didn't support them, but I might. It has to be added to the Go library. The other day I started <a href="/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">looking into this</a> (warning: risk of migraine!) again.</li>
-  <li>Clones. Same same, but different! SANtricity's clones are actually "Snapshot Volumes" and there are two ways to do that; the simpler one is to use Snapshot Volumes, the complicated one is to copy Snapshot Volume to a "real" volume. See the link just above.</li>
+  <li>Snapshots. Trident CSI didn't support them, but SANtricity CSI might. Snapshot support has to be added to the Go library and it's a bit tricky. The other day I started <a href="/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">looking into this again</a> (warning: risk of migraine!).</li>
+  <li>Clones. Same same, but different! SANtricity's clones are actually "Snapshot Volumes" and there are two ways to do that; the simpler one is to use Snapshot Volumes, the complicated one is to copy Snapshot Volume to a "real" volume. See the link just above. One could also say the first way to clone is from a snapshot, while the other is a volume copy. I believe CSI relies on the first approach (snapshot-to-clone), but I haven't started looking into that yet - still trying to figure out to do this in the API first…</li>
 </ul>
 
 <p>Integrations-wise:</p>
@@ -434,7 +440,7 @@ I0119 05:14:15.731044       1 controller.go:104] Creating volume pvc-8d2425bb-ec
 
 <p>SANtricity CSI is <em>simple</em>, it performs no "black box" magic. Anyone can understand it, improve it and fix bugs whether it's in the Go client library or CSI driver.</p>
 
-<p>Most improvements to the CSI driver need to first happen in the Go client library first, so even if I remain the only SANtricity CSI user, the library will be used by many. Why? Because there's nothing out there. Unless you are happy running Ansible playbooks to create SANtricity volumes (or snapshots, if they get implemented), you want a native client such as this SANtricity Go library that can create volumes in seconds.</p>
+<p>Most improvements to the CSI driver need to first happen in the Go client library first, so even if I remain the only SANtricity CSI user, the GO client library will be used by many. Why? Because there's nothing out there. Unless you are happy running Ansible playbooks, you may want a native client (such as this SANtricity Go library) that can create volumes in seconds without any bloat. Some admins will use it.</p>
 
 <p>The source code for SANtricity Go library and CSI can be found in my <code class="language-plaintext highlighter-rouge">santricity-go</code> repository.</p>
 
