@@ -2117,6 +2117,12 @@ var store = [{
         "url": "/2026/01/16/santricity-eseries-datalake-storage.html",
         "teaser": null
       },{
+        "title": "NetApp E-Series SANtricity CSI",
+        "excerpt":"Introduction Having built some building blocks we can now have nice things, such as a proper CSI driver for E-Series. If you’re ignorant about E-Series and wonder whey someone would want a CSI driver for it, you can read about Terraform SANtricity Provider here - SANtricity CSI uses the same...","categories": ["netapp","storage","kubernetes"],
+        "tags": ["netapp","e-series","santricity","api","automation","golang","go","csi","kubernetes"],
+        "url": "/2026/01/19/netapp-eseries-santricity-csi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2130,7 +2136,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Big Data &amp; analytics patterns for NetApp object &amp; block 2026-01-16 00:00 2 minute read NetApp E-Series SANtricity Terraform Provider 2026-01-16 00:00 15 minute read Provision storage in seconds with Terraform and E-Series E-Series SANtricity Go client for Day 1+ operations 2026-01-15 00:00 1 minute read Permissive OSS client Go...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"NetApp E-Series SANtricity CSI 2026-01-19 00:00 10 minute read Community CSI driver for NetApp E-Series arrays: what it is and what it does Big Data &amp; analytics patterns for NetApp object &amp; block 2026-01-16 00:00 2 minute read NetApp E-Series SANtricity Terraform Provider 2026-01-16 00:00 15 minute read Provision storage...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"

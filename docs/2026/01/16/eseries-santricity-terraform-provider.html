@@ -258,7 +258,7 @@
         </ul>
       </li>
       <li>Temp/scratch/KV cache - fast(est) tier, used by analytics and inferencing - there's a copy in S3 or databases</li>
-      <li>Other (front-end apps) - small capacity, <strong>big churn</strong> of many small volumes with no important data. Put them anywhere - replicated ZFS on RAID 10 disks, VM-based HA NAS on RAID 6…</li>
+      <li>Other (front-end apps) - small capacity, <strong>big churn</strong> of many small volumes with non-persistent data. Put them anywhere - replicated ZFS on RAID 10 disks, VM-based HA NAS on RAID 6…</li>
     </ul>
   </li>
 </ul>
@@ -320,7 +320,7 @@
   <li>Use E-Series Performance Analyzer or E-Series SANtricity Collector to monitor performance, capacity, events</li>
 </ul>
 
-<p>In case you wonder how that exactly works: DDP with 11+ disks always writes in 10 stripes; those can be 5+5 (R1 volumes) or 8+2 (R6 volumes). That's it! When you query the DDP, you see it keeps track of total share of RAID 1 and 6 volumes. Showing the extents key from this pool I used:</p>
+<p>In case you wonder how exactly that works: DDP (11+ disks) always writes in 10 stripes; those can be 5+5 (R1 volumes) or 8+2 (R6 volumes). That's it! When you query the DDP, you see it keeps track of total extents allocated to RAID 1 and RAID 6 volumes. See extents key from this pool I used: <code class="language-plaintext highlighter-rouge">raidDiskPool</code> has <code class="language-plaintext highlighter-rouge">raid6</code> and <code class="language-plaintext highlighter-rouge">raid1</code> volumes in it:</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"extents"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
   </span><span class="p">{</span><span class="w">
@@ -347,7 +347,7 @@
 </span><span class="p">]</span><span class="w">
 </span></code></pre></div></div>
 
-<p>There's a RAID 1 vs 6 breakdown calculator in my E-Config Web app (see in Projects), but it's not hard to calculate "expected" usable from a DDP based on estimates of "usable" R1 and R6 capacity: R1 takes 100% more DDP space (1/1), R6 takes 25% (2/8). Remember that DDP itself has a reserve (1 or more disks) that can allow it to tolerate several consecutive failures of up to 2 disks.</p>
+<p>There's a RAID 1 vs 6 breakdown calculator in my E-Config Web app (see <a href="/projects/">Projects</a>), but it's not hard to manually calculate expected usable capacity from a DDP based on estimates of R1 and R6 shares: R1 takes 100% more DDP space (1/1), R6 takes 25% (2/8). Remember that DDP itself has a reserve (1 or more disks) that can allow it to tolerate several consecutive failures of up to 2 disks.</p>
 
 <p>This image depicts two target workloads for SANtricity Provider:</p>
 
@@ -590,8 +590,8 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
 
 <ul>
   <li>P1: Volume expand will be added today (edit: <strong>done</strong>)</li>
-  <li>P2: NVMe/RoCEv2 will likely be added soon - it only impacts host creation (and the only reason it's not available now is I don't have any hardware to try it, but I'll build it based on JSON samples)</li>
-  <li>P3: Planned host replacement with volume move (edit: <strong>done</strong>, also volume re-mapping (edit mapping))</li>
+  <li>P2: NVMe/RoCEv2 will likely be added soon - it only impacts host creation (and the only reason it's not available now is I don't have any hardware to try it, but I'll build it based on JSON samples (edit: <strong>done</strong>, although I can't test due to no hardware access))</li>
+  <li>P3: Planned host replacement with volume move (edit: <strong>done</strong>, also volume-to-host re-mapping in SANtricity Provider)</li>
 </ul>
 
 <p>Gaps (real and perceived):</p>
@@ -605,7 +605,7 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
 
 <p>Application-level integrations? I don't think we need those. Currently the repository has a PostgreSQL (storage side) example shared above (the HA pattern). A sample for the NOSQL/NUSQL pattern may be added, but it's really the same thing - just <strong>don't</strong> create a "host group" that lets all hosts see all volumes.</p>
 
-<p>The provider and examples can be found in the <code class="language-plaintext highlighter-rouge">santricity-go</code> repository.</p>
+<p>The provider and examples can be found in my <code class="language-plaintext highlighter-rouge">santricity-go</code> repository.</p>
 
         
       </section>
@@ -708,6 +708,54 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/01/19/netapp-eseries-santricity-csi.html" rel="permalink">NetApp E-Series SANtricity CSI
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-01-19T00:00:00+08:00">2026-01-19 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          10 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Community CSI driver for NetApp E-Series arrays: what it is and what it does
+</p>
+  </article>
+</div>
+
     
       
       
@@ -848,54 +896,6 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
 
 
     <p class="archive__item-excerpt" itemprop="description">How to copy a volume into another, directly, from a snapshot, or from consistency group snapshot and more
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/01/14/e-series-disk-group-vg-raid-level-change.html" rel="permalink">Change disk group's RAID level on NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-01-14T00:00:00+08:00">2026-01-14 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          6 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">How to change a disk group's RAID protection schema on NetApp E-Series SANtricity arrays
 </p>
   </article>
 </div>
