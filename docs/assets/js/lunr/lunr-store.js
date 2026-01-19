@@ -2119,7 +2119,7 @@ var store = [{
       },{
         "title": "NetApp E-Series SANtricity CSI",
         "excerpt":"Introduction Having built some building blocks we can now have nice things, such as a proper CSI driver for E-Series. If you’re ignorant about E-Series and wonder whey someone would want a CSI driver for it, you can read about Terraform SANtricity Provider here - SANtricity CSI uses the same...","categories": ["netapp","storage","kubernetes"],
-        "tags": ["netapp","e-series","santricity","api","automation","golang","go","csi","kubernetes"],
+        "tags": ["netapp","e-series","santricity","api","automation","golang","go","csi","nomad","kubernetes"],
         "url": "/2026/01/19/netapp-eseries-santricity-csi.html",
         "teaser": null
       },{
