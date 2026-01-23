@@ -2148,7 +2148,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"NetApp E-Series Performance Analyzer v3.5.3 2026-01-21 00:00 4 minute read About new Prometheus metrics and PiT volume performance Kubernetes with NetApp E-Series SANtricity 2026-01-20 00:00 3 minute read CSI drivers you can use with NetApp E-Series arrays NetApp E-Series SANtricity CSI 2026-01-19 00:00 11 minute read Community CSI driver for...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"NetApp E-Series Performance Analyzer v3.5.3 2026-01-21 00:00 4 minute read About new Prometheus metrics and PiT volume performance Kubernetes with NetApp E-Series SANtricity 2026-01-20 00:00 3 minute read CSI drivers you can use with NetApp E-Series arrays NetApp E-Series SANtricity CSI 2026-01-19 00:00 12 minute read Community CSI driver for...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"

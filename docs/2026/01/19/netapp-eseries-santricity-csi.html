@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -256,7 +256,7 @@
 
 <p><img src="/assets/images/santricity-go-02-terraform-provider.png" alt="Storage provisioning with SANtricity Provider" /></p>
 
-<p>Unlike in the picture, we target only DDP pools (no traditional/classic RAID). Storage pools with classic RAID (incorrectly called "volume groups") can be used just fine, but are not recommended and I don't care about them at this time.</p>
+<p>Unlike in the picture, we target only DDP pools (no traditional/classic RAID). Storage pools with classic RAID disk groups (usually incorrectly called "volume groups") can be used just fine, but are not recommended and I don't care about them at this time.</p>
 
 <p>Imagine an EF600 with a single NVMe DDP pool. Configure SANtricity CSI with that pool ID and there's nothing else to do but monitor the thing (capacity, performance, events) and replace failed hardware components.</p>
 
@@ -429,6 +429,30 @@ I0119 05:14:15.731044       1 controller.go:104] Creating volume pvc-8d2425bb-ec
   <li>Volume metadata and monitoring: you or I could update <a href="https://github.com/scaleoutsean/eseries-perf-analyzer">EPA</a> and/or <a href="https://github.com/scaleoutsean/eseries-santricity-collector">ESC</a> to extract volume metadata KVs and easily find and watch Kubernetes volumes. Then you get proper statistics (PVC volume count, etc.), capacity and performance monitoring for SANtricity CSI volumes</li>
   <li>Hashicorp Nomad CSI - hopefully just a matter of giving SANtricity CSI a try. Why bother with Kubernetes if you don't really need it? I like <a href="/2022/04/05/nomad-beegfs-eseries.html">Nomad</a> better than Kubernetes (if that's not obvious)</li>
 </ul>
+
+<p>Here's an example of a volume metadata key in volume JSON:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fstype"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xfs"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pv_name"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc-185bb457-d426-4645-9122-f5e80b286c0c"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc_name"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"basic-test-pvc"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pvc_namespace"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p>It gives us enough to present a static volume (should we need to recover from CSI failure), back it up (after making a <a href="/2026/01/14/e-series-santricity-clones-consistency-group-clones.html">clone</a>) from a non-Kubernetes client, or use this for charge-back or show-back.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
