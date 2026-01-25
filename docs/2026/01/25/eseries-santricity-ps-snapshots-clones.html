@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          10 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-is-new">What is new</a></li><li><a href="#whats-the-big-deal">What's the big deal?</a></li><li><a href="#related-information">Related information</a><ul><li><a href="#host-side">Host-side</a></li><li><a href="#host-quiesce-freeze">Host quiesce ("freeze")</a></li><li><a href="#consistency-groups">Consistency Groups</a></li><li><a href="#santricity-cloud-connector">SANtricity Cloud Connector</a></li><li><a href="#monitoring">Monitoring</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-is-new">What is new</a></li><li><a href="#whats-the-big-deal">What's the big deal?</a><ul><li><a href="#when-to-use">When to use?</a></li></ul></li><li><a href="#related-information">Related information</a><ul><li><a href="#host-side">Host-side</a></li><li><a href="#host-quiesce-freeze-or-suspend-io">Host quiesce (freeze or suspend I/O)</a></li><li><a href="#consistency-groups">Consistency Groups</a></li><li><a href="#santricity-cloud-connector">SANtricity Cloud Connector</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#clones-vs-volume-copies">Clones vs. Volume Copies</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -312,6 +312,21 @@
   <li>Then unmount the volume on the host and restore from the UI (recommended)</li>
 </ul>
 
+<h3 id="when-to-use">When to use?</h3>
+
+<p>Many applications and hypervisors can take hardware-independent snapshots (example: <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/checkpoints?tabs=hyper-v-manager#creating-checkpoints">Hyper-V</a>) and even upload them to S3.  With those, you would probably use hardware snapshots sparingly - for example, with vSphere and Hyper-V you may do like this:</p>
+<ul>
+  <li>Hourly hypervisor VM snapshots, retain eight</li>
+  <li>One hypervisor-based VM snapshot every eight hours, retain three</li>
+  <li>Daily hardware snapshots, retain seven</li>
+</ul>
+
+<p>There are applications where you may want to take snapshots daily and before major patches or upgrades.</p>
+
+<p>Backup offload to another server is a use case for plain filesystem backup, but also databases.</p>
+
+<p>There's no need to create excessive number of hardware snapshots - most volumes will be fine with just two that are created on snapshot schedule and expired, and maybe one or two on-demand, which can be deleted immediately after they're no longer necessary.</p>
+
 <h2 id="related-information">Related information</h2>
 
 <h3 id="host-side">Host-side</h3>
@@ -322,17 +337,19 @@
 
 <p>Ansible lets you control host-side behavior, but you don't need an application for orchestration unles it's something complex. Simply create an independent schedule on servers. You're not trying to create some low-latency coupling here.</p>
 
-<h3 id="host-quiesce-freeze">Host quiesce ("freeze")</h3>
+<h3 id="host-quiesce-freeze-or-suspend-io">Host quiesce (freeze or suspend I/O)</h3>
 
 <p>Likewise, you can freeze the host IO, VM or application, and then call these cmdlets (to create a snapshot, mostly) from the same script.</p>
 
 <p>Do we need Ansible or similar?</p>
 <ul>
-  <li>Yes, you do need Ansible or similar if your server administrator or DBA must not be allowed to access storage (the same API allows them to delete all volumes). And you have to assume your server will get hacked, so even if you trust your DBA, you shouldn't try to get away with letting server administrator being able to wipe your disk array</li>
-  <li>No, you do not need Ansible or similar if you nicely time your sequence. When taking a snapshot, freeze the app or VM at 9:59:55am, let SANtricity scheduler do its thing at 10am sharp as it always does. Resume the app at 10:00:10 am. Send the logs of both events to Elasticsearch or other place where you can keep an eye on these logs and any errors</li>
+  <li>Yes, you may need Ansible or similar if your server administrator or DBA must not be allowed to access storage (the same API allows them to delete all volumes). And you have to assume your server will get hacked, so even if you trust your DBA, you shouldn't try to get away with letting server administrator being able to wipe your disk array</li>
+  <li>No, you do not need Ansible or similar if you nicely time your sequence and have NTP and logging done. When taking a snapshot, freeze the app or VM at 9:59:55am, let SANtricity scheduler do its thing at 10 am sharp. Resume the app at 10:00:10 am. Send the logs of both events to Elasticsearch or other place where you can keep an eye on these logs and any errors</li>
 </ul>
 
-<p>Not good enough? It's easy to do it better. Start polling for newest snapshot at 10:00:01 am, once every second, and resume IO as soon as you spot a new snapshot or alert if no snapshot gets generated by 10:00:15 am. You need read-only access to SANtricity API and you can use the built-in <code class="language-plaintext highlighter-rouge">monitor</code> account for that so that even if the server gets hacked, the attacker can't do anything to storage. Easy!</p>
+<p>Not good enough? It's easy to do it better.</p>
+
+<p>Start polling for newest snapshot at 10:00:01 am, once every second, and resume IO as soon as you spot a new snapshot or alert if no snapshot gets generated by 10:00:15 am. You need read-only access to SANtricity API and you can use the built-in <code class="language-plaintext highlighter-rouge">monitor</code> account for that so that even if the server gets hacked, the attacker can't do anything to storage. Easy!</p>
 
 <h3 id="consistency-groups">Consistency Groups</h3>
 
@@ -344,7 +361,7 @@
 
 <p>Well, now you can get <a href="https://kopia.io/docs/installation/">Kopia</a>, the free edition of Veeam or something else that works for you, and backup your data to S3 for almost free, just refresh your clones before each run.</p>
 
-<p>A modern, SANtricity version of <a href="https://github.com/scaleoutsean/solidbackup">SolidBackup</a> is now possible if you want to automate this with or without Ansible (which I use in SolidBackup). If you're on Windows, you could have the whole thing run just Kopia or <a href="https://rclone.org/downloads/">rclone</a> to S3.</p>
+<p>A modern, SANtricity version of <a href="https://github.com/scaleoutsean/solidbackup">SolidBackup</a> is now possible if you want to automate this with or without Ansible (which I use in SolidBackup). If you're on Windows, you could have the whole thing run just Kopia or <a href="https://rclone.org/downloads/">rclone</a> to S3. This way you can have an unlimited number of cloud-based backups that consume a small amount of low-cost capacity.</p>
 
 <h3 id="monitoring">Monitoring</h3>
 
@@ -353,15 +370,23 @@
 <ul>
   <li>Read the E-Series snapshots TR (<a href="https://www.netapp.com/media/17167-tr4747.pdf">TR-4747</a>) to understand what makes sense</li>
   <li>Like with VMware, don't pile up too many snapshots. CoW doesn't like that due to their cascading effect on performance</li>
-  <li>You need to watch out for capacity in "internal" volumes used for Snapshot Group (repos) and separate clone repos (these can be small, if you backup and just need read-write in order to be able to mount, a 1% reserve is enough). E-Series SANtricity Collector lets you watch capacity very closely, although you can get this with cmdlets as well. This reminds me - years ago I wrote several PRTG E-Series monitoring scripts in PowerShell. Those may need small updates as it's been a while, but if you're a PowerShell user and prefer it over Python, check those out
+  <li>You need to watch out for capacity in "internal" volumes used for Snapshot Group (repos) and separate clone repos (these can be small, if you backup and just need read-write in order to be able to mount, a 1% reserve is enough). <a href="https://github.com/scaleoutsean/eseries-santricity-collector?tab=readme-ov-file">E-Series SANtricity Collector</a> lets you monitor many things related to capacity and even <a href="https://github.com/scaleoutsean/eseries-santricity-collector/blob/master/docs/SCHEMA.md">snapshot group capacity</a> although you can get that with cmdlets such as <code class="language-plaintext highlighter-rouge">Get-SANtricitySnapshotGroup</code> as well. This reminds me - years ago I wrote several PRTG E-Series monitoring scripts in PowerShell. Those may need small updates as it's been a while, but if you're a PowerShell user and prefer it over Python, check those out
     <ul>
       <li><a href="/2023/09/25/monitoring-netapp-eseries-with-prtg.html">PRTG with E-Series</a> - for 11.80, so it may need very few updates, really</li>
       <li><a href="/2023/10/29/consistency-group-monitoring-in-eseries.html">Consistency Group monitoring</a> - this post is about stand-alone volumes (not CGs), but if you're wondering about the scope of monitoring snapshots, clones and such, it contains some useful information</li>
     </ul>
   </li>
-  <li>Start small (daily snapshots, keep 5), watch utilization, watch SANtricity events</li>
+  <li>Start small (daily snapshots, keep 5), watch Snapshot Group utilization/count, Snapshot Volume (clone) reserved capacity utilization and count, and SANtricity events and logs (again, send these to something like Elasticsearch or Grafana to get alerts if anything goes wrong)</li>
   <li>Increase use (more frequent schedules, more clones, and so on) to meet your busines and technical objectives</li>
 </ul>
+
+<h3 id="clones-vs-volume-copies">Clones vs. Volume Copies</h3>
+
+<p>Volume Copy is a separate concept, where you copy one volume into another of the same size. This also works with groups of volumes.</p>
+
+<p>You could, for example, copy NVMe-based database volumes to NL-SAS based volumes for the purpose of having a low-cost database upgrade environment.</p>
+
+<p>Volume Copy hasn't been implemented in cmdlets, but it can be depending on need.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
