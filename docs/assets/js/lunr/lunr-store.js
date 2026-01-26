@@ -2141,6 +2141,12 @@ var store = [{
         "url": "/2026/01/25/eseries-santricity-ps-snapshots-clones.html",
         "teaser": null
       },{
+        "title": "Glances plugin for SANtricity in DAS environments",
+        "excerpt":"Glances plugins Glances is a host-, not cluster- or fleet-focused monitoring system, but many E-Series users may have just a host or two (including in Active-Passive HA clusters, so it’s really like one) configured anyway. So I figured it wouldn’t be out of place to add a simple SANtricity plugin...","categories": ["netapp","storage"],
+        "tags": ["netapp","e-series","santricity","s3","storagegrid","analytics","big data"],
+        "url": "/2026/01/26/santricity-glances-plugin.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2154,7 +2160,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"santricity-powershell adds single volume snapshots and clones 2026-01-25 00:00 10 minute read Automate creation of single-volume snapshots and clones with PowerShell (Linux, Windows, OS X) NetApp E-Series Performance Analyzer v3.5.3 2026-01-21 00:00 4 minute read About new Prometheus metrics and PiT volume performance Kubernetes with NetApp E-Series SANtricity 2026-01-20 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Glances plugin for SANtricity in DAS environments 2026-01-26 00:00 2 minute read santricity-powershell adds single volume snapshots and clones 2026-01-25 00:00 10 minute read Automate creation of single-volume snapshots and clones with PowerShell (Linux, Windows, OS X) NetApp E-Series Performance Analyzer v3.5.3 2026-01-21 00:00 4 minute read About new Prometheus...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
