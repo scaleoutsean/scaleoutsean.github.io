@@ -259,9 +259,9 @@
 
 <h2 id="whats-the-big-deal">What's the big deal?</h2>
 
-<p>It's not a huge deal (everyone can do snapshots and it's been available in Ansible for E-Series), but almost no one likes to automate with Ansible. Even commercial backup vendors use lousy SMcli scripts (I think that's what Veritas Netbackup's SANtricity plugin does).</p>
+<p>It's not a huge deal (everyone can do snapshots and it's been available in Ansible for E-Series), but almost no one likes to automate with Ansible. Even commercial backup vendors seem to be using lousy SMcli scripts (I think that's what Veritas Netbackup's SANtricity plugin does).</p>
 
-<p>Well, look at us now…</p>
+<p>It's better now.</p>
 
 <div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Take initial snapshot</span><span class="w">
 </span><span class="nv">$snap1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-SANtricitySnapshot</span><span class="w"> </span><span class="nt">-VolumeName</span><span class="w"> </span><span class="s2">"DB"</span><span class="w">
@@ -353,15 +353,23 @@
 
 <h3 id="consistency-groups">Consistency Groups</h3>
 
-<p>There's nothing different or more difficult about Consistency Groups. The same cmdlets will be created for CGs. For now, you can loop over individual volumes if your application or IO can be frozen (suspended) while you do that. Or just use a schedule.</p>
+<p>Support for CGs is a to-do item, but there's nothing different or more difficult about Consistency Groups.</p>
+
+<p>For now, you can loop over individual volumes if your application or IO can be frozen (suspended) while you do that. Or just use a snapshot schedule that creates crash-consistent CGs.</p>
+
+<p>As an aside: I sometimes hear from people how quiesced or application-consistent snapshots are somehow "better", but if you can't reliably count on your application handling unplanned OS or system outages, you have a problem.</p>
+
+<p>CGs are necessary to handle applications that use multiple mutually dependent volumes, but even plain crash-consistent CG snapshots should reliably protect them. If they can't, you're in trouble no matter how you create snapshots.</p>
 
 <h3 id="santricity-cloud-connector">SANtricity Cloud Connector</h3>
 
-<p><a href="https://docs.netapp.com/us-en/e-series/cloud-connector/backup-intro-concept.html#run-full-and-incremental-backups">This thing</a> existed for some time. If it was open source, maybe it would have been useful. I don't know anyone who used it, and I've never heard anyone tell me what it's good for, so I'm not surprised it's gone.</p>
+<p><a href="https://docs.netapp.com/us-en/e-series/cloud-connector/backup-intro-concept.html#run-full-and-incremental-backups">This thing</a> existed for some time. If it was open source and provided some implicit assurance such backups will remain restorable no matter what, maybe it would have been useful.</p>
 
-<p>Well, now you can get <a href="https://kopia.io/docs/installation/">Kopia</a>, the free edition of Veeam or something else that works for you, and backup your data to S3 for almost free, just refresh your clones before each run.</p>
+<p>As it didn't do either, I've never heard of anyone who used it. I've never heard anyone tell me what it's good for, so I'm not surprised it's gone.</p>
 
-<p>A modern, SANtricity version of <a href="https://github.com/scaleoutsean/solidbackup">SolidBackup</a> is now possible if you want to automate this with or without Ansible (which I use in SolidBackup). If you're on Windows, you could have the whole thing run just Kopia or <a href="https://rclone.org/downloads/">rclone</a> to S3. This way you can have an unlimited number of cloud-based backups that consume a small amount of low-cost capacity.</p>
+<p>Well, now you can get <a href="https://kopia.io/docs/installation/">Kopia</a>, Veeam Community Edition or something else that works for you, and backup your data to S3 for almost free - just refresh your clones before each run and kick off your backups. And you'll very likely be able to restore your backups for a long while.</p>
+
+<p>A modern, SANtricity, version of <a href="https://github.com/scaleoutsean/solidbackup">SolidBackup</a> is now possible if you want to automate this with or without Ansible (which I use in SolidBackup). If you're on Windows, you could have the whole thing run just Kopia or <a href="https://rclone.org/downloads/">rclone</a> to S3. This way you can have an unlimited number of cloud-based backups that consume a small amount of low-cost capacity.</p>
 
 <h3 id="monitoring">Monitoring</h3>
 
@@ -398,7 +406,7 @@
 
 <p>Now we can do it easily, for free, and from any major OS (supported by PowerShell). I rarely use PowerShell on Windows, for example: <code class="language-plaintext highlighter-rouge">santricity-powershell</code> is developed and tested overwhelmingly on Ubuntu Linux.</p>
 
-<p>Whether you want to quiesce and snapshot Hyper-V VMs, clone SQL Server or execute hardware-assisted snapshots PostgreSQL on Rocky Linux, these cmdlets can do it.</p>
+<p>Whether you want to quiesce and snapshot Hyper-V VMs, clone SQL Server or execute hardware-assisted snapshots PostgreSQL on Rocky Linux, these cmdlets can help probably you do it easier or better.</p>
 
 <p>If you use SQL Server on Windows, you've probably heard of <a href="https://dbatools.io/">DBATools</a>. Now it takes two-three cmdlets to properly update and refresh a clone and one to <a href="https://dbatools.io/Backup-DbaDatabase/">offload SQL Server backup</a> to another host without worrying you didn't do something right but you're not aware of a problem. You can also include SANtricity cmdlets into <a href="/2024/04/01/windows-server-2025-with-solidfire-part-two-sql-server-2022.html">T-SQL snapshot workflows</a>.</p>
 
@@ -680,7 +688,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          3 minute read
         
       </span>
     

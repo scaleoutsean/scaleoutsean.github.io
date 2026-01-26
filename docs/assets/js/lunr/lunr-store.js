@@ -1536,8 +1536,8 @@ var store = [{
         "teaser": null
       },{
         "title": "NetApp SANtricity PowerShell module for E-Series",
-        "excerpt":"Get NetApp.SANtricity module for PowerShell 5.1 Install and load Use End Appendix A - Known issues \\&amp; workarounds Get NetApp.SANtricity module for PowerShell 5.1 The problem is you can’t. Or maybe you can, but it’s not easy. It appears it was deprecated some time ago and removed from NetApp downloads....","categories": ["storage","automation"],
-        "tags": ["e-series","eseries","windows","powershell","devops"],
+        "excerpt":"UPDATE: This outdated module for PowerShell 5.1 may not work with with SANtricity 11.90+. But there’s a new community module that supports PowerShell 7, santricity-powershell. See this post, for exmaple. Get NetApp.SANtricity module for PowerShell 5.1 Install and load Use End Appendix A - Known issues \\&amp; workarounds Get NetApp.SANtricity...","categories": ["storage","automation"],
+        "tags": ["e-series","eseries","windows","santricity","powershell","devops"],
         "url": "/2024/03/28/netapp-santricity-powershell-module.html",
         "teaser": null
       },{
