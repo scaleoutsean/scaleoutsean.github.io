@@ -912,7 +912,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Speed of volume creation with BeeGFS CSI",
-        "excerpt":"While reading the excellent article Why We Migrated from Kubernetes to Nomad (2021) it occurred to me I spotted some of the same advantages while working on Nomad posts for this blog. I then thought to do a simple experiment to quantity one of the things I noticed, which is...","categories": ["containers","storage"],
+        "excerpt":"While reading the excellent article Why We Migrated from Kubernetes to Nomad (2021) it occurred to me I spotted some of the same advantages while working on Nomad posts for this blog. I then thought to do a simple experiment to quantify one of the things I noticed, which is...","categories": ["containers","storage"],
         "tags": ["netapp","beegfs","csi","nomad","hashicorp","eseries","e-series"],
         "url": "/2022/09/27/beegfs-csi-nomad-kubernetes.html",
         "teaser": null
@@ -2094,7 +2094,7 @@ var store = [{
         "teaser": null
       },{
         "title": "NetApp E-Series single volume and consistency group clones",
-        "excerpt":"Introduction Years ago I created a marathon-post on SANtricity snapshots and consistency groups. Not the most pleasant topic even for E-Series. Just reading that stuff causes headaches. But, since I’ve been making progress with client libraries, I want to make another post on this topic, specifically on the topic of...","categories": ["storage","automation"],
+        "excerpt":"UPDATE: If you just want to use this workflow, see santricity-powershell adds single volume snapshots and clones. You can extract the steps from this or make an enhancement request for santricity-client Introduction Years ago I created a marathon-post on SANtricity snapshots and consistency groups. Not the most pleasant topic even...","categories": ["storage","automation"],
         "tags": ["snapshot","e-series","eseries","powershell","python","api","santricity","consistency group","clone","cg"],
         "url": "/2026/01/14/e-series-santricity-clones-consistency-group-clones.html",
         "teaser": null
@@ -2147,6 +2147,12 @@ var store = [{
         "url": "/2026/01/26/santricity-glances-plugin.html",
         "teaser": null
       },{
+        "title": "Using S3 bucket snapshots in StorageGRID 12",
+        "excerpt":"WTF are branch buckets? Those are S3 bucket snapshots on StorageGRID 12. I wrote about them in the post called StorageGRID Branch Buckets and Read Cache . They seem useful to me, but apart from this link above no one has found this feature interesting enough to blog about it...","categories": ["netapp","storage"],
+        "tags": ["netapp","e-series","s3","storagegrid","branch bucket","analytics","snapshot","bucket snapshot"],
+        "url": "/2026/01/30/storagegrid-branch-buckets-snapshots.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2160,7 +2166,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Glances plugin for SANtricity in DAS environments 2026-01-26 00:00 2 minute read santricity-powershell adds single volume snapshots and clones 2026-01-25 00:00 10 minute read Automate creation of single-volume snapshots and clones with PowerShell (Linux, Windows, OS X) NetApp E-Series Performance Analyzer v3.5.3 2026-01-21 00:00 4 minute read About new Prometheus...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Using S3 bucket snapshots in StorageGRID 12 2026-01-30 00:00 5 minute read Branch buckets are bucket snapshots. Read how to create, use and delete them Glances plugin for SANtricity in DAS environments 2026-01-26 00:00 2 minute read santricity-powershell adds single volume snapshots and clones 2026-01-25 00:00 10 minute read Automate...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
