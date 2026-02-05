@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#wtf-are-branch-buckets">WTF are branch buckets?</a></li><li><a href="#workflow">Workflow</a></li><li><a href="#sizing">Sizing</a></li><li><a href="#bucket-snapshot-api-methods">Bucket Snapshot API methods</a></li><li><a href="#next-steps">Next steps</a></li></ul>
+              <ul class="toc__menu"><li><a href="#wtf-are-branch-buckets">WTF are branch buckets?</a></li><li><a href="#workflow">Workflow</a><ul><li><a href="#snapshot-buckets-vs-materialized-views">Snapshot buckets vs. materialized views</a></li></ul></li><li><a href="#sizing">Sizing</a></li><li><a href="#bucket-snapshot-api-methods">Bucket Snapshot API methods</a></li><li><a href="#next-steps">Next steps</a></li></ul>
             </nav>
           </aside>
         
@@ -258,6 +258,23 @@
 <p>Proceed to create a snapshot bucket.</p>
 
 <p>You may need to wait a minute and then you may use your S3 client to access the new snapshot bucket (assuming you could access the original or "base" bucket with those keys and didn't change access policies on the snapshot).</p>
+
+<h3 id="snapshot-buckets-vs-materialized-views">Snapshot buckets vs. materialized views</h3>
+
+<p>Because you don't have to create a snapshot bucket unless you need it, you don't <em>need</em> a "snapshot schedule" either. You can look back as far as your object versions allow and create a snapshot on demand.</p>
+
+<p>Let's say you suddenly need to produce a point-in-time view of an S3-backed database as of 60 and 30 days ago. You create two bucket snapshots at that point in time and that's all. Now you can easily compare tables from these databases.</p>
+
+<p>But remember that modern S3-backed databases may have this feature built in.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="o">&lt;</span><span class="n">viewName</span><span class="o">&gt;</span> <span class="k">AS</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="o">&lt;</span><span class="n">tableName</span><span class="o">&gt;</span>
+<span class="k">SHOW</span> <span class="n">VIEWS</span>
+<span class="k">DESCRIBE</span> <span class="p">[</span><span class="n">EXTENDED</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">viewName</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>This works fine with StorageGRID and it's the native approach for tools and databases that support it. If it's available, use it.</p>
+
+<p>If it's not, or if you have unstructured data, you can create "thin S3 clones" instead and from them generate your own "views" at an arbitrary point-in-time.</p>
 
 <h2 id="sizing">Sizing</h2>
 
@@ -337,7 +354,7 @@
 
 <p>E-Series gives you fast performance for work-in-progress, and S3 is the source of truth. You can create S3 bucket snapshots from <strong>any</strong> point-in-time because of bucket versioning.</p>
 
-<p>As recently as two months ago these scenarios complicated and laborious, but with the tools I've built in recent weeks, there's almost no need to develop API integrations - just automate and orchestrate. Seamless data flows between S3 and E-Series are now well within our grasp.</p>
+<p>As recently as two months ago these scenarios seemed complicated and laborious, but with SANtricity automation tools and libraries I built in recent weeks there's almost no need to <em>develop</em> API integrations - just automate and orchestrate using tools you already have (example: Terraform). Seamless data flows between S3 and E-Series are now well within our grasp.</p>
 
 <p>I'll blog more about this as I create related demonstrations.</p>
 
