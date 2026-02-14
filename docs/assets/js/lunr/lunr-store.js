@@ -2153,6 +2153,12 @@ var store = [{
         "url": "/2026/01/30/storagegrid-branch-buckets-snapshots.html",
         "teaser": null
       },{
+        "title": "Overcome SSH invalid key length, SSH security annoyances",
+        "excerpt":"Problem Your SSH client fails to connect and reports Bad server host key: Invalid key length. What to do? Root cause: your SSH client is not shitty enough. Weak Link SSH to rescue You can create one-off, per-host SSH client configurations, but if you need to do this every day...","categories": ["security"],
+        "tags": ["linux","security","openssh","ssh","invalid key length"],
+        "url": "/2026/02/14/weak-security-ssh-client.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2163,10 +2169,10 @@ var store = [{
     "excerpt":"","url": "https://scaleoutsean.github.io/"
   },{
     "title": "Page Archive",
-    "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries Home Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
+    "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries security Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Using S3 bucket snapshots in StorageGRID 12 2026-01-30 00:00 6 minute read Branch buckets are bucket snapshots. Read how to create, use and delete them Glances plugin for SANtricity in DAS environments 2026-01-26 00:00 2 minute read santricity-powershell adds single volume snapshots and clones 2026-01-25 00:00 10 minute read Automate...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Overcome SSH invalid key length, SSH security annoyances 2026-02-14 00:00 3 minute read Fix for the annoying SSH invalid key error Using S3 bucket snapshots in StorageGRID 12 2026-01-30 00:00 6 minute read Branch buckets are bucket snapshots. Read how to create, use and delete them Glances plugin for SANtricity...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -2242,6 +2248,9 @@ var store = [{
   },{
     "title": "eseries",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/eseries/"
+  },{
+    "title": "security",
+    "excerpt":"","url": "https://scaleoutsean.github.io/categories/security/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page2/"
