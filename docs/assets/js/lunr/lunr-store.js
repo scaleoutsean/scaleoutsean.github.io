@@ -2159,6 +2159,12 @@ var store = [{
         "url": "/2026/02/14/weak-security-ssh-client.html",
         "teaser": null
       },{
+        "title": "Terraform provider for SolidFire update for Feb 2026",
+        "excerpt":"Introduction Last July (2025) I forked the dead Provider for ElementSW for the reasons explained in that post. Anything come out of it? Let’s see. What’s new in Feburary 2026 (and since July 2025) Last July I started working on that fork by building things from scratch. Upstream had several...","categories": ["automation","solidfire","projects"],
+        "tags": ["netapp","solidfire","terraform","hcl"],
+        "url": "/2026/02/15/updated-terraform-provider-solidfire.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2172,7 +2178,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year projects solidfire random kubernetes virtualization automation storage analytics containers cloud meta openstack linux monitoring backup ai netapp hci netapp hci performance e-series eseries security Home Home Home Home Home Home Home Home...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Overcome SSH invalid key length, SSH security annoyances 2026-02-14 00:00 3 minute read Fix for the annoying SSH invalid key error Using S3 bucket snapshots in StorageGRID 12 2026-01-30 00:00 6 minute read Branch buckets are bucket snapshots. Read how to create, use and delete them Glances plugin for SANtricity...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Terraform provider for SolidFire update for Feb 2026 2026-02-15 00:00 2 minute read Latest and greatest Terraform provider for SolidFire status update (2026/02) Overcome SSH invalid key length, SSH security annoyances 2026-02-14 00:00 3 minute read Fix for the annoying SSH invalid key error Using S3 bucket snapshots in StorageGRID...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -2464,4 +2470,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page72/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page73/"
   }]
