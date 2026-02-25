@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          15 minute read
+          16 minute read
         
       </span>
     
@@ -495,6 +495,8 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>This could probably be automated with a "watcher" service, but I'd rather not touch that unless the controller with failed over LUNs was maxed out. <a href="https://github.com/scaleoutsean/eseries-santricity-collector">E-Series SANtricity Collector</a> collects volume location (preferred vs. non-preferred), among other things, and I'd rather set alerts in Grafana or InfluxDB 3 and deal with these on a case-by-cases basis.</p>
 
+<p>Under good conditions, SANtricity in ALUA mode performs "implicit" failback, so you may not need to do anything to fail-back failed-over volumes to optimal controllers. If you have to push it, you can force them back from the SANtricity UI, but it's disruptive and not advisable unless one array is getting maxed-out.</p>
+
 <h4 id="multipath-tools-dm-mp">multipath-tools (DM-MP)</h4>
 
 <p>DM-MP is not recommended for NVMe-oF as native kernel support is preferred, but for the sake of completeness:</p>
@@ -509,28 +511,28 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>Whitelist E-Series NVMe (not SCSI!) storage in DM-MP:</p>
 
-<pre><code class="language-raw">devices {
-  device {
-    vendor "NVME"
-    product "NetApp E-Series*"
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>devices <span class="o">{</span>
+  device <span class="o">{</span>
+    vendor <span class="s2">"NVME"</span>
+    product <span class="s2">"NetApp E-Series*"</span>
     path_grouping_policy group_by_prio
-    failback immediate # it may be better to consider: manual, &lt;timeout_seconds&gt;, followover
+    failback immediate <span class="c"># it may be better to consider: manual, &lt;timeout_seconds&gt;, followover</span>
     no_path_retry 30
-    # no_path_retry fail # recommended for SLES 15 for cluster file system clients
-    # SLES proposes "multi-queue" with the following kernel parameters: scsi_mod.use_blk_mq=1 dm_mod.use_blk_mq=1
-  }
-}
-</code></pre>
+    <span class="c"># no_path_retry fail # recommended for SLES 15 for cluster file system clients</span>
+    <span class="c"># SLES proposes "multi-queue" with the following kernel parameters: scsi_mod.use_blk_mq=1 dm_mod.use_blk_mq=1</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <p>Blacklist E-Series NVMe from DM-MP:</p>
 
-<pre><code class="language-raw">blacklist {
-  device {
-    vendor  "NVME"
-    product "NetApp E-Series*"
-  }
-}
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>blacklist <span class="o">{</span>
+  device <span class="o">{</span>
+    vendor  <span class="s2">"NVME"</span>
+    product <span class="s2">"NetApp E-Series*"</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="automation">Automation</h2>
 
@@ -627,15 +629,15 @@ server2                    : <span class="nv">ok</span><span class="o">=</span>4
 
 <ul>
   <li>Lookup methods (pools, volumes, hosts) are all weak, as if the collection was created to configure sutff and not manage it day to day</li>
-  <li>Create volume module doesn't return volume object (!?)</li>
+  <li>Create volume module doesn't return a volume object like the API does</li>
   <li>NVMe-related features are weak (EF600 was launched in 2019!). Yes, you can create NVMe-oF hosts, but you can't look up targets and you have to build own Ansible tasks for that, which is disappointing</li>
-  <li>No <code class="language-plaintext highlighter-rouge">raid_level</code> support for volume create task in DDP (RAID setting was added in SANtricity 11.7 years ago!)</li>
+  <li>No <code class="language-plaintext highlighter-rouge">volume_raid_level</code> support for volume create task in DDP (RAID setting was added in SANtricity 11.7 years ago and I support it everywhere, including in SANtricity CSI)</li>
   <li>Working around these quirks and adding own tasks that do what the Collection doesn't is fine if you have very repetitive tasks. Otherwise you end up doing what you could create and run faster in a proper language without these extra layers</li>
 </ul>
 
 <p>But, it works.</p>
 
-<p>I created a playbook that configures NICs and storage for Rocky 10.1, creates volumes on storage array, and deploys PostgreSQL to Podman that uses these volumes. It was an interesting experience because Trident CSI also supports Docker in non-HA storage mode (because Docker Swam doesn't support it).</p>
+<p>I created a playbook that configures NICs and storage for Rocky 10.1, creates volumes on storage array, and deploys PostgreSQL to Podman that uses these volumes. It was an interesting experience because Trident CSI also supports Docker in non-HA storage mode (it can't, because Docker Swarm doesn't support it).</p>
 
 <p>Compared to Trident with Docker, this is actually a better experience because Ansible gives you the same storage experience (non-HA provisioning to host-bound containers) with some extras that you'd probably use in any case: with Trident for Docker you'd still have some tools for container management, and here you already have them in Ansible. And you don't have to deal with a storage provisioner just to create volumes and present them to a host.</p>
 
@@ -659,21 +661,21 @@ server2                    : <span class="nv">ok</span><span class="o">=</span>4
 
 <p>And now we have everything we need to create a SANtricity version of <a href="https://github.com/scaleoutsean/firemox">Firemox</a>.</p>
 
-<p>My SANtricity Go client, Terraform Provider SANtricity and SANtricity CSI have all been updated. And because it works, we SANtricity Go and Terraform Provider can configure <code class="language-plaintext highlighter-rouge">hosts</code> object, which is where a host's port(s) are defined. And SANtricity CSI is NVMe-oF aware.</p>
+<p>My SANtricity Go client, Terraform Provider SANtricity and SANtricity CSI have all been updated since I've published this post. And because it all works, SANtricity Go and Terraform Provider can now configure NVMe/RoCE <code class="language-plaintext highlighter-rouge">hosts</code> object, which is where a host's port(s) are defined. And SANtricity CSI is now also NVMe-oF-aware.</p>
 
 <p><img src="/assets/images/santricity-csi-v1-02-startup.png" alt="CSI container startup" /></p>
 
-<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also been updated to handle NVMe/RDMA host objects (added in version 0.1.1). Subsequently I also added volume expand support since that wasn't implemented before.</p>
+<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also updated to handle NVMe/RoCE host objects (added in SAntricity Client version 0.1.1). Subsequently I also added "volume expand" support and few other things.</p>
 
-<p>There is an opportunity to add custom NVMe-focused commands/cmdlets to better serve NVMe/RoCE users because existing approaches (see my comments about Ansible Collection above) aren't optimal. Also, I may also need to update E-Series Performance Analyzer and E-Series SANtricity Collector to make sure NVMe/RoCE is not neglected. I'll blog about that later if I get it done.</p>
+<p>There is an opportunity to add custom NVMe-focused commands/cmdlets to better serve NVMe/RoCE users because existing approaches (see my comments about the Ansible Collection above) aren't optimal. Also, I may also need to update E-Series Performance Analyzer and E-Series SANtricity Collector to make sure NVMe/RoCE is not neglected. I'll blog about that later if I get it done.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>The simplicity, performance and (now) improving automation… How nice! Automation used to be the weakest spot, but that's no longer the case. Now it's becoming a strength.</p>
+<p>The simplicity, performance and (now) improving automation… How nice! Automation used to be the weakest spot of E-Series, but that's no longer the case. Now it's becoming a strength.</p>
 
-<p>NVMe/RoCE is the best choice for NVMe-over-Fabric - it's not as "different" as Infiniband, it's more cost effective and works equally well for AI, Analytics and virtualization, all of which happen to be strong points of EF-Series. NVMe/TCP is even cheaper, but also slower (to me it's always been "a complicated version of iSCSI" that couldn't justify the switch).</p>
+<p>NVMe/RoCE is the best choice for NVMe-over-Fabric - it's not as "different" and pricey as Infiniband, it's more cost effective and works equally well for AI, Analytics and virtualization, all of which happen to be strong points of EF-Series. NVMe/TCP is even cheaper, but also slower (to me it's always been "a complicated version of iSCSI" that couldn't justify the switch).</p>
 
-<p>I know, "virtualization" mentioned just above seems out of place, but let's remember that not all VI users expect storage to do everythig for them; many expect it to work reliably, be good value for money, perform well and behave. E-Series does all that, so yes, I say it's a very good choice for virtualization, too!</p>
+<p>I know, "virtualization" I've mentioned above seems out of place, but let's remember that not all VI users expect storage to do everythig for them; many expect it to work reliably, be good value for money, perform well and behave. E-Series does all that, so yes, I say it's a very good choice for virtualization, too!</p>
 
 
         
