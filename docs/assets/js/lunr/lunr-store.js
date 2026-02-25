@@ -2177,6 +2177,12 @@ var store = [{
         "url": "/2026/02/19/the-shocking-truth-about-ef600-200g-ports.html",
         "teaser": null
       },{
+        "title": "Fork of IBM Block CSI driver for NetApp-E-Series",
+        "excerpt":"What is IBM Block Driver CSI (SANtricity-focused fork) It is my fork of IBM Block Storage CSI v1.13.0 (IBM Block CSI driver on Github). Why? Just like NetApp Trident CSI, IBM Block Storage CSI driver is a decent CSI driver. Neither of them supports NetApp E-Series SANtricity systems, but one...","categories": ["storage","e-series","kubernetes"],
+        "tags": ["ef600","netapp","nvme","iscsi","csi"],
+        "url": "/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2190,7 +2196,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Connecting to 200G HICs on E-Series EF600 2026-02-19 00:00 2 minute read Connecting to EF-Series EF600 200G HIC in DAS mode Linux, NVMe/RoCE and HA NetApp EF-Series NVMe-oF storage 2026-02-19 00:00 12 minute read Linux NVMe/RoCE clients with NetApp EF-Series NVMe-oF Terraform provider for SolidFire update for Feb 2026 2026-02-15...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Fork of IBM Block CSI driver for NetApp-E-Series 2026-02-26 00:00 10 minute read Unofficial fork of IBM Block CSI driver for your SANtricity storage Connecting to 200G HICs on E-Series EF600 2026-02-19 00:00 2 minute read Connecting to EF-Series EF600 200G HIC in DAS mode Linux, NVMe/RoCE and HA NetApp...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"

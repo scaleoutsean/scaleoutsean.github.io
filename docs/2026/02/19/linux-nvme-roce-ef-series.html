@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          15 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#network">Network</a></li><li><a href="#hosts">Hosts</a><ul><li><a href="#ubuntu-24043">Ubuntu 24.04.3</a></li><li><a href="#rocky-linux-101">Rocky Linux 10.1</a></li><li><a href="#proxmox-91-debian-trixie">Proxmox 9.1 (Debian Trixie)</a></li><li><a href="#suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</a></li><li><a href="#discover-and-connect">Discover and connect</a></li><li><a href="#multipathing-with-nvme-ana">Multipathing with NVMe ANA</a></li></ul></li><li><a href="#automation">Automation</a><ul><li><a href="#ansible">Ansible</a></li><li><a href="#other-automation">Other automation</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#network">Network</a></li><li><a href="#hosts">Hosts</a><ul><li><a href="#ubuntu-24044">Ubuntu 24.04.4</a></li><li><a href="#rocky-linux-101">Rocky Linux 10.1</a></li><li><a href="#proxmox-91-debian-trixie">Proxmox 9.1 (Debian Trixie)</a></li><li><a href="#suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</a></li><li><a href="#discover-and-connect">Discover and connect</a></li><li><a href="#multipathing">Multipathing</a><ul><li><a href="#nvme-ana">NVMe ANA</a></li><li><a href="#multipath-tools-dm-mp">multipath-tools (DM-MP)</a></li></ul></li></ul></li><li><a href="#automation">Automation</a><ul><li><a href="#ansible">Ansible</a></li><li><a href="#other-automation">Other automation</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -348,7 +348,7 @@ modprobe nvme_rdma <span class="o">&amp;&amp;</span> <span class="nb">echo</span
 
 <p>I'll provide some working examples for everyone's reference.</p>
 
-<h3 id="ubuntu-24043">Ubuntu 24.04.3</h3>
+<h3 id="ubuntu-24044">Ubuntu 24.04.4</h3>
 
 <p>Ubuntu wasn't (and still isn't) on the list of supported iSER clients, but it works fine with EF-Series iSER as far as I'm concerned. There's no reason it wouldn't work well here, especially considering NVIDIA's participation in the Ubuntu ecosystem.</p>
 
@@ -414,7 +414,7 @@ modprobe nvme_rdma <span class="o">&amp;&amp;</span> <span class="nb">echo</span
 
 <p><img src="/assets/images/eseries-nvme-of-server_tui_nic_1.png" alt="Network configuration in TUI" /></p>
 
-<p>MTU 9000 is entirely optional. If you use switches, you may need a few extra bytes on switch MTU for VLAN and other overheads (or you may need to set a lower MTU here, such as 8800).</p>
+<p>MTU 9000 is entirely optional. If you use storage switches, you may need a few extra bytes on switch MTU for VLAN and other overheads (or you may need to set a lower MTU here, such as 8800).</p>
 
 <p><img src="/assets/images/eseries-nvme-of-server_tui_nic_2.png" alt="Network adapter configuration in TUI" /></p>
 
@@ -441,13 +441,21 @@ iface nic4 inet static
 
 <p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-nic-01.png" alt="NVMe/RoCE configuration in Proxmox VE 9" /></p>
 
-<p>When you edit these in Proxmox UI, remember to set them to auto-start (that <code class="language-plaintext highlighter-rouge">auto nic4</code> in the configuration file above).</p>
+<p>When you edit these in Proxmox UI, remember to set them to auto-start (that <code class="language-plaintext highlighter-rouge">auto nic&lt;number&gt;</code> in the Proxmox configuration file above).  Apply this configuration to bring them up.</p>
 
 <p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-nic-02.png" alt="NVMe/RoCE configuration in Proxmox VE 9" /></p>
 
+<p>Add Proxmox host NQN to a host (and/or host group), create a volume on E-Series, present to the host(s), discover and connect from the hosts. You can do all these things with Ansible or other automation, of course.</p>
+
+<p>I started with a 10G volume that was too small and I had to resize it after I realized it was too small. I deleted LVM and ran <code class="language-plaintext highlighter-rouge">pveresize /dev/nvme1n1</code> which solved the problem. After a refresh in the Web UI I saw the new size (100 GB) was able to see the new size.</p>
+
+<p>For shits-n-gigles, I uploaded Ubuntu 26.04 Snapshot 3 ISO to <code class="language-plaintext highlighter-rouge">local</code> repo and created a VM on the SANtricity volume. One of the nice things here is you can get QoS on VMs without E-Series doing anything. Sure, it's not as great as it is with SolidFire, but it's simple enough and familiar to PVE admins. It works, and there's nothing new to learn.</p>
+
 <h3 id="suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</h3>
 
-<p>I haven't tried SLES, but the good thing about it is SLES has always been well documented and well behaved and that extends to NVMe/RoCE - the best documentation and probably the best QA as well. And it's officially supported by E-Series.</p>
+<p>I haven't tried SLES (yet), but the good thing about it is SLES has always been well documented and well behaved and that extends to NVMe/RoCE - the best documentation and probably the best QA as well.</p>
+
+<p>And it's officially supported by E-Series.</p>
 
 <h3 id="discover-and-connect">Discover and connect</h3>
 
@@ -463,7 +471,7 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>Pay attention to the <code class="language-plaintext highlighter-rouge">--ctrl-loss-tmo</code> parameter. The NetApp documentation suggests <code class="language-plaintext highlighter-rouge">3600</code> (seconds), while <code class="language-plaintext highlighter-rouge">-1</code> is allowed and means "forever".  After that timeout limit is hit without, the (dis)connected device flips to read-only mode. One hour is reasonable, but so is eight or 24.</p>
 
-<p>Next, auto-connect service. Add all targets if you want host to reconnect.</p>
+<p>Next, auto-connect service. Add all targets if you want the host to reconnect.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"-t rdma -a 192.168.1.1"</span> | <span class="nb">sudo tee</span> <span class="nt">-a</span> /etc/nvme/discovery.conf
 <span class="c"># discover on all NVMe/RoCE ports</span>
@@ -471,21 +479,62 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 <span class="nb">sudo </span>systemctl <span class="nb">enable </span>nvmf-autoconnect.service
 </code></pre></div></div>
 
-<p>I'm not sure if this is desirable for Kubernetes or VI configurations where it'd seem smarter to connect to targets only when necessary.</p>
+<p>You wouldn't need this in a Kubernetes environment with dynamic PVCs that are scheduled on demand, and don't need to survive reboots on their own.</p>
 
-<h3 id="multipathing-with-nvme-ana">Multipathing with NVMe ANA</h3>
+<p>Also note the modern way is <code class="language-plaintext highlighter-rouge">/etc/nvme/discovery.json</code>, while <code class="language-plaintext highlighter-rouge">discovery.conf</code> still works as of now.</p>
+
+<h3 id="multipathing">Multipathing</h3>
+
+<h4 id="nvme-ana">NVMe ANA</h4>
 
 <p>Use <code class="language-plaintext highlighter-rouge">nvme show-topology</code> to to view paths to storage targets.</p>
 
-<p>With multiple paths, some (or one, if you have just two) will be <code class="language-plaintext highlighter-rouge">optimized</code> and other(s) <code class="language-plaintext highlighter-rouge">non-optimized</code>.</p>
+<p>With multiple paths, some (or one, if you have just two) will likely be <code class="language-plaintext highlighter-rouge">optimized</code> and other(s) <code class="language-plaintext highlighter-rouge">non-optimized</code>. (Theoretically you may see two optimized if they're both connected to the same controller that's optimal for the volume, but most people would connect to two controlles.)</p>
 
 <p>I've mentioned earlier that failback in NVMe/RoCE seems hard to control. You may need to fiddle with these to push a volume from the non-preferred controller to the preferred. I haven't played with this yet.</p>
 
 <p>This could probably be automated with a "watcher" service, but I'd rather not touch that unless the controller with failed over LUNs was maxed out. <a href="https://github.com/scaleoutsean/eseries-santricity-collector">E-Series SANtricity Collector</a> collects volume location (preferred vs. non-preferred), among other things, and I'd rather set alerts in Grafana or InfluxDB 3 and deal with these on a case-by-cases basis.</p>
 
+<h4 id="multipath-tools-dm-mp">multipath-tools (DM-MP)</h4>
+
+<p>DM-MP is not recommended for NVMe-oF as native kernel support is preferred, but for the sake of completeness:</p>
+<ul>
+  <li>E-Series support was added in multipath-tools <a href="https://github.com/opensvc/multipath-tools/blob/0.12.1/NEWS.md#other-5">0.9.4 (2022/12)</a></li>
+  <li>Enable DM-MP for NVMe with <code class="language-plaintext highlighter-rouge">nvme_core.multipath=N</code> kernel parameter (which makes it manageable by DM-MP)</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">multipath -T</code> to show the default package settings for connected devices and avoid using deprecated options</li>
+  <li>Even if you use DM-MP for some NVMe targets, you can blacklist selected products</li>
+</ul>
+
+<p>I have not tested DM-MP with NVMe/RoCE yet, given it's "legacy" label, but you may consider these if you try.</p>
+
+<p>Whitelist E-Series NVMe (not SCSI!) storage in DM-MP:</p>
+
+<pre><code class="language-raw">devices {
+  device {
+    vendor "NVME"
+    product "NetApp E-Series*"
+    path_grouping_policy group_by_prio
+    failback immediate # it may be better to consider: manual, &lt;timeout_seconds&gt;, followover
+    no_path_retry 30
+    # no_path_retry fail # recommended for SLES 15 for cluster file system clients
+    # SLES proposes "multi-queue" with the following kernel parameters: scsi_mod.use_blk_mq=1 dm_mod.use_blk_mq=1
+  }
+}
+</code></pre>
+
+<p>Blacklist E-Series NVMe from DM-MP:</p>
+
+<pre><code class="language-raw">blacklist {
+  device {
+    vendor  "NVME"
+    product "NetApp E-Series*"
+  }
+}
+</code></pre>
+
 <h2 id="automation">Automation</h2>
 
-<p>NVMe is very similar to iSCSI, just with a NQN and without CHAP.</p>
+<p>From a SANtricity admin's host management perspective NVMe is quite similar to iSCSI, it's just hosts identified by an NQN.</p>
 
 <p>The slightly tricky part (at least it was for me, as I had nowhere to copy this from) is the "<code class="language-plaintext highlighter-rouge">PUT /hosts</code>" part for NVMe/RoCE host configuration steps, which is easier to do in Swagger than in Ansible (where it's supposed to be "easy").</p>
 
@@ -493,7 +542,7 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <ul>
   <li>The host name for me was <code class="language-plaintext highlighter-rouge">h3</code></li>
-  <li>Port needs a <code class="language-plaintext highlighter-rouge">&lt;hostLabel&gt;_&lt;portNumber&gt;</code> value, i.e. <code class="language-plaintext highlighter-rouge">h3_1</code>, a <code class="language-plaintext highlighter-rouge">port</code> string (landmine!) which isn't a port but an NQN, and a type (<code class="language-plaintext highlighter-rouge">nvmeof</code>) - at least one value that is as one might expect.</li>
+  <li>Port needs a <code class="language-plaintext highlighter-rouge">&lt;hostLabel&gt;_&lt;portNumber&gt;</code> value, i.e. <code class="language-plaintext highlighter-rouge">h3_1</code>, a <code class="language-plaintext highlighter-rouge">port</code> string (landmine!) which isn't at all a port but an NQN, and a type (<code class="language-plaintext highlighter-rouge">nvmeof</code> - at least one value that is as one might expect).</li>
 </ul>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
@@ -511,7 +560,7 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Once you have that in place, the rest is almost the same as with iSCSI: create a volume, map it to the host(s) identified <code class="language-plaintext highlighter-rouge">hostRef</code> (or <code class="language-plaintext highlighter-rouge">hostGroupRef</code> if mapping to a cluster of hosts), go to your host(s) to discover, connect and start cracking!</p>
+<p>Once you have that in place, the rest is almost the same as with iSCSI: create a volume, map it to the host(s) identified <code class="language-plaintext highlighter-rouge">hostRef</code> (or <code class="language-plaintext highlighter-rouge">clusterRef</code> if mapping to a cluster of hosts), go to your host(s) to discover, connect and start cracking!</p>
 
 <p>If you automate, you probably don't want to manually configure NVMe/RoCE adapters - especially not on Red Hat and Rocky Linux where that results in ugly NM connection files. My preferred approach is to configure storage NICs via automation and not use Network Manager TUI/GUI at all.</p>
 
@@ -521,64 +570,78 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>In this playbook, I use an EF600 array with 200G NICs. Why's that relevant? You may see the previous post (the one mentioned at the top) - the odd part is NIC speed is set only one one of the adapters, because the other one is "virtual". The less odd part is I had a 40G cable. Most real-life configurations won't look exactly like this.</p>
 
-<pre><code class="language-raw">TASK [Configure Controller A NVMe Interfaces] ********************************************
-skipping: [server1] =&gt; (item={'channel': 3, 'address': '192.168.1.1', 'speed': 40})
-skipping: [server1] =&gt; (item={'channel': 1, 'address': '192.168.2.1'})
-skipping: [server1]
-skipping: [server2] =&gt; (item={'channel': 3, 'address': '192.168.1.1', 'speed': 40})
-skipping: [server2] =&gt; (item={'channel': 1, 'address': '192.168.2.1'})
-skipping: [server2]
-changed: [array1 -&gt; localhost] =&gt; (item={'channel': 3, 'address': '192.168.1.1', 'speed': 40})
-changed: [array1 -&gt; localhost] =&gt; (item={'channel': 1, 'address': '192.168.2.1'})
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TASK <span class="o">[</span>Configure Controller A NVMe Interfaces] <span class="k">********************************************</span>
+skipping: <span class="o">[</span>server1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.1'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+skipping: <span class="o">[</span>server1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.1'</span><span class="o">})</span>
+skipping: <span class="o">[</span>server1]
+skipping: <span class="o">[</span>server2] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.1'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+skipping: <span class="o">[</span>server2] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.1'</span><span class="o">})</span>
+skipping: <span class="o">[</span>server2]
+changed: <span class="o">[</span>array1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.1'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+changed: <span class="o">[</span>array1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.1'</span><span class="o">})</span>
 
-TASK [Configure Controller B NVMe Interfaces] ********************************************
-skipping: [server1] =&gt; (item={'channel': 3, 'address': '192.168.1.2', 'speed': 40})
-skipping: [server1] =&gt; (item={'channel': 1, 'address': '192.168.2.2'})
-skipping: [server2] =&gt; (item={'channel': 3, 'address': '192.168.1.2', 'speed': 40})
-skipping: [server1]
-skipping: [server2] =&gt; (item={'channel': 1, 'address': '192.168.2.2'})
-skipping: [server2]
-changed: [array1 -&gt; localhost] =&gt; (item={'channel': 3, 'address': '192.168.1.2', 'speed': 40})
-changed: [array1 -&gt; localhost] =&gt; (item={'channel': 1, 'address': '192.168.2.2'})
-</code></pre>
+TASK <span class="o">[</span>Configure Controller B NVMe Interfaces] <span class="k">********************************************</span>
+skipping: <span class="o">[</span>server1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.2'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+skipping: <span class="o">[</span>server1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.2'</span><span class="o">})</span>
+skipping: <span class="o">[</span>server2] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.2'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+skipping: <span class="o">[</span>server1]
+skipping: <span class="o">[</span>server2] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.2'</span><span class="o">})</span>
+skipping: <span class="o">[</span>server2]
+changed: <span class="o">[</span>array1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 3, <span class="s1">'address'</span>: <span class="s1">'192.168.1.2'</span>, <span class="s1">'speed'</span>: 40<span class="o">})</span>
+changed: <span class="o">[</span>array1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'channel'</span>: 1, <span class="s1">'address'</span>: <span class="s1">'192.168.2.2'</span><span class="o">})</span>
+</code></pre></div></div>
 
 <p>Unlike with iSCSI, here we use NQNs to create (register) hosts on SANtricity.</p>
 
-<pre><code class="language-raw">TASK [Debug Host NQN] ********************************************************************
-ok: [server1] =&gt; {
-    "msg": "Host NQN for server1 is nqn.2014-08.org.nvmexpress:uuid:b6087fac-aef6-4e75-85c1-abd7078c94f9"
-}
-ok: [server2] =&gt; {
-    "msg": "Host NQN for server2 is nqn.2014-08.org.nvmexpress:uuid:cd525b26-df3b-11e9-b457-3a68dd166ea7"
-}
-skipping: [array1]
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TASK <span class="o">[</span>Debug Host NQN] <span class="k">********************************************************************</span>
+ok: <span class="o">[</span>server1] <span class="o">=&gt;</span> <span class="o">{</span>
+    <span class="s2">"msg"</span>: <span class="s2">"Host NQN for server1 is nqn.2014-08.org.nvmexpress:uuid:b6087fac-aef6-4e75-85c1-abd7078c94f9"</span>
+<span class="o">}</span>
+ok: <span class="o">[</span>server2] <span class="o">=&gt;</span> <span class="o">{</span>
+    <span class="s2">"msg"</span>: <span class="s2">"Host NQN for server2 is nqn.2014-08.org.nvmexpress:uuid:cd525b26-df3b-11e9-b457-3a68dd166ea7"</span>
+<span class="o">}</span>
+skipping: <span class="o">[</span>array1]
+</code></pre></div></div>
 
-<p>The entire workflow works fine, including volume creation and mapping to hosts.</p>
+<p>The entire workflow works fine with NVMe, including volume creation and mapping to hosts.</p>
 
-<pre><code class="language-raw">TASK [Create Host Volumes on E-Series Array] *********************************************
-skipping: [array1] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
-skipping: [array1]
-changed: [server1 -&gt; localhost] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
-changed: [server2 -&gt; localhost] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TASK <span class="o">[</span>Create Host Volumes on E-Series Array] <span class="k">*********************************************</span>
+skipping: <span class="o">[</span>array1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
+skipping: <span class="o">[</span>array1]
+changed: <span class="o">[</span>server1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
+changed: <span class="o">[</span>server2 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
 
-TASK [Map Volumes to Host] ***************************************************************
-skipping: [array1] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
-skipping: [array1]
-changed: [server2 -&gt; localhost] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
-changed: [server1 -&gt; localhost] =&gt; (item={'name': 'data', 'size': 10, 'unit': 'gb', 'lun': 1, 'raid_level': 'raid1'})
+TASK <span class="o">[</span>Map Volumes to Host] <span class="k">***************************************************************</span>
+skipping: <span class="o">[</span>array1] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
+skipping: <span class="o">[</span>array1]
+changed: <span class="o">[</span>server2 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
+changed: <span class="o">[</span>server1 -&gt; localhost] <span class="o">=&gt;</span> <span class="o">(</span><span class="nv">item</span><span class="o">={</span><span class="s1">'name'</span>: <span class="s1">'data'</span>, <span class="s1">'size'</span>: 10, <span class="s1">'unit'</span>: <span class="s1">'gb'</span>, <span class="s1">'lun'</span>: 1, <span class="s1">'raid_level'</span>: <span class="s1">'raid1'</span><span class="o">})</span>
 
-PLAY RECAP *******************************************************************************
-array1                     : ok=3    changed=2    unreachable=0    failed=0    skipped=14   rescued=0    ignored=0
-server1                    : ok=42   changed=3    unreachable=0    failed=0    skipped=35   rescued=0    ignored=0
-server2                    : ok=41   changed=5    unreachable=0    failed=0    skipped=33   rescued=0    ignored=0
-</code></pre>
+PLAY RECAP <span class="k">*******************************************************************************</span>
+array1                     : <span class="nv">ok</span><span class="o">=</span>3    <span class="nv">changed</span><span class="o">=</span>2    <span class="nv">unreachable</span><span class="o">=</span>0    <span class="nv">failed</span><span class="o">=</span>0    <span class="nv">skipped</span><span class="o">=</span>14   <span class="nv">rescued</span><span class="o">=</span>0    <span class="nv">ignored</span><span class="o">=</span>0
+server1                    : <span class="nv">ok</span><span class="o">=</span>42   <span class="nv">changed</span><span class="o">=</span>3    <span class="nv">unreachable</span><span class="o">=</span>0    <span class="nv">failed</span><span class="o">=</span>0    <span class="nv">skipped</span><span class="o">=</span>35   <span class="nv">rescued</span><span class="o">=</span>0    <span class="nv">ignored</span><span class="o">=</span>0
+server2                    : <span class="nv">ok</span><span class="o">=</span>41   <span class="nv">changed</span><span class="o">=</span>5    <span class="nv">unreachable</span><span class="o">=</span>0    <span class="nv">failed</span><span class="o">=</span>0    <span class="nv">skipped</span><span class="o">=</span>33   <span class="nv">rescued</span><span class="o">=</span>0    <span class="nv">ignored</span><span class="o">=</span>0
+</code></pre></div></div>
 
-<p>This playbook will be shared once I work out a meaningful demo (not just volume provisioning).</p>
+<p>Some observations:</p>
+
+<ul>
+  <li>Lookup methods (pools, volumes, hosts) are all weak, as if the collection was created to configure sutff and not manage it day to day</li>
+  <li>Create volume module doesn't return volume object (!?)</li>
+  <li>NVMe-related features are weak (EF600 was launched in 2019!). Yes, you can create NVMe-oF hosts, but you can't look up targets and you have to build own Ansible tasks for that, which is disappointing</li>
+  <li>No <code class="language-plaintext highlighter-rouge">raid_level</code> support for volume create task in DDP (RAID setting was added in SANtricity 11.7 years ago!)</li>
+  <li>Working around these quirks and adding own tasks that do what the Collection doesn't is fine if you have very repetitive tasks. Otherwise you end up doing what you could create and run faster in a proper language without these extra layers</li>
+</ul>
+
+<p>But, it works.</p>
+
+<p>I created a playbook that configures NICs and storage for Rocky 10.1, creates volumes on storage array, and deploys PostgreSQL to Podman that uses these volumes. It was an interesting experience because Trident CSI also supports Docker in non-HA storage mode (because Docker Swam doesn't support it).</p>
+
+<p>Compared to Trident with Docker, this is actually a better experience because Ansible gives you the same storage experience (non-HA provisioning to host-bound containers) with some extras that you'd probably use in any case: with Trident for Docker you'd still have some tools for container management, and here you already have them in Ansible. And you don't have to deal with a storage provisioner just to create volumes and present them to a host.</p>
 
 <h3 id="other-automation">Other automation</h3>
 
-<p>Frequent readers may recall I've recently released other integrations for SANtricity (Python, PowerShell, Go), so Ansible is is just one example.</p>
+<p>Frequent readers of this blog may recall I recently released other integrations for SANtricity (Python, PowerShell, Go), so Ansible is is just one example.</p>
 
 <p>They all "work", but need support for NVMe/RoCE (related to creating NVMe/RoCE host and host-groups).</p>
 
@@ -600,7 +663,9 @@ server2                    : ok=41   changed=5    unreachable=0    failed=0    s
 
 <p><img src="/assets/images/santricity-csi-v1-02-startup.png" alt="CSI container startup" /></p>
 
-<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also been updated to handle NVMe/RDMA host objects (added in version 0.1.1).</p>
+<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also been updated to handle NVMe/RDMA host objects (added in version 0.1.1). Subsequently I also added volume expand support since that wasn't implemented before.</p>
+
+<p>There is an opportunity to add custom NVMe-focused commands/cmdlets to better serve NVMe/RoCE users because existing approaches (see my comments about Ansible Collection above) aren't optimal. Also, I may also need to update E-Series Performance Analyzer and E-Series SANtricity Collector to make sure NVMe/RoCE is not neglected. I'll blog about that later if I get it done.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -706,6 +771,54 @@ server2                    : ok=41   changed=5    unreachable=0    failed=0    s
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html" rel="permalink">Fork of IBM Block CSI driver for NetApp-E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-02-26T00:00:00+08:00">2026-02-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          10 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Unofficial fork of IBM Block CSI driver for your SANtricity storage
+</p>
+  </article>
+</div>
+
     
       
       
@@ -846,54 +959,6 @@ server2                    : ok=41   changed=5    unreachable=0    failed=0    s
 
 
     <p class="archive__item-excerpt" itemprop="description">Fix for the annoying SSH invalid key error
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html" rel="permalink">Using S3 bucket snapshots in StorageGRID 12
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-01-30T00:00:00+08:00">2026-01-30 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          6 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Branch buckets are bucket snapshots. Read how to create, use and delete them
 </p>
   </article>
 </div>
