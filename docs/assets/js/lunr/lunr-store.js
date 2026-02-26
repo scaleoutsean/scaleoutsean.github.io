@@ -2166,8 +2166,8 @@ var store = [{
         "teaser": null
       },{
         "title": "Linux, NVMe/RoCE and HA NetApp EF-Series NVMe-oF storage",
-        "excerpt":"Introduction The EF-Series documentation related to NVMe/RoCE is too basic and, similarly to the old iSER-related post, this post aims help E-Series users get started with NVMe/RoCE. This post several will likely be updated several times until it’s complete. Network Two main things I’d like to mention here: DAS is...","categories": ["storage","e-series"],
-        "tags": ["ef600","ef-series","netapp","nvme","rdma","hardware","networking"],
+        "excerpt":"Introduction The EF-Series documentation related to NVMe/RoCE is too basic and, similarly to the old iSER-related post, this post aims help E-Series users get started with NVMe/RoCE. This post several will likely be updated several times until it’s complete. Network Two main things I’d like to mention here: DAS is...","categories": ["storage","e-series","automation"],
+        "tags": ["ef600","ef-series","netapp","nvme","roce","rdma","hardware","networking"],
         "url": "/2026/02/19/linux-nvme-roce-ef-series.html",
         "teaser": null
       },{
@@ -3634,6 +3634,9 @@ var store = [{
   },{
     "title": "ssh",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssh/"
+  },{
+    "title": "roce",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/roce/"
   },{
     "title": "hardware",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/hardware/"
