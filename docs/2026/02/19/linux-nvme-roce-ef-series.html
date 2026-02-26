@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          16 minute read
+          17 minute read
         
       </span>
     
@@ -449,7 +449,19 @@ iface nic4 inet static
 
 <p>I started with a 10G volume that was too small and I had to resize it after I realized it was too small. I deleted LVM and ran <code class="language-plaintext highlighter-rouge">pveresize /dev/nvme1n1</code> which solved the problem. After a refresh in the Web UI I saw the new size (100 GB) was able to see the new size.</p>
 
-<p>For shits-n-gigles, I uploaded Ubuntu 26.04 Snapshot 3 ISO to <code class="language-plaintext highlighter-rouge">local</code> repo and created a VM on the SANtricity volume. One of the nice things here is you can get QoS on VMs without E-Series doing anything. Sure, it's not as great as it is with SolidFire, but it's simple enough and familiar to PVE admins. It works, and there's nothing new to learn.</p>
+<p>For shits-n-gigles, I uploaded Ubuntu 26.04 Snapshot 3 ISO to <code class="language-plaintext highlighter-rouge">local</code> repo and created a VM on the SANtricity volume. One of the nice things with Proxmox is you can get QoS on VMs without E-Series doing anything. Sure, it's not as great as it is with SolidFire, but it's simple enough and familiar to PVE admins. It works, and there's nothing new to learn.</p>
+
+<p>One thing to be aware of - and loosely related to NVMe - is that <em>currently</em> (PVE 9.1.1) - E-Series with iSCSI supports shared storage (also with <code class="language-plaintext highlighter-rouge">iscsidirect</code>, not marked because it's too niche for my liking), but E-Series with NVMe/RoCE officially does not.</p>
+
+<p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-storage-options.png" alt="PVE 9.1.1 Storage Options" /></p>
+
+<p>Current options for block include ZFS, directory, and Btrfs (supported by <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, by the way). One emerging exception is <code class="language-plaintext highlighter-rouge">LVM</code> where a footnote mentions it's a technology preview function, so it may not be stable yet.</p>
+
+<p>Many users use the "block device" approach and replication is done in PVE. Think of it this way - use ZFS or Btrfs, save 50% with 2x compression savings, then replicate those volumes to another DDP pool with a stand-by PVE node, and you're back to 1x.</p>
+
+<p>But if you'd prefer to use shared block storage, standard iSCSI (you can get it on EF300, EF600, E4000) is the way to go. Elsewhere the slippery slope of LVM (with either iSCSI or NVMe/ROCE, although <a href="https://scaleoutsean.github.io/2023/09/22/ubuntu-lts-netapp-eseries-iser.html">iSER</a> is also there as a very niche approach).</p>
+
+<p>And, as another aside, <a href="https://kb.netapp.com/on-prem/E-Series/Hardware-KBs/Very_Low_iSCSI_Read_Performance_on_NetApp_EF300_with_Proxmox_Debian_Hosts">this explanation does not make any sense</a>. I won't say "ignore this", but I know what I'd do.</p>
 
 <h3 id="suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</h3>
 
