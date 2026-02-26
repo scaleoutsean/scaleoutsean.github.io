@@ -227,13 +227,13 @@
           <aside class="sidebar__right ">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#what-is-ibm-block-driver-csi-fork-with-santricity-focused-patches">What is IBM Block Driver CSI (fork with SANtricity-focused patches)</a></li><li><a href="#why">Why?</a></li><li><a href="#whats-not-implemented">What's not implemented</a></li><li><a href="#how-to-use-it">How to use it</a><ul><li><a href="#configuration-and-deployment">Configuration and deployment</a><ul><li><a href="#checks">Checks</a></li></ul></li><li><a href="#pvcs">PVCs</a></li></ul></li><li><a href="#possible-improvements">Possible improvements</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#what-is-ibm-block-driver-csi-patched-for-e-series-santricity">What is IBM Block Driver CSI (patched for E-Series SANtricity)</a></li><li><a href="#why">Why?</a></li><li><a href="#whats-not-implemented">What's not implemented</a></li><li><a href="#how-to-use-it">How to use it</a><ul><li><a href="#configuration-and-deployment">Configuration and deployment</a><ul><li><a href="#checks">Checks</a></li></ul></li><li><a href="#pvcs">PVCs</a></li></ul></li><li><a href="#possible-improvements">Possible improvements</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
-        <h2 id="what-is-ibm-block-driver-csi-fork-with-santricity-focused-patches">What is IBM Block Driver CSI (fork with SANtricity-focused patches)</h2>
+        <h2 id="what-is-ibm-block-driver-csi-patched-for-e-series-santricity">What is IBM Block Driver CSI (patched for E-Series SANtricity)</h2>
 
-<p>It is my fork of IBM Block Storage CSI v1.13.0 (<a href="https://github.com/ibm/ibm-block-csi-driver/">IBM Block CSI driver</a> on Github).</p>
+<p>It is my patch of IBM Block Storage CSI driver v1.13.0 (<a href="https://github.com/ibm/ibm-block-csi-driver/">IBM Block CSI driver</a> on Github).</p>
 
 <h2 id="why">Why?</h2>
 
@@ -247,7 +247,7 @@
 
 <p>I started playing with it and soon realized testing it was just too hard without knowing where all the various "landmines" and gotchas were. As a temporary workaround, I switched to building it for SolidFire, which is something I can test at home(with SolidFire Demo VM) and SolidFire has a great Python SDK, so at least one side of the equation was known.</p>
 
-<p>But I didn't make much progress with SolidFire due to home "infrastructure" and Kuberntes issues and, frustrated with that situation, I switched to creating a CSI driver from scratch. Last week I released <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, but this week I thought to revisit this forked driver because I really liked its aproachability.</p>
+<p>But I didn't make much progress with SolidFire due to home "infrastructure" and Kuberntes issues and, frustrated with that situation, I switched to creating a CSI driver from scratch. Last week I released <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, but this week I thought to revisit this patched driver because I really liked its aproachability.</p>
 
 <p>The other reason was - see my recent blog posts to get the idea - it had been almost two months of "re-automating" and since then I had improved <a href="https://github.com/scaleoutsean/santricity-client">santricity-client</a> (Python client library for SANtricity) enough to approach this in a better way: plugin into that CSI driver rather than build from within. That was expected lessen uncertainties and difficulties.</p>
 
@@ -261,7 +261,7 @@
 
 <h2 id="whats-not-implemented">What's not implemented</h2>
 
-<p>Portset host definer setting is something my fork ignores, the reason being SANtricity arrays don't have <em>that</em> many ports to require micro-management. And in Kubernetes environments you will probably have an all-can-see-everything situation in any case. It can be done, but I don't see much value in it.</p>
+<p>Portset host definer setting is something my patch ignores, the reason being SANtricity arrays don't have <em>that</em> many ports to require micro-management. And in Kubernetes environments you will probably have an all-can-see-everything situation in any case. It can be done, but I don't see much value in it.</p>
 
 <p>Other things not included:</p>
 
@@ -276,7 +276,7 @@
   <li>UNIX support (I've no UNIX systems at home, so… As an aside, I built working Trident <a href="/2021/02/24/netapp-trident-on-arm64#notes-on-linuxs390x-feb-25-2021">binaries for Power and Linux on zOS</a> five years ago, also ARM64 containers for Trident CSI <a href="/2021/07/31/netapp-trident-v21.07.html#trident-v2107-on-arm64">before</a> it was officially supported)</li>
 </ul>
 
-<p>The fork's README file has more technical details about differences from upstream.</p>
+<p>The patch'es README file has more technical details about differences from upstream.</p>
 
 <h2 id="how-to-use-it">How to use it</h2>
 
@@ -390,7 +390,9 @@ demo-pvc-santricity   Bound    pvc-b766ad3e-388b-43c0-b3d1-cc5f4c5fd865   12Gi  
 
 <p>The name on E-Series? Don't ask. It's <code class="language-plaintext highlighter-rouge">csi_GkR7FvXS9dqXv3zDQpN7gCQshS</code>.</p>
 
-<p>Don't blame me - this fork in charge of the prefix only (adjustable; default: <code class="language-plaintext highlighter-rouge">csi_</code>)! My SANtricity CSI driver uses (trimmed, due to length) PVC names. Here, I won't interfere.</p>
+<p><img src="/assets/images/ibm_block_driver_for_santricity_02.png" alt="IBM Block CSI (patched for SANtricity) volume name in SANtricity" /></p>
+
+<p>Don't blame me - this patch in charge of the prefix only (adjustable; default: <code class="language-plaintext highlighter-rouge">csi_</code>)! My SANtricity CSI driver uses (trimmed, due to length) PVC names. Here, I won't interfere.</p>
 
 <p>What I can - and do - is tag these volumes with SANtricity volume metadata tags. You get these, and can collect them with my <a href="https://github.com/scaleoutsean/eseries-santricity-collector">E-Series SANtricity Collector</a> or your own API client.</p>
 <ul>
@@ -448,16 +450,18 @@ Events:                &lt;none&gt;
 
 <p>The demo storage class above is the default one; XFS and RAID 6. I used a DDP pool named <code class="language-plaintext highlighter-rouge">data</code> (which can also be set using a <code class="language-plaintext highlighter-rouge">poolId</code> rather than name). You can also use RAID 1 on DDP.</p>
 
-<p>Neither this fork nor SANtricity CSI do is create DDPs or Disk Groups, but SANtricity CSI doesn't want to deal with non-DDP storage pools (I think it should be optimized, so DDP-only, although you could point it to any). This fork doesn't do that and isn't picky about underlying storage pools: use any type of storage pool.</p>
+<p>Neither this patched IBM block CSI driver nor SANtricity CSI do is create DDPs or Disk Groups, but SANtricity CSI doesn't want to deal with non-DDP storage pools (I think it should be optimized, so DDP-only, although you could point it to any). This patch doesn't do that and isn't picky about underlying storage pools: use any type of storage pool.</p>
 
-<p>Other arrays supported by this driver also support different RAID types, this fork follows. If you like to micro-manage, use RAID 1, RAID 5, RAID 6, or DDP. Or a mix. If you use DDP, your Storage Class choices are RAID 1 or RAID 6, with RAID 6 as the default. The rest ("classic" disk groups) has no choice - a PVC's RAID type follows underlying disk group's RAID type.</p>
+<p>Other arrays supported by this driver also support different RAID types, this patch follows. If you like to micro-manage low level storage, use RAID 1, RAID 5, RAID 6, or DDP. If you use DDP, your Storage Class choices are RAID 1 or RAID 6, with RAID 6 as the default. The rest ("classic" disk groups) has no choice - a PVC's RAID type follows underlying disk group's RAID type.</p>
+
+<p>DDP is vastly superior and should be used over others.</p>
 
 <p><img src="/assets/images/ibm_block_driver_for_santricity_01.png" alt="First SANtricity PVC with IBM Block CSI driver" /></p>
 
 <h2 id="possible-improvements">Possible improvements</h2>
 
 <ul>
-  <li>Snapshots - highly desirable, but I'm focusing on SANtricity CSI as the "native" SANtricity CSI driver for Kubernetes. If anyone uses this fork and needs snapshots and linked clones (aka "snapshot volumes"), let me know in issues (or ping me on X)</li>
+  <li>Snapshots - highly desirable, but I'm focusing on SANtricity CSI as the "native" SANtricity CSI driver for Kubernetes. If anyone uses this patch and needs snapshots and linked clones (aka "snapshot volumes"), let me know in issues (or ping me on X)</li>
   <li>Clones - slightly less interesting, but interesting</li>
   <li>Portsets - these aren't really a thing on E-Series arrays, but we could expose them ("portsets" being matching sets of host-facing controller ports), it's just need some work</li>
 </ul>
@@ -466,11 +470,11 @@ Events:                &lt;none&gt;
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>It would be best if Trident CSI supported E-Series - I could spend free time on other things E-Series - but since it doesn't, I've created two alternatives for own (and anyone's) use, so now we have a "native" SANtricity CSI on the one side, and this friendly fork of IBM Block Storage CSI with SANtricity support on the other. But are "BOYCSI", but that's how it is.</p>
+<p>It would be best if Trident CSI supported E-Series - I could spend free time on other things E-Series - but since it doesn't, I've created two alternatives for own (and anyone's) use, so now we have a "native" SANtricity CSI on the one side, and this patch of IBM Block Storage CSI with SANtricity support on the other. But are "BOYCSI", but that's how it is.</p>
 
-<p>With two prototypes that support SANtricity 11.9 and modern (NVMe/RoCE) protocols, given how stable SANtricity API is, these should be easy to maintain for years to come, even if you're doing it yourself. My fork has only minor changes to upstream code, so it should be easy to update once IBM releases a new version.</p>
+<p>With two prototypes that support SANtricity 11.9 and modern (NVMe/RoCE) protocols, given how stable SANtricity API is, these should be easy to maintain for years to come, even if you're doing it yourself. My patched IBM block CSI driver has only minor changes to upstream code, so it should be easy to update once IBM releases a new version.</p>
 
-<p>I recommend SANtricity CSI for NVMe/RoCE and "modern" use cases, and this fork of IBM Block Driver CSI for following use cases and situations:</p>
+<p>I recommend SANtricity CSI for NVMe/RoCE and "modern" use cases, and this patch of IBM Block Driver CSI for following use cases and situations:</p>
 <ul>
   <li>iSCSI environments (although NVMe/RoCE is the one I tested, upstream does not officially support NVMe/RoCE, while my own SANtricity CSI focuses on NVMe/RoCE)</li>
   <li>Self-sufficient OpenShift users with E-Series. I suspect even OpenShift Virtualization might work, if it works</li>

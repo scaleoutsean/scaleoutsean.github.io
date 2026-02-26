@@ -2178,7 +2178,7 @@ var store = [{
         "teaser": null
       },{
         "title": "IBM Block Storage CSI driver patched for NetApp E-Series",
-        "excerpt":"What is IBM Block Driver CSI (fork with SANtricity-focused patches) It is my fork of IBM Block Storage CSI v1.13.0 (IBM Block CSI driver on Github). Why? Just like NetApp Trident CSI, IBM Block Storage CSI driver is a decent CSI driver. Neither of them supports NetApp E-Series SANtricity systems,...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"What is IBM Block Driver CSI (patched for E-Series SANtricity) It is my patch of IBM Block Storage CSI driver v1.13.0 (IBM Block CSI driver on Github). Why? Just like NetApp Trident CSI, IBM Block Storage CSI driver is a decent CSI driver. Neither of them supports NetApp E-Series SANtricity...","categories": ["storage","e-series","kubernetes"],
         "tags": ["ef600","netapp","nvme","iscsi","csi"],
         "url": "/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html",
         "teaser": null
