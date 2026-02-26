@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          17 minute read
+          18 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#network">Network</a></li><li><a href="#hosts">Hosts</a><ul><li><a href="#ubuntu-24044">Ubuntu 24.04.4</a></li><li><a href="#rocky-linux-101">Rocky Linux 10.1</a></li><li><a href="#proxmox-91-debian-trixie">Proxmox 9.1 (Debian Trixie)</a></li><li><a href="#suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</a></li><li><a href="#discover-and-connect">Discover and connect</a></li><li><a href="#multipathing">Multipathing</a><ul><li><a href="#nvme-ana">NVMe ANA</a></li><li><a href="#multipath-tools-dm-mp">multipath-tools (DM-MP)</a></li></ul></li></ul></li><li><a href="#automation">Automation</a><ul><li><a href="#ansible">Ansible</a></li><li><a href="#other-automation">Other automation</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#network">Network</a></li><li><a href="#hosts">Hosts</a><ul><li><a href="#ubuntu-24044">Ubuntu 24.04.4</a></li><li><a href="#rocky-linux-101">Rocky Linux 10.1</a></li><li><a href="#proxmox-91-debian-trixie">Proxmox 9.1 (Debian Trixie)</a></li><li><a href="#suse-enterprise-linux-sles-160">SuSE Enterprise Linux (SLES 16.0)</a></li><li><a href="#discover-and-connect">Discover and connect</a></li><li><a href="#multipathing">Multipathing</a><ul><li><a href="#nvme-ana">NVMe ANA</a></li><li><a href="#multipath-tools-dm-mp">multipath-tools (DM-MP)</a></li></ul></li></ul></li><li><a href="#automation">Automation</a><ul><li><a href="#ansible">Ansible</a></li><li><a href="#other-automation">Other automation</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -445,29 +445,57 @@ iface nic4 inet static
 
 <p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-nic-02.png" alt="NVMe/RoCE configuration in Proxmox VE 9" /></p>
 
-<p>Add Proxmox host NQN to a host (and/or host group), create a volume on E-Series, present to the host(s), discover and connect from the hosts. You can do all these things with Ansible or other automation, of course.</p>
+<p>One thing to be aware of - and loosely related to NVMe - is that the PVE 9.1.1 documentation for storage looks weird.</p>
 
-<p>I started with a 10G volume that was too small and I had to resize it after I realized it was too small. I deleted LVM and ran <code class="language-plaintext highlighter-rouge">pveresize /dev/nvme1n1</code> which solved the problem. After a refresh in the Web UI I saw the new size (100 GB) was able to see the new size.</p>
-
-<p>For shits-n-gigles, I uploaded Ubuntu 26.04 Snapshot 3 ISO to <code class="language-plaintext highlighter-rouge">local</code> repo and created a VM on the SANtricity volume. One of the nice things with Proxmox is you can get QoS on VMs without E-Series doing anything. Sure, it's not as great as it is with SolidFire, but it's simple enough and familiar to PVE admins. It works, and there's nothing new to learn.</p>
-
-<p>One thing to be aware of - and loosely related to NVMe - is that <em>currently</em> (PVE 9.1.1) - E-Series with iSCSI supports shared storage (also with <code class="language-plaintext highlighter-rouge">iscsidirect</code>, not marked because it's too niche for my liking), but E-Series with NVMe/RoCE officially does not.</p>
+<p>They claim to support shared storage with kernel-based iSCSI (also with <code class="language-plaintext highlighter-rouge">iscsidirect</code>, not highlighted because it's too nichey and hackish for my liking), but NVMe/FC and NVMe/RoCE aren't listed. That looks <em>outdated and completely wrong</em>!</p>
 
 <p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-storage-options.png" alt="PVE 9.1.1 Storage Options" /></p>
 
-<p>Current options for block include ZFS, directory, and Btrfs (supported by <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, by the way). One emerging exception is <code class="language-plaintext highlighter-rouge">LVM</code> where a footnote mentions it's a technology preview function, so it may not be stable yet.</p>
+<p>One exception for shared block storage is <code class="language-plaintext highlighter-rouge">LVM</code>, which has a footnote (not shown here) which says:</p>
 
-<p>Many users use the "block device" approach and replication is done in PVE. Think of it this way - use ZFS or Btrfs, save 50% with 2x compression savings, then replicate those volumes to another DDP pool with a stand-by PVE node, and you're back to 1x.</p>
+<blockquote>
+  <p>It is possible to use LVM on top of an iSCSI or FC-based storage. That way you get a shared LVM storage.</p>
+</blockquote>
 
-<p>But if you'd prefer to use shared block storage, standard iSCSI (you can get it on EF300, EF600, E4000) is the way to go. Elsewhere the slippery slope of LVM (with either iSCSI or NVMe/ROCE, although <a href="https://scaleoutsean.github.io/2023/09/22/ubuntu-lts-netapp-eseries-iser.html">iSER</a> is also there as a very niche approach).</p>
+<p>Sorry, but that doesn't make any sense. Why wouldn't NVMe/RoCE work? (E-Series does support both FC and NVMe/FC, but why use these if you have a choice?)</p>
 
-<p>And, as another aside, <a href="https://kb.netapp.com/on-prem/E-Series/Hardware-KBs/Very_Low_iSCSI_Read_Performance_on_NetApp_EF300_with_Proxmox_Debian_Hosts">this explanation does not make any sense</a>. I won't say "ignore this", but I know what I'd do.</p>
+<p>I used PVE 9.1.1 with LVM on NVMe/RoCE earlier this week and it worked fine:</p>
+<ul>
+  <li>add a Proxmox host NQN to a SANtricity host (or a host group)</li>
+  <li>create a volume on E-Series, present it to the host(s), discover and connect from the hosts</li>
+  <li>on the host (or one of the cluster members), create ("register", really) NVMe device and create LVM on it</li>
+  <li>I tried to resize a volume (<code class="language-plaintext highlighter-rouge">pveresize /dev/nvme1n1</code>), which worked fine as well</li>
+</ul>
 
-<h3 id="suse-enterprise-linux-sles">SuSE Enterprise Linux (SLES)</h3>
+<p>LVM on NVMe/RoCE block storage target with EF600:</p>
+
+<p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-lvm.png" alt="PVE, LVM, E-Series NVMe/RoCE" /></p>
+
+<p>It's possible that something "works", but isn't supported. It's also possible that the documentation is outdated. Or they don't have NVMe/RoCE storage to test.</p>
+
+<p>Among other options for non-block storage are ZFS, generic filesystem directory, or Btrfs (which is also supported by <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>). You can use those as you would use direct-attached external storage (no storage switches, but unlike JBOD E-Series can present both protected and unprotected (RAID 0, alllocated as physical disk units) volumes).</p>
+
+<p>In this screenshot a volume is mapped to only one host (<code class="language-plaintext highlighter-rouge">h3</code>). This environment happens to have just one, but it'd work the same way for 2 or 12 hosts. You wouldn't map a volume to more than one (hence, "single host filesystems"). There's an LXC container on the Btrfs filesystem created on top of the NVMe volume from E-Series.</p>
+
+<p><img src="/assets/images/eseries-nvme-of-proxmox-nvme-file-btrfs.png" alt="PVE, Btrfs, E-Series NVMe/RoCE" /></p>
+
+<p>This isn't such a bad deal: if ZFS (or Btrfs) saves you 50% with 2x compression, even if you replicate disks from server <code class="language-plaintext highlighter-rouge">h3</code> to server <code class="language-plaintext highlighter-rouge">h2</code> and vice versa, you still don't end up using more storage than you would without efficiencies you get from ZFS <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">(see these examples of savings you can get)</a> or Btrfs.</p>
+
+<p>Related to outdated and wrong documentation and KBs: NetApp has its own gems, such as <a href="https://kb.netapp.com/on-prem/E-Series/Hardware-KBs/Very_Low_iSCSI_Read_Performance_on_NetApp_EF300_with_Proxmox_Debian_Hosts">this explanation</a>. It's true that Debian isn't on the NetApp Interoperability Matrix, but that doesn't mean it's <em>expected</em> to be slow or not work well.</p>
+
+<p>Summary from the two vendors' sites:</p>
+<ul>
+  <li>Proxmox doesn't mention NVMe/RoCE is supported, making iSCSI and FC the only obviously viable options for "block", while NVMe/RoCE would be possible in "file" mode (ZFS/Btrfs/directory)</li>
+  <li>But… NetApp claims Debian isn't tested, so it may or may not work well with iSCSI (and by extension any other protocol)</li>
+</ul>
+
+<p>I was a Proxmox/E-Series user I'd simply ignore both of these points.</p>
+
+<h3 id="suse-enterprise-linux-sles-160">SuSE Enterprise Linux (SLES 16.0)</h3>
 
 <p>I haven't tried SLES (yet), but the good thing about it is SLES has always been well documented and well behaved and that extends to NVMe/RoCE - the best documentation and probably the best QA as well.</p>
 
-<p>And it's officially supported by E-Series.</p>
+<p>And it's officially supported by E-Series (version 16 not yet, though).</p>
 
 <h3 id="discover-and-connect">Discover and connect</h3>
 
@@ -495,11 +523,27 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>Also note the modern way is <code class="language-plaintext highlighter-rouge">/etc/nvme/discovery.json</code>, while <code class="language-plaintext highlighter-rouge">discovery.conf</code> still works as of now.</p>
 
+<p>Among the various interesting details from <code class="language-plaintext highlighter-rouge">nvme</code> CLI commands you'll notice array's NQN. See about the source of that in Automation further below.</p>
+
 <h3 id="multipathing">Multipathing</h3>
 
 <h4 id="nvme-ana">NVMe ANA</h4>
 
 <p>Use <code class="language-plaintext highlighter-rouge">nvme show-topology</code> to to view paths to storage targets.</p>
+
+<p>In this case we have one target and four paths. Optimized go through controller B where the two ".2" IPv4 addresses are located.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nvme show-topology
+nvme-subsys1 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.com.netapp:6000.6d039ea000493a9c00000000609943a4
+               <span class="nv">hostnqn</span><span class="o">=</span>nqn.2014-08.org.nvmexpress:uuid:f4a33812-daa8-11e9-9399-3a68dd160bef
+<span class="se">\</span>
+ +- ns 1
+ <span class="se">\</span>
+  +- nvme1 rdma <span class="nv">traddr</span><span class="o">=</span>192.168.2.1,trsvcid<span class="o">=</span>4420 live non-optimized
+  +- nvme2 rdma <span class="nv">traddr</span><span class="o">=</span>192.168.1.1,trsvcid<span class="o">=</span>4420 live non-optimized
+  +- nvme3 rdma <span class="nv">traddr</span><span class="o">=</span>192.168.2.2,trsvcid<span class="o">=</span>4420 live optimized
+  +- nvme4 rdma <span class="nv">traddr</span><span class="o">=</span>192.168.1.2,trsvcid<span class="o">=</span>4420 live optimized
+</code></pre></div></div>
 
 <p>With multiple paths, some (or one, if you have just two) will likely be <code class="language-plaintext highlighter-rouge">optimized</code> and other(s) <code class="language-plaintext highlighter-rouge">non-optimized</code>. (Theoretically you may see two optimized if they're both connected to the same controller that's optimal for the volume, but most people would connect to two controlles.)</p>
 
@@ -507,7 +551,7 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>This could probably be automated with a "watcher" service, but I'd rather not touch that unless the controller with failed over LUNs was maxed out. <a href="https://github.com/scaleoutsean/eseries-santricity-collector">E-Series SANtricity Collector</a> collects volume location (preferred vs. non-preferred), among other things, and I'd rather set alerts in Grafana or InfluxDB 3 and deal with these on a case-by-cases basis.</p>
 
-<p>Under good conditions, SANtricity in ALUA mode performs "implicit" failback, so you may not need to do anything to fail-back failed-over volumes to optimal controllers. If you have to push it, you can force them back from the SANtricity UI, but it's disruptive and not advisable unless one array is getting maxed-out.</p>
+<p>Under regular conditions, SANtricity NVMe targets in ALUA mode perform "implicit" failback, so you may not need to do anything to fail-back failed-over volumes to optimal controllers. If you have to push it, you can force them back from the SANtricity UI, but it's disruptive and not advisable unless one array is getting maxed-out.</p>
 
 <h4 id="multipath-tools-dm-mp">multipath-tools (DM-MP)</h4>
 
@@ -576,7 +620,25 @@ nvme connect-all <span class="nt">-t</span> rdma <span class="nt">-a</span> 192.
 
 <p>Once you have that in place, the rest is almost the same as with iSCSI: create a volume, map it to the host(s) identified <code class="language-plaintext highlighter-rouge">hostRef</code> (or <code class="language-plaintext highlighter-rouge">clusterRef</code> if mapping to a cluster of hosts), go to your host(s) to discover, connect and start cracking!</p>
 
-<p>If you automate, you probably don't want to manually configure NVMe/RoCE adapters - especially not on Red Hat and Rocky Linux where that results in ugly NM connection files. My preferred approach is to configure storage NICs via automation and not use Network Manager TUI/GUI at all.</p>
+<p>If you automate, you probably don't want to manually configure NVMe/RoCE adapters on clients/hosts - especially not on Red Hat and Rocky Linux where that results in ugly NM connection files. My preferred approach is to configure storage NICs via automation and not use Network Manager TUI/GUI at all.</p>
+
+<p>Hosts also identify storage by its NQN when they discover namespaces. I prefer to call them LUNs because it's shorter. Where does that come from?</p>
+
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">GET /nvmeof/initiator-settings
+</span></code></pre></div></div>
+
+<p>Response contains array's NQN (shortened response below). This NQN is what <code class="language-plaintext highlighter-rouge">nvme</code> CLI uses to identify an array.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"targetRef"</span><span class="p">:</span><span class="w"> </span><span class="s2">"900000006D039EA000493A260033001E609949E1"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"nodeName"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"ioInterfaceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nvmeof"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"iscsiNodeName"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"remoteNodeWWN"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"nvmeNodeName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nqn.1992-08.com.netapp:6000.6d039ea000493a9c00000000609943a4"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
 
 <h3 id="ansible">Ansible</h3>
 
@@ -641,9 +703,9 @@ server2                    : <span class="nv">ok</span><span class="o">=</span>4
 
 <ul>
   <li>Lookup methods (pools, volumes, hosts) are all weak, as if the collection was created to configure sutff and not manage it day to day</li>
-  <li>Create volume module doesn't return a volume object like the API does</li>
-  <li>NVMe-related features are weak (EF600 was launched in 2019!). Yes, you can create NVMe-oF hosts, but you can't look up targets and you have to build own Ansible tasks for that, which is disappointing</li>
-  <li>No <code class="language-plaintext highlighter-rouge">volume_raid_level</code> support for volume create task in DDP (RAID setting was added in SANtricity 11.7 years ago and I support it everywhere, including in SANtricity CSI)</li>
+  <li>Create Volume module doesn't return a volume object like the API does. Thankfully, we have lookup methods. Oh, wait…</li>
+  <li>NVMe-related features are weak (EF600 was launched in 2019!). Yes, you can create NVMe-oF hosts, but you can't look up targets and you have to build own Ansible tasks for that</li>
+  <li>No <code class="language-plaintext highlighter-rouge">volume_raid_level</code> support for volume create task in DDP (RAID setting was added in SANtricity 11.7 (years ago) and I support it all my tools and applications including SANtricity CSI)</li>
   <li>Working around these quirks and adding own tasks that do what the Collection doesn't is fine if you have very repetitive tasks. Otherwise you end up doing what you could create and run faster in a proper language without these extra layers</li>
 </ul>
 
@@ -655,7 +717,7 @@ server2                    : <span class="nv">ok</span><span class="o">=</span>4
 
 <h3 id="other-automation">Other automation</h3>
 
-<p>Frequent readers of this blog may recall I recently released other integrations for SANtricity (Python, PowerShell, Go), so Ansible is is just one example.</p>
+<p>Frequent readers of this blog may recall I recently released other integrations for SANtricity (Python, PowerShell, Go), so Ansible is just one example.</p>
 
 <p>They all "work", but need support for NVMe/RoCE (related to creating NVMe/RoCE host and host-groups).</p>
 
@@ -673,13 +735,13 @@ server2                    : <span class="nv">ok</span><span class="o">=</span>4
 
 <p>And now we have everything we need to create a SANtricity version of <a href="https://github.com/scaleoutsean/firemox">Firemox</a>.</p>
 
-<p>My SANtricity Go client, Terraform Provider SANtricity and SANtricity CSI have all been updated since I've published this post. And because it all works, SANtricity Go and Terraform Provider can now configure NVMe/RoCE <code class="language-plaintext highlighter-rouge">hosts</code> object, which is where a host's port(s) are defined. And SANtricity CSI is now also NVMe-oF-aware.</p>
+<p>My SANtricity Go client, Terraform Provider SANtricity and SANtricity CSI have all been updated since I've published this post. And because it all works, SANtricity Go and Terraform Provider can now create a NVMe/RoCE <code class="language-plaintext highlighter-rouge">host</code> object, which is where a host's port(s) are defined. And SANtricity CSI is now also NVMe-oF-aware.</p>
 
 <p><img src="/assets/images/santricity-csi-v1-02-startup.png" alt="CSI container startup" /></p>
 
-<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also updated to handle NVMe/RoCE host objects (added in SAntricity Client version 0.1.1). Subsequently I also added "volume expand" support and few other things.</p>
+<p>My <code class="language-plaintext highlighter-rouge">santricity-client</code>, a Python client for SANtricity, has also updated to handle NVMe/RoCE host objects (added in SANtricity Client version 0.1.1). Subsequently I also added "volume expand" support and few other things.</p>
 
-<p>There is an opportunity to add custom NVMe-focused commands/cmdlets to better serve NVMe/RoCE users because existing approaches (see my comments about the Ansible Collection above) aren't optimal. Also, I may also need to update E-Series Performance Analyzer and E-Series SANtricity Collector to make sure NVMe/RoCE is not neglected. I'll blog about that later if I get it done.</p>
+<p>There is an opportunity to add custom NVMe-focused commands/cmdlets to better serve NVMe/RoCE users because existing approaches (see my comments about the Ansible Collection above) are too basic. Also, I may need to update E-Series Performance Analyzer and E-Series SANtricity Collector to make sure NVMe/RoCE is not neglected. I'll blog about that later if I get it done.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
