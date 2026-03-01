@@ -2183,6 +2183,12 @@ var store = [{
         "url": "/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html",
         "teaser": null
       },{
+        "title": "Block external docs to improve NetApp docs load time",
+        "excerpt":"The hogs      The two phat scripts are candidates for local caching.   The rest are candidates for your ad blocker.   Block ‘em   ! Block stuff from NetApp docs translate-pa.googleapis.com/* translate.googleapis.com/* go-mpulse.net/* typography.com/* akstat.io/*   ","categories": ["meta"],
+        "tags": ["netapp"],
+        "url": "/2026/03/01/adblock-andnetapp-docs.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2196,7 +2202,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"IBM Block Storage CSI driver patched for NetApp E-Series 2026-02-26 00:00 11 minute read Unofficial patch to IBM Block CSI driver for E-Series SANtricity storage Connecting to 200G HICs on E-Series EF600 2026-02-19 00:00 2 minute read Connecting to EF-Series EF600 200G HIC in DAS mode Linux, NVMe/RoCE and HA...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Block external docs to improve NetApp docs load time 2026-03-01 00:00 less than 1 minute read Block external domains on https://docs.netapp.com IBM Block Storage CSI driver patched for NetApp E-Series 2026-02-26 00:00 11 minute read Unofficial patch to IBM Block CSI driver for E-Series SANtricity storage Connecting to 200G HICs...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
