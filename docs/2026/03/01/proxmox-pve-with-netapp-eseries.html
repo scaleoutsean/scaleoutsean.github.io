@@ -286,7 +286,7 @@
 
 <h3 id="simple-random-workloads">Simple random workloads</h3>
 
-<p>This <code class="language-plaintext highlighter-rouge">fio</code> run with random IO uses 8 KiB requests (usually the minimum for databases) on DDP-based RAID 6. The filesystem is Btrfs, we have a 30% write workload a minimal multi-threading and basic Queue Depth, to make it more realistic.</p>
+<p>This <code class="language-plaintext highlighter-rouge">fio</code> run with random IO uses 8 KiB requests (usually the minimum for databases) on a DDP storage pool-based RAID 6. The filesystem is Btrfs, we have a 30% write workload a minimal multi-threading and basic Queue Depth, to make it slightly more realistic.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>fio <span class="nt">--ioengine</span><span class="o">=</span>libaio <span class="nt">--direct</span><span class="o">=</span>1 <span class="nt">--sync</span><span class="o">=</span>1 <span class="nt">--rw</span><span class="o">=</span>readwrite <span class="nt">--rwmixwrite</span><span class="o">=</span>30 <span class="se">\</span>
    <span class="nt">--bs</span><span class="o">=</span>8K <span class="nt">--numjobs</span><span class="o">=</span>2 <span class="nt">--iodepth</span><span class="o">=</span>4 <span class="nt">--runtime</span><span class="o">=</span>60 <span class="nt">--size</span> 1G <span class="nt">--time_based</span> <span class="se">\</span>
@@ -318,9 +318,13 @@ Run status group 0 <span class="o">(</span>all <span class="nb">jobs</span><span
 
 <p>1.1k (8 KiB) IOPS.</p>
 
-<p>The performance is poor for reasons explained earlier. If I needed more performance, I'd use a filesystem suitable that kind of a workload (not Btrfs, for example) and, if I needed even more, I'd probably use RAID 1 volumes on the same DDP for the DB log file. And I'd tune my storage and system (which I didn't do - it was as explained above and in the video).</p>
+<p>The performance is relatively poor for the reasons explained earlier. If I needed more performance, I'd use a filesystem suitable that kind of a workload (not Btrfs, for example) and, if I needed even more, I'd probably use RAID 1 volumes on the same DDP for the DB log file.</p>
 
-<p>All of these tests also test filesystem performance. The Proxmox examples test block devices (which is technially correct for "storage" tests). I run these test with (on) filesystems because I don't need to demonstrate "best possible", but <strong>almost the worst</strong> performance figures in part because of the generic nature of the KB.</p>
+<p>And I'd tune my storage and system (which I didn't do at all, as explained above and in the video).</p>
+
+<p>All of these tests also test filesystem performance.</p>
+
+<p>The Proxmox examples test block devices (which is technially correct for "storage" tests). I run these test with (on) filesystems because I don't need to demonstrate "best possible", but <strong>almost the worst</strong>, performance figures in part because of the fuzzy claims in the KB.</p>
 
 <p>Let's see what happens when we make some improvements to both the filesystem and RAID level (XFS on RAID 1) while still using the same DDP storage pool.</p>
 
@@ -437,11 +441,11 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
 
 <p>Note that the KB refers to who-knows-what kind of storage configuration and host and network (mis)configuration. This post and the video demo show exactly what I did and how using PVE 9.1.1 with NVMe/RoCE storage on EF600 in absence of any tuning and even with some self-sabotage.</p>
 
-<p>PVE with a slower array and NL-SAS will be slower, and if it's misconfigured it will be extremely slow. But that has nothing to do with Proxmox, Debian, iSCSI, NVMe/RoCE or E-Series. PVE (or Debian, or E-Series) are expected to perform exactly as designed and not slower than other hosts or storage systems of similar configuration.</p>
+<p>PVE with a slower array and NL-SAS will be slower, and if it's misconfigured it will be extremely slow. But that has nothing to do with Proxmox, Debian, iSCSI, NVMe/RoCE or E-Series. PVE (or Debian, or E-Series) are expected to perform exactly as designed and configured and not slower than other hosts or storage systems of similar configuration.</p>
 
 <p>In theory, there may be a software-specific issue that makes PVE with E-Series slower than Red Hat with E-Series. In practice, everyone uses the same software stack (i.e. the Linux kernel, open-iscsi, NIC drivers…) and components and it never happens over extended periods of time. I've never encountered any issues, let alone those that persisted over many months.</p>
 
-<p>But saying that Proxmox or Debian would be slower because they're not validated is almost equal to saying SANtricity is tuned for the validated Linux distributions.</p>
+<p>But saying that Proxmox or Debian would be slower because they're not validated is almost equal to saying SANtricity is tuned for the validated Linux distributions or the validated distributions are tuned for SANtricity.</p>
 
 <p>Despite wasting most of today on trivia, I've managed to expose tbe <code class="language-plaintext highlighter-rouge">block_size</code> parameter for volume resource in Terraform Provider for SANtricity. Sadly, nothing else got accomplished.</p>
 
