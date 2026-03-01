@@ -2191,7 +2191,7 @@ var store = [{
       },{
         "title": "Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE",
         "excerpt":"Introduction Today I wanted to work on something useful - such as host-side interface reporting for various SANtricity-related libraries I maintain - but instead I spent hours dealing with custom URL blocking filters and “clarifying” my take on this this NetApp KB (see this Linux NVMe/RoCE post for additional details),...","categories": ["storage","e-series","virtualization"],
-        "tags": ["ef600","ef-series","netapp","nvme","roce","rdma","trixie","debian","pve"],
+        "tags": ["ef600","ef-series","netapp","nvme","roce","rdma","trixie","debian","pve","proxmox"],
         "url": "/2026/03/01/proxmox-pve-with-netapp-eseries.html",
         "teaser": null
       },{
