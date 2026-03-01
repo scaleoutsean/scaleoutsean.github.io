@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          10 minute read
+          11 minute read
         
       </span>
     
@@ -396,13 +396,13 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
   nvme1n2: <span class="nv">ios</span><span class="o">=</span>185685/141282, <span class="nv">sectors</span><span class="o">=</span>2970960/1768400, <span class="nv">merge</span><span class="o">=</span>0/0, <span class="nv">ticks</span><span class="o">=</span>23835/22661, <span class="nv">in_queue</span><span class="o">=</span>46496, <span class="nv">util</span><span class="o">=</span>77.58%
 </code></pre></div></div>
 
-<p>The performance dropped from 15k to 4.4k IOPS.</p>
+<p>The performance dropped from 15k to 4.4k IOPS, but that's fine: we need to remember we can't have a single thread IO orkload and Queue Depth unless there's just one process using storage. This is a workload that doesn't exist on a virtualization host, and is very rare in VMs (of which you'll have several per host at the very least) as well.</p>
 
-<p>Note that the PVE page gets 21k IOPS with the random workload, but that is with 4 KiB requests <strong>and</strong> with a 100% read workload.</p>
+<p>Note that the PVE page gets 22k IOPS with a random workload, but that is with 4 KiB requests. Once you account for 20% write workload and need to protect it with RF2, you have a 40% write workload and those mirrored writes have to round-trip to another host just as they already do in E-Series systems, but not as efficiently.</p>
 
-<p>Our second example above (10.6k in 8 KiB requests) achieves better performance. In the case filesystem fragmentation is extreme, we'd get less than 15k in 8 KiB IOPS, but if we use 100% read like the Proxmox test does, we'd more than make up for that.</p>
+<p>Our second example above (15k in 8 KiB requests) achieves much better performance because we have 14 disks to write to and a non-ridiculous threads (2) and queue depth (4) make us waste less time waiting for IO due to ther always being some in-flight IO requests.</p>
 
-<p>It'd be nice to see XFS on RAID 6 (with controller cache enabled as that's how everyone would use it), but I don't want to spend even more time on this rather "academic" post that I wouldn't have written, given absence of any real-life problem associated with it.</p>
+<p>It'd be nice to see XFS on RAID 6 (with controller cache enabled, as that's how everyone would use it in streaming workloads), but I don't want to spend even more time on this rather "academic" post that I wouldn't have written, given absence of any real-life problem associated with it.</p>
 
 <h3 id="simple-sequential-workload">Simple sequential workload</h3>
 
