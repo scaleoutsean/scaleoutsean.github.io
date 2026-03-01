@@ -2186,7 +2186,7 @@ var store = [{
         "title": "Block external sites to improve loading speed of NetApp docs",
         "excerpt":"The hogs The two phat scripts are candidates for local caching even if you need them. The rest are candidates for your browser filters/blockers. Block ‘em I tried blocking ‘em all, and didn’t see any negative effects. In uBlock Origin (Firefox), under My Filters, add these and see if it...","categories": ["meta"],
         "tags": ["netapp","documentation","docs"],
-        "url": "/2026/03/01/adblock-andnetapp-docs.html",
+        "url": "/2026/03/01/adblock-and-netapp-docs.html",
         "teaser": null
       },{
     "title": "About this site",
