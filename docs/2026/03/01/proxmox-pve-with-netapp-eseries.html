@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a></li><li><a href="#tuning-pve-with-e-series">Tuning PVE with E-Series</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -241,7 +241,7 @@
 
 <p>Proxmox has <a href="https://pve.proxmox.com/wiki/Benchmarking_Storage">this page</a> with basic <code class="language-plaintext highlighter-rouge">fio</code>-based performance tests. As the page clearly states, those are very basic tests to get you started.</p>
 
-<p>I generally dislike running these tests unless I know what the objective is, but since the KB article is generic and I need a reference point, I followed the commands on the Proxmox Wiki page and did some extra runs to give you an idea of what might be relevant here.</p>
+<p>I generally dislike running these aimless tests unless I know what the objective is, but since the KB article is generic and I need a reference point, I followed the commands on the Proxmox Wiki page and did some extra runs to give you an idea of what might be relevant here.</p>
 
 <h2 id="video-walk-through">Video walk-through</h2>
 
@@ -281,7 +281,7 @@
 
 <h2 id="other-examples">Other examples</h2>
 
-<p>These examples are <strong>not</strong> in the video, which would make the video too long, but nevertheless illustrate some of the points made above.</p>
+<p>These examples are <strong>not</strong> in the video, which would make the video too long, but illustrate some of the points made above.</p>
 
 <p>This <code class="language-plaintext highlighter-rouge">fio</code> run with random IO uses 8 KiB requests (usually the minimum for databases) on DDP-based RAID 6. The filesystem is Btrfs, we have a 30% write workload a minimal multi-threading and basic Queue Depth, to make it more realistic.</p>
 
@@ -402,6 +402,25 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
 <p>To get most out of reads you'd run them multi-threaded and - with E-Series - using a higher Queue Depth and larger request sizes (4 MiB, for example). So this is another example of a non-ideal workload - this time a sequential read - that still gets a decent result.</p>
 
 <p>Not one of the tests - I ran about 10-15 variants - produced suspiciously sub-par results.</p>
+
+<h2 id="tuning-pve-with-e-series">Tuning PVE with E-Series</h2>
+
+<p>In the case you think "Okay, so this is almost worst, but how do I get the best, performance?"</p>
+
+<p>This post isn't about that, but I'll add a few lines on that.</p>
+
+<p>Check these official <a href="https://pve.proxmox.com/wiki/Performance_Tweaks">PVE performance tuning tweaks</a>.</p>
+
+<p>For the stack used in these (generic) tests, what we could do better:</p>
+
+<ul>
+  <li>Tune storage NIC configuration (follow your NIC manufacturer's and distro's guides)</li>
+  <li>Perform other OS-level settings (distro's and Linux kernel guides)</li>
+  <li>Enable read-write cache on E-Series (factory default: both are enabled)</li>
+  <li>Create DDP volumes not just with workload-specific RAID levels, but also other volume options (such as <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-settings/cache-settings-and-performance.html">cache block size</a>). Note that RAID 1 on DDP must be done from the CLI or API (see the rest of this site or SMcli documentation)</li>
+  <li>Test several filesystem options (at least one of XFS or ext4, for reference)</li>
+  <li>Test classic RAID storage pools. I recommend using DDP for everything rather than breaking storage down into islands, but in extreme cases you might want to do try.</li>
+</ul>
 
 <h2 id="conclusion">Conclusion</h2>
 
