@@ -2189,6 +2189,12 @@ var store = [{
         "url": "/2026/03/01/adblock-and-netapp-docs.html",
         "teaser": null
       },{
+        "title": "Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE",
+        "excerpt":"Introduction Today I wanted to work on something useful - such as host-side interface reporting for various SANtricity-related libraries I maintain - but instead I spent hours dealing with custom URL blocking filters and “clarifying” my take on this this NetApp KB (see this Linux NVMe/RoCE post for additional details),...","categories": ["storage","e-series","virtualization"],
+        "tags": ["ef600","ef-series","netapp","nvme","roce","rdma","trixie","debian","pve"],
+        "url": "/2026/03/01/proxmox-pve-with-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2202,7 +2208,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Block external sites to improve loading speed of NetApp docs 2026-03-01 00:00 1 minute read Block external domains on https://docs.netapp.com IBM Block Storage CSI driver patched for NetApp E-Series 2026-02-26 00:00 11 minute read Unofficial patch to IBM Block CSI driver for E-Series SANtricity storage Connecting to 200G HICs on...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE 2026-03-01 00:00 8 minute read PVE 9.1.1 with NVMe/RoCE on NetApp EF600 Block external sites to improve loading speed of NetApp docs 2026-03-01 00:00 1 minute read Block external domains on https://docs.netapp.com IBM Block Storage CSI driver patched for NetApp E-Series 2026-02-26...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3653,6 +3659,12 @@ var store = [{
     "title": "docs",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/docs/"
   },{
+    "title": "trixie",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/trixie/"
+  },{
+    "title": "debian",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/debian/"
+  },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
   },{
@@ -3937,4 +3949,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page73/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page74/"
   }]
