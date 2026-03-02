@@ -2195,7 +2195,7 @@ var store = [{
         "url": "/2026/03/01/proxmox-pve-with-netapp-eseries.html",
         "teaser": null
       },{
-        "title": "k0rdent k0s with NetApp SANtricity CSI",
+        "title": "k0rdent k0s, SANtricity CSI, NetApp E-Series",
         "excerpt":"What is k0rdent and why should E-Series users care? To be honest, I didn’t know either. I did know about k0s and in fact I tried to use it in development with SolidFire CSI some six weeks ago, but I hadn’t been aware of k0rdent at the time. According to...","categories": ["storage","e-series","kubernetes","ai"],
         "tags": ["ef600","netapp","nvme","k0s","k0rdent","csi","mirantis"],
         "url": "/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html",
@@ -2214,7 +2214,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"k0rdent k0s with NetApp SANtricity CSI 2026-03-02 00:00 8 minute read What is k0rdent and why should E-Series users care? Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE 2026-03-01 00:00 11 minute read PVE 9.1.1 with NVMe/RoCE on NetApp EF600 Block external sites to improve loading speed of NetApp docs...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"k0rdent k0s, SANtricity CSI, NetApp E-Series 2026-03-02 00:00 8 minute read What is k0rdent, what is k0s, and how SANtricity CSI helps you connect them to E-Series storage Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE 2026-03-01 00:00 11 minute read PVE 9.1.1 with NVMe/RoCE on NetApp EF600 Block external...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
