@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          8 minute read
         
       </span>
     
@@ -281,7 +281,7 @@
 
 <p>I do most of my work with Ubuntu and Debian, and I expected less challenges with those and thought this may be interesting to Rocky Linux users.</p>
 
-<p>You shouldn't follow these steps blindly as they will age anyway, but if you happen to be trying it now, or get stuck, maybe some of them will</p>
+<p>You shouldn't follow these steps blindly as they will age anyway, but if you happen to be trying it now, or get stuck, maybe some of them will help you. As the root user:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">--proto</span> <span class="s1">'=https'</span> <span class="nt">--tlsv1</span>.2 <span class="nt">-sSf</span> https://get.k0s.sh | <span class="nb">sudo </span>sh
 k0s <span class="nb">install </span>controller <span class="nt">--enable-worker</span> <span class="nt">--no-taints</span>
@@ -293,7 +293,7 @@ k0s kubectl get nodes
 <span class="nb">export </span><span class="nv">KUBECONFIG</span><span class="o">=</span>~/.kube/k0s.conf
 </code></pre></div></div>
 
-<p>It appears at least 8132 is mandatory, I opened both because why spend time on figuring it out when I'm just testing.</p>
+<p>It appears at least tcp/8132 is mandatory, but I opened both because why spend time on figuring it out when I'm just testing.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># 8132 comment "konnectivity agents"</span>
 <span class="c"># 10250 comment "kubelet from pods"</span>
@@ -304,9 +304,11 @@ firewall-cmd <span class="nt">--reload</span>
 
 <h3 id="csi-steps">CSI steps</h3>
 
-<p>Now that singleton k0s Kubernetes cluster is running, we can do the CSI thing. <strong>Only NVMe/RoCE and iSCSI</strong> are expected to work.</p>
+<p>Now that our singleton k0s Kubernetes cluster is running, we can do the CSI thing. <strong>Only NVMe/RoCE and iSCSI</strong> are expected to work!</p>
 
-<p>Go into SANtricity Swagger/Open API interface to figure out <code class="language-plaintext highlighter-rouge">poolId</code> in <code class="language-plaintext highlighter-rouge">GET /pools</code> output. I suggest using DDP. If you don't have a DDP you can use, create a small RAID 1 disk group and use that ID. Otherwise you'll have to change the demo Storage Class which uses RAID 1 (or create your own for whatever RAID leve your existing VGs are; supported are R1, R5, R6).</p>
+<p>Go into SANtricity Swagger/Open API interface to figure out <code class="language-plaintext highlighter-rouge">poolId</code> from <code class="language-plaintext highlighter-rouge">GET /storage-pools</code> output. I suggest using a DDP storage pool.</p>
+
+<p>If you don't have a DDP you can use, create a small RAID 1 disk group and use that pool ID. Otherwise, you'll have to change the demo Storage Class which uses RAID 1 (or create your own for whatever RAID leve your existing VGs are; supported are R1, R5, R6).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/scaleoutsean/santricity-go 
 <span class="c"># create my-values.yaml - see https://github.com/scaleoutsean/santricity-go/blob/master/charts/README.md or</span>
@@ -351,11 +353,11 @@ kube-system   kube-router-gvlvx                            1/1     Running   0  
 kube-system   metrics-server-df68c566c-g29vd               1/1     Running   0          19m
 </code></pre></div></div>
 
-<p>But notice that we extracted kubeconfig which was for Helm, not for <code class="language-plaintext highlighter-rouge">k0s kubectl</code>.</p>
+<p>Notice that when we extracted kubeconfig that was for the Helm command, not for <code class="language-plaintext highlighter-rouge">k0s kubectl</code>.</p>
 
 <p>K0s has its own "take" on Helm (the catalog thing) and I didn't follow their approach because my immediate concern was to get the CSI thing done. I left that for another time. Anyway, my caveman approach worked without any issue.</p>
 
-<p>Default Storage Class deployed by Helm uses RAID 1, so don't go crazy provisioning with it. It is suggested to size PVCs in 4 GB increments.</p>
+<p>Default Storage Class deployed by the Helm chart uses RAID 1, so don't go crazy provisioning with it. I suggest to size PVCs in 4 GB units.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>k0s kubectl get sc
 NAME                              PROVISIONER                         RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
@@ -477,7 +479,7 @@ santricity-nvme-raid1 <span class="o">(</span>default<span class="o">)</span>   
 
 <p>Installation on Ubuntu should be equally uneventful.</p>
 
-<p>In the case something's off with SANtricity CSI, submit an issue on the Github repository. No promises, but I'll see what I can do.</p>
+<p>In the case something's off with SANtricity CSI, submit an issue on the Github repository. I can't promise anything, but I'll see what I can do.</p>
 
 <h2 id="conclusion-and-next-steps">Conclusion and next steps</h2>
 
@@ -485,19 +487,19 @@ santricity-nvme-raid1 <span class="o">(</span>default<span class="o">)</span>   
 
 <p>After failing due to the kubelet path issue, it took me a couple of hours on a Sunday evening to improve the Helm chart, test and rework the SANtricity CSI install instructions. This is a common issue that was affecting k3s users, but I needed a reason to justify that extra work, which came in k0rdent/k0s.</p>
 
-<p>The same change will also benefit Talos users, although I haven't gotten to testing that one yet.</p>
+<p>The same change will also benefit Talos Linux users, although I haven't gotten to testing that one yet.</p>
 
 <p>I can't say whether SANtricity CSI is stable, reliable, etc. It probably has just one user and it's been around for several weeks. It's not like there are many choices, so it's "one of best" CSI solutions for E-Series there is. (<a href="/2022/05/18/vmware-tanzu-netapp-eseries.html">vSphere CSI</a> might be "the best", but it comes at a price.)</p>
 
 <p>For a while, Mirantis seemed caught off guard by the shift from OpenStack to Kubernetes. k0rdent and k0s seem like a great pivot and it's highly relevant to E-Series. Back in 2019, I was evangelizing plugging E-Series into NetApp HCI with NKS - basically using SolidFire as "management storage" for AI/Analytics where SolidFire just couldn't meet the price or performance that SANtricity could - and still can - deliver. NKS was replaced by RKE and NetApp HCI ended soon after that and, in 2022, E-Series was dropped from Trident CSI, so the idea of using E-Series in AI and Analytics environments on Kubernetes didn't develop as I had hoped for.</p>
 
-<p>But now there's k0rdent and there's SANtricity CSI, which looks very promising. There are other <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">CSI</a> drivers, too.</p>
+<p>But now there's k0rdent and there's SANtricity CSI, which looks very promising. There are other <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">CSI</a> drivers (native and other) you can use with E-Series, too.</p>
 
 <p>Next steps for SANtricity CSI in terms of k0s:</p>
 <ul>
   <li>Figure out how to register/load SANtricity CSI Helm Chart in k0rdent catalog</li>
   <li>Try some of the AI and Analytics solutoins from their catalog with SANtricity CSI</li>
-  <li>Investigate k0s with <a href="https://docs.k0rdent.io/latest/quickstarts/quickstart-2-kubevirt/">KubeVirt</a>. SolidFire used to <a href="https://finance.yahoo.com/news/solidfire-mirantis-extend-partnership-power-155636851.html">work closely</a> with Mirantis due to their (and SolidFire's) OpenStack expertise, so Mirantis is good at OpenStack and virtualization. k0s, KubeVirt, and SANtricity CSI would open up some nice solutions for E-Series users!</li>
+  <li>Investigate k0s with <a href="https://docs.k0rdent.io/latest/quickstarts/quickstart-2-kubevirt/">KubeVirt</a>. SolidFire used to <a href="https://finance.yahoo.com/news/solidfire-mirantis-extend-partnership-power-155636851.html">work closely</a> with Mirantis due to their (and SolidFire's) OpenStack expertise, so Mirantis is well known for their expertise in OpenStack and virtualization. k0s, KubeVirt, and SANtricity CSI would open up some nice solutions for E-Series users!</li>
 </ul>
 
         
