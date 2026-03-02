@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -260,23 +260,25 @@
 <p>I also deliberately used bad settings for "minimally viable" EF600 performance (in this configuration):</p>
 
 <ul>
-  <li>Apart from setting the storage NICs to MTU 9000 bytes, both the host and storage had <strong>zero tuning</strong> of any kind. All I wanted is to simulate a basic setup by someone who just followed steps in that NVMe post linked at the top</li>
-  <li>End-to-end <strong>disabled</strong> caching on the RAID 1 volume with XFS (totally unrealistic because it should realy be enabled as E-Series by defaults mirrors its write cache and it's battery-backed and fully redundant). For the RAID 6 disk I didn't check cache settings because the overhead of Btrfs was obvious.</li>
+  <li>Apart from setting the storage NICs to MTU 9000 bytes, both the host and storage had <strong>zero tuning</strong> of any kind. All I wanted is to simulate a basic setup by someone who just followed steps in that NVMe post linked at the top.</li>
+  <li>End-to-end <strong>disabled</strong> caching on the RAID 1 volume with XFS (totally unrealistic because it should realy be enabled as E-Series by defaults mirrors its write cache and it's battery-backed and fully redundant). The RAID 6 volume had both enabled, but its results suffered due to Btrfs.</li>
 </ul>
 
-<p>Highlights:</p>
+<p>Highlights of EF600 tests:</p>
 
 <ul>
-  <li>Slower performance for 4 KiB random read than in the simple test by Proxmox. Why? They likely used internal NVMe, which has no network latency and DAS is especially beneficial for the lowest Queue Depth and the smallest reqeust size possible, i.e. exactly this test</li>
-  <li>Faster performance than the Wiki test with higher Queue Depth and the more realistic 8 KiB request size</li>
-  <li>Much faster performance with 1 MiB and 4 MiB "streaming" requests, due to more disks on E-Series and better sequential performance of E-Series</li>
+  <li>Slower performance for 4 KiB random read than in the simple test by Proxmox. Why? They likely used internal NVMe, which has no network latency and internal disks are especially beneficial for the tiny Queue Depth and the smallest reqeust size possible, i.e. exactly what this test does. This is the worst kind of test for SANtricity. With simple, real-life modifications (e.g. 8 KiB requests and QD 4) SANtricity random performance takes off bigly.</li>
+  <li>Faster SANtricity performance than the likely DAS in the Proxmox Wiki tests, when higher Queue Depths and more realistic request sizes are used</li>
+  <li>Much faster performance with 1 MiB and 4 MiB "streaming" workload, due to more disks on E-Series</li>
+  <li>Additional advantages of the SANtricity approach emerge when read percentage is not 100%, but there's no way to compare because the simple tests are limited to two workloads with a 100% read access pattern</li>
 </ul>
 
 <p>Operational highlights:</p>
 
 <ul>
-  <li>Both RAID 1 (it's RAID 10, but RAID 1 is the config shorthand) and RAID 6 volumes can be consolidated on DDP storage pools</li>
-  <li>For optimal price/performance, users would normally use RAID 1 for log-style workloads (e.g. PostgreSQL WAL log) and maybe write-heavy indexes and RAID 6 for the rest</li>
+  <li>Both RAID 1 (it's RAID 10, but RAID 1 is the config shorthand) and RAID 6 volumes can be consolidated on DDP storage pools.</li>
+  <li>For optimal price/performance, users would normally use RAID 1 for log-style workloads (e.g. PostgreSQL WAL log) and maybe write-heavy indexes and RAID 6 for the rest.</li>
+  <li>XFS or ext4 should be used to set a baseline for understanding the impact of filesystem choice. Some, such as Btrfs, have distinct advantages, but also disadvantages compared to the bread-and-butter single host fileystems.</li>
   <li>There's relatively little one has to understand to make most out of E-Series performance. Tools like E-Series SANtricity Collector help you deep dive into performance, but in reality for most users on flash arrays, that is not necessary. If you use hybrid or NL-SAS, then you'll need enough disks to get decent random IO performance on NL-SAS - the same as on any storage system.</li>
 </ul>
 
@@ -432,9 +434,9 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
   <li>Tune storage NIC configuration (follow your NIC manufacturer's and distro's guides)</li>
   <li>Perform other OS-level settings (distro's and Linux kernel guides)</li>
   <li>Enable read-write cache on E-Series (factory default: both are enabled)</li>
-  <li>Create DDP volumes not just with workload-specific RAID levels, but also other volume options (such as <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-settings/cache-settings-and-performance.html">cache block size</a>). Note that RAID 1 on DDP must be done from the CLI or API (see the rest of this site or SMcli documentation)</li>
+  <li>Create DDP volumes not just with workload-specific RAID levels, but also other volume options (such as <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-settings/cache-settings-and-performance.html">cache block size</a>). Note that RAID 1 on DDP must be created from the CLI or API (see the rest of this site or SMcli documentation) which SANtricity Go library (used by SANtricity CSI) can do. For detailed volume tuning options (which can be done out of band and after volume creation), your current options are the SANtricity UI and API, SMcli, my SANtricity client (Python client library), and my SANtricity PowerShell module</li>
   <li>Test several filesystem options (at least one of XFS or ext4, for reference)</li>
-  <li>Test classic RAID storage pools. I recommend using DDP for everything rather than breaking storage down into islands, but in extreme cases you might want to do try.</li>
+  <li>Test classic RAID storage pools. I recommend using DDP for everything rather than breaking storage down into islands, but in extreme cases you might want to try.</li>
 </ul>
 
 <h2 id="conclusion">Conclusion</h2>
