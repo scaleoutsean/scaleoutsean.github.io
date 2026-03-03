@@ -2201,6 +2201,12 @@ var store = [{
         "url": "/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html",
         "teaser": null
       },{
+        "title": "Single volume snapshot and clone with SANtricity Go client library for NetApp E-Series",
+        "excerpt":"Introduction This is another post on the topic of Reautomating E-Series. Since last Demcember, I’ve created: PowerShell modules Python client Go client Not all can do everything, and some can do more than others. PowerShell is the best CLI tool overall, so I usually build for it first. This post...","categories": ["storage","e-series","backup"],
+        "tags": ["netapp","santricity","go","cli","snapshots","clones"],
+        "url": "/2026/03/03/netapp-eseries-snapshot-clone-go-cli.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2214,7 +2220,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"k0rdent k0s, SANtricity CSI, NetApp E-Series 2026-03-02 00:00 8 minute read What is k0rdent, what is k0s, and how SANtricity CSI helps you connect them to E-Series storage Proxmox PVE 9.1.1 (Debian) with NetApp EF-Series NVMe/RoCE 2026-03-01 00:00 12 minute read PVE 9.1.1 with NVMe/RoCE on NetApp EF600 Block external...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Single volume snapshot and clone with SANtricity Go client library for NetApp E-Series 2026-03-03 00:00 8 minute read Here’s how you can create snapshots and linked clones using my Go CLI for SANtricity k0rdent k0s, SANtricity CSI, NetApp E-Series 2026-03-02 00:00 8 minute read What is k0rdent, what is k0s,...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3676,6 +3682,12 @@ var store = [{
   },{
     "title": "k0rdent",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/k0rdent/"
+  },{
+    "title": "snapshots",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapshots/"
+  },{
+    "title": "clones",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/clones/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
