@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          10 minute read
         
       </span>
     
@@ -302,8 +302,8 @@ PitRef                               Volume               Status     Timestamp  
 
 <ul>
   <li>PiT Ref is the only one that's guarnateed to be unique, so that one is not truncated</li>
-  <li>You can do <code class="language-plaintext highlighter-rouge">-o json</code> if you need to see the rest in detail</li>
-  <li>You can get snapshots for the specific volume and sort by time or snapshot sequence number.</li>
+  <li>You can do <code class="language-plaintext highlighter-rouge">-o json</code> if you need to see all the details</li>
+  <li>You can get snapshots for specific volume and sort by time or snapshot sequence number</li>
 </ul>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>santricity-cli get snapshot-images <span class="se">\</span>
@@ -312,19 +312,42 @@ PitRef                               Volume               Status     Timestamp  
 340000006D039EA000493A260063096469A5B4E4 pvc-1f6ac50e-7a82... optimal    2026-03-02 12:49:24 123
 </code></pre></div></div>
 
+<p>To rollback and recover volume data from a snapshot, stop access on the volume and use <code class="language-plaintext highlighter-rouge">santricity-cli rollback</code>.</p>
+
 <p>Writeable linked clone:</p>
 
-<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-01.png" alt="SANtricity Go CLI writeable linked clone " /></p>
+<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-01.png" alt="SANtricity Go CLI writeable linked clone" /></p>
 
-<p>Its snapshot group is very large: 8GiB for a 2GiB volume. I know DDP allocates in large chunks (which is why I recommend volumes in 4GB units) but this seems odd. I've checked the code which looks correct. Later I'll check the API and TRs to see if this is expected and update this post if I find anything noteworthy.</p>
+<p>Its snapshot group is very large: 8GiB for a 2GiB volume! This coarsness is a disadvantage of using DDP if you use a ton of tiny volumes.</p>
 
-<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-02-snapshot-group.png" alt="SANtricity Go CLI writeable linked clone " /></p>
+<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-02-snapshot-group.png" alt="SANtricity Go CLI repo utilization and comparison DDP vs Traditional VG" /></p>
+
+<p>Observations:</p>
+
+<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-03-observations.png" alt="SANtricity Go CLI snapshot group observations" /></p>
+
+<ul>
+  <li>(1) You may attempt to economize through micro-management. While DDP allocates repo volumes in 8GiB increments, traditional RAID groups are precise. You can see how two, 12 and 64 GiB volumes with a 20%, 10% and 5% snapshot group reserve behave very well.</li>
+  <li>(2) Notice how there are 0 snapshot images in the snapshot group, indicating repo volume(s) are wasting capacity if this isn't temporary.</li>
+  <li>(3) The PVC volume at the bottom has no snapshot images, but that's different from having 0 snapshot images.</li>
+  <li>(4) On the DDP, a 64GiB volume uses no less than 8GiB in repo volume capacity (even though just 5% or 10% is reserved). Just above that, a 64GiB volume on a RAID 1 group uses 3.19GiB for a repo that's 5% of volume size. And just below that, a 2GiB volume uses 8GiB (minimum on DDP)</li>
+</ul>
+
+<p>Let's first deal with (4): the reason there are <code class="language-plaintext highlighter-rouge">N/A</code> snapshots here is I have a linked clone living off an on-demand snapshot in this snapshot group.</p>
+
+<p><img src="/assets/images/santricity-go-cli-snapshots-linked-clones-04-clone-only-snapshot-group.png" alt="SANtricity Go CLI snapshot group without snapshots" /></p>
+
+<p>Writeable linked clones use own repo for changes, but they are "linked" to base volume via their snapshot group, so we can't delete that group despite there being no "regular" snapshots in it.</p>
+
+<p>Now you may think classic groups are a no-brainer for snapshot-focused use cases. Maybe. But maybe not. To get started, you need at least 2 disks (which will be slower compared to this 14-disk DDP) <em>and</em> then you need one hot spare. So you're three disks down and for what?</p>
+
+<p>What I want to run on R1 volumes - which I can create on a DDP or R1 disk group - is mostly database logs and indexes for <strong>busy</strong> databases. Since those volumes are usually small but not tiny, if I default to 24GiB volume size and have 8GiB in snapshot reserve (30%) for each, that's not such a bad deal. Normally, we'll have just a few of those anyway. So I'd stick with DDP unless I had very busy sequential worklaods on the same DDP or some other justification.</p>
 
 <h3 id="maintenance-of-snapshot-groups">Maintenance of snapshot groups</h3>
 
-<p>Your DBs are probably be larger than 10GiB, so even if you take and keep just one snapshot for the time required to backup to S3, that might take hours, so allocating a few GBs to snapshot <strong>group</strong> would be wise (and the linked clone may need its own 10MiB reserve). These should be temporary in any case. On medium sized volumes (100-1,000 GiB) short-lived snapshot reserve capacity won't matter cost- or capacity-wise.</p>
+<p>Your DBs are probably be larger than 10GiB, so even if you take and keep just one snapshot for the time required to backup to S3, that might take hours, so allocating a few GBs to this snapshot <strong>group</strong> would be wise (and the writeable linked clone may need its own, separate reserve just for basic writes). Both of these should be temporary in any case. On medium sized volumes (100-1,000 GiB) short-lived snapshot reserve capacity won't matter cost- or capacity-wise.</p>
 
-<p>Also consider that, even if you have 100 tiny 2 GiB volumes, 100 snapshot groups would occupy less than 1TiB - hardly a financial or IT disaster. My main objection to having many of those linger around for weeks is that it's stupid. Run <code class="language-plaintext highlighter-rouge">create snapshot-volume --host-id &lt;backup_host&gt;</code>, ship data off to S3 and delete that snapshot as well as snapshot "group" (reserve) if you don't have any other snapshots that use it. If you don't have unnecessary snapshot groups or clones, you also avoid the impact of Copy-on-Write, which is another benefit of not using snapshots incorrectly.</p>
+<p>Also consider that, even if you have 100 tiny 2 GiB volumes, 100 snapshot groups would occupy less than 1TiB - hardly a financial or IT disaster. My main objection to having many of those linger around for weeks is that it's silly. Run <code class="language-plaintext highlighter-rouge">create snapshot-volume --host-id &lt;backup_host&gt;</code>, ship data off to S3 and delete that snapshot as well as snapshot "group" (reserve) if you don't have any other snapshots that use it. If you don't have unnecessary snapshot groups or clones, you also avoid the impact of Copy-on-Write, which is another benefit of not using snapshots incorrectly. An easy way to keep a minimum number of snapshots around is create a snapshot schedule that takes and keeps just one snapshot.</p>
 
 <p>The E-Series documentation has couple of paragraphs on <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-storage/how-reserved-capacity-works.html#thin-volumes-and-reserved-capacity">orphaned reserved capacity volumes</a>, which are unused snapshot groups. You won't have that problem if you automate, which is now very easy.</p>
 
@@ -358,11 +381,11 @@ PitRef                               Volume               Status     Timestamp  
 
 <p>Three months ago, the only choice for CLI automation was SMcli, which, in my opinion <a href="/2026/01/05/eseries-santricity-smcli-client.html">is not really usable</a>. Maybe that's too harsh, but when was the last time you saw a SMcli snapshot script that does anything in a generic way?</p>
 
-<p>Now we can do (almost) whatever we want - PowerShell, Python, Go, and any other language that wraps any of these (especially Go CLI). What's <a href="https://docs.netapp.com/us-en/e-series-cli/commands-a-z/create-snapgroup.html#parameters">missing is the fancy snapshot-related options</a> you can get in SMcli, API and UI, but those can be added if anyone needs them (let me know in <code class="language-plaintext highlighter-rouge">santricity-go</code> issues).</p>
+<p>Now we can do (almost) whatever we want - PowerShell, Python, Go, and any other language that wraps any of these (especially Go CLI). What's <a href="https://docs.netapp.com/us-en/e-series-cli/commands-a-z/create-snapgroup.html#parameters">missing is the fancy snapshot-related options</a> that you can get in SMcli, API and SANtricity Web UI, but those can be added if anyone needs them (let me know in <code class="language-plaintext highlighter-rouge">santricity-go</code> issues).</p>
 
 <p>What we can't do is change how SANtricty snapshots work. You need to exercise caution, but thankfully:</p>
 <ul>
-  <li>You can, and should, offload the junk snapshots and writeable clones (CI/CD, for example) to VMs with Brfs and ZFS</li>
+  <li>You can, and should, offload the junk snapshots and writeable clones (CI/CD, for example) to VMs with Brfs or ZFS</li>
   <li>Most modern applications already do snapshots in software, so:
     <ul>
       <li>Even when you need snapshots, you can take them on schedule, disregarding the application</li>
