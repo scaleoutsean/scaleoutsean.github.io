@@ -2232,7 +2232,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ubuntu 26.04 LTS iSCSI client with SolidFire 12 2026-03-06 00:00 4 minute read Ubuntu 26.04 LTS works with SolidFire, but discovery seems weird SolidFire CSI, a community CSI driver for NetApp SolidFire 2026-03-06 00:00 28 minute read What’s SolidFire CSI community driver, who should use it and why Single volume...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Ubuntu 26.04 LTS iSCSI client with SolidFire 12 2026-03-06 00:00 4 minute read Ubuntu 26.04 LTS works with SolidFire, but discovery seems weird SolidFire CSI, a community CSI driver for NetApp SolidFire 2026-03-06 00:00 29 minute read What’s SolidFire CSI community driver, who should use it and why Single volume...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
