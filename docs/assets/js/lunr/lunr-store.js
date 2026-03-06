@@ -2207,6 +2207,18 @@ var store = [{
         "url": "/2026/03/03/netapp-eseries-snapshot-clone-go-cli.html",
         "teaser": null
       },{
+        "title": "SolidFire CSI, a community CSI driver for NetApp SolidFire",
+        "excerpt":"Introduction SolidFire CSI is, as far as I know, the third working CSI driver for NetApp SolidFire storage systems. Maybe you are surprised to see this claim, but it is not the second. Cinder CSI - the first “semi-official” driver that most NetApp SolidFire users have never heard about. I...","categories": ["storage","solidfire","kubernetes"],
+        "tags": ["csi","kubernetes","netapp","solidfire","storage","talos linux"],
+        "url": "/2026/03/06/solidfire-csi-driver.html",
+        "teaser": null
+      },{
+        "title": "Ubuntu 26.04 LTS iSCSI client with SolidFire 12",
+        "excerpt":"Introduction Ubuntu 26.04 LTS is coming out within weeks, so it’s time for another “let’s check it out” post for SolidFire iSCSI targets. Prepare SolidFire and Ubuntu 26.04 I have SolidFire Demo VM 12.5 which is the last one they released. Newer ones won’t work worse, so if you have...","categories": ["storage","linux"],
+        "tags": ["solidfire","ubuntu 26.04","resolute raccoon","iscsi discovery","ubuntu"],
+        "url": "/2026/03/06/ubuntu-26-resolute-raccoon-solidfire-iscsi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2220,7 +2232,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Single volume snapshot and clone with SANtricity Go client library for NetApp E-Series 2026-03-03 00:00 11 minute read Here’s how you can create snapshots and linked clones using my Go CLI for SANtricity k0rdent k0s, SANtricity CSI, NetApp E-Series 2026-03-02 00:00 8 minute read What is k0rdent, what is k0s,...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Ubuntu 26.04 LTS iSCSI client with SolidFire 12 2026-03-06 00:00 4 minute read Ubuntu 26.04 LTS works with SolidFire, but discovery seems weird SolidFire CSI, a community CSI driver for NetApp SolidFire 2026-03-06 00:00 28 minute read What’s SolidFire CSI community driver, who should use it and why Single volume...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3688,6 +3700,18 @@ var store = [{
   },{
     "title": "clones",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/clones/"
+  },{
+    "title": "talos linux",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/talos-linux/"
+  },{
+    "title": "ubuntu 26.04",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ubuntu-26-04/"
+  },{
+    "title": "resolute raccoon",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/resolute-raccoon/"
+  },{
+    "title": "iscsi discovery",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iscsi-discovery/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
