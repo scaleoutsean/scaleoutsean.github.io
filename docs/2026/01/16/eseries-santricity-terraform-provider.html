@@ -257,8 +257,8 @@
           <li>Data - hot or warm, fast tier, stored on protected external storage</li>
         </ul>
       </li>
-      <li>Temp/scratch/KV cache - fast(est) tier, used by analytics and inferencing - there's a copy in S3 or databases</li>
-      <li>Other (front-end apps) - small capacity, <strong>big churn</strong> of many small volumes with non-persistent data. Put them anywhere - replicated ZFS on RAID 10 disks, VM-based HA NAS on RAID 6…</li>
+      <li>Temp/scratch/KV cache - fast(est) tier, used by analytics and inferencing - there's a copy in S3 or databases, so nothing to backup or snapshot</li>
+      <li>Other (front-end apps) - small capacity, <strong>big churn</strong> of many small volumes with non-persistent data. Put them anywhere - replicated ZFS on RAID 10 disks, VM-based HA NAS on RAID 6, Rook/Ceph on E-Series…</li>
     </ul>
   </li>
 </ul>
@@ -270,8 +270,8 @@
 <ul>
   <li>RAID 1-like performance for logs</li>
   <li>RAID 6- or RAID 1-like performance for data that stays on protected storage</li>
-  <li>RAID 1 or RAID 0 for ephemeral cache and scratch/temp filesystems (needed for analytics jobs which can be re-run if storage or host fail)</li>
-  <li>"Other" applications have very simple requirements because data persistence isn't required. Containerize and scale them out if HA or rack redundancy is required. There's nothing to protect or backup - most are read-only (stateless). Create a Linux VM with a RAID 6 volume and use CSI LVM or TopoLVM, or form a small Ceph (three VMs, can be spread across racks) cluster for rack redundancy, etc.</li>
+  <li>RAID 1 or RAID 0 for ephemeral cache and scratch/temp filesystems (needed for analytics jobs which can be re-run if a host fails)</li>
+  <li>"Other" applications have very simple requirements because data persistence isn't required. Containerize and scale them out if HA or rack redundancy is required. There's nothing to protect or backup - most are read-only (stateless). Create a Linux VM with a RAID 6 volume and use CSI LVM or TopoLVM, or form a small Rook/Ceph (three VMs, can be spread across racks) cluster for rack redundancy, etc.</li>
 </ul>
 
 <p>In this situation, having a single global pool of capacity from which we can carve volumes is a great feature. Does E-Series have that? Yes, DDP. I've blogged about it many times. In short:</p>
@@ -280,7 +280,7 @@
   <li>Great performance for both random and sequential workloads</li>
   <li>Expansion in single disk increments without violating best practices</li>
   <li>Supports RAID 6 and RAID 1</li>
-  <li>Simple choices - durability vs performance (or both, with application replicas or EC)</li>
+  <li>Simple choices - durability (RAID 6) vs performance (RAID 1) (or both, with application replicas or EC) in one large, highly available pool</li>
 </ul>
 
 <p>DDP isn't the only way, but it's a great choice. If you have massive workloads you understand very well, you can benefit from traditional layout ("classic" RAID groups), or mix two in the same storage or across different arrays.</p>
@@ -352,13 +352,13 @@
 <p>This image depicts two target workloads for SANtricity Provider:</p>
 
 <ul>
-  <li>Modern databases - each node uses own disk(s) (hosts <strong>do not belong to a host group</strong>)</li>
-  <li>Traditional HA clusters (shared disk(s) - mapped to a joint host group)</li>
+  <li>Modern databases - each node uses own disk(s) (hosts <strong>do not belong to a SANtricity "host group"</strong>, each is on its own from E-Series side, and there is <strong>no disk failover</strong> - all we need to do is provision volumes and map them to hosts, maybe resize or extend once every few months!)</li>
+  <li>Traditional HA clusters (shared disk(s) - mapped to a common, shared host group on E-Series)</li>
 </ul>
 
 <p><img src="/assets/images/santricity-go-02-terraform-provider.png" alt="Storage provisioning with SANtricity Provider" /></p>
 
-<p>There's no difference to the provider if the pool is DDP or not or whether volumes are mapped one-per-node or shared to a host group (shared storage cluster). You can configure and use it either way.</p>
+<p>There's no difference to the provider if the pool is DDP or not, or whether volumes are mapped one-per-node or shared to a host group (shared storage cluster). You can configure and use it either way!</p>
 
 <p>The difference to the <em>administrator</em> (and only because I didn't want to implement that, because I don't think it should be done) is modern databases (pattern on the left) need at least one disk (RAID 0 in the schematic) per application and the provider does not touch storage pools. That means you'd need to create and manage several classic RAID disk groups.</p>
 
@@ -725,6 +725,54 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html" rel="permalink">Versity Gateway, SANtricity CSI, and NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-07T00:00:00+08:00">2026-03-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Versity and SANtricity CSI make it possible to deploy S3 service on Kubernetes in 60 seconds
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2026/03/06/ubuntu-26-resolute-raccoon-solidfire-iscsi.html" rel="permalink">Ubuntu 26.04 LTS iSCSI client with SolidFire 12
 </a>
       
@@ -854,54 +902,6 @@ santricity_host_group.pg_cluster: Destruction <span class="nb">complete </span>a
 
 
     <p class="archive__item-excerpt" itemprop="description">Here's how you can create snapshots and linked clones using my Go CLI for SANtricity
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html" rel="permalink">k0rdent k0s, SANtricity CSI, NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-03-02T00:00:00+08:00">2026-03-02 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          8 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">What is k0rdent, what is k0s, and how SANtricity CSI helps you connect them to E-Series storage
 </p>
   </article>
 </div>

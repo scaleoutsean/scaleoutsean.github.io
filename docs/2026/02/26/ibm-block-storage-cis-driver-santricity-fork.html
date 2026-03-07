@@ -272,7 +272,7 @@
   <li>Policy-based replication (doesn't seem important enough; I think Kubernetes users should use native application replication and clustering)</li>
   <li>NVMe+FC support (no hardware to test, and not interested. It might work out of box, who knows!)</li>
   <li>IO group support, HyperSwap and other features specific to IBM storage hardware</li>
-  <li>Topology awareness - this what portsets enable and probably not very relevant for Kubernetes with SANtricity (which isn't a scale-out storage array, unlike some of IBM's block storage arrays). (See my first SANtricity CSI post for my opinion on how it should be done for SANtricity; long story short, in a Kuberntes environment that spans racks I'd implement multiple, independent, smaller E-Series arrays rather than one big one.)</li>
+  <li>Topology awareness - this what portsets enable and probably not very relevant for Kubernetes with SANtricity (which isn't a scale-out storage array, unlike some of IBM's block storage arrays). (See my first SANtricity CSI post for my opinion on how it should be done for SANtricity; long story short, in a Kuberntes environment that spans racks I'd implement multiple, independent, smaller E-Series arrays rather than one big one, and deploy one SANtricity CSI instance per array.)</li>
   <li>UNIX support (I've no UNIX systems at home, so… As an aside, I built working Trident <a href="/2021/02/24/netapp-trident-on-arm64#notes-on-linuxs390x-feb-25-2021">binaries for Power and Linux on zOS</a> five years ago, also ARM64 containers for Trident CSI <a href="/2021/07/31/netapp-trident-v21.07.html#trident-v2107-on-arm64">before</a> it was officially supported)</li>
 </ul>
 
@@ -284,7 +284,7 @@
 
 <p>For this version (v1.13), make sure you have a Kubernetes 1.32-1.34 (or OpenShift 4.16-4.20) cluster on x86 systems and one E-Series array with iSCSI or NVMe/RoCE interfaces (even Fibre Channel might work, it's just that I don't have a way to test it, and wouldn't even if I could).</p>
 
-<p>iSCSI should be the stable one, as NVMe/RoCE is not supported by upstream - only NVMe/FC is, so it's a change but not a big one, especially since SANtricity also supports NVMe/FC, so NVMe discovery exists in upstream (it does exist in my patch, obviously).</p>
+<p>iSCSI should be the stable one, as NVMe/RoCE is not supported by upstream - only NVMe/FC is, so it's a change but not a big one. Note that SANtricity also supports NVMe/FC, and NVMe/FC discovery already exists in upstream, so that might work as well.</p>
 
 <p>Folks who have IBM storage and use IBM Block CSI driver: this driver aims to install in a different name space (<code class="language-plaintext highlighter-rouge">default</code>). IBM's CSI driver uses own, non-default namespace. This patch also uses a slightly different CSI driver name (<code class="language-plaintext highlighter-rouge">santricity.block.csi.ibm.com</code>) to avoid naming conflicts and give credit to upstream. So it should be able to coexist with "real" IBM Block Storage CSI driver within the same Kubernetes cluster.</p>
 
@@ -450,11 +450,11 @@ Events:                &lt;none&gt;
 
 <p>The demo storage class above is the default one; XFS and RAID 6. I used a DDP pool named <code class="language-plaintext highlighter-rouge">data</code> (which can also be set using a <code class="language-plaintext highlighter-rouge">poolId</code> rather than name). You can also use RAID 1 on DDP.</p>
 
-<p>Neither this patched IBM block CSI driver nor SANtricity CSI do is create DDPs or Disk Groups, but SANtricity CSI doesn't want to deal with non-DDP storage pools (I think it should be optimized, so DDP-only, although you could point it to any). This patch doesn't do that and isn't picky about underlying storage pools: use any type of storage pool.</p>
+<p>What neither this patched IBM block CSI driver nor SANtricity CSI do is create new DDPs or Disk Groups, but SANtricity CSI doesn't want to deal with non-DDP storage pools (I think it should be optimized, so SANtricity supports only DDP pools, although you could point it to any). This patch doesn't do that and isn't picky about underlying storage pools: use any type of storage pool you want - all you need is to provide a <code class="language-plaintext highlighter-rouge">PoolId</code>.</p>
 
 <p>Other arrays supported by this driver also support different RAID types, this patch follows. If you like to micro-manage low level storage, use RAID 1, RAID 5, RAID 6, or DDP. If you use DDP, your Storage Class choices are RAID 1 or RAID 6, with RAID 6 as the default. The rest ("classic" disk groups) has no choice - a PVC's RAID type follows underlying disk group's RAID type.</p>
 
-<p>DDP is vastly superior and should be used over others.</p>
+<p>For general use cases, DDP is vastly superior and should be used over other types of storage pools.</p>
 
 <p><img src="/assets/images/ibm_block_driver_for_santricity_01.png" alt="First SANtricity PVC with IBM Block CSI driver" /></p>
 
@@ -597,6 +597,54 @@ Events:                &lt;none&gt;
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html" rel="permalink">Versity Gateway, SANtricity CSI, and NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-07T00:00:00+08:00">2026-03-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Versity and SANtricity CSI make it possible to deploy S3 service on Kubernetes in 60 seconds
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2026/03/06/ubuntu-26-resolute-raccoon-solidfire-iscsi.html" rel="permalink">Ubuntu 26.04 LTS iSCSI client with SolidFire 12
 </a>
       
@@ -726,54 +774,6 @@ Events:                &lt;none&gt;
 
 
     <p class="archive__item-excerpt" itemprop="description">Here's how you can create snapshots and linked clones using my Go CLI for SANtricity
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html" rel="permalink">k0rdent k0s, SANtricity CSI, NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-03-02T00:00:00+08:00">2026-03-02 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          8 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">What is k0rdent, what is k0s, and how SANtricity CSI helps you connect them to E-Series storage
 </p>
   </article>
 </div>
