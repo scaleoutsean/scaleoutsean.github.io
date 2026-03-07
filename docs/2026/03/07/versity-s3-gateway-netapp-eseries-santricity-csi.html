@@ -242,7 +242,7 @@
 <p>This month, it feels real as tangible outcomes are easy to see:</p>
 
 <ul>
-  <li>Terraform Provider for SANtricity gives you the ability to provision PostreSQL (and other) HA clusters in 10 seconds. This Terraform deployment plan is already on Github.</li>
+  <li>Terraform Provider for SANtricity gives you the ability to provision PostgreSQL (and other) HA clusters in 10 seconds. This Terraform deployment plan is already on Github, I've blogged about it and will build it out for NOSQL databases</li>
   <li>SANtricity CSI makes it possible to deploy entire production-ready S3 Kubernetes clusters in 60 seconds. This post will talk about that.</li>
 </ul>
 
@@ -255,7 +255,7 @@
 <ul>
   <li>Replacement for "single node, single drive"-style MinIO deployment, with the added benefit of not messing with your data (it's a gateway, remember!) and having a well protected, highly available volume rather than a "drive"</li>
   <li>Superior performance with small objects (compared to MinIO)</li>
-  <li>Proper Open Source unlike MinIO (while it was still properly maintained in 2025). After the rug pull, MinIOI is no longer a factor, but now they sell <a href="/2026/01/10/minio-aistor-eseries-patterns.html">AIStor</a> which is also a rug pull candidate</li>
+  <li>Proper Open Source unlike MinIO (while it was still properly maintained in 2025). After the rug pull, MinIO is no longer a factor, but now they sell <a href="/2026/01/10/minio-aistor-eseries-patterns.html">AIStor</a> which is also a rug pull candidate</li>
 </ul>
 
 <p>By default, Versity Gateway uses POSIX backend, so in case of container-packaged Versity Gateway for regular use on Kubernetes, that could be an XFS-based PVC.</p>
@@ -284,9 +284,9 @@
   <li>Deploy Versity S3 Gateway (10 seconds) - use Versity Gateway's <a href="https://github.com/versity/versitygw/blob/main/chart/README.md">Helm chart included in their repository</a></li>
   <li>(Optional) deploy an ingress gateway - if you need to rate-limit, micro-manage access, provide OIDC authentication, or do other magic. I'm not covering this because everyone has their own idea of how this should be done
     <ul>
-      <li>S3 API: tcp/7070 ("mandatory" for S3 service)</li>
-      <li>Admin port: tcp/7071</li>
-      <li>Web UI: tcp/8080</li>
+      <li>S3 API: <code class="language-plaintext highlighter-rouge">tcp/7070</code> ("mandatory" for S3 service)</li>
+      <li>Admin port: <code class="language-plaintext highlighter-rouge">tcp/7071</code></li>
+      <li>Web UI: <code class="language-plaintext highlighter-rouge">tcp/8080</code></li>
     </ul>
   </li>
 </ul>
@@ -354,15 +354,15 @@ h1.datafabric.lan Ready    control-plane   5d13h   v1.35.1+k0s
 
 <p><img src="/assets/images/versity-s3-gateway-santricity-csi-k0s-01.png" alt="Versity S3 Data Volume" /></p>
 
-<p><code class="language-plaintext highlighter-rouge">pvc-a3835ab1...</code> volume properties show 64 GiB size and RAID 1 level as per the Storage Class:</p>
+<p><code class="language-plaintext highlighter-rouge">pvc-a3835ab1...</code> volume properties show a 64 GiB size and RAID 1 protection level, as per the Storage Class:</p>
 
 <p><img src="/assets/images/versity-s3-gateway-santricity-csi-k0s-02.png" alt="SANtricity CSI API volume properties" /></p>
 
-<p>SANtricity CSI (also IBM Block CSI patched for SANtricity) both store PVC metadata in SANtricity volume properties, which makes it easier to recover in the case the container or Kubenetes get destroyed. SANtricity's API response for <code class="language-plaintext highlighter-rouge">GET /volume/{id}</code> for the same volume shows its filesystem type, namespace, PVC name and PV name.</p>
+<p>SANtricity CSI (also IBM Block CSI patched for SANtricity) both store PVC metadata in SANtricity volume properties, which makes it easier to recover in the case the container or Kubernetes get destroyed. SANtricity's API response for <code class="language-plaintext highlighter-rouge">GET /volume/{id}</code> for the same volume shows its filesystem type, namespace, PVC name and PV name.</p>
 
 <p><img src="/assets/images/versity-s3-gateway-santricity-csi-k0s-03.png" alt="SANtricity CSI API volume metadata" /></p>
 
-<p>The volume filter feature (marked in yellow circle) from SANtricity Web UI reminds me: today I added the option to filter volumes by volume metadata in SANtricity PowerShell's <code class="language-plaintext highlighter-rouge">Get-SANtricityVolumes</code> cmdlet.</p>
+<p>The volume filter feature (marked in yellow circle) from the SANtricity Web UI screenshot reminds me: today I added the option to filter volumes by volume metadata in SANtricity PowerShell's <code class="language-plaintext highlighter-rouge">Get-SANtricityVolumes</code> cmdlet.</p>
 
 <h2 id="what-else-can-be-done">What else can be done?</h2>
 
@@ -370,7 +370,7 @@ h1.datafabric.lan Ready    control-plane   5d13h   v1.35.1+k0s
 
 <ul>
   <li>Versity S3 Gateway as S3 read cache backed by single host volume or parallel file system was already <a href="/2025/10/09/storagegrid-s3-cache-branch-buckets.html#so-how-is-this-supposed-to-be-used">demonstrated</a>, just not on Kubernetes. There's no need to repeat it on Kubernetes, but the topic of S3 caching will be visited again…</li>
-  <li>Can we "backup" Versity's S3 storage volume (<code class="language-plaintext highlighter-rouge">pvc-a38...</code>)? Absolutely! One shouldn't backup S3 volumes (one should replicate it to other S3 with <code class="language-plaintext highlighter-rouge">rclone</code>, for example) but yes, unlike with MinIO in the recent years, you can not only backup your Versity Gateway PVC, but we expect to be able to do it <strong>easily and for free with Velero</strong>. And when we restore that backup to another volume, we're supposed to see our (single part objects) <em>objects as files</em>. More on Velero in coming weeks…</li>
+  <li>Can we "backup" Versity's S3 storage volume (<code class="language-plaintext highlighter-rouge">pvc-a38...</code>)? Absolutely! One shouldn't backup a Versity S3 volumes (one should replicate it to other S3 storage with <code class="language-plaintext highlighter-rouge">rclone</code>, for example) but yes, unlike with MinIO in the recent years, you can not only backup your Versity Gateway PVC, but we expect to be able to do it <strong>easily and for free with Velero</strong>. And when we restore that backup to another volume, we're supposed to see our (single part objects) <em>objects as files</em>. More on Velero in coming weeks…</li>
   <li>What about the security? Refresh and bounce your Versity Gateway whenever you want. Enterprise users can buy support from Versity, while Docker Hub subscribers can get hardened, rootless, FIPS-compatible Versity Gateway images from <code class="language-plaintext highlighter-rouge">dhi.io</code>. Versity Gateway, SANtricity CSI (or IBM Block CSI with SANtricity patches) are permissively licensed OSS and easy to review.</li>
   <li>Since this runs on a filesystem, can we scan objects for viruses and malware? Of course we can. <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">I've blogged about that already</a>.</li>
   <li>Can we use this "for AI"? Of course we can. Versity Gateway supports notifications via Webhooks and more.</li>
@@ -387,20 +387,18 @@ h1.datafabric.lan Ready    control-plane   5d13h   v1.35.1+k0s
 <ul>
   <li>Deploy heavy-weight HA and NOSQL databases and message queues on bare metal (Terraform Provider for SANtricity) or Kubernetes (SANtricity CSI, or IBM Block CSI with SANtricity patches)</li>
   <li>Deploy dynamic, auto-scaling workloads with SANtricity CSI or IBM Block CSI with SANtricity patches. Offload high-churn workloads to Kubernetes-based Ceph or VMs with ZFS or Btrfs</li>
-  <li>Run ephemeral, scratch and temp filesystems on any cluster file sytem (BeeGFS, Ceph, Lustre) backed by E-Series</li>
+  <li>Run ephemeral, scratch and temp filesystems on any cluster file system (BeeGFS, Ceph, Lustre) backed by E-Series</li>
   <li>Cache S3 access in memory with spill-over to disk (local, PVC, or cluster file system)</li>
   <li>All of this works on plain Ethernet (100G, 200G NVMe/RoCE and 10G, 25G iSCSI). And no, you do not "need Infiniband", despite what you may have heard elsewhere</li>
 </ul>
 
 <p><img src="/assets/images/eseries-datalake-storage-layout-02.png" alt="SANtricity and S3 as Data Lake" /></p>
 
-<p>Versity Gateway is suitable for many use cases. Should you choose to use it, E-Series gives you volumes that can be hundreds of TBs in size and it is possible to extend them online. If you need low-cost, high-capacity S3 for parking idle data (such as simple <code class="language-plaintext highlighter-rouge">rclone</code>, <code class="language-plaintext highlighter-rouge">rsync</code>, or Kopia-style backups), all it takes is one Versity Gateway instance.</p>
+<p>Versity Gateway is suitable for many use cases. Should you choose to use it, E-Series gives you volumes that can be hundreds of TBs in size and it is possible to extend them online. If you need low-cost, high-capacity S3 for parking idle data (such as simple <code class="language-plaintext highlighter-rouge">rclone</code>, <code class="language-plaintext highlighter-rouge">rsync</code>, or Kopia-style backups), all it takes is one Versity Gateway instance you can deploy in seconds.</p>
 
-<p>If you need multiple instances or enterprise S3 features, NetApp has StorageGRID (currently deployable in KVM VMs, for example), and while enterprise-grade features (including erasure coding) are all there, StorageGIRD does take some effort to deploy and manage and needs significant hardware resources. If you're "not there yet", consider Versity Gateway first. If you need to move data from one to another, there's <code class="language-plaintext highlighter-rouge">rclone</code>. If you're "worried about Kubernetes", run it on a VM from Docker compose or binary. It's not rocket science. But multi-node Kubernetes gives you HA, which a Docker Compose won't (you'd have to failover VM or use clusterware).</p>
+<p>If you need multiple instances or enterprise S3 features, NetApp has StorageGRID (currently deployable in KVM VMs, for example), and while enterprise-grade features (including erasure coding) are all there, StorageGIRD does take some effort to deploy and manage and needs significant hardware resources. If you're "not there yet", consider Versity Gateway first. If you need to move data from one to another, there's <code class="language-plaintext highlighter-rouge">rclone</code>. If you're "worried about Kubernetes", run it on a VM from Docker compose or binary. It's not rocket science. But multi-node Kubernetes gives you HA, which a Docker Compose won't (you'd have to failover the VM or use clusterware).</p>
 
-<p>What is still missing?</p>
-
-<p>I'd say not much.</p>
+<p>What is still missing? I'd say not much.</p>
 
 <p>Unlike with closed source "stacks" and solutions, there's nothing that needs to be "completed" or "proven" here. With major client libraries, a Terraform provider and CSI driver(s) all available as permissible OSS, now it's simply a matter of combining these the way that suits our needs.</p>
 
