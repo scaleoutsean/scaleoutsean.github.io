@@ -2225,6 +2225,12 @@ var store = [{
         "url": "/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html",
         "teaser": null
       },{
+        "title": "Proxmox Backup Server 4.1 with NetApp E-Series",
+        "excerpt":"Introduction Following the recent two PVE-related posts, it’s a good idea to cover Proxmox Backup Server (PBS) as well. I’ve wanted to explore Proxmox Backup Server in more detail since SolidFire times. SolidFire isn’t included here because it’s only all-flash based storage and, due to cost, performance and “global pool”...","categories": ["storage","e-series","virtualization"],
+        "tags": ["e-series","backup","pbs","netapp","nl-sas","roce","rdma","zfs","pve","proxmox"],
+        "url": "/2026/03/08/proxmox-backup-server-with-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2238,7 +2244,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Versity Gateway, SANtricity CSI, and NetApp E-Series 2026-03-07 00:00 8 minute read Versity and SANtricity CSI make it possible to deploy S3 service on Kubernetes in 60 seconds Ubuntu 26.04 LTS iSCSI client with SolidFire 12 2026-03-06 00:00 4 minute read Ubuntu 26.04 LTS works with SolidFire, but discovery seems...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Proxmox Backup Server 4.1 with NetApp E-Series 2026-03-08 00:00 27 minute read Proxmox Backup Server on PVE or bare metal servers and NetApp E-Series Versity Gateway, SANtricity CSI, and NetApp E-Series 2026-03-07 00:00 8 minute read Versity and SANtricity CSI make it possible to deploy S3 service on Kubernetes in...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3721,6 +3727,12 @@ var store = [{
   },{
     "title": "santricity csi",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-csi/"
+  },{
+    "title": "pbs",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pbs/"
+  },{
+    "title": "nl-sas",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nl-sas/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
