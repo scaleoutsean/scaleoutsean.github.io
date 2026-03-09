@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          27 minute read
+          38 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#zfs-and-protected-storage">ZFS and protected storage</a></li><li><a href="#deployment-walk-through">Deployment walk-through</a></li><li><a href="#sizing">Sizing</a><ul><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#performance-sizing">Performance sizing</a></li></ul></li><li><a href="#zpool-zfs-and-e-series">Zpool, ZFS, and E-Series</a><ul><li><a href="#ashift">ashift</a></li><li><a href="#zil-arc-zfs-recordsize-and-more">ZIL, ARC, ZFS, recordsize and more</a></li></ul></li><li><a href="#pbs-and-pve-storage-options">PBS and PVE storage options</a><ul><li><a href="#requirements">Requirements</a></li><li><a href="#example-1-hybrid-pve-and-pbs-environment-with-hybrid-arrays-e4000-ef300-ef600">Example 1: Hybrid PVE and PBS environment with hybrid arrays (E4000, EF300, EF600)</a></li><li><a href="#example-2-all-flash-for-pve-and-pbs-tlc-on-ef600-or-ef300-qlc-on-ef600c-or-ef300c">Example 2: All-flash for PVE and PBS (TLC on EF600 or EF300, QLC on EF600C or EF300C)</a></li><li><a href="#example-3-dedicated-pbs-server-and-e-series-with-nl-sas">Example 3: Dedicated PBS server and E-Series with NL-SAS</a></li><li><a href="#example-4-few-large-databases-on-pve-with-dump-to-disk-and-pbs-backup">Example 4: Few large databases on PVE with dump-to-disk and PBS backup</a></li><li><a href="#example-5-pbs-with-s3">Example 5: PBS with S3</a></li></ul></li><li><a href="#high-availability-and-disaster-recovery-for-pbs">High availability and disaster recovery for PBS</a><ul><li><a href="#ha">HA</a></li><li><a href="#dr">DR</a></li></ul></li><li><a href="#compatibility-and-support">Compatibility and support</a></li><li><a href="#demo">Demo</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#zfs-and-protected-storage">ZFS and protected storage</a></li><li><a href="#deployment-walk-through">Deployment walk-through</a></li><li><a href="#sizing">Sizing</a><ul><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#performance-sizing">Performance sizing</a></li></ul></li><li><a href="#zpool-zfs-and-e-series">Zpool, ZFS, and E-Series</a><ul><li><a href="#ashift">ashift</a></li><li><a href="#zil-arc-zfs-recordsize-and-more">ZIL, ARC, ZFS, recordsize and more</a></li></ul></li><li><a href="#pbs-and-pve-storage-options">PBS and PVE storage options</a><ul><li><a href="#requirements">Requirements</a></li><li><a href="#example-1-hybrid-pve-and-pbs-environment-with-hybrid-arrays-e4000-ef300-ef600">Example 1: Hybrid PVE and PBS environment with hybrid arrays (E4000, EF300, EF600)</a></li><li><a href="#example-2-all-flash-for-pve-and-pbs-tlc-on-ef600-or-ef300-qlc-on-ef600c-or-ef300c">Example 2: All-flash for PVE and PBS (TLC on EF600 or EF300, QLC on EF600C or EF300C)</a></li><li><a href="#example-3-dedicated-pbs-server-and-e-series-with-nl-sas">Example 3: Dedicated PBS server and E-Series with NL-SAS</a></li><li><a href="#example-4-few-large-databases-on-pve-with-dump-to-disk-and-pbs-backup">Example 4: Few large databases on PVE with dump-to-disk and PBS backup</a></li><li><a href="#example-5-pbs-with-s3">Example 5: PBS with S3</a></li></ul></li><li><a href="#high-availability-and-disaster-recovery-for-pbs">High availability and disaster recovery for PBS</a><ul><li><a href="#ha">HA</a></li><li><a href="#dr">DR</a></li></ul></li><li><a href="#compatibility-and-support">Compatibility and support</a></li><li><a href="#demo">Demo</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-zpool-expansion">Appendix A: Zpool expansion</a></li></ul>
             </nav>
           </aside>
         
@@ -441,9 +441,54 @@
   <li>A crazy, but very exciting opportunity is to use RAID 0 on E-Series. This means you allocate whole individual disks from E-Series as you would with a JBOD, except that write caching and write cache mirroring would work the same way as it usually does. You could even disable write caching and let ZFS control that. You should <strong>not</strong> disable write cache mirroring with RAID 0, because that would indeed mean you could lose writes to disks (and this isn't RAID 0 specific) in the case of a controller or controller's host side interface failure. In addition to having ZFS in charge, another reason to like this approach is the same array can have other, protected LUNs for XFS, ext4, Btrfs, etc. You get most of "ZPool on JBOD" characteristics without creating storage sprawl.</li>
 </ul>
 
+<p>Here's what I tried on that PBS server:</p>
+
+<ul>
+  <li>Add disk to (PBS) OS from PVE:</li>
+</ul>
+
+<p><img src="/assets/images/pbs_15_pbs_add_disk.png" alt="PBS - add disk" /></p>
+
+<ul>
+  <li>Grow Zpool with a single command:</li>
+</ul>
+
+<p><img src="/assets/images/pbs_16_pbs_grow_zpool_zfs.png" alt="PBS - grow zpool" /></p>
+
+<p>All this was done without rebooting. It literally takes one command to grow a Zpool and ZFS with it.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zpool add backup_store /dev/sdc
+
+<span class="nv">$ </span>zpool list
+NAME           SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+backup_store    63G  2.90G  60.1G        -         -     1%     4%  1.00x    ONLINE  -
+
+<span class="nv">$ </span>zfs list <span class="nt">-r</span> backup_store
+NAME           USED  AVAIL  REFER  MOUNTPOINT
+backup_store  2.90G  58.1G  2.90G  /mnt/datastore/backup_store
+</code></pre></div></div>
+
+<p>I've also tried online device growth and that worked, too (see Appendix A).</p>
+
+<p>Another thing I tried later was adding the 2nd VM (also Ubuntu 26.04 LTS) and two Ubuntu 24.04 containers. One normally wouldn't backup Kubernetes container images, but LXD containers are a little like VMs, so maybe some people do backup them. The LXD container disks were set to 8GB by PVE and I didn't override that suggestion. But it's interesting that, unlike VMs, logical backup size isn't shown as 8G (see below).</p>
+
+<p>With two Ubuntu 26.04 LTS VMs (3 backups in total) and two Ubuntu 24.04 (two backups), efficiency climbed up to 24x.</p>
+
+<p><img src="/assets/images/pbs_21_growing_backup_store_efficiency.png" alt="Growing backup store efficiency" /></p>
+
+<p>It's an awkward way of calculating efficiency  - it's a "marketing math" that doesn't help with capacity sizing, it's confusing, and the figures don't always make complete sense.</p>
+
+<p>These two were captured together after a GC run: 6.34G used, 22.43x efficiency, 129G in the sources' logical disk capacity:</p>
+
+<p><img src="/assets/images/pbs_22_backup_store_size.png" alt="PBS backup store used" /></p>
+
+<p><img src="/assets/images/pbs_23_backup_store_backup_details.png" alt="PBS backup store details" /></p>
+
+<p>129 divided by 6.34 is 20.34, so I don't know where the 22.43x is coming from.</p>
+
 <h3 id="performance-sizing">Performance sizing</h3>
 
-<p>On NL-SAS, the number of disks is the key factor. With flash disks, you won't have problems even with smallest E-Series volumes.</p>
+<p>On NL-SAS, the number of disks is the key factor. With flash disks, you won't have performance problems.</p>
 
 <p>Whichever array or configuration you fancy, ask for an official sizing estimate from NetApp - that's easy to get from NetApp or their partner. But there's a potentially tricky situation here because those sizing tools currently can't precisely size hybrid configurations. If you're considering a hybrid (mixed SSD and HDD) configuration, ask for:</p>
 
@@ -497,11 +542,30 @@
   <li>Revisit your assumptions. Look at my own performance charts: the small IO before the big spike was the installation of Ubuntu 26.04 and PBS 4.1. The write spike was the first "full" backup of Ubuntu 26.04 VM or the first restore (note that is aggregate performance of all volumes, including PVE volumes where a "restore" results in writes. The rest (two other backups) barely registered. Maybe we don't need 2GiB/s at all.</li>
 </ul>
 
+<p>Although I said the objective was to understand PBS and not test performance, I had to take a quick look, and here's what I've found after limited time spent on this. This is the second Ubuntu 26.04 LTS VM backed up for the first time.</p>
+
+<p>At first, nothing happens until PVE does its thing (gets a snapshot, suspends, reads chunks and starts sending them to PBS). Then - as we saw in E-Series performance charts - we get about 200-300 MB/s written to our backup store.</p>
+
+<p><img src="/assets/images/pbs_17_pbs_write_mib_per_sec.png" alt="PBS - write MiB per second during VM backup" /></p>
+
+<p>So far, so good. These requests are not tiny, which is great for NL-SAS (which I didn't have in my environment). Towards the end (job metadata, chunk lists?) we have some ew smaller requests, which is expected.</p>
+
+<p><img src="/assets/images/pbs_18_pbs_avg_write_request_size.png" alt="PBS - write request size per second during VM backup" /></p>
+
+<p>In Appendix A, there's another related screenshot that shows how Zpool nicely balanced requests across both constituent disk devices (as I later added another, to test concatenated Zpool expansion).</p>
+
+<p>Performance-related comments:</p>
+
+<ul>
+  <li>it looks that sizing for write workload can be done with 128K request size</li>
+  <li>when it comes to NL-SAS-based backup stores, I'd grow them in larger increments to delay the spraying of requests across different devices. Flash devices could be grown in smaller increments to avoid allocating stranded capacity before it's necessary.</li>
+</ul>
+
 <h2 id="zpool-zfs-and-e-series">Zpool, ZFS, and E-Series</h2>
 
 <p>I've <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html#disk-layout-and-performance-sizing">done some</a> <a href="/2024/02/28/incus-zfs-netapp-eseries.html">testing</a> with ZFS, but not exhaustive or with custom options. I haven't yet evaluated the effect of non-default options, especially in the context of PBS.</p>
 
-<p>This PBS test was done with default ZFS options as the pool was created from the PBS UI, by the way.</p>
+<p>This PBS testing was done with default ZFS options as the pool was created from the PBS UI, by the way.</p>
 
 <h3 id="ashift">ashift</h3>
 
@@ -513,28 +577,86 @@
 
 <h3 id="zil-arc-zfs-recordsize-and-more">ZIL, ARC, ZFS, <code class="language-plaintext highlighter-rouge">recordsize</code> and more</h3>
 
-<p>I haven't experimented with these and furthermore, I'd be careful guessing because it could be more complex than it seems (I'm referring not to E-Series, but to the impact of sources on PBS'es own efficiency with different setups, and the impact on performance and capacity). So for now, and in general, my approach is to stick with the defaults because I can't see anything wrong in the way PBS works with NVMe (and before with SAS) disks.</p>
+<p>I haven't experimented with these and furthermore, I'd be careful guessing what non-default settings might be better because it could be more complex than it seems (I'm referring not to E-Series, but to the impact of sources on PBS'es own efficiency with different setups, and the impact on performance and capacity).</p>
 
-<p>Possibly <a href="https://openzfs.github.io/openzfs-docs/Performance%20and%20Tuning/Workload%20Tuning.html#larger-record-sizes">pertient information</a>:</p>
+<p>So for now, and in general, my approach is to stick with the defaults because I can't see anything wrong in the way PBS works with NVMe (and before with SAS) disks.</p>
 
-<blockquote>
-  <p>Record sizes of up to 16M are supported with the <code class="language-plaintext highlighter-rouge">large_blocks</code> pool feature, which is enabled by default on new pools on systems that support it.</p>
-</blockquote>
+<p>Some random details about the backup store Zpool/ZFS, which was created from the UI (i.e. using PBS presets).</p>
 
-<p>But also:</p>
+<p>Before expansion was done:</p>
 
-<blockquote>
-  <p>Zvols have a <code class="language-plaintext highlighter-rouge">volblocksize</code> property that is analogous to <code class="language-plaintext highlighter-rouge">recordsize</code>. Current default (16KB since v2.2) balances the metadata overhead, compression opportunities and decent space efficiency on majority of pool configurations due to 4KB disk physical block rounding (especially on RAIDZ and DRAID), while incurring some write amplification on guest FSes that run with smaller block sizes
-Users are advised to test their scenarios and see whether the <code class="language-plaintext highlighter-rouge">volblocksize</code> needs to be changed to favor one or the other</p>
-</blockquote>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zpool list
+NAME           SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+backup_store  31.5G  2.90G  28.6G        -         -     2%     9%  1.00x    ONLINE  -
+</code></pre></div></div>
 
-<p>Precisely, especially since PBS isn't just one workload, but several. Depending on the mix, one set of settings may work well in one PBS environment, and not so well in another PBS setup.</p>
+<ul>
+  <li>Backup data is under <code class="language-plaintext highlighter-rouge">./chunks</code>:</li>
+</ul>
 
-<p>If I were to test the effect of this on DDP volumes with NL-SAS, I'd try 256KiB and 512KiB first.</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">du</span> <span class="nt">-h</span> /mnt/datastore/backup_store/
+...
+3.0G    /mnt/datastore/backup_store/.chunks/
+3.0G    total
+</code></pre></div></div>
+
+<ul>
+  <li>Individual backup jobs for VMs are under <code class="language-plaintext highlighter-rouge">./vm/{vm_id}</code> and LXD containers are under <code class="language-plaintext highlighter-rouge">./ct/{ct_id}</code>. Example for our Ubuntu 26.04 VM:</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-lat</span>  /mnt/datastore/backup_store/vm/101/2026-03-09T05<span class="se">\:</span>08<span class="se">\:</span>32Z/
+total 87
+drwxr-xr-x 2 backup backup      6 Mar  9 00:08 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 backup backup    547 Mar  9 00:08 client.log.blob
+<span class="nt">-rw-r--r--</span> 1 backup backup    409 Mar  9 00:08 index.json.blob
+<span class="nt">-rw-r--r--</span> 1 backup backup 266240 Mar  9 00:08 drive-scsi0.img.fidx
+<span class="nt">-rw-r--r--</span> 1 backup backup    412 Mar  9 00:08 qemu-server.conf.blob
+</code></pre></div></div>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">recordsize</code> is indeed 128K, as per ZFS defaults. Compression is <code class="language-plaintext highlighter-rouge">on</code>, and not much is saved by filesystem compression as backup data is already (pre)compressed. Deduplication is also disabled as it should be (I'm not sure much would be saved, and worse, Backup Server would need <a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">lots of RAM</a> to make it work).</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zfs get all
+NAME          PROPERTY              VALUE                        SOURCE
+backup_store  <span class="nb">type                  </span>filesystem                   -
+backup_store  creation              Sat Mar  7  9:41 2026        -
+backup_store  used                  2.90G                        -
+backup_store  available             27.6G                        -
+backup_store  referenced            2.90G                        -
+backup_store  compressratio         1.03x                        -
+backup_store  mounted               <span class="nb">yes</span>                          -
+backup_store  quota                 none                         default
+backup_store  reservation           none                         default
+backup_store  recordsize            128K                         default
+backup_store  mountpoint            /mnt/datastore/backup_store  <span class="nb">local
+</span>backup_store  sharenfs              off                          default
+backup_store  checksum              on                           default
+backup_store  compression           on                           <span class="nb">local</span>
+
+<span class="nv">$ </span>zpool get all
+NAME          PROPERTY                       VALUE                          SOURCE
+backup_store  size                           31.5G                          -
+backup_store  capacity                       9%                             -
+backup_store  altroot                        -                              default
+backup_store  health                         ONLINE                         -
+backup_store  guid                           17015060385844344410           -
+backup_store  version                        -                              default
+backup_store  bootfs                         -                              default
+backup_store  delegation                     on                             default
+backup_store  autoreplace                    off                            default
+backup_store  cachefile                      -                              default
+backup_store  failmode                       <span class="nb">wait                           </span>default
+backup_store  listsnapshots                  off                            default
+backup_store  autoexpand                     off                            default
+backup_store  dedupratio                     1.00x                          -
+</code></pre></div></div>
+
+<p>As mentioned above, later I overrode <code class="language-plaintext highlighter-rouge">autoexpand</code> (default: <code class="language-plaintext highlighter-rouge">off</code>) for testing purposes, which worked. (This isn't a recommendation to override or not, just a note that it I used that to grow the pool.)</p>
 
 <h2 id="pbs-and-pve-storage-options">PBS and PVE storage options</h2>
 
-<p>This post is meant to be about PBS, but because E-Series supports hybrid configurations (SSD, HDD), it is completely valid to have both PVE and PBS connected to only one E-Series array.</p>
+<p>This post is meant to be about PBS, but because E-Series supports hybrid configurations (SSD, HDD), it is completely valid to have both PVE and PBS using to the same E-Series array.</p>
 
 <p>Here are couple of scenarios that can be scaled out as "pods" (N servers + 1 E-Series) or adjusted as you see fit.</p>
 
@@ -652,6 +774,12 @@ Users are advised to test their scenarios and see whether the <code class="langu
   <li>Weekly backup to S3 for long term retention and DR</li>
 </ul>
 
+<p>S3 backup stores are candidate for a R1 (on DDP or other) <a href="https://pbs.proxmox.com/docs/storage.html#datastores-with-s3-backend">cache volume</a>, which is another use case for hybrid disk arrays (unless you use internal disks, which has its own costs and challenges):</p>
+
+<blockquote>
+  <p>4 GiB to 128 GiB are recommended given that cached datastore contents include also data chunks. Best is to use a dedicated disk, partition or ZFS dataset with quota as local cache.</p>
+</blockquote>
+
 <h2 id="high-availability-and-disaster-recovery-for-pbs">High availability and disaster recovery for PBS</h2>
 
 <h3 id="ha">HA</h3>
@@ -703,9 +831,13 @@ Users are advised to test their scenarios and see whether the <code class="langu
 
 <p>E-Series is suitable for both PBS and PVE and no issues have been observed in testing.</p>
 
-<p>E-Series arrays offer a range of models, protocol (I didn't even talk about FC, which I dislike), shelf, disk sizes, storage pools and RAID options. It even lets you nominally comply with the hilarious Proxmox advice to use RAID 0 disks with write cache disabled.</p>
+<p>E-Series arrays offer a range of models, protocol (I didn't even talk about FC, which I dislike), shelf, disk sizes, storage pools and RAID options.</p>
 
-<p>But you can do better performance and data-protection wise if you use PBS with standard volumes on DDP pools and otherwise follow general recommendations from the NetApp documentation for E-Series products, technology and software integration features (because the Veeam and Commvault material is useful from a design, best practices and sizing perspective related to backup).</p>
+<p>But you can do better performance- and data protection-wise if you use PBS with standard volumes on DDP pools and otherwise follow general recommendations from the NetApp documentation for E-Series products, technology and software integration features (because the Veeam and Commvault material is useful from a design, best practices and sizing perspective related to backup).</p>
+
+<p>PBS backups are compressed, so using NL-SAS makes sense as soon as the volume of data can justify adding a 12-disk NL-SAS shelf (or an E4012, which is is that shelf with a pair of E4000 controllers).</p>
+
+<p>For all-NL-SAS pools I'd just go with single volume Zpools or concatenated Zpools on DDP-based RAID 6 volumes. Zpools can be grown in-place online and also use concatenated devices, so E-Series doesn't restrict these features or require changes in how they're used.</p>
 
 <p>PBS works well and much better than the older versions I tried years ago. I'm sure it doesn't have some of the features "enterprise" users are used to seeing in enterprise backup software stacks, but as a Linux user it does most of what I need.</p>
 
@@ -713,11 +845,197 @@ Users are advised to test their scenarios and see whether the <code class="langu
 
 <ul>
   <li><strong>All-in-one</strong> (PVE and PBS storage): <a href="https://www.netapp.com/media/21363-tr-4877.pdf">EF300</a> - NVMe, NVMe SSDs in controller shelf, NL-SAS in expansion shelves, entry level performance sufficient for some 200 VMs on NVMe and PBS backup stores on NL-SAS. EF300 is the best for switchless iSCSI.</li>
-  <li><strong>Dedicated for PBS</strong> (PBS, or PBS with a small amount of PVE): <a href="https://www.netapp.com/media/116236-tr-5001-intro-to-netapp-e4000-arrays-with-santricity.pdf">E4000</a> - NL-SAS-only or hybrid SAS (NL-SAS, SSD SAS). Don't cut corners on spindle count!</li>
+  <li><strong>Dedicated for PBS</strong> (PBS, or PBS with a small amount of PVE): <a href="https://www.netapp.com/media/116236-tr-5001-intro-to-netapp-e4000-arrays-with-santricity.pdf">E4000</a> - NL-SAS-only or hybrid SAS (NL-SAS, SSD SAS). Don't cut corners on spindle count if you have specific performance requirements!</li>
   <li><strong>High performance databases</strong> (PVE with backup-to-disk (NVMe-to-NL-SAS) and disk-to-disk backup on PBS): <a href="https://www.netapp.com/media/17009-tr4800.pdf">EF600</a> - if you have up to dozens very high-performance VMs and dump database backups to DDP (NL-SAS), and then use PBS to backup these database dump volumes to PBS backup store on another DDP</li>
 </ul>
 
-<p>More work on understanding Zpool and ZFS optimization for E-Series hybrid arrays (where we have the opportunity to use small SSD volumes) would be helpful, but for all-NL-SAS pools I'd just go with single volume Zpools or concatenated Zpools on DDP RAID 6 as explained in this post.</p>
+<h2 id="appendix-a-zpool-expansion">Appendix A: Zpool expansion</h2>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zpool status <span class="nt">-v</span>
+  pool: backup_store
+ state: ONLINE
+  scan: scrub repaired 0B <span class="k">in </span>00:00:02 with 0 errors on Sun Mar  8 00:24:03 2026
+config:
+
+        NAME          STATE     READ WRITE CKSUM
+        backup_store  ONLINE       0     0     0
+          sdb         ONLINE       0     0     0
+          sdc         ONLINE       0     0     0
+
+errors: No known data errors
+</code></pre></div></div>
+
+<p>Override the default to allow online expansion:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zpool <span class="nb">set </span><span class="nv">autoexpand</span><span class="o">=</span>on backup_store
+root@pbs:~# zpool list
+NAME           SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+backup_store    63G  4.16G  58.8G        -         -     1%     6%  1.00x    ONLINE  -
+
+<span class="nv">$ </span>zpool get autoexpand
+NAME          PROPERTY    VALUE   SOURCE
+backup_store  autoexpand  on      <span class="nb">local</span>
+</code></pre></div></div>
+
+<p>Let's see the current volume sizes for constituent volumes <code class="language-plaintext highlighter-rouge">/dev/sdb</code>, <code class="language-plaintext highlighter-rouge">/dev/sdc</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>fdisk <span class="nt">-l</span>
+Disk /dev/sda: 32 GiB, 34359738368 bytes, 67108864 sectors
+Disk model: QEMU HARDDISK
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+Disklabel <span class="nb">type</span>: gpt
+Disk identifier: C852B282-00B4-40CC-9821-A72BC1C1502A
+
+Device       Start      End  Sectors  Size Type
+/dev/sda1       34     2047     2014 1007K BIOS boot
+/dev/sda2     2048  1050623  1048576  512M EFI System
+/dev/sda3  1050624 67108830 66058207 31.5G Linux LVM
+GPT PMBR size mismatch <span class="o">(</span>67108863 <span class="o">!=</span> 83886079<span class="o">)</span> will be corrected by write.
+The backup GPT table is not on the end of the device.
+
+
+Disk /dev/sdb: 40 GiB, 42949672960 bytes, 83886080 sectors
+Disk model: QEMU HARDDISK
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+Disklabel <span class="nb">type</span>: gpt
+Disk identifier: F989F903-C3D3-5D4A-B305-9077CE08C48B
+
+Device        Start      End  Sectors Size Type
+/dev/sdb1      2048 67090431 67088384  32G Solaris /usr &amp; Apple ZFS
+/dev/sdb9  67090432 67106815    16384   8M Solaris reserved 1
+
+
+Disk /dev/mapper/pbs-swap: 3.88 GiB, 4160749568 bytes, 8126464 sectors
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/pbs-root: 27.62 GiB, 29653729280 bytes, 57917440 sectors
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+GPT PMBR size mismatch <span class="o">(</span>67108863 <span class="o">!=</span> 83886079<span class="o">)</span> will be corrected by write.
+The backup GPT table is not on the end of the device.
+
+
+Disk /dev/sdc: 40 GiB, 42949672960 bytes, 83886080 sectors
+Disk model: QEMU HARDDISK
+Units: sectors of 1 <span class="k">*</span> 512 <span class="o">=</span> 512 bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: 512 bytes / 512 bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: 512 bytes / 512 bytes
+Disklabel <span class="nb">type</span>: gpt
+Disk identifier: 814012D8-5B83-884F-A711-33E14DB0E6B4
+
+Device        Start      End  Sectors Size Type
+/dev/sdc1      2048 67090431 67088384  32G Solaris /usr &amp; Apple ZFS
+/dev/sdc9  67090432 67106815    16384   8M Solaris reserved 1
+</code></pre></div></div>
+
+<p>Now expand the volume(s) online and see if the Zpool grows to 80-ish GB.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>zpool online <span class="nt">-e</span> backup_store /dev/sdb
+<span class="nv">$ </span>zpool online <span class="nt">-e</span> backup_store /dev/sdc
+
+<span class="nv">$ </span>zpool list
+NAME           SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+backup_store    79G  4.16G  74.8G        -         -     1%     5%  1.00x    ONLINE  -
+</code></pre></div></div>
+
+<p>And - related to the earlier two Zpool performance charts - here's how Zpool divides workload between them during a VM backup.</p>
+
+<p><img src="/assets/images/pbs_19_zpool_balancing.png" alt="PBS - device balancing" /></p>
+
+<p>The same can be seen in this output below, which also shows that vCPUs in this PBS VM don't get maxed out by single backup job. But it's not enough for three, so if you run dozens in parallel, consider CPU resources required for compression or adjust backup to run no more than <code class="language-plaintext highlighter-rouge">N</code> jobs in parallel, where <code class="language-plaintext highlighter-rouge">N</code> is your number of PBS (v)CPUs, for example.</p>
+
+<p>This is an entire backup run ("incremental" OS backup of an Ubuntu 26.04 VM after 500 new OS packages have been installed).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">----system----</span> <span class="nt">----total-usage----</span> <span class="nt">--dsk</span>/sdb-----dsk/sdc--
+     <span class="nb">time</span>     |usr sys idl wai stl| <span class="nb">read  </span>writ: <span class="nb">read  </span>writ
+09-03 03:27:29| 14   9  76   0   0|   0     0 :   0     0
+09-03 03:27:30|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:27:31|  0   0 100   0   0|   0     0 :   0     0
+09-03 03:27:32|  8   6  87   0   0|   0     0 :   0     0
+09-03 03:27:33|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:27:34|  0   0 100   0   0|   0     0 :   0     0
+09-03 03:27:35|  1   0  99   0   0|   0     0 :   0     0
+09-03 03:27:36|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:27:37|  0   1 100   0   1|   0     0 :   0     0
+09-03 03:27:38|  9   6  85   0   0|   0     0 :   0     0
+09-03 03:27:39|  7   5  89   0   0|   0     0 :   0     0
+09-03 03:27:40|  1   0  99   0   0|   0     0 :   0     0
+09-03 03:27:41|  4   3  93   0   0|   0     0 :   0     0
+09-03 03:27:42| 22  11  65   0   0|   0     0 :   0     0
+09-03 03:27:43| 39  24  36   0   0|   0     0 :   0     0
+09-03 03:27:44| 17  11  72   0   0|   0     0 :   0     0
+09-03 03:27:45|  2   1  96   0   0|   0     0 :   0     0
+09-03 03:27:46| 25  27  46   0   0|   0    96M:   0   109M
+09-03 03:27:47| 40  23  36   0   0|   0     0 :   0     0
+09-03 03:27:48| 42  18  41   0   0|   0     0 :   0     0
+09-03 03:27:49|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:27:50|  0   0 100   0   0|   0     0 :   0     0
+09-03 03:27:51|  1  13  78   6   0|   0    67M:   0    79M
+09-03 03:27:52|  1   1  98   0   0|   0     0 :   0     0
+09-03 03:27:53|  9   4  86   0   0|   0     0 :   0     0
+09-03 03:27:54|  9   5  86   0   0|   0     0 :   0     0
+09-03 03:27:55| 19   9  71   0   0|   0     0 :   0     0
+09-03 03:27:56|  0   4  93   2   0|   0    14M:   0    16M
+09-03 03:27:57| 12   6  82   0   0|   0     0 :   0     0
+09-03 03:27:58| 11   5  82   0   0|   0     0 :   0     0
+09-03 03:27:59| 24  15  62   0   0|   0     0 :   0     0
+09-03 03:28:00|  1   1  96   0   0|   0     0 :   0     0
+09-03 03:28:01|  2   3  92   0   0|   0  7271k:   0  9173k
+09-03 03:28:02| 15   8  76   2   0|   0    13M:   0    16M
+09-03 03:28:03|  0   1  98   0   0|   0     0 :   0     0
+09-03 03:28:04| 19   8  73   0   0|   0     0 :   0     0
+09-03 03:28:05| 30  11  59   1   0|   0     0 :   0     0
+09-03 03:28:06|  9   5  85   0   0|   0     0 :   0     0
+09-03 03:28:07|  3   8  87   1   0|   0    35M:   0    40M
+09-03 03:28:08| 33  24  42   0   0|   0     0 :   0     0
+09-03 03:28:09| 43  34  22   0   0|   0     0 :   0     0
+09-03 03:28:10| 40  36  24   0   1|   0    99M:   0   114M
+09-03 03:28:11| 32  16  52   0   0|   0     0 :   0     0
+09-03 03:28:12| 33  16  48   0   0|   0     0 :   0     0
+09-03 03:28:13| 25  26  43   1   0|   0    94M:   0   108M
+09-03 03:28:14| 32  16  53   0   0|   0     0 :   0     0
+09-03 03:28:15| 38  16  45   0   0|   0     0 :   0     0
+09-03 03:28:16| 29  18  51   0   0|   0     0 :   0     0
+<span class="nt">----system----</span> <span class="nt">----total-usage----</span> <span class="nt">--dsk</span>/sdb-----dsk/sdc--
+     <span class="nb">time</span>     |usr sys idl wai stl| <span class="nb">read  </span>writ: <span class="nb">read  </span>writ
+09-03 03:28:17| 39  42  18   0   0|   0    92M:   0   106M
+09-03 03:28:18| 36  22  42   0   0|   0     0 :   0     0
+09-03 03:28:19| 44  41  13   0   0|   0    83M:   0    96M
+09-03 03:28:20| 44  31  25   0   0|   0    13M:   0    16M
+09-03 03:28:21| 29  31  39   0   0|   0    70M:   0    80M
+09-03 03:28:22| 40  31  28   0   0|   0    28M:   0    33M
+09-03 03:28:23| 35  41  24   0   0|   0    99M:   0   114M
+09-03 03:28:24| 36  17  47   0   0|   0    56k:   0    88k
+09-03 03:28:25|  2   1  95   0   0|   0     0 :   0     0
+09-03 03:28:26|  1   0  99   1   0|   0     0 :   0     0
+09-03 03:28:27|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:28:28|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:28:29|  9  13  77   0   0|   0    28M:   0    34M
+09-03 03:28:30|  1   0  99   0   0|   0     0 :   0     0
+09-03 03:28:31|  0   0 100   0   0|   0     0 :   0     0
+09-03 03:28:32|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:28:33|  0   0  99   0   0|   0     0 :   0     0
+09-03 03:28:34|  0   0  98   0   0|   0   140k:   0   232k
+09-03 03:28:35|  1   1  99   0   0|   0     0 :   0     0
+09-03 03:28:36|  0   1  99   0   0|   0     0 :   0     0
+09-03 03:28:37|  1   0  99   0   0|   0     0 :   0     0
+09-03 03:28:38|  6   3  91   0   0|   0     0 :   0     0
+09-03 03:28:39|  3   2  92   0   0|   0   152k:   0   256k
+09-03 03:28:40|  0   1  99   0   0|   0     0 :   0     0
+09-03 03:28:41|  7   5  89   0   0|   0   108k:   0    72k
+</code></pre></div></div>
+
+<p>This backup job as captured from the PVE UI:</p>
+
+<p><img src="/assets/images/pbs_20_backup_job_progress.png" alt="PBS backup job captured above" /></p>
 
         
       </section>
