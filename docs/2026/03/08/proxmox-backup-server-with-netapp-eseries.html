@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          38 minute read
+          39 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#zfs-and-protected-storage">ZFS and protected storage</a></li><li><a href="#deployment-walk-through">Deployment walk-through</a></li><li><a href="#sizing">Sizing</a><ul><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#performance-sizing">Performance sizing</a></li></ul></li><li><a href="#zpool-zfs-and-e-series">Zpool, ZFS, and E-Series</a><ul><li><a href="#ashift">ashift</a></li><li><a href="#zil-arc-zfs-recordsize-and-more">ZIL, ARC, ZFS, recordsize and more</a></li></ul></li><li><a href="#pbs-and-pve-storage-options">PBS and PVE storage options</a><ul><li><a href="#requirements">Requirements</a></li><li><a href="#example-1-hybrid-pve-and-pbs-environment-with-hybrid-arrays-e4000-ef300-ef600">Example 1: Hybrid PVE and PBS environment with hybrid arrays (E4000, EF300, EF600)</a></li><li><a href="#example-2-all-flash-for-pve-and-pbs-tlc-on-ef600-or-ef300-qlc-on-ef600c-or-ef300c">Example 2: All-flash for PVE and PBS (TLC on EF600 or EF300, QLC on EF600C or EF300C)</a></li><li><a href="#example-3-dedicated-pbs-server-and-e-series-with-nl-sas">Example 3: Dedicated PBS server and E-Series with NL-SAS</a></li><li><a href="#example-4-few-large-databases-on-pve-with-dump-to-disk-and-pbs-backup">Example 4: Few large databases on PVE with dump-to-disk and PBS backup</a></li><li><a href="#example-5-pbs-with-s3">Example 5: PBS with S3</a></li></ul></li><li><a href="#high-availability-and-disaster-recovery-for-pbs">High availability and disaster recovery for PBS</a><ul><li><a href="#ha">HA</a></li><li><a href="#dr">DR</a></li></ul></li><li><a href="#compatibility-and-support">Compatibility and support</a></li><li><a href="#demo">Demo</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-zpool-expansion">Appendix A: Zpool expansion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a><ul><li><a href="#deployment-approaches">Deployment approaches</a></li></ul></li><li><a href="#zfs-and-protected-storage">ZFS and protected storage</a></li><li><a href="#deployment-walk-through">Deployment walk-through</a></li><li><a href="#sizing">Sizing</a><ul><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#performance-sizing">Performance sizing</a></li></ul></li><li><a href="#zpool-zfs-and-e-series">Zpool, ZFS, and E-Series</a><ul><li><a href="#ashift">ashift</a></li><li><a href="#zil-arc-zfs-recordsize-and-more">ZIL, ARC, ZFS, recordsize and more</a></li></ul></li><li><a href="#pbs-and-pve-storage-options">PBS and PVE storage options</a><ul><li><a href="#requirements">Requirements</a></li><li><a href="#example-1-hybrid-pve-and-pbs-environment-with-hybrid-arrays-e4000-ef300-ef600">Example 1: Hybrid PVE and PBS environment with hybrid arrays (E4000, EF300, EF600)</a></li><li><a href="#example-2-all-flash-for-pve-and-pbs-tlc-on-ef600-or-ef300-qlc-on-ef600c-or-ef300c">Example 2: All-flash for PVE and PBS (TLC on EF600 or EF300, QLC on EF600C or EF300C)</a></li><li><a href="#example-3-dedicated-pbs-server-and-e-series-with-nl-sas">Example 3: Dedicated PBS server and E-Series with NL-SAS</a></li><li><a href="#example-4-few-large-databases-on-pve-with-dump-to-disk-and-pbs-backup">Example 4: Few large databases on PVE with dump-to-disk and PBS backup</a></li><li><a href="#example-5-pbs-with-s3">Example 5: PBS with S3</a></li></ul></li><li><a href="#high-availability-and-disaster-recovery-for-pbs">High availability and disaster recovery for PBS</a><ul><li><a href="#ha">HA</a></li><li><a href="#dr">DR</a></li></ul></li><li><a href="#compatibility-and-support">Compatibility and support</a></li><li><a href="#demo">Demo</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-zpool-expansion">Appendix A: Zpool expansion</a></li></ul>
             </nav>
           </aside>
         
@@ -240,6 +240,41 @@
 <p>I've wanted to explore Proxmox Backup Server in more detail since SolidFire times. SolidFire isn't included here because it's only all-flash based storage and, due to cost, performance and "global pool" nature, not suitable as a storage target for same-cluster backup. Proxmox users with SolidFire should probably backup to S3 or an E-Series array.</p>
 
 <p>For current and future owners of NetApp E-Series (and EF-Series; in this post I'll refer to both as E-Series unless I need to single out EF-Series models) storage arrays, we'll look at various options at your disposal.</p>
+
+<h3 id="deployment-approaches">Deployment approaches</h3>
+
+<p>Here's how I'd go about these. I like the first two better - bare metal has less moving parts.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Approach</th>
+      <th>E-Series Storage</th>
+      <th>Comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bare Metal</td>
+      <td>iSCSI, NVMe/RoCE, FC (yuck!)</td>
+      <td>Single host; use PBS replication (LAN/MAN/WAN) for HA/DR</td>
+    </tr>
+    <tr>
+      <td>Single node PVE VM</td>
+      <td><code class="language-plaintext highlighter-rouge">iSCSI/kernel</code> (or NVMe/RoCE), <code class="language-plaintext highlighter-rouge">zfs</code>, <code class="language-plaintext highlighter-rouge">lvm</code>, <code class="language-plaintext highlighter-rouge">xfs</code>, <code class="language-plaintext highlighter-rouge">ext4</code></td>
+      <td>Single host; use PBS replication (LAN/MAN/WAN) for HA/DR</td>
+    </tr>
+    <tr>
+      <td>HA PVE VM</td>
+      <td><code class="language-plaintext highlighter-rouge">iSCSI/kernel</code> (or NVMe/RoCE), <code class="language-plaintext highlighter-rouge">lvm</code></td>
+      <td>Relies on HA failover of PVE cluster dedicated to PBS - must use shared PVE storage; use replication for DR</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Single node PVE or or "single node PVE cluster" is also simple and even better if you prefer to manage VMs rather than bare metal. You could backup PBS VM OS to S3 (with or without backup store(s)) to be able to recover that VM independently of the PVE cluster it protects.</p>
+
+<p>It's tricky to run PBS on cluster which it's supposed to recover when it fails, so I don't list that option. Although this post uses exactly that approach and NVMe/RoCE instead of iSCSI/kernel. Or, let's play along and call this option <code class="language-plaintext highlighter-rouge">NVMe/kernel</code>.</p>
 
 <h2 id="zfs-and-protected-storage">ZFS and protected storage</h2>
 

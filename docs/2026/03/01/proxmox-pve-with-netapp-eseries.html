@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          20 minute read
         
       </span>
     
@@ -229,13 +229,269 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a><ul><li><a href="#simple-random-workloads">Simple random workloads</a></li><li><a href="#simple-sequential-workload">Simple sequential workload</a></li><li><a href="#summary">Summary</a></li></ul></li><li><a href="#tuning-pve-with-e-series">Tuning PVE with E-Series</a></li><li><a href="#demo-video">Demo video</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#e-series-in-pve-storage-options">E-Series in PVE storage options</a><ul><li><a href="#options">Options</a><ul><li><a href="#storage-efficiency-comparison">Storage efficiency comparison</a></li></ul></li><li><a href="#shared-vs-host-only">Shared vs. host-only</a></li><li><a href="#lvm-with-snapshots">LVM with snapshots</a><ul><li><a href="#lvm-with-proxmox-cli">LVM with Proxmox CLI</a></li></ul></li></ul></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a><ul><li><a href="#simple-random-workloads">Simple random workloads</a></li><li><a href="#simple-sequential-workload">Simple sequential workload</a></li><li><a href="#summary">Summary</a></li></ul></li><li><a href="#tuning-pve-with-e-series">Tuning PVE with E-Series</a></li><li><a href="#demo-video">Demo video</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
         <h2 id="introduction">Introduction</h2>
 
 <p>Today I wanted to work on something useful - such as host-side interface reporting for various SANtricity-related libraries I maintain - but instead I spent hours dealing with <a href="/2026/03/01/adblock-and-netapp-docs.html">custom URL blocking filters</a> and "clarifying" my take on this <a href="https://kb.netapp.com/on-prem/E-Series/Hardware-KBs/Very_Low_iSCSI_Read_Performance_on_NetApp_EF300_with_Proxmox_Debian_Hosts">this NetApp KB</a> (see <a href="/2026/02/19/linux-nvme-roce-ef-series.html#proxmox-91-debian-trixie">this Linux NVMe/RoCE post for additional details</a>), which is what follows below.</p>
+
+<p>I'll also add some notes on NetApp E-Series storage configuration options for PVE.</p>
+
+<h2 id="e-series-in-pve-storage-options">E-Series in PVE storage options</h2>
+
+<h3 id="options">Options</h3>
+
+<p>PVE storage options are <a href="https://pve.proxmox.com/wiki/Storage">here</a>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Plugin Type</th>
+      <th>Level</th>
+      <th>Shared</th>
+      <th>Snapshots</th>
+      <th>Comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backup</td>
+      <td><code class="language-plaintext highlighter-rouge">pbs</code></td>
+      <td>both</td>
+      <td>yes</td>
+      <td>yes</td>
+      <td>Install on BM svr &amp; E/EF</td>
+    </tr>
+    <tr>
+      <td><strong>LVM</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">lvm</code></td>
+      <td>block</td>
+      <td><strong>yes</strong></td>
+      <td><strong>yes</strong></td>
+      <td>Big/Med VMs &amp; CTs</td>
+    </tr>
+    <tr>
+      <td>ZFS (local)</td>
+      <td><code class="language-plaintext highlighter-rouge">zfspool</code></td>
+      <td>both</td>
+      <td>no</td>
+      <td>yes</td>
+      <td>Small CTs &amp; VMs</td>
+    </tr>
+    <tr>
+      <td>Directory</td>
+      <td><code class="language-plaintext highlighter-rouge">dir</code></td>
+      <td>file</td>
+      <td>no</td>
+      <td>yes</td>
+      <td>Small CTs &amp; VMs</td>
+    </tr>
+    <tr>
+      <td>Btrfs</td>
+      <td><code class="language-plaintext highlighter-rouge">btrfs</code></td>
+      <td>file</td>
+      <td>no</td>
+      <td>yes</td>
+      <td>Small CT &amp; VMs</td>
+    </tr>
+    <tr>
+      <td>CephFS</td>
+      <td><code class="language-plaintext highlighter-rouge">cephfs</code></td>
+      <td>file</td>
+      <td><strong>yes</strong></td>
+      <td>yes</td>
+      <td>Many VMs &amp; Containers</td>
+    </tr>
+    <tr>
+      <td>Ceph/RBD</td>
+      <td><code class="language-plaintext highlighter-rouge">rbd</code></td>
+      <td>block</td>
+      <td><strong>yes</strong></td>
+      <td>yes</td>
+      <td>Many VMs &amp; Containers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">iSCSI/kernel</code>, <code class="language-plaintext highlighter-rouge">rdma/kernel</code></td>
+      <td><code class="language-plaintext highlighter-rouge">block</code></td>
+      <td>block</td>
+      <td>yes</td>
+      <td><strong>no</strong></td>
+      <td>Big VMs; I made up <code class="language-plaintext highlighter-rouge">rdma/kernel</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="storage-efficiency-comparison">Storage efficiency comparison</h4>
+
+<p>Several options offer good compression, and since E-Series has no efficiencies, these are highly recommended for compressible data.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Efficiency</th>
+      <th>Recommendation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backup</td>
+      <td>yes</td>
+      <td>Compression (enabeld by default)</td>
+    </tr>
+    <tr>
+      <td>LVM</td>
+      <td>no</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>ZFS</td>
+      <td><strong>yes</strong></td>
+      <td>Compression only</td>
+    </tr>
+    <tr>
+      <td>Btrfs</td>
+      <td><strong>yes</strong></td>
+      <td>Compression only</td>
+    </tr>
+    <tr>
+      <td>CephFS</td>
+      <td>yes</td>
+      <td>Compression &amp; selective deduplication</td>
+    </tr>
+    <tr>
+      <td>Ceph/RBD</td>
+      <td>yes</td>
+      <td>Compression &amp; selective deduplication</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">iSCSI/kernel</code>, <code class="language-plaintext highlighter-rouge">rdma/kernel</code></td>
+      <td>no</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>With <em>2x compression savings (common), in-cluster replication makes single-host storage options <strong>economically viable</strong></em>, as you end up using not more storage that you'd use anyway if you were on shared LVM storage or iSCSI/kernel (RDMA/kernel) without compression on E-Series.</p>
+
+<h3 id="shared-vs-host-only">Shared vs. host-only</h3>
+
+<p>The Proxmox link explains everything, so all that remains is several comments from an E-Series perspective.</p>
+
+<ul>
+  <li><strong>Proxmox Backup Server</strong> isn't really "storage". It's a backup server that works well with E-Series. I recommend to install it on a single stand-alone bare metal server, or single-host PVE, or a dedicated PVE cluster (depending on needs; the last would have to use LVM), and setup replication if you need HA and DR. See <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">this post</a></li>
+  <li><strong>Recommended: LVM</strong> is what saves space (by avoiding in-cluster duplication) and provides HA to PVE cluster. In PVE 8, <strong>host-side snapshots</strong> weren't possible, but in version 9 they are.
+    <ul>
+      <li>E-Series can't have thousands of volumes per storage pool, so this would be fine for 200 VMs (or 100 VMs with 2 volumes each) per storage pool. On EF arrays you can have over 500 LUNs across two DDP (12 disks, one reserve) pools - not a huge number, so if you have hundreds of workloads, I recommend to keep the large and medium VMs here, and offload "bulk" workloads to single host storage</li>
+      <li>Shared = yes in the case of LVM means that while storage is shared, it's not used at the same time by all (as it is on NFS or Ceph); a planned or unplanned failover event is needed for the storage to be shared by another host.</li>
+      <li>Sharing is non-concurrent, LUN-based, so whatever is on a LUN needs to be able to run on the PVE host that takes it over. It is therefore recommended to have several LUNs per host. Example: 3 PVE hosts and 9 LUNs for LVM. Then you can use HA groups for failover (see <a href="https://pve.proxmox.com/wiki/High_Availability">here</a>).</li>
+    </ul>
+  </li>
+  <li><strong>Recommended: single host storage</strong>: these use internal disks or E-Series volumes mapped to, and mounted by, individual PVE hosts. Because there's no HA here, you maybe don't need HA (say, Kubernetes)
+    <ul>
+      <li>If you need HA, use LVM. If you have very many workloads and can't put everything on LVM, then move these workloads to Kubernetes either Ceph (see below), or "native" (<a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">check out HA CSI drivers for E-Series, as you'd need HA CSI</a>) or use PVE's inter-cluster (host-to-host) replication (since these workloads are often small and don't need VM/LXD backup, replication might be inexpensive)</li>
+      <li>ZFS is popular, "directory" is good, Btrfs is "technology preview". <strong>ZFS (local)</strong> can be installed on single-host E-Series LUNs, especially in DAS environments; since there's no HA without in-cluster replication, set it up in PVE. See <a href="https://pve.proxmox.com/wiki/Storage:_ZFS">the Proxmox Wiki page</a> for more on ZFS. The same goes for other types, but among single-host options <strong>ZFS has file sharing and compression</strong> and Btrfs have compression** and Btrfs is less mature</li>
+    </ul>
+  </li>
+  <li><strong>Ceph</strong>: Proxmox has own Ceph packages. I haven't used those, but you could use "single host storage" (map one LUN to each individual PVE host) and configure Ceph on it. You can use RAID 0 if you plan to use Erasure Coding on Ceph, or no replication if you use DDP volumes. Recommended for larger clusters with &gt; 1,000 VMs and/or LXD containers. See <a href="/2025/12/28/ceph-with-netapp-eseries.html">here</a> for more.
+    <ul>
+      <li>Note that Ceph appears twice - as file server with NFS gateways and as RADOS block storage. The only reason I don't recommend it is complexity; LVM and single host storage should be easier to manage for up to 1,000 VMs/CTs</li>
+    </ul>
+  </li>
+  <li><strong>iSCSI/kernel</strong> dedicates entire E-Series volumes to VMs, and snapshots are only available from (storage) hardware, so this isn't as good as LVM in PVE 9.</li>
+</ul>
+
+<h3 id="lvm-with-snapshots">LVM with snapshots</h3>
+
+<p><a href="https://pve.proxmox.com/wiki/Storage:_LVM">LVM</a> is what "most people" would use and it's similar to how you may imagine Active-Passive KVM HA clusters would work. I haven't <em>properly</em> tested it with E-Series myself - it needs multiple hosts - but I tried <code class="language-plaintext highlighter-rouge">iSCSI/kernel</code> with a multi-node PVE 8 cluster and SolidFire and failover worked. PVE 9 isn't worse and E-Series supports SCSI-3 reservations and so on.</p>
+
+<p>What drove me nuts is the UI, so here's how it worked over NVMe/RoCE with EF600.</p>
+
+<p>First, on E-Series, create a host group (aka cluster) and add your PVE cluster members to it (use the right NQN (or IQN with iSCSI) when adding them). Then create a volume - at least one - and map it to this host group (or a pair, if you plan to use HA pairs for failover in PVE cluster).</p>
+
+<p>Then on all hosts re-scan storage to make sure the target is visible.</p>
+
+<p>After that go to a <em>host</em>, any host from the group the LUN is mapped, to create a VG for the first, highly available LVM on E-Series. If you add storage, that volume would be added right away. If you do <em>not</em> add storage, you'll need to create an LVM. I did not create LVM in this workflow, to better showcase what it entails.</p>
+
+<p><img src="/assets/images/pve_shared_storage_01_host_vg.png" alt="Create a VG for LVM on shared block device" /></p>
+
+<p>Now we need to create an LVM on this VG. Stay on the same host, move to <strong>Storage &gt; LVM</strong> and add one.</p>
+
+<p><img src="/assets/images/pve_shared_storage_02_host_lvm_create.png" alt="Create LVM on host" /></p>
+
+<p>Because our VG exists, use "Existing volume groups". There are several options and all are recommended. <code class="language-plaintext highlighter-rouge">Shared</code> is the key one, because this LVM is going to be a shared block device. If you're building HA in pairs, you'd have several smaller pairs created on E-Series, and select the two Nodes that belong to a pair. Otherwise, leave that alone. <code class="language-plaintext highlighter-rouge">Enable</code> is obviously required, unless you want to do nothing with the volume, or want to do some preparatory work before "onlining" it. <code class="language-plaintext highlighter-rouge">Wipe Removed Volumes</code> is recommended because it's more secure (especially if you sometimes delete a VM and forget to delete its volume).</p>
+
+<p>The last one, <code class="language-plaintext highlighter-rouge">Allow snapshots as Volume-Chain</code> (software snapshots), is also recommended, especially since hardware snapshots on SANtricity aren't that great. Just note that this feature is currently offered as a technology preview.</p>
+
+<p>The next step is to create what's often termed a "cluster resource". Go to top level <strong>Datacenter</strong> menu and create a PVE cluster-level storage resource.</p>
+
+<p><img src="/assets/images/pve_shared_storage_03_datacenter_resource_create.png" alt="Create Datacenter-level shared LVM resource" /></p>
+
+<p>Now you may create a VM or LXD Container on this LVM. Or add more LVM devices of the same kind.</p>
+
+<p>Make sure you pick the right storage (LVM you created) and among the non-default options, <code class="language-plaintext highlighter-rouge">Discard</code> is strongly recommended. You can include (or not) the disk in <code class="language-plaintext highlighter-rouge">Backup</code> plan for the VM. I did not include it because it is the first disk for OS and configuration files which I "push" from automation tools, so system volume backup is not required.</p>
+
+<p>Note that the <code class="language-plaintext highlighter-rouge">Cache</code> item you see here is KVM-level cache, which isn't mirrored although there is an options to write-through and avoid having unprotected dirty cache on host.</p>
+
+<p><img src="/assets/images/pve_shared_storage_04_vm_on_lvm.png" alt="Create LVM on host" /></p>
+
+<p>Don't miss the "Bandwidth" tab - the storage-limiting options are there. You can'd provide "Minimum QoS" on E-Series, but you can limit VM from squeezing out IO from other VMs or LXD containers.</p>
+
+<p><img src="/assets/images/pve_shared_storage_05_vm_qos.png" alt="Set QoS on VM" /></p>
+
+<p>Ideas:</p>
+
+<ul>
+  <li>On PVE with E-Series NL-SAS disks, you should probably limit IOPS on all VMs and set burst to the same limit. There must be scripts for this out there because it's such a basic idea</li>
+  <li>On PVE with any storage, it's a good idea to set limits and burst values for all resources</li>
+  <li>Monitor E-Series performance and fine-tune</li>
+</ul>
+
+<p>LXD containers are no different, but the discard option is in a different place. It is strongly recommended (on SSDs; it has no effect on HDDs).</p>
+
+<p><img src="/assets/images/pve_shared_storage_06_lxd_on_lvm.png" alt="Create LXD container on LVM" /></p>
+
+<p>This way you can have a bunch of VMs on one shared LVM volume.</p>
+
+<p><img src="/assets/images/pve_shared_storage_07_vm_lxd_resources_on_lvm.png" alt="Create LXD container on LVM" /></p>
+
+<p><strong>NOTE:</strong> The reason you see just an LXD container and not an LXD container <em>and</em> a VM is that KVM in Proxmox 9.1.1 has a bug and as a free user, I can't get it.</p>
+
+<h4 id="lvm-with-proxmox-cli">LVM with Proxmox CLI</h4>
+
+<p>There are just two steps after hosts rescan and detect the volume: the first is to create a VG (on only one of the hosts).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pvesm status
+Name              Type     Status     Total <span class="o">(</span>KiB<span class="o">)</span>      Used <span class="o">(</span>KiB<span class="o">)</span> Available <span class="o">(</span>KiB<span class="o">)</span>        %
+<span class="nb">local              dir     </span>active        98497780         8579304        84868928    8.71%
+pbs41              pbs     active        80280448         9103360        71177088   11.34%
+pve-ef             lvm     active       104853504         8388608        96464896    8.00%
+vg_nvme_n2         <span class="nb">dir     </span>active       114404832        27399440        87005392   23.95%
+</code></pre></div></div>
+
+<p>The second is to create an LVM on that VG, <em>using the same host</em>.</p>
+
+<p>The Promox Storage Management CLI (<code class="language-plaintext highlighter-rouge">pvesm</code>) sucks and I lost patience figuring out how to create LVM with advanced options.</p>
+
+<p>Once that is done, <code class="language-plaintext highlighter-rouge">/etc/pve/storage.cfg</code> will show the LVM.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /etc/pve/storage.cfg
+<span class="nb">dir</span>: <span class="nb">local
+        </span>path /var/lib/vz
+        content import,backup,iso,vztmpl
+
+lvm: pve-ef
+        vgname pve-ef
+        content rootdir,images
+        saferemove 1
+        shared 1
+        snapshot-as-volume-chain 1
+</code></pre></div></div>
+
+<p>The datacenter storage addition would come after that. <code class="language-plaintext highlighter-rouge">pvesm</code> is</p>
 
 <h2 id="verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</h2>
 
@@ -596,7 +852,7 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          40 minute read
+          41 minute read
         
       </span>
     
