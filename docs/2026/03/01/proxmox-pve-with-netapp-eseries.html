@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          20 minute read
+          21 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#e-series-in-pve-storage-options">E-Series in PVE storage options</a><ul><li><a href="#options">Options</a><ul><li><a href="#storage-efficiency-comparison">Storage efficiency comparison</a></li></ul></li><li><a href="#shared-vs-host-only">Shared vs. host-only</a></li><li><a href="#lvm-with-snapshots">LVM with snapshots</a><ul><li><a href="#lvm-with-proxmox-cli">LVM with Proxmox CLI</a></li></ul></li></ul></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a><ul><li><a href="#simple-random-workloads">Simple random workloads</a></li><li><a href="#simple-sequential-workload">Simple sequential workload</a></li><li><a href="#summary">Summary</a></li></ul></li><li><a href="#tuning-pve-with-e-series">Tuning PVE with E-Series</a></li><li><a href="#demo-video">Demo video</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#e-series-in-pve-storage-options">E-Series in PVE storage options</a><ul><li><a href="#storage-options">Storage options</a><ul><li><a href="#storage-efficiency-comparison">Storage efficiency comparison</a></li><li><a href="#volume-lun-mapping-comparison">Volume (LUN) mapping comparison</a></li></ul></li><li><a href="#shared-vs-host-only">Shared vs. host-only</a></li><li><a href="#lvm-with-snapshots">LVM with snapshots</a><ul><li><a href="#lvm-with-proxmox-cli">LVM with Proxmox CLI</a></li></ul></li></ul></li><li><a href="#verifying-proxmox-pve-performance">Verifying Proxmox PVE performance</a></li><li><a href="#video-walk-through">Video walk-through</a></li><li><a href="#other-examples">Other examples</a><ul><li><a href="#simple-random-workloads">Simple random workloads</a></li><li><a href="#simple-sequential-workload">Simple sequential workload</a></li><li><a href="#summary">Summary</a></li></ul></li><li><a href="#tuning-pve-with-e-series">Tuning PVE with E-Series</a></li><li><a href="#demo-video">Demo video</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -241,7 +241,7 @@
 
 <h2 id="e-series-in-pve-storage-options">E-Series in PVE storage options</h2>
 
-<h3 id="options">Options</h3>
+<h3 id="storage-options">Storage options</h3>
 
 <p>PVE storage options are <a href="https://pve.proxmox.com/wiki/Storage">here</a>.</p>
 
@@ -340,7 +340,7 @@
     <tr>
       <td>Backup</td>
       <td>yes</td>
-      <td>Compression (enabeld by default)</td>
+      <td>Compression (default: <code class="language-plaintext highlighter-rouge">on</code>)</td>
     </tr>
     <tr>
       <td>LVM</td>
@@ -375,24 +375,78 @@
   </tbody>
 </table>
 
-<p>With <em>2x compression savings (common), in-cluster replication makes single-host storage options <strong>economically viable</strong></em>, as you end up using not more storage that you'd use anyway if you were on shared LVM storage or iSCSI/kernel (RDMA/kernel) without compression on E-Series.</p>
+<p>With <em>2x compression savings common, in-cluster replication makes single-host storage options <strong>economically neutral</strong></em> as you end up using not more storage that you'd use anyway if you were on shared LVM storage or iSCSI/kernel (RDMA/kernel) without compression on E-Series.</p>
+
+<p>Remember that regardless whether compression is enabled or not, you can also choose algorithms and even compression levels, depending on content or CPU resources.</p>
+
+<h4 id="volume-lun-mapping-comparison">Volume (LUN) mapping comparison</h4>
+
+<p>Remember to present (map) LUNs (namespaces) to individual hosts, not groups, when it is not desirable to make them visible to all hosts, as that may prevent accidental corruption.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Host or Host Group (Cluster)</th>
+      <th>Comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backup</td>
+      <td>either</td>
+      <td>Host Group for HA-clustered PBS, Host for stand-alone PBS</td>
+    </tr>
+    <tr>
+      <td>LVM</td>
+      <td>host group</td>
+      <td>needed for HA</td>
+    </tr>
+    <tr>
+      <td>ZFS</td>
+      <td>host</td>
+      <td>in-cluster replication for HA</td>
+    </tr>
+    <tr>
+      <td>Btrfs</td>
+      <td>host</td>
+      <td>in-cluster replication for HA</td>
+    </tr>
+    <tr>
+      <td>CephFS</td>
+      <td>either</td>
+      <td>Host (use E-Series as internal DAS disks) aligns better with Ceph management concepts</td>
+    </tr>
+    <tr>
+      <td>Ceph/RBD</td>
+      <td>either</td>
+      <td>Host (use E-Series as internal DAS disks) aligns better with Ceph management concepts</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">iSCSI/kernel</code>, <code class="language-plaintext highlighter-rouge">rdma/kernel</code></td>
+      <td>host group</td>
+      <td>needed for HA</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If you perform manual failover of E-Series volumes mapped to single PVE host, you can remap those from the SANtricity UI or via API (or theCLIs I've created) and then "import" such filesystems. That's still better than exposing them to multiple hosts at the same time.</p>
 
 <h3 id="shared-vs-host-only">Shared vs. host-only</h3>
 
-<p>The Proxmox link explains everything, so all that remains is several comments from an E-Series perspective.</p>
-
 <ul>
-  <li><strong>Proxmox Backup Server</strong> isn't really "storage". It's a backup server that works well with E-Series. I recommend to install it on a single stand-alone bare metal server, or single-host PVE, or a dedicated PVE cluster (depending on needs; the last would have to use LVM), and setup replication if you need HA and DR. See <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">this post</a></li>
+  <li><strong>Proxmox Backup Server</strong> isn't really "storage". It's a backup repository (the concept is similar to <a href="/2022/04/03/restic-server-netapp-eseries.html">Rest Server</a>) that works with E-Series storage. I recommend installing it on a single stand-alone bare metal server, or a single-host PVE system, or a dedicated PVE-PBS cluster (depending on needs; the last would likely use LVM and ext4/XFS for HA) and setup replication if you need HA and DR. Backups arrive to PBS pre-compressed and coarsely deduplicated, so in this case ZFS'es compression doesn't save almost any space. See <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">this post</a> for more.</li>
   <li><strong>Recommended: LVM</strong> is what saves space (by avoiding in-cluster duplication) and provides HA to PVE cluster. In PVE 8, <strong>host-side snapshots</strong> weren't possible, but in version 9 they are.
     <ul>
-      <li>E-Series can't have thousands of volumes per storage pool, so this would be fine for 200 VMs (or 100 VMs with 2 volumes each) per storage pool. On EF arrays you can have over 500 LUNs across two DDP (12 disks, one reserve) pools - not a huge number, so if you have hundreds of workloads, I recommend to keep the large and medium VMs here, and offload "bulk" workloads to single host storage</li>
+      <li>E-Series can't have thousands of volumes per storage pool, so this would be fine for 200 VMs (or 100 VMs with 2 volumes each) per storage pool. On EF arrays you can have over 500 LUNs across two DDP (12 disks, one reserve) pools - not a huge number, but with 10 VMs per volume, that's still enough for 1,000 VMs</li>
+      <li>If you have hundreds of workloads, I recommend to keep the large and medium VMs on LVM and offload "bulk" workloads to single host storage or Ceph</li>
       <li>Shared = yes in the case of LVM means that while storage is shared, it's not used at the same time by all (as it is on NFS or Ceph); a planned or unplanned failover event is needed for the storage to be shared by another host.</li>
       <li>Sharing is non-concurrent, LUN-based, so whatever is on a LUN needs to be able to run on the PVE host that takes it over. It is therefore recommended to have several LUNs per host. Example: 3 PVE hosts and 9 LUNs for LVM. Then you can use HA groups for failover (see <a href="https://pve.proxmox.com/wiki/High_Availability">here</a>).</li>
     </ul>
   </li>
-  <li><strong>Recommended: single host storage</strong>: these use internal disks or E-Series volumes mapped to, and mounted by, individual PVE hosts. Because there's no HA here, you maybe don't need HA (say, Kubernetes)
+  <li><strong>Recommended: single host storage</strong>: these use internal disks or E-Series volumes mapped to, and mounted by, individual PVE hosts. Because there's no HA here, you maybe don't need HA (say, you use Kubernetes with stateless containers for front-end services)
     <ul>
-      <li>If you need HA, use LVM. If you have very many workloads and can't put everything on LVM, then move these workloads to Kubernetes either Ceph (see below), or "native" (<a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">check out HA CSI drivers for E-Series, as you'd need HA CSI</a>) or use PVE's inter-cluster (host-to-host) replication (since these workloads are often small and don't need VM/LXD backup, replication might be inexpensive)</li>
+      <li>If you do need HA, use LVM. If you have very many workloads and can't put everything on LVM volumes, then move these workloads to Kubernetes either Ceph (see below), or "native" (<a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">check out HA CSI drivers for E-Series, as you'd need HA CSI</a>) or use PVE's inter-cluster (host-to-host) replication (since these workloads are often small and don't need VM/LXD backup, replication might be inexpensive)</li>
       <li>ZFS is popular, "directory" is good, Btrfs is "technology preview". <strong>ZFS (local)</strong> can be installed on single-host E-Series LUNs, especially in DAS environments; since there's no HA without in-cluster replication, set it up in PVE. See <a href="https://pve.proxmox.com/wiki/Storage:_ZFS">the Proxmox Wiki page</a> for more on ZFS. The same goes for other types, but among single-host options <strong>ZFS has file sharing and compression</strong> and Btrfs have compression** and Btrfs is less mature</li>
     </ul>
   </li>
