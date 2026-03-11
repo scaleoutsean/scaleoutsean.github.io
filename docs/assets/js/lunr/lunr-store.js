@@ -3997,40 +3997,4 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page63/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page64/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page65/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page66/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page68/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page69/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page70/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page71/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page72/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page73/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page74/"
-  },{
-    "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page75/"
   }]
