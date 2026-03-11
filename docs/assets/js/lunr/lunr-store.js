@@ -2232,7 +2232,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Proxmox PVE with NetApp E-Series-backed NFS/RDMA",
-        "excerpt":"Introduction Recently I blogged about: PVE with E-Series arrays, with emphasis on NVMe/RoCE, but I also covered other protocols (iSCSI, mostly) Proxmox Backup Server backed by E-Series block with emphasis on NL-SAS disks The first, PVE-related post, commented on CephFS as a file-based alternative, but I thought to spend some...","categories": ["storage","e-series","virtualization"],
+        "excerpt":"Introduction Recently, I’ve blogged about: PVE with E-Series arrays, with emphasis on NVMe/RoCE, but I also covered other protocols (iSCSI, mostly) Proxmox Backup Server backed by E-Series block with emphasis on NL-SAS disks The first, PVE-related post, commented on CephFS as a file-based alternative, but I thought to spend some...","categories": ["storage","e-series","virtualization"],
         "tags": ["e-series","backup","pbs","netapp","nfs","roce","rdma","pve","proxmox"],
         "url": "/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html",
         "teaser": null
