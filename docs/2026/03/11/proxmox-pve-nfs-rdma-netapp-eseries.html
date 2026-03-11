@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          47 minute read
+          48 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nfs-server-configuration">NFS server configuration</a></li><li><a href="#nfs-client-configuration">NFS client configuration</a></li><li><a href="#fio-tests">fio tests</a></li><li><a href="#test-results-observations">Test, results, observations</a><ul><li><a href="#minimal-4kib-qd-1-single-thread">Minimal (4KiB, QD 1, single thread)</a></li><li><a href="#realistic-vi-8kib-7030-rw-vmscts">Realistic VI (8KiB, 70/30 r/w, VMs/CTs)</a></li><li><a href="#realistic-analytics-128kib-5050-rw">Realistic Analytics (128KiB, 50/50 r/w)</a></li></ul></li><li><a href="#how-to-do-nfs-with-e-series">How to do NFS with E-Series</a></li><li><a href="#network-roce">Network (RoCE)</a></li><li><a href="#proxmox-pve-with-nfsrdma">Proxmox PVE with NFS/RDMA</a></li><li><a href="#backup-and-restore">Backup and restore</a><ul><li><a href="#backup-and-restore-of-linux-nfs-vm">Backup and restore of Linux NFS VM</a></li><li><a href="#backup-and-restore-vmct-on-nfs-data-store">Backup and restore VM/CT on NFS data store</a></li></ul></li><li><a href="#performance-nl-sas-vs-ssd">Performance (NL-SAS vs. SSD)</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-fio-log">Appendix A: fio log</a></li><li><a href="#appendix-b-backup-and-restore-with-pbs">Appendix B: backup and restore with PBS</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nfs-server-configuration">NFS server configuration</a></li><li><a href="#nfs-client-configuration">NFS client configuration</a></li><li><a href="#fio-tests">fio tests</a></li><li><a href="#test-results-observations">Test, results, observations</a><ul><li><a href="#minimal-4kib-qd-1-single-thread">Minimal (4KiB, QD 1, single thread)</a></li><li><a href="#realistic-vi-8kib-7030-rw-vmscts">Realistic VI (8KiB, 70/30 r/w, VMs/CTs)</a></li><li><a href="#realistic-analytics-128kib-5050-rw">Realistic Analytics (128KiB, 50/50 r/w)</a></li></ul></li><li><a href="#how-to-do-nfs-with-e-series">How to do NFS with E-Series</a></li><li><a href="#network-roce">Network (RoCE)</a></li><li><a href="#proxmox-pve-with-nfsrdma">Proxmox PVE with NFS/RDMA</a></li><li><a href="#backup-and-restore">Backup and restore</a><ul><li><a href="#backup-and-restore-of-linux-nfs-vm">Backup and restore of Linux NFS VM</a></li><li><a href="#backup-and-restore-vmct-located-on-nfs-data-store">Backup and restore VM/CT located on NFS data store</a></li></ul></li><li><a href="#performance-nl-sas-vs-ssd">Performance (NL-SAS vs. SSD)</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-fio-log">Appendix A: fio log</a></li><li><a href="#appendix-b-backup-and-restore-with-pbs">Appendix B: backup and restore with PBS</a></li></ul>
             </nav>
           </aside>
         
@@ -276,7 +276,14 @@
   </li>
 </ul>
 
-<p>Disks weren't even connected over multiple paths - it wasn't necessary for this simple test.</p>
+<p>Configuration instructions for RDMA modules:</p>
+
+<ul>
+  <li>my <a href="/2026/02/19/linux-nvme-roce-ef-series.html#hosts">how-to</a> for Rocky Linux 10.1</li>
+  <li>the RHEL 10 <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_infiniband_and_rdma_networks/enabling-nfs-over-rdma-on-an-nfs-server_configuring-infiniband-and-rdma-networks">documentation</a>,</li>
+</ul>
+
+<p>The NVMe/RoCE disks weren't even connected over multiple paths and I didn't try to remedy that because it wasn't necessary for this simple test.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nvme show-topology
 nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.com.netapp:6000.6d039ea000493a9c00000000609943a4
@@ -318,6 +325,13 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
       <li>The volume mounted at <code class="language-plaintext highlighter-rouge">/r1_4096_128 nfs4</code> on <code class="language-plaintext highlighter-rouge">h1</code> shared over NFS/RDMA was mounted using the same network used by NFS server to access the block device that backed NFS share (not ideal, but also an example of a "worst case" scenario because only one link to storage was functional and the same was used for NFS/RDMA access).</li>
     </ul>
   </li>
+</ul>
+
+<p>Configuration instructions for RDMA modules:</p>
+
+<ul>
+  <li>Don't forget to ensure that RDMA modules are loaded before network starts, as NFS mounts might fail without them</li>
+  <li>my <a href="/2026/02/19/linux-nvme-roce-ef-series.html#hosts">how-to</a> for Proxmox 9.1</li>
 </ul>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>192.168.1.11:/r1_4096_128 /mnt/r1_4096_128 nfs4 rw,relatime,vers<span class="o">=</span>4.2,rsize<span class="o">=</span>1048576,wsize<span class="o">=</span>1048576,namlen<span class="o">=</span>255,hard,proto<span class="o">=</span>rdma,port<span class="o">=</span>20049,timeo<span class="o">=</span>600,retrans<span class="o">=</span>2,sec<span class="o">=</span>sys,clientaddr<span class="o">=</span>192.168.1.12,local_lock<span class="o">=</span>none,addr<span class="o">=</span>192.168.1.11 0 0
@@ -466,7 +480,7 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <ul>
   <li>Most NOSQL and queue/messaging (Kafka, Elasticsearch…) - maybe more than 50% write (with RF2 on application)</li>
-  <li>Proxmox Backup Server - you may have just one, but it will be very busy for several hours every day, doing 100% write during that time. See <a href="">this post on PBS</a></li>
+  <li>Proxmox Backup Server - you may have just one, but it will be very busy for several hours every day, doing 100% write during that time. See <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">this post on PBS</a></li>
 </ul>
 
 <p>Now, I <strong>don't recommend using NFS for either</strong> of these workloads (use NVMe/RoCE or iSCSI with RF2 on application level), but in terms of heavy workloads that's what users would have - not read-only with 1M.</p>
@@ -592,6 +606,11 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <p><img src="/assets/images/pve_shared_nfs_05_directory_based_nfs_rdma_datastore.png" alt="NFS/RDMA as shared directory" /></p>
 
+<p><strong>NOTE:</strong> you do need to load <code class="language-plaintext highlighter-rouge">rdma</code> modules before you attempt to mount NFS. Test-reboot a PVE node to see that RDMA is loaded after <code class="language-plaintext highlighter-rouge">network</code> and before</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>192.168.0.216:/mnt/HDD1 /mnt/nfs_rdma/ nfs rdma,rw,bg,hard 0 0
+</code></pre></div></div>
+
 <h2 id="backup-and-restore">Backup and restore</h2>
 
 <h3 id="backup-and-restore-of-linux-nfs-vm">Backup and restore of Linux NFS VM</h3>
@@ -609,7 +628,7 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <p>Note that PBS provides both snapshots and file-based recovery, so VMs or CTs could be recovered from a "local" PVE snapshot easier and faster. This is more aligned with PVE's way of doing things, so E-Series <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html">snapshots</a> would be used to recover only in extreme cases (i.e. ransomware or catastrophic human error on PVE). You'd need to "reserve" some "snapshot repository" capacity on E-Series for that. For example, reserve 10% of LUN size if you keep 3-4 snapshots for 24 hours; 10% should be enough if rate change is less than 10% per day.</p>
 
-<h3 id="backup-and-restore-vmct-on-nfs-data-store">Backup and restore VM/CT on NFS data store</h3>
+<h3 id="backup-and-restore-vmct-located-on-nfs-data-store">Backup and restore VM/CT located on NFS data store</h3>
 
 <p>I also tested this, just to see if there's anything unusual - there was nothing, it worked really well.</p>
 
@@ -637,6 +656,17 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 <p>Backup and restore logs are available in Appendix B below.</p>
 
 <p>Remember to enable <code class="language-plaintext highlighter-rouge">Discard</code> for Linux NFS server, whichever filesystem it uses, otherwise it'll constantly grow and bloat backend LVM capacity up to 100% of allocation (data disk size) which could be expensive with SSDs.</p>
+
+<p>One final note. <a href="https://pve.proxmox.com/pve-docs/pvesm.1.html">From TFM</a>:</p>
+
+<blockquote>
+  <p>After an NFS request times out, NFS request are retried indefinitely by default. This can lead to unexpected hangs on the client side. For read-only content, it is worth to consider the NFS soft option, which limits the number of retries to three.</p>
+</blockquote>
+
+<ul>
+  <li>You might have exactly that kind of workloads - read-only content (static Web sites, front-end apps) - on NFS (at least I would). But if you don't, don't be <code class="language-plaintext highlighter-rouge">soft</code> because you might lose data.</li>
+  <li>If you use have workloads that use NFS and if NFS hangs, you can attempt to backup the VMs before you kill them (otherwise, with <code class="language-plaintext highlighter-rouge">hard</code>, they may just hang in there)</li>
+</ul>
 
 <h2 id="performance-nl-sas-vs-ssd">Performance (NL-SAS vs. SSD)</h2>
 
