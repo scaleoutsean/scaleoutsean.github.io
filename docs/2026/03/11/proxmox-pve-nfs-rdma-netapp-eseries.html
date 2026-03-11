@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          45 minute read
+          46 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nfs-server-configuration">NFS server configuration</a></li><li><a href="#nfs-client-configuration">NFS client configuration</a></li><li><a href="#fio-tests">fio tests</a></li><li><a href="#test-results-observations">Test, results, observations</a><ul><li><a href="#minimal-4kib-qd-1-single-thread">Minimal (4KiB, QD 1, single thread)</a></li><li><a href="#realistic-vi-8kib-7030-rw-vmscts">Realistic VI (8KiB, 70/30 r/w, VMs/CTs)</a></li><li><a href="#realistic-analytics-128kib-5050-rw">Realistic Analytics (128KiB, 50%/50% r/w)</a></li></ul></li><li><a href="#how-to-do-nfs-with-e-series">How to do NFS with E-Series</a></li><li><a href="#network-roce">Network (RoCE)</a></li><li><a href="#proxmox-pve-with-nfsrdma">Proxmox PVE with NFS/RDMA</a></li><li><a href="#backup-and-restore">Backup and restore</a><ul><li><a href="#backup-and-restore-nfs-vm">Backup and restore NFS VM</a></li><li><a href="#backup-and-restore-vmct-on-nfs-data-store">Backup and restore VM/CT on NFS data store</a></li></ul></li><li><a href="#performance-nl-sas-vs-ssd">Performance (NL-SAS vs. SSD)</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-fio-log">Appendix A: fio log</a></li><li><a href="#appendix-b-backup-and-restore-with-pbs">Appendix B: backup and restore with PBS</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nfs-server-configuration">NFS server configuration</a></li><li><a href="#nfs-client-configuration">NFS client configuration</a></li><li><a href="#fio-tests">fio tests</a></li><li><a href="#test-results-observations">Test, results, observations</a><ul><li><a href="#minimal-4kib-qd-1-single-thread">Minimal (4KiB, QD 1, single thread)</a></li><li><a href="#realistic-vi-8kib-7030-rw-vmscts">Realistic VI (8KiB, 70/30 r/w, VMs/CTs)</a></li><li><a href="#realistic-analytics-128kib-5050-rw">Realistic Analytics (128KiB, 50%/50% r/w)</a></li></ul></li><li><a href="#how-to-do-nfs-with-e-series">How to do NFS with E-Series</a></li><li><a href="#network-roce">Network (RoCE)</a></li><li><a href="#proxmox-pve-with-nfsrdma">Proxmox PVE with NFS/RDMA</a></li><li><a href="#backup-and-restore">Backup and restore</a><ul><li><a href="#backup-and-restore-of-linux-nfs-vm">Backup and restore of Linux NFS VM</a></li><li><a href="#backup-and-restore-vmct-on-nfs-data-store">Backup and restore VM/CT on NFS data store</a></li></ul></li><li><a href="#performance-nl-sas-vs-ssd">Performance (NL-SAS vs. SSD)</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-fio-log">Appendix A: fio log</a></li><li><a href="#appendix-b-backup-and-restore-with-pbs">Appendix B: backup and restore with PBS</a></li></ul>
             </nav>
           </aside>
         
@@ -539,6 +539,21 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <p>In both of these approaches, make sure PVE does not rely on NFS for critical services. Use block for those, so that if NFS completely fails, your PVE and PBS are still available for use. Do not use NFS for PBS data stores either, since there's no advantage to that and it can be another circular dependency. That's why I do not recommend running NFS and PBS inside of the same cluster where VM/CT workloads run.</p>
 
+<p>Regarding deployment options, this is how <strong>not</strong> to do it:</p>
+
+<ul>
+  <li>Single NFS (bare metal) server - no server redundancy</li>
+  <li>Same non-redundant link for NFS/RDMA service and NVMe/RoCE</li>
+</ul>
+
+<p><img src="/assets/images/pve_shared_nfs_04_single_nfs_server.png" alt="Single NFS server" /></p>
+
+<p>A nicer option is a pair of physical servers in own PVE cluster. You can collocate PBS and NFS in this cluster, and have multiple NFS VMs. Then you rely on PVE for HA for both NFS and PBS VM.</p>
+
+<p><img src="/assets/images/pve_shared_nfs_03_ha_dedicated_pbs_nfs.png" alt="Dedicated two-node NFS/PBS stand-alone PVE DC" /></p>
+
+<p>Unlike in <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html">the other PVE post</a> where I mentioned how we can avoid storage switches with 2-4 PVE servers, here we have 5 servers, so unless we cut corners and used a single link to storage from the PBS/NFS cluster (which would keep iSCSI port count down to 8 iSCSI ports on EF300 and EF600), we'd probably have slightly more failures without redundancy, but they'd be limited to failovers of PBS and NFS VMs, which may or may not be tolerable. For NVMe/RoCE and NVMe/RDMA, switchless design with several PVE servers would not be possible due to not enough NVMe ports in the existing E-Series models.</p>
+
 <h2 id="network-roce">Network (RoCE)</h2>
 
 <p>NVMe/RoCE is currently available on EF300 and EF600.</p>
@@ -571,7 +586,7 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <h2 id="backup-and-restore">Backup and restore</h2>
 
-<h3 id="backup-and-restore-nfs-vm">Backup and restore NFS VM</h3>
+<h3 id="backup-and-restore-of-linux-nfs-vm">Backup and restore of Linux NFS VM</h3>
 
 <p>If you run NFS on E-Series-backed block devices (LVM on block), PBS can back them up (and restore) without issues.</p>
 
