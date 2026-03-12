@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          49 minute read
+          50 minute read
         
       </span>
     
@@ -253,11 +253,15 @@
 <p>Note that, in order to provide NFS/RDMA service out of a VM, you'd need the VM to have access to an RDMA NIC. Therefore for NFS/RDMA (not NFS/TCP) you need to either:</p>
 
 <ul>
-  <li>Implement <a href="https://www.servethehome.com/how-to-pass-through-pcie-nics-with-proxmox-ve-on-intel-and-amd/">pass-through</a> for a PVE-hosted VM with Linux NFS/RDMA for at least a pair of hosts that need RoCE capability, or</li>
+  <li>Implement <a href="https://www.servethehome.com/how-to-pass-through-pcie-nics-with-proxmox-ve-on-intel-and-amd/">pass-through</a> for a PVE-hosted VM with Linux NFS/RDMA for at least a pair of hosts that need RoCE capability
+    <ul>
+      <li>It may also be possible (and easier) to RoCE available to guests by creating bridge on RoCE interfaces, but I'd have to un-configure and re-configure this cluster, so I'll leave this for another time</li>
+    </ul>
+  </li>
   <li>Run NFS/RDMA on non-PVE servers, with "bare metal" access to RoCE NICs</li>
 </ul>
 
-<p>If you can't do either, then just fall back to regular Linux NFS service. There's also a complex workaround for this situation explained in this post. For this PoC, I used a bare metal server to run NFS/RDMA service in this initial PoC.</p>
+<p>If you can't do either, then just fall back to regular Linux NFS service. There's also an ugly workaround for this situation explained later in this post. For this PoC, I used a bare metal server to run NFS/RDMA service in this initial PoC.</p>
 
 <ul>
   <li>Rocky Linux 10.1 (not a PVE VM!)</li>
@@ -607,7 +611,9 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <h2 id="proxmox-pve-as-nfs-client-with-nfsrdma-server">Proxmox PVE as NFS client with NFS/RDMA server</h2>
 
-<p>In 9.1.1, the UI won't let you specify scan options, so "<code class="language-plaintext highlighter-rouge">-o rdma</code>" isn't available. The CLI (<code class="language-plaintext highlighter-rouge">pvesm scan</code>) won't let you do that either (and it doesn't do it automatically even if the <code class="language-plaintext highlighter-rouge">rdma</code> modules are already loaded).</p>
+<p>Non-RDMA NFS users can ignore RDMA and use NFS/TCP as usual.</p>
+
+<p>NFS/RDMA users on 9.1.1 will notice the UI won't let you specify NFS scan options, so "<code class="language-plaintext highlighter-rouge">-o rdma</code>" isn't available and without that option, nothing gets discovered. The CLI (<code class="language-plaintext highlighter-rouge">pvesm scan</code>) won't let you do that either (and it doesn't do it automatically even if the <code class="language-plaintext highlighter-rouge">rdma</code> modules are already loaded).</p>
 
 <p>Approaches:</p>
 
@@ -629,8 +635,22 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 
 <p><strong>NOTE:</strong> you do need to load <code class="language-plaintext highlighter-rouge">rdma</code> modules before you attempt to mount NFS. Test-reboot a PVE node to see that RDMA is loaded before <code class="language-plaintext highlighter-rouge">network</code> is available and NFS mount attempted. Add your NFS options to <code class="language-plaintext highlighter-rouge">/etc/fstab</code> as you use them:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>192.168.1.11:/mnt/r1_4096_128 /mnt/nfs_rdma/ nfs rdma,rw,bg,hard 0 0
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>192.168.1.11:/mnt/r1_4096_128 /mnt/nfs_rdma nfs rdma,rw,bg,hard 0 0
 </code></pre></div></div>
+
+<p>My PVE storage configuration for this NFS/RDMA share:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">dir</span>: nfs_rdma
+        path /mnt/nfs_rdma
+        content vztmpl,iso,rootdir,images,backup
+        max-protected-backups 4
+        preallocation falloc
+        prune-backups keep-all<span class="o">=</span>1
+        shared 1
+        snapshot-as-volume-chain 1
+</code></pre></div></div>
+
+<p>Non-RDMA users will simply have no issues adding NFS - there's no need for any workarounds.</p>
 
 <h2 id="backup-and-restore">Backup and restore</h2>
 
@@ -673,6 +693,8 @@ nvme-subsys0 - <span class="nv">NQN</span><span class="o">=</span>nqn.1992-08.co
 </ul>
 
 <p><img src="/assets/images/pve_shared_nfs_02_backup_restore_mbs.png" alt="Backup and restore in MB/s" /></p>
+
+<p>It seems we almost max out Proxmox backup client's performance (rated at 775 MB/s on Ryzen 7 2600X) using CPUs on the (very old) <code class="language-plaintext highlighter-rouge">h3</code> uniprocessor server I was using. This is good to know because now you also know 1 GB/s per PVE host is roughly most one can get when backing up.</p>
 
 <p>Backup and restore logs are available in Appendix B below.</p>
 
