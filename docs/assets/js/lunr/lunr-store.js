@@ -2111,7 +2111,7 @@ var store = [{
         "url": "/2026/01/16/eseries-santricity-terraform-provider.html",
         "teaser": null
       },{
-        "title": "Big Data & analytics patterns for NetApp object & block",
+        "title": "Big data & analytics patterns for NetApp object & block",
         "excerpt":"Introduction The post StorageGRID Branch Buckets and Read Cache is a rant about patterns for the NetApp storage products in analytics and big data environments. I didn’t do a good job illustrating those at the time, so this post will add hopefully better depictions along with some comments. Application, rack...","categories": ["netapp","storage"],
         "tags": ["analytics","big data","e-series","netapp","s3","santricity","storagegrid"],
         "url": "/2026/01/16/santricity-eseries-datalake-storage.html",
@@ -2237,6 +2237,18 @@ var store = [{
         "url": "/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Veeam B&R 13.0, Proxmox PVE 9.1, and NetApp E-Series",
+        "excerpt":"Introduction Following the post on Proxmox Backup Server, I thought to try Veeam Backup &amp; Recovery, especially since I’ve never used it with Proxmox. I also wanted to check out the NVMe/RoCE, current state of pre-post backup and snapshot integration - supposedly a complex topic (judging by the lack of...","categories": ["storage","e-series","backup"],
+        "tags": ["e-series","backup","veeam","netapp","nl-sas","roce","rdma","pve","proxmox"],
+        "url": "/2026/03/14/veeam-proxmox-netapp-eseries.html",
+        "teaser": null
+      },{
+        "title": "Volume Copy behavior on NetApp E-Series",
+        "excerpt":"Introduction The SANtricity Volume Copy feature serves a different purpose to Linked Clones: linked clones - or “snapshot volumes”, as the documentation calls them - live off a Point-in-Time snapshot which, in turn, lives off a Base Volume Copies are simply full copies Sometimes you want linked clones (usually for...","categories": ["storage","e-series","backup"],
+        "tags": ["netapp","santricity","snapshots","clones"],
+        "url": "/2026/03/15/netapp-eseries-volume-copy-behavior.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2250,7 +2262,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Proxmox PVE with NetApp E-Series-backed NFS/RDMA 2026-03-11 00:00 50 minute read How to deploy Linux-based NFS and NFS/RDMA service backed by NetApp E-Series Proxmox Backup Server 4.1 with NetApp E-Series 2026-03-08 00:00 39 minute read Proxmox Backup Server on PVE or bare metal servers and NetApp E-Series Versity Gateway, SANtricity...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series 2026-03-14 00:00 11 minute read Proxmox Backup Server on PVE or bare metal servers and...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
