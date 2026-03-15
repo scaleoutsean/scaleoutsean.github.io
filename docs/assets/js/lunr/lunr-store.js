@@ -2249,6 +2249,12 @@ var store = [{
         "url": "/2026/03/15/netapp-eseries-volume-copy-behavior.html",
         "teaser": null
       },{
+        "title": "Application-consistent PostgreSQL snapshots and clones on NetApp E-Series",
+        "excerpt":"Workflows for PostgreSQL 17 and 18 I this this on Windows Server 2025 as I happened to have it round for the evaluation of Veeam Backup and Recovery 13, Proxmox 9.1 and E-Series (previous post). As you can see, Veeam B&amp;R now uses PostgreSQL 17. You could do this with...","categories": ["storage","e-series","backup"],
+        "tags": ["netapp","santricity","snapshot","clone","postgres"],
+        "url": "/2026/03/15/santricity-powershell-postgres-snashot-clone.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2262,7 +2268,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series 2026-03-14 00:00 12 minute read Proxmox Backup Server on PVE or bare metal servers and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 3 minute read Snapshot images and snapshot volumes (linked clones) Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
