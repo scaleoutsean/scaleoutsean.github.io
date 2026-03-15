@@ -2262,7 +2262,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series 2026-03-14 00:00 11 minute read Proxmox Backup Server on PVE or bare metal servers and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series 2026-03-14 00:00 12 minute read Proxmox Backup Server on PVE or bare metal servers and...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"

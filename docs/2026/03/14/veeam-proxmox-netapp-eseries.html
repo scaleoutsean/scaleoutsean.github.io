@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -423,11 +423,11 @@
 
 <p><img src="/assets/images/vbr-12-pre-post-script-define.png" alt="Run agent backup scripts as user" /></p>
 
-<p>I wanted to try my SANtricity PowerShell scripts here to make this somehow work with one of the backup proxies, but - as I explained above - VIA or any other just won't let you do anything like that.</p>
+<p>I wanted to try my SANtricity PowerShell scripts here to make this somehow work with one of the backup proxies, but I couldn't make VIA discover those.</p>
 
 <p><img src="/assets/images/vbr-13-download-scripts.png" alt="SANtricity Powershell pre- and post-backup scripts" /></p>
 
-<p>This isn't to say you can't use those, but that it didn't help me work around VIA.</p>
+<p>This isn't to say you can't use those, but that it didn't help me use VIA.</p>
 
 <p>Another thing I tried was mount point backup from a Linux host. This is the mount point used as <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">NFS/RDMA data store</a> on PVE, served by the <code class="language-plaintext highlighter-rouge">h1</code> host (Rocky 10.1).</p>
 
@@ -461,13 +461,13 @@
 
 <p><img src="/assets/images/vbr-32-santricity-powershell-scripts-define.png" alt="BR before and after job" /></p>
 
-<p>If we could use a generic Veeam Linux backup proxy to mount the clone volume for backup, that would be great and that's what I was after with VIA and other tries. Sadly, VIA doesn't do this for non-virtualized workloads.</p>
+<p>If we could use a generic Veeam Linux backup proxy to mount the clone volume for backup, that would be great and that's what I was after with VIA. Sadly, I couldn't make VIA do this for backups of non-virtual workloads.</p>
 
-<p>File level restores worked fine.</p>
+<p>In terms of other features, I also tried file level restores, which worked fine.</p>
 
 <p><img src="/assets/images/vbr-34-file-level-restore-nfs-server.png" alt="File level restore initial" /></p>
 
-<p>Simply pick a file to download to your client or restore.</p>
+<p>Simply pick a file to download to your client or restore. It's not super-fast, it takes a minute, but it works.</p>
 
 <p>If the backup was taken by a Proxmox VE backup job (rather than a Linux backup job), this would be a valid way to restore a database VM. Since this was a backup of a Linux NFS server's mount point, any VM that would have been active on it was not snapshot or quiesced - fine for database dump files, but not as fine for NFS shares or block devices with live database workloads.</p>
 
@@ -499,9 +499,9 @@
       <td>Choices: LVM snapshopt, Veeam single volume snapshot, storage hardware snapshot. Alternatives: dump to "static" disk, upload to S3</td>
     </tr>
     <tr>
-      <td>Static directory on bare metal host</td>
+      <td>Static filesystem on bare metal host</td>
       <td>Sometimes</td>
-      <td>Choices: Veeam backup job for Linux, storage hardware snapshot</td>
+      <td>Choices: Veeam backup job for Linux, storage hardware snapshot. Alternatives: multi-step linked clone backup job from dedicated host</td>
     </tr>
   </tbody>
 </table>
@@ -509,8 +509,8 @@
 <p>Where storage snapshots help is the "harder" cases similar to the ones I tried:</p>
 
 <ul>
-  <li>Live app, especially large one (very large DB): it may take hours to copy data out and that may place strain on the DB server.</li>
-  <li>Bare metal NFS hosting VMs for PVE. In my case I had a physical server (see the <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">NFS/RDMA post</a>) with VMs and I discovered Veeam backup job for Linux took a snapshot of the volume hosting <code class="language-plaintext highlighter-rouge">/r1_4096_128</code> (XFS) that NFS server was sharing, so it's not that Veeam snapshots don't work, but it storage snapshots for large and busy volumes or collections of volumes (e.g. with LVM) may be better</li>
+  <li>Live apps, especially large ones (very large databases, or multi-node databases): it may take hours to copy data out and that may place strain on the database server</li>
+  <li>Bare metal NFS servers hosting VMs for PVE. In my case I had a physical server (see the <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">NFS/RDMA post</a>) with VMs and I discovered Veeam backup job for Linux took a snapshot of the volume hosting <code class="language-plaintext highlighter-rouge">/r1_4096_128</code> (XFS) that NFS server was sharing, so it's not that Veeam snapshots don't work, but it storage snapshots for large and busy volumes or collections of volumes (e.g. with LVM) may be better</li>
 </ul>
 
 <p>In both of these cases, "storage plugins", whether that be "poor man's" pre/post backup scripts, or the official storage vendor plugins included by Veeam in B&amp;R 13, help you do that:</p>
@@ -521,15 +521,17 @@
   <li>Backup using a Veeam backup proxy</li>
 </ul>
 
-<p>You can't achieve exactly the same outcome with "poor man's" workaround, but you could have another host ("poor man's VIA") that mounts a linked clone of the volume(s) you want to protect, and create a Linux backup job for that other host.</p>
+<p>I think we can't achieve exactly the same outcome with "poor man's" workflow, but we could have another host ("poor man's VIA") that mounts a linked clone of the volume(s) we want to protect, and then we simply create a Linux backup job for that other, linked clone-mounting host.</p>
 
-<p>This looks confusing - your data is on volumes mapped to <code class="language-plaintext highlighter-rouge">h1</code> but you backup volumes attached to the <code class="language-plaintext highlighter-rouge">h2</code> host, simply because VIA won't let you do the same - but Veeam doesn't need to know that your application and data is really on <code class="language-plaintext highlighter-rouge">h1</code>, especially if your first line of defense is rollback from a storage hardware snapshot that you take every 10 minutes. That frequency of protecting large or busy volumes currently isn't viable with Veeam, so there's value in it even if it's not a seamless, VIA-integrated workflow.</p>
+<p>That surely looks confusing - our data is on a volume mapped to <code class="language-plaintext highlighter-rouge">h1</code>, but we backup volumes attached to host <code class="language-plaintext highlighter-rouge">h2</code> simply because we can't get to linked clone through VIA. Since our first line of defense is a rollback from a storage hardware snapshot that we take every 10 minutes and leave for 60 minutes, that's still fine for rapid recovery without Veeam B&amp;R. That frequency of protecting large or busy volumes currently isn't viable with Veeam, so there's value in that even if it's not a seamless, VIA-integrated workflow.</p>
 
-<p>Because that requires some effort in the form of creating custom scripts and having another host, however, it is recommended to rely on official integrations and and approaches and what we'd use with Proxmox VE is Veeam worker for Proxmox. Use the "poor man's" approach for these workloads only where you must (backups that time out, backups that impact service, backups of very large volumes, etc). You can get my SANtricity PowerShell module <a href="https://github.com/scaleoutsean/santricity-powershell/">here</a>, by the way.</p>
+<p>Because that approach requires some effort in the form of creating custom scripts and having another host, however, it is recommended to rely on official integrations and approaches. What we'd use with Proxmox VE is Veeam worker for Proxmox.</p>
+
+<p>Use the "poor man's" approach for these workloads only where you must (backups that time out, backups that impact service, backups of very large volumes, etc). You can get my SANtricity PowerShell module <a href="https://github.com/scaleoutsean/santricity-powershell/">here</a>, by the way.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Both VIA and VSA are really nicely done: from secure deployment to hardened OS and strong authentication…. Unfortunately it's not helpful to us right now.</p>
+<p>Both VIA and VSA are really nicely done: from secure deployment to hardened OS and strong authentication…. Unfortunately, that doesn't seem to helpf to E-Series users right now, but I'll give it another try later.</p>
 
 <p>Veeam B&amp;R worked well with PVE backed by E-Series for both primary and backup data.</p>
 
