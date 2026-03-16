@@ -2255,6 +2255,12 @@ var store = [{
         "url": "/2026/03/15/santricity-powershell-postgres-snashot-clone.html",
         "teaser": null
       },{
+        "title": "SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations",
+        "excerpt":"Introduction Some two years ago I blogged about the SSD Flash Cache feature on NetApp E-Series (SANtricity) systems. Due to these shortages/price hikes, that topic is somewhat relevant again. I could write a “high level” post about this stuff and post it or Linkedin, or I could do something useful…...","categories": ["storage","e-series"],
+        "tags": ["netapp","santricity","cache","frc","bcache","hybrid","nl-sas","ssd","nvme"],
+        "url": "/2026/03/17/netapp-eseries-ssd-cache-update.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2268,7 +2274,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 4 minute read Snapshot images and snapshot volumes (linked clones) Volume Copy behavior on NetApp E-Series 2026-03-15 00:00 9 minute read Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you. Veeam B&amp;R 13.0, Proxmox...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 5 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize with flash storage Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 4 minute read Snapshot images and snapshot volumes...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3757,6 +3763,15 @@ var store = [{
   },{
     "title": "nl-sas",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/nl-sas/"
+  },{
+    "title": "frc",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/frc/"
+  },{
+    "title": "bcache",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bcache/"
+  },{
+    "title": "hybrid",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
