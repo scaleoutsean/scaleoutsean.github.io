@@ -2274,7 +2274,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 5 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize with flash storage Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 4 minute read Snapshot images and snapshot volumes...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 6 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize with flash storage Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 4 minute read Snapshot images and snapshot volumes...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
