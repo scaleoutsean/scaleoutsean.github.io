@@ -2261,6 +2261,12 @@ var store = [{
         "url": "/2026/03/17/netapp-eseries-ssd-cache-update.html",
         "teaser": null
       },{
+        "title": "Proxmox Backup client with NetApp E-Series",
+        "excerpt":"Introduction There’s already a lengthy blog post on Proxmox Backup Server with NetApp E-Series in PVE environments. Why another post? Because it’s not another post. It’s a post about using Proxmox Backup client for generic volume backup. I’ve mentioned SANtricity Cloud Connector before. This post is related to that kind...","categories": ["storage","e-series","virtualization"],
+        "tags": ["e-series","backup","pbs","netapp","pve","proxmox","santricity"],
+        "url": "/2026/03/18/protect-netapp-eseries-with-proxmox-backup-client.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2274,7 +2280,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 7 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize with flash storage Application-consistent PostgreSQL snapshots and clones on NetApp E-Series 2026-03-15 00:00 4 minute read Snapshot images and snapshot volumes...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Proxmox Backup client with NetApp E-Series 2026-03-18 00:00 5 minute read use Proxmox Backup client to protect volumes from NetApp E-Series SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 7 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
