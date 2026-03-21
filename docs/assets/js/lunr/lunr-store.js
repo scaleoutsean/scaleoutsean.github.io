@@ -2292,7 +2292,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"The shocking truth about SANtricity snapshot schedules 2026-03-21 00:00 3 minute read The shocking truth about SANtricity snapshot schedules and how you can fix ‘em Highlights of NetApp EF-Series EF80 and EF50 2026-03-21 00:00 5 minute read What I find noteworthy in the new models Proxmox Backup client with NetApp...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"The shocking truth about SANtricity snapshot schedules 2026-03-21 00:00 4 minute read The shocking truth about SANtricity snapshot schedules and how you can fix ‘em Highlights of NetApp EF-Series EF80 and EF50 2026-03-21 00:00 5 minute read What I find noteworthy in the new models Proxmox Backup client with NetApp...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
