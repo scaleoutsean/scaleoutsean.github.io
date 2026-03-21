@@ -2274,7 +2274,7 @@ var store = [{
         "teaser": null
       },{
         "title": "The shocking truth about SANtricity snapshot schedules",
-        "excerpt":"Introduction Over the years I’ve deep dived into SANtricity snapshots, but only when I needed to, because it’s not a happy affair. They work, but … need work. There’s nothing fundamentally wrong with them. Snapshots aren’t exactly a rocket science these days and not much has changed from day one....","categories": ["storage","e-series"],
+        "excerpt":"Introduction Over the years I’ve deep dived into SANtricity snapshots, but only when I needed to and not more than I had to, because it’s not a happy affair. They work, but … need work. There’s nothing fundamentally wrong with them. Snapshots aren’t exactly a rocket science these days and...","categories": ["storage","e-series"],
         "tags": ["netapp","santricity","schapps-shot","snapshot","schedule"],
         "url": "/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html",
         "teaser": null
