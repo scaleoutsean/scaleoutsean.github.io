@@ -2262,9 +2262,15 @@ var store = [{
         "teaser": null
       },{
         "title": "Proxmox Backup client with NetApp E-Series",
-        "excerpt":"Introduction There’s already a lengthy blog post on Proxmox Backup Server with NetApp E-Series in PVE environments. Why another post? Because it’s not another post. It’s a post about using Proxmox Backup client for generic volume backup. I’ve mentioned SANtricity Cloud Connector before. This post is related to that kind...","categories": ["storage","e-series","virtualization"],
+        "excerpt":"Introduction There’s already a lengthy blog post on Proxmox Backup Server (PBS) with NetApp E-Series in PVE environments. Why another post? Because it’s not another post about PBS. It’s a post about using Proxmox Backup client for generic volume backup and restore. I mentioned SANtricity Cloud Connector in some older...","categories": ["storage","e-series","virtualization"],
         "tags": ["e-series","backup","pbs","netapp","pve","proxmox","santricity"],
         "url": "/2026/03/18/protect-netapp-eseries-with-proxmox-backup-client.html",
+        "teaser": null
+      },{
+        "title": "Highlights of NetApp EF-Series EF80 and EF50",
+        "excerpt":"Introduction NetApp announced two EF-Series arrays, the EF50 and EF80. The data sheet may be viewed here. These may evolve over time as EF600 and EF300 have (e.g. originally they had no hybrid media capability), so this post is about the initial version with SANtricity OS 12.00. I’m not going...","categories": ["storage","e-series"],
+        "tags": ["netapp","santricity","ef-series","ef80","ef50","ef600","ef300"],
+        "url": "/2026/03/21/netapp-ef-series-ef80-ef50.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2280,7 +2286,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Proxmox Backup client with NetApp E-Series 2026-03-18 00:00 5 minute read use Proxmox Backup client to protect volumes from NetApp E-Series SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations 2026-03-17 00:00 7 minute read When to (not) use SSD Flash Cache and bcache, when you have to economize...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Highlights of NetApp EF-Series EF80 and EF50 2026-03-21 00:00 5 minute read What I find noteworthy in the new models Proxmox Backup client with NetApp E-Series 2026-03-18 00:00 7 minute read Use Proxmox Backup client to protect volumes from NetApp E-Series SSD Flash Cache and bcache for Hybrid NetApp E-Series...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3779,6 +3785,12 @@ var store = [{
     "title": "hybrid",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid/"
   },{
+    "title": "ef80",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef80/"
+  },{
+    "title": "ef50",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef50/"
+  },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
   },{
@@ -4036,4 +4048,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page63/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page64/"
   }]

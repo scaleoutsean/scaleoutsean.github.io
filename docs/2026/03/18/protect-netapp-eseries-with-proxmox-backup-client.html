@@ -31,7 +31,7 @@
 
 
 
-  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/">
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/proxmox-backup-client-santricity-01.png">
 
 
 
@@ -42,7 +42,7 @@
 
   
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/proxmox-backup-client-santricity-01.png">
   
 
   
@@ -182,7 +182,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="Proxmox Backup client with NetApp E-Series">
-    <meta itemprop="description" content="use Proxmox Backup client to protect volumes from NetApp E-Series">
+    <meta itemprop="description" content="Use Proxmox Backup client to protect volumes from NetApp E-Series">
     <meta itemprop="datePublished" content="2026-03-18T00:00:00+08:00">
     
 
@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          7 minute read
         
       </span>
     
@@ -235,13 +235,13 @@
         
         <h2 id="introduction">Introduction</h2>
 
-<p>There's already a lengthy blog <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">post on Proxmox Backup Server with NetApp E-Series in PVE environments</a>. Why another post?</p>
+<p>There's already a lengthy blog <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">post on Proxmox Backup Server (PBS) with NetApp E-Series in PVE environments</a>. Why another post?</p>
 
-<p>Because it's not another post. It's a post about using Proxmox Backup client for generic volume backup.</p>
+<p>Because it's not another post about PBS. It's a post about using Proxmox Backup client for generic volume backup and restore.</p>
 
-<p>I've mentioned <a href="https://docs.netapp.com/us-en/e-series/cloud-connector/backup-intro-concept.html">SANtricity Cloud Connector</a> before. This post is related to that kind of use case, but done correctly.</p>
+<p>I mentioned <a href="https://docs.netapp.com/us-en/e-series/cloud-connector/backup-intro-concept.html">SANtricity Cloud Connector</a> in some older posts. This post is related to that kind of use case, but done correctly.</p>
 
-<p>Years ago I created a simple version of this workflow for SolidFire called SolidBackup and although I don't know if anyone uses it, it's usable, works well and doesn't leave you with backups that you can't restore because it's not a black box. The workflow:</p>
+<p>Years ago I created a simple version of this workflow for SolidFire called SolidBackup and although I don't know if anyone uses it, it's usable, works well and doesn't leave you with backups that you can't restore because the software is not a black box. The workflow:</p>
 
 <ul>
   <li>Clone a volume</li>
@@ -249,9 +249,13 @@
   <li>Run a backup command (Restic, rclone, Kopia or some other) to backup data to S3</li>
 </ul>
 
-<p>Proxmox Backup Server (PBS) can store backups in a S3 bucket, so the difference here is we'd send data through a PBS "proxy", which in turn stores data on disk or S3. But wait, that's <strong>not very</strong> different - in fact it is very similar to how SolidBackup would send data to a <a href="/2022/04/03/restic-server-netapp-eseries.html">Rest Server</a>!</p>
+<p>Proxmox Backup Server (PBS) can store backups in an S3 bucket, so the difference here is we'd send data through a PBS "proxy", which in turn stores data on disk or S3. But wait, that's not <strong>very</strong> different - in fact it is similar to how SolidBackup would send data to a <a href="/2022/04/03/restic-server-netapp-eseries.html">Rest Server</a>!</p>
 
 <p>Still, if you're in a Proxmox environment, it's better to be able to use existing tools, even when similar free tools already exist out there.</p>
+
+<p>What PBS gives you and those approaches do not is a <em>managed</em> backup "proxy". Even if PBS stores data in S3, the S3 client is PBS and not every individual PBS user out there. Users get PBS API keys from PBS and send backups (or read backups, when restoring) to the PBS server, so ultimately the PBS admin manages backends on users' behalf.</p>
+
+<p>That is an potentially better-organized and orderly way to consolidate and manage backups, as opposed to a self-service approach that individual users with Restic and Kopia employ.</p>
 
 <h2 id="workflow">Workflow</h2>
 
@@ -269,7 +273,7 @@
 <span class="nv">$ </span><span class="nb">date</span> <span class="o">&gt;&gt;</span> /tmp/garbage/file.txt
 </code></pre></div></div>
 
-<p>Backup to PBS:</p>
+<p>Backup host data to PBS:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>proxmox-backup-client backup csi-volume.pxar:/tmp/garbage
 Starting backup: host/h3/2026-03-17T16:19:46Z
@@ -295,27 +299,33 @@ End Time: Tue Mar 17 11:19:46 2026
 
 <p><code class="language-plaintext highlighter-rouge">proxmox-backup-client</code> can do more than just this, but the above example should be a good hint.</p>
 
+<p>The above process could be performed by a PBS admin using one global key, but it could also be done with a PBS API key issued to individual users which gives them backup/restore roles in own namespace such as <code class="language-plaintext highlighter-rouge">host/h3</code> for the H3 administrator.</p>
+
+<p>Above example used <code class="language-plaintext highlighter-rouge">root@pam!backup@IP.ADDR.ES:datastore</code> (PBS admin account; <code class="language-plaintext highlighter-rouge">datastore</code> is a name of on-disk data store), but individual users would use own accounts and API keys for self-service backup and restore. And maybe they'd use an S3 back-end rather than a data store for backup-to-disk.</p>
+
 <h2 id="whats-that-for">What's that for</h2>
 
-<p>Well, if you have PBS, you probably have PVE, too. Some ideas relevant to E-Series users are explained below.</p>
+<p>Well, if you have PBS, you probably have PVE, too. Do you use PBS to backup generic, non-PVE applications? If not, why not?</p>
+
+<p>Some ideas relevant to E-Series users are explained below.</p>
 
 <h3 id="santricity-csi">SANtricity CSI</h3>
 
 <p>Maybe you also have some Kubernetes. Now you can use SANtricity CSI to backup PVCs to PBS. "Can" is too strong a word - you can't really do it nicely - but it's doable.</p>
 
-<p>It's still nicer to use Velero and backup directly to S3, but you also lose centralized backup management, auditing, and maybe end up with several ways to manage DR.</p>
+<p>It's still nicer to use Velero and backup directly to S3, but you also lose centralized backup management, auditing, and maybe end up with several ways to manage DR - you have some backups on PBS, others on S3, and different Kubernetes clusters use different buckets.</p>
 
-<p>Until PBS creates own CSI backup, there probably won't be good ways to centralize backup management using native Kubernetes integrations.</p>
+<p>Until PBS creates own CSI backup plugin, there probably won't be good ways to centralize backup management using native Kubernetes integrations. We can do that today with Veeam and Kasten, but not with PBS.</p>
 
-<p>Until that is available, you can schedule "clone, static-mount, backup and delete" jobs that use this workflow and all your data gets backed up and protected in one place (with optional DR replicas). Or you can use the same approach that Velero used to use for CSI storage without snapshots, which was to backup data off live PVC (also using Proxmox backup client like we do here, although that means copying a moving target).</p>
+<p>Until that integration is available, you can schedule "clone, static-mount, backup and delete" jobs that use this workflow and all your data gets backed up and protected in one place (PBS), with optional PBS-managed DR replicas. Or you can use the same approach that Velero used to use for CSI storage without snapshots, which was to backup data off live PVCs, copying a moving target.</p>
 
 <h3 id="nfs-shares-and-other-large-volumes">NFS shares and other large volumes</h3>
 
-<p>Maybe you use E-Series-backed Linux NFS server(s) to provide NFS datastores to PVE.</p>
+<p>Maybe you use E-Series-backed Linux NFS server(s) to provide NFS datastores to PVE. I recommend this for non-critical PVE workloads.</p>
 
-<p>If those are VMs on PVE, you can back up VMs, but if they're bare metal (see <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">the post on NFS/RDMA</a>), you can't back them up from PVE. But you can <a href="/2026/03/15/santricity-powershell-postgres-snashot-clone.html#snapshot-and-clone-workflow">use this workflow</a> to snapshot-clone-and-backup volumes with NFS data directly to PBS.</p>
+<p>If such NFS service runs in VMs on PVE, you can back up VMs using PBS. But if NFS service runs on bare metal server (see <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">the post on NFS/RDMA</a>), you can't back them up from PVE. But you can <a href="/2026/03/15/santricity-powershell-postgres-snashot-clone.html#snapshot-and-clone-workflow">use this workflow</a> to snapshot-clone-and-backup volumes with NFS data directly to PBS.</p>
 
-<p>NFS shares can easily be multi-TB filesystems, so backing them up while they change isn't a great idea. It adds extra workload, file change as you make backups, etc. But if you create a linked or full clone and mount it read-only on a different or same host, you can take your time backing it up.</p>
+<p>Such NFS shares can easily be multi-TB filesystems that live on E-Series, so backing them up while they change may leave many files (some of them VMs) corrupt. It also adds extra workload while backup is running, and so on. But if you create a linked or full clone of the filesystem on E-Series and mount it read-only on a different or same bare metal server, you can take your time backing it up and backup will be crash-consistent.</p>
 
 <h3 id="backup-any-santricity-volume-to-pbs">Backup any SANtricity volume to PBS</h3>
 
@@ -329,7 +339,7 @@ End Time: Tue Mar 17 11:19:46 2026
 
 <h3 id="backup-to-tape">Backup to tape</h3>
 
-<p>Yep, PBS can do it. If you need that in a Proxmox shop, PBS may be ready for it - you just need to create a daily cron job to dump that DB to <code class="language-plaintext highlighter-rouge">/mnt/pg_dump</code> and then use Proxmox backup client to backup to PBS (and PBS can make copies to disk and tape).</p>
+<p>Yep, PBS can do that, too! If you need that in a Proxmox environment, PBS may be a good way to do it. You just need to create a daily cron job to dump a DB to <code class="language-plaintext highlighter-rouge">/mnt/pg_dump</code> and then use Proxmox backup client to backup that directory to PBS (and PBS can make copies to both disk and tape).</p>
 
 <h2 id="screenshots">Screenshots</h2>
 
@@ -443,7 +453,7 @@ End Time: Tue Mar 17 11:19:46 2026
       <a href="/2026/03/17/netapp-eseries-ssd-cache-update.html" class="pagination--pager" title="SSD Flash Cache and bcache for Hybrid NetApp E-Series configurations">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html" class="pagination--pager" title="Highlights of NetApp EF-Series EF80 and EF50">Next</a>
     
   </nav>
 
@@ -460,6 +470,54 @@ End Time: Tue Mar 17 11:19:46 2026
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html" rel="permalink">Highlights of NetApp EF-Series EF80 and EF50
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-21T00:00:00+08:00">2026-03-21 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What I find noteworthy in the new models
+</p>
+  </article>
+</div>
+
     
       
       
@@ -496,7 +554,7 @@ End Time: Tue Mar 17 11:19:46 2026
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          9 minute read
         
       </span>
     
@@ -600,54 +658,6 @@ End Time: Tue Mar 17 11:19:46 2026
 
 
     <p class="archive__item-excerpt" itemprop="description">Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you.
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/03/14/veeam-proxmox-netapp-eseries.html" rel="permalink">Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-03-14T00:00:00+08:00">2026-03-14 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          12 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Proxmox Backup Server on PVE or bare metal servers and NetApp E-Series
 </p>
   </article>
 </div>

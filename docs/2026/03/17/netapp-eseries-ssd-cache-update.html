@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          9 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#ssd-flash-cache-on-santricity-systems">SSD Flash Cache on SANtricity systems</a></li><li><a href="#bcache">bcache</a></li><li><a href="#ha-and-nosql-deployment">HA and NOSQL deployment</a></li><li><a href="#bcache-vs-ssd-flash-cache-vs-zfs">bcache vs. SSD Flash Cache vs. ZFS</a></li><li><a href="#microsoft-windows">Microsoft Windows</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#ssd-flash-cache-on-santricity-systems">SSD Flash Cache on SANtricity systems</a></li><li><a href="#bcache">bcache</a></li><li><a href="#classic-active-passive-ha-and-modern-multi-node-deployments">Classic Active-Passive HA and modern multi-node deployments</a></li><li><a href="#bcache-vs-ssd-flash-cache-vs-zfs">bcache vs. SSD Flash Cache vs. ZFS</a></li><li><a href="#microsoft-windows">Microsoft Windows</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -270,7 +270,7 @@
 
 <p>Well, since I've had zero takers on those three options above, I'll just skip repeating myself and say that I'll be looking at adding SSD Flash Cache monitoring to <a href="https://github.com/scaleoutsean/eseries-perf-analyzer">E-Series Performance Analyzer</a> later this week. This may at least make figuring out how well it works easier for those who have it.</p>
 
-<p>This is what's currently in a feature branch</p>
+<p>This is what's currently in a feature branch:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># HELP eseries_flashcache_bytes Flash Cache byte metrics</span>
 <span class="c"># TYPE eseries_flashcache_bytes gauge</span>
@@ -304,11 +304,17 @@ eseries_flashcache_components<span class="o">{</span><span class="nv">flash_cach
 eseries_flashcache_components<span class="o">{</span><span class="nv">flash_cache_id</span><span class="o">=</span><span class="s2">"3233343536373839303134303200000000000000"</span>,flash_cache_name<span class="o">=</span><span class="s2">"SSD_Cache"</span>,metric<span class="o">=</span><span class="s2">"cache_drive_count"</span>,sys_id<span class="o">=</span><span class="s2">"6d039ea0009317330000000066f433d1"</span>,sys_name<span class="o">=</span><span class="s2">"e4012"</span><span class="o">}</span> 2.0
 </code></pre></div></div>
 
+<p>SSD Cache monitoring has also been added to SANtricity PowerShell on March 20, 2026.</p>
+
+<p>You can use the cmdlet to view all cache, or just counters, or just gauges. Since counters are hard to read, you can watch them over an interval and get "per second" averages.</p>
+
+<p><img src="/assets/images/santricity_ssd_flash_cache_powershell.png" alt="SSD Cache monitoring in PowerShell" /></p>
+
 <h2 id="bcache">bcache</h2>
 
 <p><a href="https://wiki.ubuntu.com/ServerTeam/Bcache">bache</a> isn't new, but it's new to most E-Series users.</p>
 
-<p>It's easier to control, it's better (if not well) <a href="https://www.kernel.org/doc/html/latest/admin-guide/bcache.html">documented</a>, it's included in Linux and it supports write caching, too.</p>
+<p>It's easier to control, it's better (if not well) <a href="https://www.kernel.org/doc/html/latest/admin-guide/bcache.html">documented</a>, it's included in Linux and it supports write caching ("writeback" mode), too.</p>
 
 <p>What's not to like?</p>
 
@@ -353,7 +359,16 @@ Node                  Generic               SN                   Model          
   <li>Reboot to see it all works and check the documentation for recovery and removal steps in case you need to GTHO later</li>
 </ul>
 
-<p>Did it work fo rme? Well, it didn't crash and burn, that's for sure.</p>
+<p>Because <code class="language-plaintext highlighter-rouge">/dev/nvmeXnY</code> may be unreliable as well (I don't know if they are or aren't), I'd use proper, immutable E-Series device names rather than these NVMe paths.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ls -lat /dev/disk/by-id/ | grep n5</span>
+lrwxrwxrwx  1 root root  13 Mar 16 15:21 nvme-eui.00000a1e69b807ced039ea0000493a26 -&gt; ../../nvme0n5
+lrwxrwxrwx  1 root root  13 Mar 16 15:21 nvme-NetApp_E-Series_952103002724_5 -&gt; ../../nvme0n5
+</code></pre></div></div>
+
+<p>What I would use is <code class="language-plaintext highlighter-rouge">/dev/disk/by-id/nvme-eui.00000a1e69b807ced039ea0000493a26</code>, not <code class="language-plaintext highlighter-rouge">./dev/nvme0n5</code>.</p>
+
+<p>Did bcache work for me? Well, it didn't crash and burn, that's for sure.</p>
 
 <p>I created a 20GB file on the bcache device, to make sure it overflows to the backing device.</p>
 
@@ -381,9 +396,66 @@ Node                  Generic               SN                   Model          
 
 <p>See the kernel documentation and the Ubuntu link at the top for the create and mount options and other details.</p>
 
-<h2 id="ha-and-nosql-deployment">HA and NOSQL deployment</h2>
+<h2 id="classic-active-passive-ha-and-modern-multi-node-deployments">Classic Active-Passive HA and modern multi-node deployments</h2>
 
-<p>I haven't looked - maybe I will, if someone asks - how to do HA with this setup. Both block devices need to failover, and bcache configuration needs to exist on each host. For HA, this does't seem trivial.</p>
+<p>I haven't looked - maybe I will, if someone asks - how to do HA with this setup. Both block devices need to failover, and bcache configuration needs to exist on each host. For HA, this doesn't seem trivial.</p>
+
+<p>If the server using caching device restarts and bcache doesn't come alive, you may even forget where data (backing device) is.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /sys/fs/bcache/15a20d03-5f99-435a-9e5d-a696249b3318/bdev0/backing_dev_name
+nvme0n4
+</code></pre></div></div>
+
+<p>If it's a standby node in HA cluster, you maybe don't even want that bcache device to autostart.</p>
+
+<p>Let's see the backing device:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>bcache-super-show /dev/nvme0n4
+sb.magic                ok
+sb.first_sector         8 <span class="o">[</span>match]
+sb.csum                 998EE8996D7AE511 <span class="o">[</span>match]
+sb.version              1 <span class="o">[</span>backing device]
+
+dev.label               <span class="o">(</span>empty<span class="o">)</span>
+dev.uuid                bfd9fe75-590b-420f-9f6a-716ab32ca948
+dev.sectors_per_block   8
+dev.sectors_per_bucket  1024
+dev.data.first_sector   16
+dev.data.cache_mode     1 <span class="o">[</span>writeback]
+dev.data.cache_state    1 <span class="o">[</span>clean]
+
+cset.uuid               15a20d03-5f99-435a-9e5d-a696249b3318
+</code></pre></div></div>
+
+<p>The caching device:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>bcache-super-show /dev/nvme0n5
+sb.magic                ok
+sb.first_sector         8 <span class="o">[</span>match]
+sb.csum                 A41478E44D7BF404 <span class="o">[</span>match]
+sb.version              3 <span class="o">[</span>cache device]
+
+dev.label               <span class="o">(</span>empty<span class="o">)</span>
+dev.uuid                e7332fab-a60c-4022-88a4-5506d83aed58
+dev.sectors_per_block   8
+dev.sectors_per_bucket  1024
+dev.cache.first_sector  1024
+dev.cache.cache_sectors 20970496
+dev.cache.total_sectors 20971520
+dev.cache.ordered       <span class="nb">yes
+</span>dev.cache.discard       <span class="nb">yes
+</span>dev.cache.pos           0
+dev.cache.replacement   0 <span class="o">[</span>lru]
+</code></pre></div></div>
+
+<p>If you need to recover these, it's a good idea to get and backup this information as soon as you create bcache. Then they become easy to recover and re-register.</p>
+
+<p>Some of these parameters are tunable, such as <code class="language-plaintext highlighter-rouge">data.cache_mode</code> on backing and <code class="language-plaintext highlighter-rouge">cache.replacement</code> on caching device, and can be modified on live bcache (very nice!) devices.</p>
+
+<p>See the kernel documentation for other commands including those related to registration and unregistration of bcache. One interesting detail is that backing device can be mounted as loopback with <code class="language-plaintext highlighter-rouge">-o 8192</code>, so you can get to your data even without backing cache (assuming you did not use writeback and ended up with a corrupt backing device).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>losetup <span class="nt">-o</span> 8192 /dev/loop0 /dev/nvme0n4
+</code></pre></div></div>
 
 <p>bcache seems much more usable in NOSQL environments, comparatively speaking, where you can use <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform Provider SANtricity</a> to create these on multiple hosts in 10 seconds. And you don't need to fail them over. And you can disband/remove bcache without downtime, assuming you have (at least) RF2 or Erasure Coding in place across hosts.</p>
 
@@ -519,6 +591,54 @@ Node                  Generic               SN                   Model          
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html" rel="permalink">Highlights of NetApp EF-Series EF80 and EF50
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-21T00:00:00+08:00">2026-03-21 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What I find noteworthy in the new models
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2026/03/18/protect-netapp-eseries-with-proxmox-backup-client.html" rel="permalink">Proxmox Backup client with NetApp E-Series
 </a>
       
@@ -544,14 +664,14 @@ Node                  Generic               SN                   Model          
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          7 minute read
         
       </span>
     
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">use Proxmox Backup client to protect volumes from NetApp E-Series
+    <p class="archive__item-excerpt" itemprop="description">Use Proxmox Backup client to protect volumes from NetApp E-Series
 </p>
   </article>
 </div>
@@ -648,54 +768,6 @@ Node                  Generic               SN                   Model          
 
 
     <p class="archive__item-excerpt" itemprop="description">Volume Copy on NetApp E-Series (SANtricity) is weird. How to make it work for you.
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/03/14/veeam-proxmox-netapp-eseries.html" rel="permalink">Veeam B&amp;R 13.0, Proxmox PVE 9.1, and NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-03-14T00:00:00+08:00">2026-03-14 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          12 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Proxmox Backup Server on PVE or bare metal servers and NetApp E-Series
 </p>
   </article>
 </div>
