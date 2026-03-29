@@ -2275,7 +2275,7 @@ var store = [{
       },{
         "title": "The shocking truth about SANtricity snapshots",
         "excerpt":"Introduction Over the years I’ve deep dived into SANtricity snapshots but only when I needed to because those aren’t fun to work with. On those occasions I wrote “how-to” type posts on individual and group snapshots. As I’ve been using the API and UI quite a lot in recent weeks,...","categories": ["storage","e-series"],
-        "tags": ["netapp","santricity","schapps-shot","snapshot","schedule","repos"],
+        "tags": ["netapp","santricity","schnapps-shot","snapshot","schedule","repos"],
         "url": "/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html",
         "teaser": null
       },{
@@ -3797,8 +3797,8 @@ var store = [{
     "title": "ef50",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef50/"
   },{
-    "title": "schapps-shot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/schapps-shot/"
+    "title": "schnapps-shot",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/schnapps-shot/"
   },{
     "title": "repos",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/repos/"
