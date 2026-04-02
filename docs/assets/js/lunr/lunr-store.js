@@ -2279,6 +2279,12 @@ var store = [{
         "url": "/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html",
         "teaser": null
       },{
+        "title": "Proxmox Plugin or NetApp E-Series SANtricity",
+        "excerpt":"Introduction When PVE 8 was a thing, I considered building a SolidFire plug-in for PVE 8. I quickly realized that didn’t make any sense. We have PVE 9 now, things surely must be better, right? Riiight? Wrong. But, let’s also show and tell. So I’ve built a minimal viable plugin...","categories": ["netapp","storage","virtualization"],
+        "tags": ["api","automation","e-series","go","santricity","proxmox","plugin","projects"],
+        "url": "/2026/03/31/proxmox-plugin-netapp-eseries-santricity.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2292,7 +2298,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"The shocking truth about SANtricity snapshots 2026-03-21 00:00 15 minute read The shocking truth about SANtricity snapshots (especially snapshot schedules) and what you can do about it Highlights of NetApp EF-Series EF80 and EF50 2026-03-21 00:00 5 minute read What I find noteworthy in the new models Proxmox Backup client...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Proxmox Plugin or NetApp E-Series SANtricity 2026-03-31 00:00 9 minute read Why SANtricity Plug-in for Proxmox 9 exists and why it exists barely The shocking truth about SANtricity snapshots 2026-03-21 00:00 15 minute read The shocking truth about SANtricity snapshots (especially snapshot schedules) and what you can do about it...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
