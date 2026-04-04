@@ -1542,7 +1542,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SSD Cache feature on NetApp SANtricity E-Series",
-        "excerpt":"WTH is “SSD Cache” Create SSD cache Configure HDD-based volumes to use SSD Cache Summary API for monitoring WTH is “SSD Cache” It’s a feature that makes E-Series arrays store frequently accessed data from HDDs on faster flash disk drives. The documentation isn’t very clear so I’m putting this post...","categories": ["storage"],
+        "excerpt":"WTH is “SSD Cache” Create SSD cache Configure HDD-based volumes to use SSD Cache Summary API for monitoring UPDATE: See updated post about this. Also, since 20206, E-Series Performance Analyzer gathers SSD Flash Cache metrics. WTH is “SSD Cache” It’s a feature that makes E-Series arrays store frequently accessed data...","categories": ["storage"],
         "tags": ["caching","e-series","eseries","ssd","ssd cache"],
         "url": "/2024/03/29/netapp-eseries-santricity-ssd-read-cache.html",
         "teaser": null
