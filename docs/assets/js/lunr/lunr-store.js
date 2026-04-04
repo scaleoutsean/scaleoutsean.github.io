@@ -2281,7 +2281,7 @@ var store = [{
       },{
         "title": "Proxmox Plugin for NetApp E-Series SANtricity",
         "excerpt":"Introduction When PVE 8 was a thing, I considered building a SolidFire plug-in for PVE 8. I quickly realized that didn’t make any sense. We have PVE 9 now, things surely must be better, right? Riiight? Wrong. But, let’s also show and tell. So I’ve built a minimal viable plugin...","categories": ["netapp","storage","virtualization","projects"],
-        "tags": ["api","automation","e-series","go","santricity","proxmox","sanmox","plugin","projects"],
+        "tags": ["api","automation","e-series","go","santricity","proxmox","sanmox","plugin","powershell"],
         "url": "/2026/03/31/proxmox-plugin-netapp-eseries-santricity.html",
         "teaser": null
       },{
