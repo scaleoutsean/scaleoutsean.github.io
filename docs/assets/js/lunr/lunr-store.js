@@ -2286,8 +2286,8 @@ var store = [{
         "teaser": null
       },{
         "title": "What is new in E-Series Perf Analyzer v3.5.4",
-        "excerpt":"Introduction E-Series Performance Analyzer was updated to v3.5.4. The change log in the repository has the details, but it’s not very descriptive and lacks detail. SSD Cache I recently wrote my second post on SSD Cache. Due to the significant flash storage price increases in recent months, some folks have...","categories": ["storage","e-series","projects","visualization"],
-        "tags": ["netapp","santricity","grafana"],
+        "excerpt":"Introduction E-Series Performance Analyzer was updated to v3.5.4. The change log in the repository has the details, but it’s not very descriptive and lacks detail. SSD Cache I recently wrote my second post on SSD Cache. Due to the significant flash storage price increases in recent months, some folks have...","categories": ["storage","e-series","projects","monitoring"],
+        "tags": ["netapp","epa","performance","santricity","grafana"],
         "url": "/2026/04/06/epa-eseries-perf-analyzer-354.html",
         "teaser": null
       },{
@@ -3889,9 +3889,6 @@ var store = [{
   },{
     "title": "s3",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/s3/"
-  },{
-    "title": "visualization",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/visualization/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page2/"
