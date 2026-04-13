@@ -1,0 +1,765 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI | Acting Technologist</title>
+<meta name="description" content="Elasticsearch ECK on k0s with SANtricity CSI">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">
+
+
+  <meta property="og:description" content="Elasticsearch ECK on k0s with SANtricity CSI">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/elasticsearch-eck-santricity-csi-01-deploy.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI">
+  <meta name="twitter:description" content="Elasticsearch ECK on k0s with SANtricity CSI">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/elasticsearch-eck-santricity-csi-01-deploy.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-04-13T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI">
+    <meta itemprop="description" content="Easily and quickly, deploy Elasticsearch 9 on E-Series">
+    <meta itemprop="datePublished" content="2026-04-13T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html" itemprop="url">Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-13T00:00:00+08:00">2026-04-13 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#what-is-eck">What is ECK</a></li><li><a href="#deploy-eck-on-k0s-with-santricity-csi">Deploy ECK on k0s with SANtricity CSI</a></li><li><a href="#storage-configuration">Storage configuration</a></li><li><a href="#is-santricity-csi-supported">Is SANtricity CSI supported?</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="what-is-eck">What is ECK</h2>
+
+<p>It's a Kubernetes Operator for Elasticsearch. You can read about it <a href="">here</a>.</p>
+
+<p>It performs all lifecycle management tasks for Elasticsearch clusters.</p>
+
+<h2 id="deploy-eck-on-k0s-with-santricity-csi">Deploy ECK on k0s with SANtricity CSI</h2>
+
+<p>ECK may be deployed <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart">using Helm</a>, which is what I chose here because the previous post on k0s with SANtricity CSI used the same.</p>
+
+<p>First, set up k0s with SANtricity CSI as per <a href="">this post</a>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm repo add elastic https://helm.elastic.co
+helm repo update
+</code></pre></div></div>
+
+<p>Install ECK operator.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm <span class="nb">install </span>elastic-operator elastic/eck-operator <span class="nt">-n</span> elastic-system <span class="nt">--create-namespace</span>
+</code></pre></div></div>
+
+<p>ECK offers a ton of options (from CA configuration to memory and volume settings), but we don't need to use to demonstrate Kubernetes storage integration with SANtricity.</p>
+
+<p>The simplest example is a single Elasticsearch 9 node with default volume size from <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/elasticsearch-deployment-quickstart">this page</a>, and it is deployed like so:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> | kubectl apply -f -
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: quickstart
+spec:
+  version: 9.3.3
+  nodeSets:
+  - name: default
+    count: 1
+    config:
+      node.store.allow_mmap: false
+</span><span class="no">EOF
+</span></code></pre></div></div>
+
+<p>Now we just wait and run these to see what's happening. It takes a minute for Elasticsearch container image to be downloaded and deployed.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get elasticsearch
+kubectl get pods <span class="nt">--selector</span><span class="o">=</span><span class="s1">'elasticsearch.k8s.elastic.co/cluster-name=quickstart'</span>
+</code></pre></div></div>
+
+<p>In my case it worked right away. Then I followed these commands to get access and check service status.</p>
+
+<p>This automatically creates a service IP for Elasticsearch.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get service quickstart-es-http
+</code></pre></div></div>
+
+<p>To get access and try:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PASSWORD</span><span class="o">=</span><span class="si">$(</span>kubectl get secret quickstart-es-elastic-user <span class="nt">-o</span> go-template<span class="o">=</span><span class="s1">''</span><span class="si">)</span>
+
+<span class="c">#</span>
+<span class="c"># kubectl port-forward service/quickstart-es-http 9200 # only if accessing from workstation</span>
+
+<span class="c"># if running from from Kubernetes host, you should be able to access service IP directly</span>
+curl <span class="nt">-u</span> <span class="s2">"elastic:</span><span class="nv">$PASSWORD</span><span class="s2">"</span> <span class="nt">-k</span> <span class="s2">"https://&lt;ELASTICSEARCH_SERVICE_IP&gt;:9200"</span>
+</code></pre></div></div>
+
+<p>This screenshot shows "default" Elasticsearch node created by ECK.</p>
+
+<p><img src="/assets/images/elasticsearch-eck-santricity-csi-01-deploy.png" alt="ECK with SANtricity CSI workflow" /></p>
+
+<p>Elasticsearch volume <code class="language-plaintext highlighter-rouge">pvc-800...</code> seen in SANtricity Web UI.</p>
+
+<p><img src="/assets/images/elasticsearch-eck-santricity-csi-02-volumes.png" alt="SANtricity CSI volumes" /></p>
+
+<p>As I mention elsewhere, DDP uses large data chunks, so SANtricity PVC of 1GiB was given 5GiB. If you get to 16GiB or larger, this won't bother you much, but it will if you create hundreds of small volumes.</p>
+
+<p><img src="/assets/images/elasticsearch-eck-santricity-csi-03-volume.png" alt="SANtricity CSI volume overprovisioning" /></p>
+
+<p>Use "classic" RAID volume groups for tiny volumes or offload tiny/junk volumes to an Linux NFS VM. You won't have this problem with Elasticsearch unless you're doing it wrong (why, because even with 2 volumes per host, you'd need tens of GBs, if not several TBs, in each).</p>
+
+<h2 id="storage-configuration">Storage configuration</h2>
+
+<p>SANtricity CSI - as per that post with k0s - needed just one configuration file (below) and was installed in a minute.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">controller</span><span class="pi">:</span>
+  <span class="na">endpoint</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://a.b.c.d:8443"</span>   <span class="c1"># SANtricity controlle(s) management IPs</span>
+  <span class="na">dataIPs</span><span class="pi">:</span> <span class="s2">"</span><span class="s">192.168.1.1,192.168.2.2"</span> <span class="c1"># iSCSI or NVMe Portal IPs (dual fabric)</span>
+  <span class="na">credentials</span><span class="pi">:</span>
+    <span class="na">username</span><span class="pi">:</span> <span class="s2">"</span><span class="s">admin"</span>
+    <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">xxxx"</span>      <span class="c1"># SANtricity admin password</span>
+
+<span class="na">storageClasses</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">santricity-nvme-raid1</span>
+    <span class="na">isDefault</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="c1"># The poolID (DDP Ref) you want to use for this class</span>
+    <span class="na">poolID</span><span class="pi">:</span> <span class="s2">"</span><span class="s">040000006D039EA000493A26000004FD6996CBC0"</span>
+    <span class="na">reclaimPolicy</span><span class="pi">:</span> <span class="s">Delete</span>
+    <span class="na">volumeBindingMode</span><span class="pi">:</span> <span class="s">Immediate</span>
+    <span class="na">allowVolumeExpansion</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="na">parameters</span><span class="pi">:</span>
+      <span class="na">mediaType</span><span class="pi">:</span> <span class="s2">"</span><span class="s">nvme"</span>
+      <span class="na">fsType</span><span class="pi">:</span> <span class="s2">"</span><span class="s">xfs"</span>
+      <span class="na">raidLevel</span><span class="pi">:</span> <span class="s2">"</span><span class="s">raid1"</span>
+</code></pre></div></div>
+
+<p>Instructions on getting NVMe/RoCE to work can be found <a href="/2026/02/19/linux-nvme-roce-ef-series.html">here</a> and in the official docs.</p>
+
+<p>Using DDP is recommended because it allows RAID 1 and RAID 6 PVs without major downsides (coarser provisioning for tiny volumes the only one that I can think of right now).</p>
+
+<p>Nothing else needed to be done. You get the right RAID type for Elasticsearch and you can resize volumes if you need to.</p>
+
+<h2 id="is-santricity-csi-supported">Is SANtricity CSI supported?</h2>
+
+<p>Bzzzt! Wrong question.</p>
+
+<p>As I've been saying for years, you <strong>don't even need a CSI driver</strong> for ECK. That's why I've created <a href="https://scaleoutsean.github.io/2026/01/16/eseries-santricity-terraform-provider.html">Terraform Provider for SANtricity</a> - for this exact use case because this method is the main pattern for <strong>all</strong> modern databases (these are not "HA" clusters).</p>
+
+<p>It's been <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">years</a> since I've suggested this approach with single host ("non-HA") CSI, which don't have to be "supported" by anyone.</p>
+
+<p>For those who didn't get the memo, here's what Elasticsearch <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/storage-recommendations#k8s_local_persistentvolume_provisioners">recommends</a> for ECK:</p>
+
+<blockquote>
+  <p>Static provisioning: Run a program that automatically discovers the existing partitions on each host, and creates the corresponding PersistentVolume resources. The Local PersistentVolume Static Provisioner is a great way to get started.</p>
+</blockquote>
+
+<p>OK, my Terraform Provider SANtricity does that. What else?</p>
+
+<blockquote>
+  <p>OpenEBS and TopoLVM are examples of components you can install into your Kubernetes cluster to manage the provisioning of persistent volumes from local disks attached to the nodes. These tools leverage technologies like LVM and ZFS to dynamically allocate persistent volumes from storage pools made out of local disks.</p>
+</blockquote>
+
+<p>Well, well, well… TopoLVM is what I've been recommending for half a decade. The first demo of ECK with local CSI is in that <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html#example-with-elasticsearch-with-directpv-on-e-series">same post from 2022</a>.</p>
+
+<p>Any CSI will do and if you don't dare to use any "because support", then static volumes with Terraform Provider or the "offical" Ansible collection. No matter which approach you choose, ECK can deploy and manage Elasticsearch on Kubernetes.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>There's nothing new, really:</p>
+
+<ul>
+  <li>ECK is still around and works well</li>
+  <li>Elasticsearch data is compressed as it's been for years</li>
+  <li>Elasticsearch relies on replication for service and data availability as it did forever</li>
+  <li>Elasticsearch can tier cold data to S3 (which <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">works with StorageGRID</a> and other S3)</li>
+  <li>It still does not make sense to backup or snapshot hot volumes on Elasticsearch nodes using storage (or "hardware") snapshots</li>
+</ul>
+
+<p>If you need cross-cluster replication for Elasticsearch, Elastic has something called <a href="https://www.elastic.co/docs/deploy-manage/tools/cross-cluster-replication">Cross Cluster Replication</a> that may help.</p>
+
+<p>In short, this pattern is well established and proven.</p>
+
+<p>The only difference for E-Series users is now there are <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">more options</a> for SANtricity compared to before - TopoLVM is still around, vSphere CSI still works with vSphere block storage, SANtricity CSI is there if you don't prefer a focused community driver and IBM Block CSI with SANtricity patch if you want to hack it yourself (front-end is fixed, the patch just deals with SANtricity on back end).</p>
+
+<p>For medium sized ECK deployments you can use a hybrid E-Series array to take care of both Hot Tier and S3 (use software-defined S3 like StorageGRID).</p>
+
+<p>For HA, even with within a Elasticsearch cluster (and site), I recommend using separate (smaller) arrays and, with SANtricity CSI, from the day it came out I've never recommended centralizing CSI - this is how it's been from Day 1: even with one Kubenetes spread over two racks, two SANtricity CSI instances are recommended.</p>
+
+<p><img src="/assets/images/elasticsearch-eck-santricity-csi-three-rack.png" alt="ECK with NetApp E-Series SANtricity CSI" /></p>
+
+<p>The diagram shows S3 SDS using storage in NL-SAS, but that's optional.</p>
+
+<p>The exactly same pattern is recommended by Elasticsarch if you use TopoLVM.</p>
+
+<p>(Docker and VMs can and should run the same way, of course, but this post is about ECK and Kubernetes.)</p>
+
+<p>It takes five minutes to install Kubernetes, SANtricity CSI, ECK and have Eleasticsearch up and running. You get PVCs that are protected from single disk failures, essentially maintenance free (compared to JBODs) and can deliver over <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#realistic-analytics-128kib-5050-rw">2 GB/s per volume</a>.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/eck" class="page__taxonomy-item p-category" rel="tag">eck</a><span class="sep">, </span>
+    
+      <a href="/tags/elasticsearch" class="page__taxonomy-item p-category" rel="tag">elasticsearch</a><span class="sep">, </span>
+    
+      <a href="/tags/k0s" class="page__taxonomy-item p-category" rel="tag">k0s</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-04-13T00:00:00+08:00">2026-04-13 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Elasticsearch+9+with+ECK+%28Kubernetes%29%2C+k0s%2C+NetApp+SANtricity+CSI%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F04%2F13%2Felasticsearch-eck-kuberntees-netapp-santricity-csi.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/04/09/netapp-santricity-applications-workloads.html" class="pagination--pager" title="Applications and Workloads in NetApp SANtricity Web UI">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/09/netapp-santricity-applications-workloads.html" rel="permalink">Applications and Workloads in NetApp SANtricity Web UI
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-09T00:00:00+08:00">2026-04-09 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Step-by-step guide to using SANtricity workloads in 2026 (not)
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/06/epa-eseries-perf-analyzer-354.html" rel="permalink">What is new in E-Series Perf Analyzer v3.5.4
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-06T00:00:00+08:00">2026-04-06 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What was added, updated, removed and why
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/03/31/proxmox-plugin-netapp-eseries-santricity.html" rel="permalink">Proxmox Plugin for NetApp E-Series SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-31T00:00:00+08:00">2026-03-31 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          11 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Why SANtricity Plug-in for Proxmox 9 exists and why SANmox TUI is better
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html" rel="permalink">The shocking truth about SANtricity snapshots
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-03-21T00:00:00+08:00">2026-03-21 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          15 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The shocking truth about SANtricity snapshots (especially snapshot schedules) and what you can do about it
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

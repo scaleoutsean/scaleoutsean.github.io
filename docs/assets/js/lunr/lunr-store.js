@@ -2297,6 +2297,12 @@ var store = [{
         "url": "/2026/04/09/netapp-santricity-applications-workloads.html",
         "teaser": null
       },{
+        "title": "Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI",
+        "excerpt":"What is ECK It’s a Kubernetes Operator for Elasticsearch. You can read about it here. It performs all lifecycle management tasks for Elasticsearch clusters. Deploy ECK on k0s with SANtricity CSI ECK may be deployed using Helm, which is what I chose here because the previous post on k0s with...","categories": ["storage","e-series","kubernetes","analytics"],
+        "tags": ["netapp","k0s","csi","eck","elasticsearch"],
+        "url": "/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2310,7 +2316,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Applications and Workloads in NetApp SANtricity Web UI 2026-04-09 00:00 8 minute read Step-by-step guide to using SANtricity workloads in 2026 (not) What is new in E-Series Perf Analyzer v3.5.4 2026-04-06 00:00 4 minute read What was added, updated, removed and why Proxmox Plugin for NetApp E-Series SANtricity 2026-03-31 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Elasticsearch 9 with ECK (Kubernetes), k0s, NetApp SANtricity CSI 2026-04-13 00:00 5 minute read Easily and quickly, deploy Elasticsearch 9 on E-Series Applications and Workloads in NetApp SANtricity Web UI 2026-04-09 00:00 8 minute read Step-by-step guide to using SANtricity workloads in 2026 (not) What is new in E-Series Perf...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3826,6 +3832,9 @@ var store = [{
   },{
     "title": "workloads",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/workloads/"
+  },{
+    "title": "eck",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/eck/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
