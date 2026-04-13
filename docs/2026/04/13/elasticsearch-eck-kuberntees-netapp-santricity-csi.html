@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -235,7 +235,7 @@
         
         <h2 id="what-is-eck">What is ECK</h2>
 
-<p>It's a Kubernetes Operator for Elasticsearch. You can read about it <a href="">here</a>.</p>
+<p>It's a Kubernetes Operator for Elasticsearch. You can read about it <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s">here</a>.</p>
 
 <p>It performs all lifecycle management tasks for Elasticsearch clusters.</p>
 
@@ -243,7 +243,26 @@
 
 <p>ECK may be deployed <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart">using Helm</a>, which is what I chose here because the previous post on k0s with SANtricity CSI used the same.</p>
 
-<p>First, set up k0s with SANtricity CSI as per <a href="">this post</a>.</p>
+<p>First, set up k0s with SANtricity CSI as per <a href="/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html">this post</a>.</p>
+
+<p>My configuration - redeployed yesterday - is current k0s 1.35.3 with the initial release of SANtricity CSI.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@h1 code]# kubectl get nodes
+NAME   STATUS   ROLES           AGE   VERSION
+h1     Ready    control-plane   9h    v1.35.3+k0s
+
+<span class="o">[</span>root@h1 code]# kubectl get pods <span class="nt">-n</span> santricity-csi
+NAME                                        READY   STATUS    RESTARTS   AGE
+santricity-csi-controller-f97565b9c-flnzc   4/4     Running   0          9h
+santricity-csi-controller-f97565b9c-gvwtg   4/4     Running   0          9h
+santricity-csi-node-7kgsg                   2/2     Running   0          9h
+
+<span class="o">[</span>root@h1 code]# kubectl get sc
+NAME                              PROVISIONER                         RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+santricity-nvme-raid1 <span class="o">(</span>default<span class="o">)</span>   santricity.scaleoutsean.github.io   Delete          Immediate           <span class="nb">true                   </span>9h
+</code></pre></div></div>
+
+<p>Add ECK Helm repository.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm repo add elastic https://helm.elastic.co
 helm repo update
@@ -279,23 +298,65 @@ spec:
 kubectl get pods <span class="nt">--selector</span><span class="o">=</span><span class="s1">'elasticsearch.k8s.elastic.co/cluster-name=quickstart'</span>
 </code></pre></div></div>
 
-<p>In my case it worked right away. Then I followed these commands to get access and check service status.</p>
+<p>Elasticsearch helped itself and created a PVC request which went to my default storage class based on SANtricity CSI:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@h1 code]# kubectl get pvc
+NAME                                         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            VOLUMEATTRIBUTESCLASS   AGE
+elasticsearch-data-quickstart-es-default-0   Bound    pvc-800c0408-27a2-4c76-987c-5a67de0aea60   1Gi        RWO            santricity-nvme-raid1   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 161m
+</code></pre></div></div>
+
+<p>To deploy with a more sensible storage configuration, check the ECK documentation.</p>
+
+<ul>
+  <li>Storage: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/storage-recommendations</li>
+  <li>Volume Claim Templates: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/volume-claim-templates</li>
+</ul>
+
+<p>Then I followed these commands to get access and check service status.</p>
 
 <p>This automatically creates a service IP for Elasticsearch.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get service quickstart-es-http
 </code></pre></div></div>
 
-<p>To get access and try:</p>
+<p>That created a service address for ES:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PASSWORD</span><span class="o">=</span><span class="si">$(</span>kubectl get secret quickstart-es-elastic-user <span class="nt">-o</span> go-template<span class="o">=</span><span class="s1">''</span><span class="si">)</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@h1 code]# kubectl get service quickstart-es-http
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>    AGE
+quickstart-es-http   ClusterIP   10.99.1.106   &lt;none&gt;        9200/TCP   162m
+</code></pre></div></div>
+
+<p>To get access I need credentials (a password or API token):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ PASSWORD</span><span class="o">=</span><span class="si">$(</span>kubectl get secret quickstart-es-elastic-user <span class="nt">-o</span> go-template<span class="o">=</span><span class="s1">'{{.data.elastic | base64decode}}'</span><span class="si">)</span>
 
 <span class="c">#</span>
 <span class="c"># kubectl port-forward service/quickstart-es-http 9200 # only if accessing from workstation</span>
 
 <span class="c"># if running from from Kubernetes host, you should be able to access service IP directly</span>
-curl <span class="nt">-u</span> <span class="s2">"elastic:</span><span class="nv">$PASSWORD</span><span class="s2">"</span> <span class="nt">-k</span> <span class="s2">"https://&lt;ELASTICSEARCH_SERVICE_IP&gt;:9200"</span>
+<span class="nv">$ </span>curl <span class="nt">-u</span> <span class="s2">"elastic:</span><span class="nv">$PASSWORD</span><span class="s2">"</span> <span class="nt">-k</span> <span class="s2">"https://10.99.1.106:9200"</span>
 </code></pre></div></div>
+
+<p>Response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"name"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"quickstart-es-default-0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"cluster_name"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"quickstart"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"cluster_uuid"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"2IDz4EyTRCWe4Cg0OlwBSQ"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"number"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"9.3.3"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"build_flavor"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"build_type"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"build_hash"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"640408e2dfd2af9fbfe5079e1575f93d8909a5f5"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"build_date"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-01T22:08:18.783399214Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"build_snapshot"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lucene_version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"10.3.2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"minimum_wire_compatibility_version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"8.19.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"minimum_index_compatibility_version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"8.0.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"tagline"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"You Know, for Search"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
 
 <p>This screenshot shows "default" Elasticsearch node created by ECK.</p>
 
@@ -346,7 +407,7 @@ curl <span class="nt">-u</span> <span class="s2">"elastic:</span><span class="nv
 
 <p>Bzzzt! Wrong question.</p>
 
-<p>As I've been saying for years, you <strong>don't even need a CSI driver</strong> for ECK. That's why I've created <a href="https://scaleoutsean.github.io/2026/01/16/eseries-santricity-terraform-provider.html">Terraform Provider for SANtricity</a> - for this exact use case because this method is the main pattern for <strong>all</strong> modern databases (these are not "HA" clusters).</p>
+<p>As I've been saying for years, you <strong>don't even need a CSI driver</strong> for ECK. That's why I've created <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform Provider for SANtricity</a> - for this exact use case because this method is the main pattern for <strong>all</strong> modern databases (these are not "HA" clusters).</p>
 
 <p>It's been <a href="/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html">years</a> since I've suggested this approach with single host ("non-HA") CSI, which don't have to be "supported" by anyone.</p>
 
