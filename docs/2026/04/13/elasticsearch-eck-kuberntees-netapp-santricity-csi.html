@@ -241,11 +241,11 @@
 
 <h2 id="deploy-eck-on-k0s-with-santricity-csi">Deploy ECK on k0s with SANtricity CSI</h2>
 
-<p>ECK may be deployed <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart">using Helm</a>, which is what I chose here because the previous post on k0s with SANtricity CSI used the same.</p>
+<p>ECK may be deployed <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-helm-chart">using Helm</a>, which is what I chose here because the previous post on k0s with SANtricity CSI also relies on Helm.</p>
 
 <p>First, set up k0s with SANtricity CSI as per <a href="/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html">this post</a>.</p>
 
-<p>My configuration - redeployed yesterday - is current k0s 1.35.3 with the initial release of SANtricity CSI.</p>
+<p>My configuration - redeployed yesterday - is current k0s 1.35.3 with the first (and current) beta release of SANtricity CSI.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@h1 code]# kubectl get nodes
 NAME   STATUS   ROLES           AGE   VERSION
@@ -273,9 +273,9 @@ helm repo update
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm <span class="nb">install </span>elastic-operator elastic/eck-operator <span class="nt">-n</span> elastic-system <span class="nt">--create-namespace</span>
 </code></pre></div></div>
 
-<p>ECK offers a ton of options (from CA configuration to memory and volume settings), but we don't need to use to demonstrate Kubernetes storage integration with SANtricity.</p>
+<p>ECK offers a ton of options (from CA configuration to memory and volume settings), but we don't need to use them to demonstrate Kubernetes storage integration with SANtricity.</p>
 
-<p>The simplest example is a single Elasticsearch 9 node with default volume size from <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/elasticsearch-deployment-quickstart">this page</a>, and it is deployed like so:</p>
+<p>The simplest example is a single Elasticsearch 9 node with default options from <a href="https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/elasticsearch-deployment-quickstart">this page</a>, and it may be deployed like so:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> <span class="o">&lt;&lt;</span><span class="no">EOF</span><span class="sh"> | kubectl apply -f -
 apiVersion: elasticsearch.k8s.elastic.co/v1
@@ -298,23 +298,21 @@ spec:
 kubectl get pods <span class="nt">--selector</span><span class="o">=</span><span class="s1">'elasticsearch.k8s.elastic.co/cluster-name=quickstart'</span>
 </code></pre></div></div>
 
-<p>Elasticsearch helped itself and created a PVC request which went to my default storage class based on SANtricity CSI:</p>
+<p>ECK helped itself and created a PVC request which went to the default storage class which is based on SANtricity CSI:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>root@h1 code]# kubectl get pvc
 NAME                                         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            VOLUMEATTRIBUTESCLASS   AGE
 elasticsearch-data-quickstart-es-default-0   Bound    pvc-800c0408-27a2-4c76-987c-5a67de0aea60   1Gi        RWO            santricity-nvme-raid1   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 161m
 </code></pre></div></div>
 
-<p>To deploy with a more sensible storage configuration, check the ECK documentation.</p>
+<p>To deploy with a more sensible storage configuration (multiple, larger volumes) or multiple nodes, check the ECK documentation.</p>
 
 <ul>
   <li>Storage: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/storage-recommendations</li>
   <li>Volume Claim Templates: https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/volume-claim-templates</li>
 </ul>
 
-<p>Then I followed these commands to get access and check service status.</p>
-
-<p>This automatically creates a service IP for Elasticsearch.</p>
+<p>Then I followed these commands to get access and check service status. This one automatically creates a service IP for Elasticsearch.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get service quickstart-es-http
 </code></pre></div></div>
@@ -326,7 +324,7 @@ NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT<span class="o"
 quickstart-es-http   ClusterIP   10.99.1.106   &lt;none&gt;        9200/TCP   162m
 </code></pre></div></div>
 
-<p>To get access I need credentials (a password or API token):</p>
+<p>To get access we need credentials (a password or API token):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ PASSWORD</span><span class="o">=</span><span class="si">$(</span>kubectl get secret quickstart-es-elastic-user <span class="nt">-o</span> go-template<span class="o">=</span><span class="s1">'{{.data.elastic | base64decode}}'</span><span class="si">)</span>
 
@@ -457,7 +455,10 @@ quickstart-es-http   ClusterIP   10.99.1.106   &lt;none&gt;        9200/TCP   16
 
 <p>(Docker and VMs can and should run the same way, of course, but this post is about ECK and Kubernetes.)</p>
 
-<p>It takes five minutes to install Kubernetes, SANtricity CSI, ECK and have Eleasticsearch up and running. You get PVCs that are protected from single disk failures, essentially maintenance free (compared to JBODs) and can deliver over <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#realistic-analytics-128kib-5050-rw">2 GB/s per volume</a>.</p>
+<p>Short of going with JBODs, which works but requires careful SDS management, performance and capacity overprovisioning to handle recovery and disk failures, reliable RAID 1 is the main thing Elasticsearch needs from storage.</p>
+
+<p>With k0s and any CSI or other automated storage provisioning method (of which there are several) it takes us five minutes to install Kubernetes, SANtricity CSI, ECK and have Eleasticsearch up and running. You get PVCs that are protected from single disk failures, essentially maintenance free (compared to JBODs) and can deliver over <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#realistic-analytics-128kib-5050-rw">2 GB/s per volume</a> with ease.</p>
+
 
         
       </section>
