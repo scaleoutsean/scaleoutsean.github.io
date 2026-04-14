@@ -2303,6 +2303,12 @@ var store = [{
         "url": "/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html",
         "teaser": null
       },{
+        "title": "Script Editor in NetApp E-Series SANtricity 12",
+        "excerpt":"I wrote about the new E-Series arrays EF80 and EF50 here, but didn’t highlight a new “feature” from release 12, Script Editor. That’s because I didn’t like it. What it Script Editor? It’s a text area in SANtricity Web UI where you can conveniently paste and use SMcli scripts. What...","categories": ["storage","e-series","automation"],
+        "tags": ["netapp","santricity","eseries","powershell","cli","python","go","ansible"],
+        "url": "/2026/04/14/santricity-script-editor-anti-pattern.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2316,7 +2322,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Elasticsearch 9 ECK (Kubernetes), k0s, NetApp SANtricity CSI 2026-04-13 00:00 7 minute read Easily and quickly, deploy Elasticsearch 9 on Kubernetes attached to E-Series Applications and Workloads in NetApp SANtricity Web UI 2026-04-09 00:00 8 minute read Step-by-step guide to using SANtricity workloads in 2026 (not) What is new in...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Script Editor in NetApp E-Series SANtricity 12 2026-04-14 00:00 3 minute read Why I don’t like the new Script Editor feature in SANtricity 12 Elasticsearch 9 ECK (Kubernetes), k0s, NetApp SANtricity CSI 2026-04-13 00:00 7 minute read Easily and quickly, deploy Elasticsearch 9 on Kubernetes attached to E-Series Applications and...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4096,4 +4102,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page64/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page65/"
   }]
