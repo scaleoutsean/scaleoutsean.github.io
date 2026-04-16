@@ -2309,6 +2309,12 @@ var store = [{
         "url": "/2026/04/14/santricity-script-editor-anti-pattern.html",
         "teaser": null
       },{
+        "title": "IBM Block Storage CSI for NetApp E-Series SANtricity 1.13.1",
+        "excerpt":"What is IBM Block Driver CSI with E-Series SANtricity patch IBM Block Storage CSI driver is a decent CSI driver. Check out the README. What’s new in IBM BLock CSI 1.13.1 Support of NVMe over FC hosts Extended support to RedHat OpenShift® 4.21 Extended support to Kubernetes 1.35 More info...","categories": ["storage","e-series","kubernetes"],
+        "tags": ["ef600","netapp","nvme","iscsi","fc","csi"],
+        "url": "/2026/04/16/ibm-block-storage-csi-driver-santricity-1-13-1.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2322,7 +2328,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Script Editor in NetApp E-Series SANtricity 12 2026-04-14 00:00 3 minute read Why I don’t like the new Script Editor feature in SANtricity 12 Elasticsearch 9 ECK (Kubernetes), k0s, NetApp SANtricity CSI 2026-04-13 00:00 7 minute read Easily and quickly, deploy Elasticsearch 9 on Kubernetes attached to E-Series Applications and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"IBM Block Storage CSI for NetApp E-Series SANtricity 1.13.1 2026-04-16 00:00 2 minute read Update for unofficial patch for E-Series SANtricity storage to IBM Block CSI driver Script Editor in NetApp E-Series SANtricity 12 2026-04-14 00:00 3 minute read Why I don’t like the new Script Editor feature in SANtricity...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
