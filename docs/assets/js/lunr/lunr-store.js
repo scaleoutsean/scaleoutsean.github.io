@@ -2310,7 +2310,7 @@ var store = [{
         "teaser": null
       },{
         "title": "IBM Block Storage CSI for NetApp E-Series SANtricity 1.13.1",
-        "excerpt":"What is IBM Block Driver CSI with E-Series SANtricity patch IBM Block Storage CSI driver is a decent CSI driver. Check out the README. What’s new in IBM BLock CSI 1.13.1 Support of NVMe over FC hosts Extended support to RedHat OpenShift® 4.21 Extended support to Kubernetes 1.35 More info...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"What is IBM Block Driver CSI with E-Series SANtricity patch IBM Block Storage CSI driver is a decent CSI driver which I (not IBM, so don’t call them about it!) patch to work with SANtricity. It has some unique features that may be interesting to NetApp E-Series owners. Check out...","categories": ["storage","e-series","kubernetes"],
         "tags": ["ef600","netapp","nvme","iscsi","fc","csi"],
         "url": "/2026/04/16/ibm-block-storage-csi-driver-santricity-1-13-1.html",
         "teaser": null
