@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -233,15 +233,15 @@
         
         <h2 id="splunk-operator-for-kubernetes-sok-with-netapp-e-series">Splunk Operator for Kubernetes (SOK) with NetApp E-Series</h2>
 
-<p>I haven't used Splunk since <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html">this post</a> in late 2023. That post was more about sizing and performance testing, but even that was too much, since no one has ever asked me anything about it.</p>
+<p>I haven't used Splunk since <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html">this post</a> in late 2023. That post was more about sizing and performance testing, but even that was too much since no one has ever asked me anything about it.</p>
 
-<p>Still, back then, E-Series didn't have any accessible CSI options (vSphere CSI was only theoretically available to me). Now, <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">we have several</a>, so I had to give SOK (Splunk Operator for Kubernetes) just to see how difficult it is.</p>
+<p>Still, back then, E-Series didn't have any accessible CSI options (vSphere CSI was only theoretically available to me). Now, <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">we have several</a>, so I had to give SOK (Splunk Operator for Kubernetes) a try in order to see just how difficult that is.</p>
 
 <p>SOK can be downloaded <a href="https://github.com/splunk/splunk-operator">here</a> and is documented <a href="https://splunk.github.io/splunk-operator/GettingStarted.html">here</a>.</p>
 
 <h2 id="the-sok-challenge">The SOK challenge</h2>
 
-<p>Turns out - I didn't have to do anything.</p>
+<p>Turns out - I didn't have to do anything to make it work.</p>
 
 <ul>
   <li>I had IBM Block CSI 1.13.1 <a href="/2026/04/16/ibm-block-storage-csi-driver-santricity-1-13-1.html">with SANtricity patch</a> released just last week</li>
@@ -267,7 +267,7 @@ metadata:
 
 <p>And, just like that, I've deployed Splunk 10.2 on Kubernetes with NetApp E-Series.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># kubectl splunk -n splunk-operator -l apps.kubernetes.io/pod-index=0 exec status</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl splunk <span class="nt">-n</span> splunk-operator <span class="nt">-l</span> apps.kubernetes.io/pod-index<span class="o">=</span>0 <span class="nb">exec </span>status
 splunkd is running <span class="o">(</span>PID: 827<span class="o">)</span><span class="nb">.</span>
 splunk helpers are running <span class="o">(</span>PIDs: 828 1013 1018 1116 1117<span class="o">)</span><span class="nb">.</span>
 </code></pre></div></div>
@@ -296,23 +296,25 @@ splunk helpers are running <span class="o">(</span>PIDs: 828 1013 1018 1116 1117
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>From that older <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html#e-series-storage-layout">Splunk-with-SmartStore post</a> we already knew E-Series easily delivers (and that was before <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">EF80</a> came out!) what Splunk Hot/Cache requiers: fast performing, reliable protected storage without complexity.</p>
+<p>From that older <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html#e-series-storage-layout">Splunk-with-SmartStore post</a> we already knew E-Series easily delivers (and that was before <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">EF80</a> came out!) what Splunk Hot/Cache requires: fast performing, reliable protected storage without complexity.</p>
 
-<p>CSI-related, I was pleased to see that IBM Block CSI with SANtricity patches worked fine. I literally did not have to do anything. Now we know these CSI volumes work just like any other - create, map, rescan/connect - but after trying another highly popular analytics solution <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">the other day</a> with the other Open Source driver, <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, the success rate has been very nice. These things just work!</p>
+<p>CSI-wise, I was pleased to see that IBM Block CSI with SANtricity patches worked fine. I literally did not have to do anything to make it work.</p>
+
+<p>Now we know these CSI volumes work just like any other - create, map, rescan/connect - but after trying another highly popular analytics solution <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">the other day</a> with the other Open Source driver, <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, I must say success rate has been very nice. These things just work!</p>
 
 <p>People may say "yeah, but you're running singleton clusters". Yeah, but that's very close to how it's actually supposed to be done.</p>
 
-<p>Like I said in the that post with the "other analytics solution", you're not supposed to centralize, consolidate and pile up Splunk (or other NOSQL) databases in one box and have Splunk running in 500 VMs connected to one array. It's <em>supposed to be distributed</em>. Both Splunk and S3 used for SmartStore.</p>
+<p>Like I said in the that post with the "other analytics solution", you're not supposed to centralize, consolidate and pile up Splunk (or other NOSQL) databases in one box and have Splunk running in 500 containers connected to one storage array. It's <em>supposed to be distributed</em>. Both Splunk and S3 used for SmartStore.</p>
 
-<p>If you had a three-rack solution, you'd have three E/EF Series boxes and SANtricity CSI could be deployed once per rack, within the same Kubenetes cluster. There's no harm in that. S3 would also be distributed across racks and you'd have redundancy across racks for compute, block and object storage.</p>
+<p>If you had a three-rack solution, you'd have three E/EF Series boxes and SANtricity CSI could be deployed once per rack, three times within the same Kubenetes cluster. S3 would also be distributed across racks and you'd have redundancy across racks for compute, block and object storage.</p>
 
 <p><img src="/assets/images/elasticsearch-eck-santricity-csi-three-rack.png" alt="SANtricity CSI in three racks" /></p>
 
-<p>You can run SOK with E-Series without any super-dynamic CSI. Just provision all the capacity in RAID 1 and use TopoLVM on the workers. That also works.</p>
+<p>You can even run SOK with E-Series without any super-dynamic CSI setup. Just provision all the capacity in RAID 1 to workers and use TopoLVM. That also works.</p>
 
-<p>With an "HA CSI" like IBM Block CSI with SANtricity patch (or SANtricity CSI, or vSphere CSI), SOK will attempt to restart failed Splunk pods on other schedulable workers. That helps avoid partial data reconstruction, but Hot Tier on RAID 1 should be "very rebuildable" (few TB in less than an hour?) and is merely something that's "nice to have".</p>
+<p>With an "HA CSI" like IBM Block CSI with SANtricity patch (or SANtricity CSI, or vSphere CSI), SOK will attempt to restart failed Splunk pods on other schedulable workers. That helps avoid partial data reconstruction, but Hot Tier on RAID 1 should be "very re-buildable" (several TB in less than an hour?) and is merely something that's "nice to have".</p>
 
-<p>Currently neither IBM Block CSI with SANtricity patch nor SANtricity CSI support SANtricity CSI snapshots (although that's <a href="/2026/04/21/santricity-client-update.html">work in progress</a>). That is exactly why I mention it here: with modern Kubernetes-based appliations such as Splunk, there's nothing you could do with CSI snapshots even if you had them. There's no role for them. I expect IBM Block CSI with SANtricity patch will support SANtricity CSI snapshots soon, but you simply don't need that. Both of these CSI drivers already deliver the few, basic CSI storage features SOK needs.</p>
+<p>Currently neither IBM Block CSI with SANtricity patch nor SANtricity CSI support SANtricity CSI snapshots (although that's <a href="/2026/04/21/santricity-client-update.html">work in progress</a>). That is exactly why I mention it here: with modern Kubernetes-based appliations such as Splunk, there's nothing you could do with CSI snapshots if you had them. There's no role for them. I expect IBM Block CSI with SANtricity patch will support SANtricity CSI snapshots soon, but you simply don't need that. Both of these CSI drivers already deliver the few, basic CSI storage features SOK needs.</p>
 
 <h2 id="appendix-a-sok-on-netapp-e-series">Appendix A: SOK on NetApp E-Series</h2>
 
