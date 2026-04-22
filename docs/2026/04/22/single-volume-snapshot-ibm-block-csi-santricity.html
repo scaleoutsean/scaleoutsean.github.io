@@ -239,7 +239,7 @@
 <ul>
   <li>Install the usual snapshot CRDs and snapshot controller</li>
   <li>Create a <code class="language-plaintext highlighter-rouge">VolumeSnapshotClass</code> (example further below, and in the patch README on Github)</li>
-  <li>Create a snapshot YAML and apply (exaimple further below)</li>
+  <li>Create a snapshot YAML and apply (example further below)</li>
 </ul>
 
 <p>I picked Splunk Kubernetes Operator from <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">yesterday's post</a> to test with.</p>
@@ -252,7 +252,7 @@
 
 <p><img src="/assets/images/ibm_block_driver_csi_santricity_snapshots_02_snapshot.png" alt="CSI snapshot with IBM Block CSI with SANtricity patch" /></p>
 
-<p>As explained in the other post, these snapshot sausages are automatically made.</p>
+<p>As explained in the other post, these snapshot sausages are automatically made - including the creation of concatenated repo groups.</p>
 
 <p><img src="/assets/images/ibm_block_driver_csi_santricity_snapshots_03_repo_group.png" alt="Repo Group with IBM Block CSI with SANtricity patch" /></p>
 
@@ -263,7 +263,7 @@
   <li>Second, DDP-based storage allocation is coarse.</li>
 </ul>
 
-<p>Regarding the snapshot "group" naming, it just can't be helped because IBM Block CSI makes it very hard to not use random names - as it does for volumes, so it does for snapshot "groups". It <em>is</em> annoying, but it's also not a huge deal. I know the "volume-is-a-pet" types like to micro-manage storage object names, but it's not how it should be. You should also not have more than one snapshot per volume in any case - ship the old ones off to S3! And one snapshot "group" as well. Oh, by the way - SANtricity snapshots do <em>not</em> have names. Only snapshot groups have, and although you can have multiple (up to 4 per volume), there are almost no use cases for having several snapshot groups for user-created snapshots.</p>
+<p>Regarding the snapshot "group" naming, it just can't be helped because IBM Block CSI makes it very hard to not use random names - as it does for volumes, so it does for snapshot "groups". It <em>is</em> annoying, but it's also not a huge deal. I know the "volume-is-a-pet" types like to micro-manage storage object names, but it's not how it should be. You should also not have more than one snapshot per volume in any case - ship the old ones off to S3! And one snapshot "group" as well. Oh, by the way - SANtricity snapshots do <em>not</em> have names. Only snapshot groups have, and although you can have multiple (up to 4 per volume), there are almost no use cases for having several snapshot groups per volume for user-created snapshots.</p>
 
 <p>Regarding the second challenge, 2 GiB (20% of base volume capacity) was requested, but 8 GiB got allocated for a 10 GiB base volume. That's nothing new, I've blogged about this several times: for larger volumes, this won't matter. "Wasting" roughly 4 GiB per volume's snapshot gruop sounds terrible until you realize SANtricity supports just 2,048 volumes, so even if you had hundreds of snapshots lying around, it'd hardly be a problem. It's solved easily by sending backup to S3 and deleting the snapshot, which also deletes unused snapshot "group". Alternatively you can use traditional RAID for tiny volumes; they have has precise allocation and works the same way DDP works. I just prefer DDP and don't consider keeping hundreds of snapshots around a good management practice.</p>
 
@@ -363,17 +363,17 @@ splunk-operator-controller-manager-fbb788c9c-7w86j   1/1     Running   0        
 
 </code></pre></div></div>
 
-<p>It seems (based on NetApp KBs) it may take a lot longer with CGs or when many snapshots are taken sequentially, but that's not the kind of workloads people run on SANtricity (and can be offloaded to replicated SDS containers with replicated ZFS or Btrfs).</p>
-
 <p>Splunk Operator managed to survive snapshot without crashing.</p>
+
+<p>It seems (based on NetApp KBs) that snapshots may take a lot longer with CGs or when many snapshots are taken sequentially, but that's not the kind of workloads people run on SANtricity. Such workloads can be offloaded to SDS containers running replicated ZFS or Btrfs or <a href="/2025/12/28/ceph-with-netapp-eseries.html#deploy-in-seconds">MicroCeph on E-Series</a> backed by SANtricity volumes.</p>
 
 <p>In conclusion, this is now ready for testing, including backup/restore with Velero - for <a href="/2026/04/18/velero-csi-backup-santricity-ibm-block-csi.html">Velero backup to Versity S3 Gateway</a> about which I blogged the other day, but now using CSI Snapshots rather than File System Backup.</p>
 
-<p>Once single volume snapshots look stable, Group Snapshots will be next. SANtricity has Consistency Group (CG) support, and so this is going to be "more of the same". Linked Clones (both individual and the CG variant) are part of this, too. We already automate them in SANtricity PowerShell, and this is not going to be new or different.</p>
+<p>Once single volume snapshots look stable, Group Snapshots will be next. SANtricity has Consistency Group (CG) support, and so this is going to be "more of the same". Linked Clones (both for individual volumes and CGs) are part of this, too. We already automate them in SANtricity PowerShell and this is not going to be new or different.</p>
 
 <p>Like I said in the SOK post yesterday, snapshots have a limited role in Kubernetes especially when one considers the big picture, which is that S3 is becoming the single source of truth and the remaining block workloads either don't need (Web/App) or don't support (databases, including Splunk) hardware snapshots. I see them as legacy feature for databases that don't have own native S3 backup and a pre-cautionary measure before major application upgrades.</p>
 
-<p>Once single and CG snapshots and Linked Clones work on IBM Block CSI with SANtricity patch, SANtricity CSI will be next.</p>
+<p>Once single and CG snapshots and Linked Clones work on IBM Block CSI with SANtricity patch, SANtricity CSI will get CSI snapshots next.</p>
 
         
       </section>
