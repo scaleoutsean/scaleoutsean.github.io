@@ -294,6 +294,8 @@ splunk helpers are running <span class="o">(</span>PIDs: 828 1013 1018 1116 1117
   <li>Create a Storage Class that uses RAID 1</li>
 </ul>
 
+<p>The same recipe applies to SANtricity CSI.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>From that older <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html#e-series-storage-layout">Splunk-with-SmartStore post</a> we already knew E-Series easily delivers (and that was before <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">EF80</a> came out!) what Splunk Hot/Cache Tier requires: fast performing, reliable protected storage without complexity.</p>
@@ -304,17 +306,19 @@ splunk helpers are running <span class="o">(</span>PIDs: 828 1013 1018 1116 1117
 
 <p>People may say "yeah, but you're running singleton clusters". Yeah, but that's very close to how it's actually supposed to be done.</p>
 
-<p>Like I said in the that post with the "other analytics solution", you're not supposed to centralize, consolidate and pile up Splunk (or other NOSQL) databases in one box and have Splunk running in 500 containers connected to one storage array. It's <em>supposed to be distributed</em>. Both Splunk and S3 used for SmartStore.</p>
+<p>Like I said in the that post with the "other analytics solution", you're not supposed to centralize, consolidate and pile up Splunk (or other NOSQL) databases on one box and have Splunk running in 64 containers connected to one storage array. It's <em>supposed to be distributed</em>. Both Splunk and S3 used by SmartStore.</p>
 
 <p>If you had a three-rack solution, you'd have three E/EF Series boxes and SANtricity CSI could be deployed once per rack, three times within the same Kubernetes cluster. S3 would also be distributed across racks and you'd have redundancy across racks for compute, block and object storage.</p>
 
 <p><img src="/assets/images/elasticsearch-eck-santricity-csi-three-rack.png" alt="SANtricity CSI in three racks" /></p>
 
-<p>You can even run SOK with E-Series without any super-dynamic CSI setup. Just provision all the capacity in RAID 1 to workers and use TopoLVM. That also works.</p>
+<p>In other words, rather than buying one EF80 box, you should consider three entry-level EF300 boxes instead (at least if you want avoid losing SIEM or other precious logs).</p>
+
+<p>You can even run SOK with E-Series without any super-dynamic HA CSI setup. Just provision all the capacity in RAID 1 to workers and use TopoLVM. That also works.</p>
 
 <p>With an "HA CSI" like IBM Block CSI with SANtricity patch (or SANtricity CSI, or vSphere CSI), SOK will attempt to restart failed Splunk pods on other schedulable workers. That helps avoid partial data reconstruction, but Hot Tier on RAID 1 should be "very re-buildable" (several TB in less than an hour?) and HA CSI is merely something that's "nice to have".</p>
 
-<p>Currently neither IBM Block CSI with SANtricity patch nor SANtricity CSI support SANtricity CSI snapshots (although - from earlier today - that's <a href="/2026/04/21/santricity-client-update.html">work in progress</a>). That is exactly why I mention it here: with modern Kubernetes-based applications such as Splunk, there's nothing you could do with CSI snapshots if you had them. There's no role for them. I expect IBM Block CSI with SANtricity patch will support SANtricity CSI snapshots soon, but you simply don't need that. Both of these CSI drivers already deliver the few, basic CSI storage features SOK needs.</p>
+<p>Currently neither IBM Block CSI with SANtricity patch nor SANtricity CSI support SANtricity CSI snapshots (although - from earlier today - that's <a href="/2026/04/21/santricity-client-update.html">work in progress</a>). That is exactly why I mention it here: with modern Kubernetes-based applications such as Splunk, there's nothing you could do with CSI snapshots if you had them. There's no role for them. I expect IBM Block CSI with SANtricity patch will support SANtricity CSI snapshots soon, but you simply don't need that. Both of these CSI drivers already deliver the few, basic CSI storage features SOK needs. (<strong>Update (2026/04/22):</strong> <a href="/2026/04/22/single-volume-snapshot-ibm-block-csi-santricity.html">single volume snapshots</a> are available and might even work.)</p>
 
 <h2 id="appendix-a-sok-on-netapp-e-series">Appendix A: SOK on NetApp E-Series</h2>
 
@@ -359,7 +363,7 @@ splunk-s1-standalone-0                               1/1     Running   0        
 
 <p>Above you can see it took about 2 minutes to install - from the moment PVC request appeared, to the moment startup probe failed once.</p>
 
-<p>Among more or less noteworthy details: 120 GB - remember, no thin-provisioning on EF-Series - is needed to deploy SOK (10 GiB) and Splunk 10.2 (110 GiB), just in case you want to try this at home and can't use thin volumes.</p>
+<p>Among the more or less noteworthy details: 120 GiB - remember, no thin-provisioning on EF-Series - is "recommended" to deploy SOK (10 GiB) and Splunk 10.2 (110 GiB), just in case you want to try this at home and can't use thin volumes. Maybe you can cut corners by fiddling with the operator deployment settings and do it with less. If your array supports thin provisioning, then there isn't much to worry about.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
 NAME   STATUS   ROLES           AGE   VERSION
@@ -398,7 +402,7 @@ splunk-s1-standalone-0                               0/1     Running   0        
 
 </code></pre></div></div>
 
-<p>In that list line <code class="language-plaintext highlighter-rouge">Ready</code> is <code class="language-plaintext highlighter-rouge">0/1</code> but that was before the first health probe passed. The pod was already up and running.</p>
+<p>In that last line <code class="language-plaintext highlighter-rouge">Ready</code> is <code class="language-plaintext highlighter-rouge">0/1</code> but that was before the first health probe passed. The pod was already up and running.</p>
 
         
       </section>
