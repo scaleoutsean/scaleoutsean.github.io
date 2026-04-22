@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -363,15 +363,43 @@ splunk-operator-controller-manager-fbb788c9c-7w86j   1/1     Running   0        
 
 </code></pre></div></div>
 
-<p>Splunk Operator managed to survive snapshot without crashing.</p>
+<p>Splunk Operator managed to survive snapshot creation without crashing.</p>
 
 <p>It seems (based on NetApp KBs) that snapshots may take a lot longer with CGs or when many snapshots are taken sequentially, but that's not the kind of workloads people run on SANtricity. Such workloads can be offloaded to SDS containers running replicated ZFS or Btrfs or <a href="/2025/12/28/ceph-with-netapp-eseries.html#deploy-in-seconds">MicroCeph on E-Series</a> backed by SANtricity volumes.</p>
 
+<p>Key API-related features related to snapshots in IBM Block CSI with SANtricity patch come from SANtricity (Python) Client about which I <a href="/2026/04/21/santricity-client-update.html">blogged</a> yesterday. This "engine" is barely visible, but it is key enabler for such features and there is simply nothing else out there in Python (there are my other SANtricity client libraries, currently with simpler snapshot features).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>santricity snapshots list-snapshots
+                                                           Snapshot Images
+
+  Snapshot Group                   Pit Ref                                    Seq <span class="c">#    Timestamp   Created By   Repo Use %   Status</span>
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  bcache:caching                   340000006D039EA000493A9C00630C2169BBDBE1     156   1773928321   user            7864320   optimal
+  bcache:backing                   340000006D039EA000493A9C00630C2269BBDBE1     156   1773928321   user            7864320   optimal
+  bcache:caching                   340000006D039EA000493A9C00630CA469C7E5B4     220   1774717184   user                  0   optimal
+  bcache:backing                   340000006D039EA000493A9C00630CA569C7E5B4     220   1774717184   user                  0   optimal
+  r1_4096_128_SG_01                340000006D039EA000493A2600630B3769E2A445     248   1776470400   schedule        7864320   optimal
+  r1_4096_128_SG_01                340000006D039EA000493A2600630B3869E3F5CD     249   1776556800   schedule              0   optimal
+  r1_4096_128_SG_02                340000006D039EA000493A2600630B3969E3F5CD     250   1776556800   schedule              0   optimal
+  6Ey6G5yWJp5c4jeDB3rxwQ26jKhwz4   340000006D039EA000493A9C00630D5669E85D76     252   1776844767   user                  0   optimal
+
+<span class="nv">$ </span>santricity snapshots list-groups
+                                                                                       Snapshot Groups
+
+  Name                             Pit Group Ref                            Sched Owned   Sched Count   Base Volume                              Snapshots   Repo Cap <span class="o">(</span>GiB<span class="o">)</span>   CG    Status
+ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  6Ey6G5yWJp5c4jeDB3rxwQ26jKhwz4   330000006D039EA000493A2600000B4069E85…       No                  0   020000006D039EA000493A2600000B3C69E79…           1             8.00   No    optimal
+  bcache:backing                   330000006D039EA000493A9C00000C1F69BBD…       No                  0   020000006D039EA000493A9C00000BF869B80…           2            16.00   Yes   optimal
+  bcache:caching                   330000006D039EA000493A9C00000C1C69BBD…       No                  0   020000006D039EA000493A2600000A1E69B80…           2             0.50   Yes   optimal
+  r1_4096_128_SG_01                330000006D039EA000493A2600000A8769C49…       Yes                 1   020000006D039EA000493A2600000A0669AF8…           2             2.50   No    optimal
+  r1_4096_128_SG_02                330000006D039EA000493A2600000A8D69C49…       Yes                 1   020000006D039EA000493A2600000A0669AF8…           1             5.50   No    optimal
+</code></pre></div></div>
+
 <p>In conclusion, this is now ready for testing, including backup/restore with Velero - for <a href="/2026/04/18/velero-csi-backup-santricity-ibm-block-csi.html">Velero backup to Versity S3 Gateway</a> about which I blogged the other day, but now using CSI Snapshots rather than File System Backup.</p>
 
-<p>Once single volume snapshots look stable, Group Snapshots will be next. SANtricity has Consistency Group (CG) support, and so this is going to be "more of the same". Linked Clones (both for individual volumes and CGs) are part of this, too. We already automate them in SANtricity PowerShell and this is not going to be new or different.</p>
+<p>Once single volume snapshots seem stable, Group Snapshots will be next. SANtricity has Consistency Group (CG) support, and so this is going to be "more of the same". Linked Clones (both for individual volumes and CGs) are part of this, too. We already automate them in SANtricity PowerShell and this is not going to be new or different.</p>
 
-<p>Like I said in the SOK post yesterday, snapshots have a limited role in Kubernetes especially when one considers the big picture, which is that S3 is becoming the single source of truth and the remaining block workloads either don't need (Web/App) or don't support (databases, including Splunk) hardware snapshots. I see them as legacy feature for databases that don't have own native S3 backup and a pre-cautionary measure before major application upgrades.</p>
+<p>As I said in the SOK post yesterday, snapshots have a limited role in Kubernetes especially when one considers the big picture, which is that S3 is becoming the single source of truth and the remaining block workloads either don't need (Web/App) or don't support (databases such as Splunk) hardware snapshots. I see them as a legacy feature for databases that don't have own native S3 backup and a pre-cautionary measure before major application upgrades.</p>
 
 <p>Once single and CG snapshots and Linked Clones work on IBM Block CSI with SANtricity patch, SANtricity CSI will get CSI snapshots next.</p>
 
