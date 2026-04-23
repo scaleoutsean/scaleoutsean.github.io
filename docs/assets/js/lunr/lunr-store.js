@@ -2340,7 +2340,7 @@ var store = [{
         "teaser": null
       },{
         "title": "EPA 4 development update",
-        "excerpt":"Introduction E-Series Performance Analyzer (EPA) was originally maintained by NetApp, which stopped maintaining the project more than four years ago. There was no signficant community activity around it, so I forked the project and have been maintaining it by myself since 2023. Although EPA has always been performance-focused, it had...","categories": ["storage","e-series","monitoring"],
+        "excerpt":"Introduction E-Series Performance Analyzer (EPA) was originally created by NetApp, which stopped maintaining the project more than four years ago. There was no signficant community activity around it, so I forked the project and have been maintaining it by myself for over three years now. Although EPA has always been...","categories": ["storage","e-series","monitoring"],
         "tags": ["netapp","epa","projects","santricity"],
         "url": "/2026/04/23/epa_400_beta.html",
         "teaser": null
