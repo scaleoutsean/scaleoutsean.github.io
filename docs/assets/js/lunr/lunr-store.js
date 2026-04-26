@@ -2361,7 +2361,7 @@ var store = [{
     "excerpt":"EPA 4 development update 2026-04-23 00:00 9 minute read EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared to EPA 3 Single volume snapshots on IBM Block CSI with SANtricity patch 2026-04-22 00:00 6 minute read How to create single volume snapshots...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
-    "excerpt":"Projects The following are my OSS repos except for E-Series Sizing Tools which is a (public) Web site (it’s a bit sensitive from a competitive perspective, so I haven’t posted that source to Github). The rest is all permissively licensed OSS. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack with...","url": "https://scaleoutsean.github.io/projects.html"
+    "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to create accessible presentation-like summaries in HTML format. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) Projects Most of my work is on Github. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack...","url": "https://scaleoutsean.github.io/projects.html"
   },{
     "title": "Posts by Tag",
     "excerpt":" ","url": "https://scaleoutsean.github.io/tags/"
