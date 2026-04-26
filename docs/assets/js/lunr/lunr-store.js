@@ -2345,6 +2345,12 @@ var store = [{
         "url": "/2026/04/23/epa_400_beta.html",
         "teaser": null
       },{
+        "title": "Forward E-Series SANtricity logs to Victoria Metrics syslog receiver",
+        "excerpt":"Introduction EPA 4.0.0 beta 1 has been posted to Github earlier today, and related the the removal of MEL (mentioned in that post), here’s another recommended solution for log forwarding and monitoring (the other one being Elasticsearch): Victoria Logs. E-Series can forward system logs to syslog destinations compatible with two...","categories": ["storage","e-series","monitoring"],
+        "tags": ["netapp","santricity","logs","epa","syslog","victoria-logs"],
+        "url": "/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2358,10 +2364,10 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"EPA 4 development update 2026-04-23 00:00 9 minute read EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared to EPA 3 Single volume snapshots on IBM Block CSI with SANtricity patch 2026-04-22 00:00 6 minute read How to create single volume snapshots...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Forward E-Series SANtricity logs to Victoria Metrics syslog receiver 2026-04-26 00:00 2 minute read How to forward SANtricity logs to Victoria Logs syslog receiver EPA 4 development update 2026-04-23 00:00 9 minute read EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
-    "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to create accessible presentation-like summaries in HTML format. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) Projects Most of my work is on Github. Repo Description All-in-One BeeGFS stack All-in-One BeeGFS stack...","url": "https://scaleoutsean.github.io/projects.html"
+    "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to (manually) create accessible presentation-like summaries in HTML format for situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) Projects Most of my work...","url": "https://scaleoutsean.github.io/projects.html"
   },{
     "title": "Posts by Tag",
     "excerpt":" ","url": "https://scaleoutsean.github.io/tags/"
@@ -3877,6 +3883,12 @@ var store = [{
   },{
     "title": "eck",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/eck/"
+  },{
+    "title": "logs",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/logs/"
+  },{
+    "title": "victoria-logs",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/victoria-logs/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
