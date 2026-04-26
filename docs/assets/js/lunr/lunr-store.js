@@ -2346,7 +2346,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Forward E-Series SANtricity logs to Victoria Logs syslog receiver",
-        "excerpt":"Introduction EPA 4.0.0 beta 1 has been posted to Github earlier today, and related the the removal of MEL (mentioned in that post), here’s another recommended solution for log forwarding and monitoring (the other one being Elasticsearch): Victoria Logs. E-Series can forward system logs to syslog destinations compatible with two...","categories": ["storage","e-series","monitoring"],
+        "excerpt":"Introduction EPA 4.0.0 beta 1 has been posted to Github earlier today, and related to the removal of MEL (mentioned in that post) here’s another recommended solution for log forwarding and monitoring (the other one being Elasticsearch): Victoria Logs. E-Series can forward system logs to a syslog destinations compatible with...","categories": ["storage","e-series","monitoring"],
         "tags": ["netapp","santricity","logs","epa","syslog","victoria-logs"],
         "url": "/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html",
         "teaser": null
