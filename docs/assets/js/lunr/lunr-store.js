@@ -2345,7 +2345,7 @@ var store = [{
         "url": "/2026/04/23/epa_400_beta.html",
         "teaser": null
       },{
-        "title": "Forward E-Series SANtricity logs to Victoria Metrics syslog receiver",
+        "title": "Forward E-Series SANtricity logs to Victoria Logs syslog receiver",
         "excerpt":"Introduction EPA 4.0.0 beta 1 has been posted to Github earlier today, and related the the removal of MEL (mentioned in that post), here’s another recommended solution for log forwarding and monitoring (the other one being Elasticsearch): Victoria Logs. E-Series can forward system logs to syslog destinations compatible with two...","categories": ["storage","e-series","monitoring"],
         "tags": ["netapp","santricity","logs","epa","syslog","victoria-logs"],
         "url": "/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html",
@@ -2364,7 +2364,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Forward E-Series SANtricity logs to Victoria Metrics syslog receiver 2026-04-26 00:00 2 minute read How to forward SANtricity logs to Victoria Logs syslog receiver EPA 4 development update 2026-04-23 00:00 9 minute read EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Forward E-Series SANtricity logs to Victoria Logs syslog receiver 2026-04-26 00:00 2 minute read How to forward SANtricity logs to Victoria Logs syslog receiver EPA 4 development update 2026-04-23 00:00 9 minute read EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to (manually) create accessible presentation-like summaries in HTML format for situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) Projects Most of my work...","url": "https://scaleoutsean.github.io/projects.html"
