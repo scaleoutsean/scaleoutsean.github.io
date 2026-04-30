@@ -2379,7 +2379,7 @@ var store = [{
     "excerpt":"Velero CSI backup with SANtricity Snapshots and read-only Linked Clones 2026-04-30 00:00 17 minute read Not just Poor Man’s Backup - improved Velero functionality for SANtricity with IBM Block CSI with SANtricity patches 1.13.2 Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity 2026-04-28 00:00 12 minute read Ubuntu 26.04 LTS...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
-    "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to (manually) create accessible presentation-like summaries in HTML format for situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) Projects Most of my work...","url": "https://scaleoutsean.github.io/projects.html"
+    "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to (manually) create accessible presentation-like summaries in HTML format for situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) NetApp E-Series in Kubernetes Ecosystem...","url": "https://scaleoutsean.github.io/projects.html"
   },{
     "title": "Posts by Tag",
     "excerpt":" ","url": "https://scaleoutsean.github.io/tags/"
