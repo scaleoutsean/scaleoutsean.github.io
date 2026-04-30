@@ -1,0 +1,1086 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Velero CSI backup with SANtricity Snapshots and read-only Linked Clones | Acting Technologist</title>
+<meta name="description" content="Velero CSI snapshots on IBM Block CSI with SANtricity patch 1.13.2">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Velero CSI backup with SANtricity Snapshots and read-only Linked Clones">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">
+
+
+  <meta property="og:description" content="Velero CSI snapshots on IBM Block CSI with SANtricity patch 1.13.2">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Velero CSI backup with SANtricity Snapshots and read-only Linked Clones">
+  <meta name="twitter:description" content="Velero CSI snapshots on IBM Block CSI with SANtricity patch 1.13.2">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-04-30T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Velero CSI backup with SANtricity Snapshots and read-only Linked Clones">
+    <meta itemprop="description" content="Not just Poor Man's Backup - improved Velero functionality for SANtricity with IBM BLock CSI with SANtricity patches 1.13.2">
+    <meta itemprop="datePublished" content="2026-04-30T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html" itemprop="url">Velero CSI backup with SANtricity Snapshots and read-only Linked Clones
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-30T00:00:00+08:00">2026-04-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          13 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</a></li><li><a href="#setup-and-workflow">Setup and workflow</a></li><li><a href="#s3-repository">S3 repository</a></li><li><a href="#limitations">Limitations</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-velero-backup-details">Appendix A: Velero backup details</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>Continuing from previous post on this topic, <a href="/2026/04/18/velero-csi-backup-santricity-ibm-block-csi.html">Backup SANtricity CSI volume with Velero and Versity S3 Gateway</a>, today we'll look at a better way to backup E-Series-backed PVCs.</p>
+
+<p>IBM Block CSI, for which I have a SANtricity patch, last week released a minor update in v1.13.1 and then, in a hurry, security patches in v1.13.2. That meant another patch festival, so I used that opportunity to do a bit of extra work. The default branch, <code class="language-plaintext highlighter-rouge">santricity</code>, still hasn't been fully updated for v1.13.2.</p>
+
+<p>In the first Velero-with-SANtricity post (the link above), I demonstrated poor man's backup without snapshots, which used FSB <a href="https://velero.io/docs/v1.18/file-system-backup/">File System Backup</a> - it backups live file systems. Many users use that approach, especially on file servers and "database dump" volumes, but it's not usable for live databases, for example.
+uthe
+This post is about making a backup from a static, ephemeral <strong>thin clone</strong> volume, which my SANtricity patch could not do at the time. IBM Block CSI has the feature, but SANtricity CSI code can't take advantage of it without knowing how to work with storage to fulfill such requests.</p>
+
+<p>Since yesterday, it's a bit smarter, making another approach possible. While the default <code class="language-plaintext highlighter-rouge">santricity</code> branch in my repo has generic updates for v1.13.2, this CSI-related work is in a separate branch in the same repo, but I won't link it as that branch will be merged into the main anyway.</p>
+
+<h2 id="csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</h2>
+
+<p><code class="language-plaintext highlighter-rouge">fsfreeze</code>, <a href="https://velero.io/docs/main/backup-hooks/">documented here</a>, can be put in place before, and undone after, a snapshot is taken.</p>
+
+<p>General workflow:</p>
+
+<ul>
+  <li>freeze workload using <code class="language-plaintext highlighter-rouge">fsfreeze</code></li>
+  <li>create CSI snapshot using VolumeSnapshotClass for a SANtricity driver (which uses only SANtricity storage)</li>
+  <li>unfreeze workload</li>
+  <li>create ephemeral clone volume</li>
+  <li>Velero data mover pod is instantiated and copies data to backup repo (e.g. S3)</li>
+  <li>once copying is done, ephemeral clone and snapshot are both deleted</li>
+</ul>
+
+<p>Almost all applications are resistant to crashes and fsfreeze isn't necessary. And if you want perfect application consistency, you should also freeze the application, not just the container.</p>
+
+<p>For single volume apps, I wouldn't do either (fsfreeze or application-specific actions), but some academically-orientated folks like to talk about it. I blogged about that in the past, and</p>
+
+<ul>
+  <li>full example of <a href="/2024/03/22/velero-trident-backup-job-details.html#appendix-d---using-velero-hooks">using Velero with hooks</a></li>
+  <li>post about using <a href="/2024/03/23/velero-netapp-verda-scripts-and-trident.html">NetApp's Verde scripts</a> for application-consistent freezes</li>
+  <li>I also have several posts about <a href="/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html">Kanister</a>, both Kasten-related and stand-alone</li>
+</ul>
+
+<p>The post that explains how Velero data mover uses ephemeral snapshots can be found <a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">here</a>. There's a video demo on the same page (with Trident CSI and SolidFire).</p>
+
+<h2 id="setup-and-workflow">Setup and workflow</h2>
+
+<ul>
+  <li>Kubernetes v1.35</li>
+  <li>IBM Block CSI with SANtricity patch v1.13.2</li>
+  <li>E-Series EF600 (11.9) with NVMe/RoCE</li>
+  <li>Velero v1.18.0 with AWS S3 plugin 1.14.0</li>
+  <li>Versity S3 Gateway v1.4.1</li>
+</ul>
+
+<p>In the FSB-related Velero post, I used Versity in a Kubernetes name space but this time I used Versity S3 Gateway on a bare metal server to make a point (more on that later).</p>
+
+<p><strong>Unlike</strong> there, Velero was installed with CSI <strong>enabled</strong> and Velero agent (required for data movement in backup/restore jobs) was installed as well.</p>
+
+<p>Among pods on the box, ibm-block-csi-operator is the (unpatched) IBM Block CSI Operator, ibm-block-csi-controller is the (patched) CSI controller and ibm-block-csi-node is the node, also patched for SANtricity.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@h2:~/code# kubectl get pods <span class="nt">-A</span>
+NAMESPACE      NAME                                      READY   STATUS    RESTARTS      AGE
+default        ibm-block-csi-controller-0                8/8     Running   0             42s
+default        ibm-block-csi-node-x5vcz                  3/3     Running   0             41s
+default        ibm-block-csi-operator-6f9878b875-kcpjm   1/1     Running   0             10d
+demo           pvc-mounter                               1/1     Running   0             88m
+kube-flannel   kube-flannel-ds-qml8x                     1/1     Running   7 <span class="o">(</span>12d ago<span class="o">)</span>   67d
+kube-system    coredns-668d6bf9bc-56nmf                  1/1     Running   9 <span class="o">(</span>12d ago<span class="o">)</span>   67d
+kube-system    coredns-668d6bf9bc-754wz                  1/1     Running   9 <span class="o">(</span>12d ago<span class="o">)</span>   67d
+kube-system    etcd-h2                                   1/1     Running   0             12d
+kube-system    kube-apiserver-h2                         1/1     Running   0             12d
+kube-system    kube-controller-manager-h2                1/1     Running   0             12d
+kube-system    kube-proxy-5qjxd                          1/1     Running   7 <span class="o">(</span>12d ago<span class="o">)</span>   67d
+kube-system    kube-scheduler-h2                         1/1     Running   0             12d
+kube-system    snapshot-controller-cc4c98c9d-5tkft       1/1     Running   0             7d10h
+kube-system    snapshot-controller-cc4c98c9d-p985p       1/1     Running   0             7d10h
+velero         node-agent-5j997                          1/1     Running   0             5h57m
+velero         velero-7cd8f46bc6-vhzsx                   1/1     Running   0             5h57m
+</code></pre></div></div>
+
+<p>A manual workflow used to proof creation of a SANtricity snapshot and read-only linked clone from it used two YAML files.</p>
+
+<p>snap-demo-pvc.yml:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshot</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">demo-pvc-snap</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s2">"</span><span class="s">demo"</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">volumeSnapshotClassName</span><span class="pi">:</span> <span class="s">demo-volumesnapshotclass</span>
+  <span class="na">source</span><span class="pi">:</span>
+    <span class="na">persistentVolumeClaimName</span><span class="pi">:</span> <span class="s">demo-pvc</span>
+</code></pre></div></div>
+
+<p>clone-demo-pvc.yml:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">demo-clone</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">demo-storageclass-santricity</span> <span class="c1"># Use your actual StorageClass name</span>
+  <span class="na">dataSource</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">demo-pvc-snap</span>                    <span class="c1"># Name of the VolumeSnapshot to restore from</span>
+    <span class="na">kind</span><span class="pi">:</span> <span class="s">VolumeSnapshot</span>
+    <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">snapshot.storage.k8s.io</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>                          <span class="c1"># Can also be ReadOnlyMany if supported</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">4Gi</span>                          <span class="c1"># Must match or exceed the original PVC size</span>
+</code></pre></div></div>
+
+<p>To do it manually, we  create a PVC, snapshot it, create a read-only Linked Clone from it.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl apply <span class="nt">-f</span> snap-demo-pvc.yml
+volumesnapshot.snapshot.storage.k8s.io/demo-pvc-snap created
+
+<span class="nv">$ </span>kubectl get volumesnapshot <span class="nt">-n</span> demo
+NAME            READYTOUSE   SOURCEPVC   SOURCESNAPSHOTCONTENT   RESTORESIZE   SNAPSHOTCLASS              SNAPSHOTCONTENT                                    CREATIONTIME   AGE
+demo-pvc-snap   <span class="nb">true         </span>demo-pvc                            4Gi           demo-volumesnapshotclass   snapcontent-d1faf0e9-764f-4538-a492-63a49eee491a   7s             9s
+
+<span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> demo
+NAME       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                   VOLUMEATTRIBUTESCLASS   AGE
+demo-pvc   Bound    pvc-54a54fdf-f7a1-4558-a631-e1337dd6dadc   4Gi        RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 87m
+
+<span class="nv">$ </span>kubectl create <span class="nt">-f</span> clone-demo-pvc.yml <span class="nt">-n</span> demo
+persistentvolumeclaim/demo-clone created
+
+<span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> demo
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                   VOLUMEATTRIBUTESCLASS   AGE
+demo-clone   Bound    pvc-5211c332-d073-4a98-85e4-93612cbbf450   4Gi        RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 3s
+demo-pvc     Bound    pvc-54a54fdf-f7a1-4558-a631-e1337dd6dadc   4Gi        RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 88m
+
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">demo-clone</code> isn't a "real" volume, it's a read-only, "thin", linked clone volume.</p>
+
+<p>There are two kinds of linked clones on SANtricity, the other one is read-write Linked Clones. I wrote about that stuff in several posts, most recently <a href="/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html">here</a> for those who may be interested.</p>
+
+<p>Here's how that looks in SANtricity Web UI:</p>
+
+<p><img src="/assets/images/velero_ibm_block_csi_santricity_04.png" alt="Linked Clone of IBM Block CSI volume" /></p>
+
+<p>When that clone isn't presented to a host, it wouldn't have any mapping.</p>
+
+<p><img src="/assets/images/velero_ibm_block_csi_santricity_05.png" alt="Linked Clone of IBM Block CSI volume" /></p>
+
+<p>That's what Velero CSI snapshot with snapshot data mover does as well, except it maps a volume to its data mover, and it also cleans up the clone and snapshot after itself. If it works well, you don't see anything but a backup that's completed without errors.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup create demo <span class="nt">--include-namespaces</span> demo <span class="nt">--snapshot-volumes</span> <span class="nt">--snapshot-move-data</span>
+Backup request <span class="s2">"demo"</span> submitted successfully.
+Run <span class="sb">`</span>velero backup describe demo<span class="sb">`</span> or <span class="sb">`</span>velero backup logs demo<span class="sb">`</span> <span class="k">for </span>more details.
+
+<span class="nv">$ </span>velero backup get
+NAME   STATUS                       ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   QUEUE POSITION   SELECTOR
+demo   WaitingForPluginOperations   0        0          2026-04-29 17:08:12 +0000 UTC   29d       default                             &lt;none&gt;
+
+<span class="nv">$ </span>velero backup get
+NAME   STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   QUEUE POSITION   SELECTOR
+demo   Completed   0        0          2026-04-29 17:08:12 +0000 UTC   29d       default                             &lt;none&gt;
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">WaitingForPluginOperations</code> can take an "unreasonably" long time, but by then snapshot was already taken and it's just Velero taking its time to work on data. Snapshot itself takes a second or two, so that's the duration of any freeze (if you do use have it in place).</p>
+
+<p>Backup logs and job details are expected to show CSI snapshots and Velero data mover were used.</p>
+
+<p><img src="/assets/images/velero_ibm_block_csi_santricity_01.png" alt="Backup data in S3" /></p>
+
+<h2 id="s3-repository">S3 repository</h2>
+
+<p>Since we backup to Versity S3 Gateway, it's easy to visually inspect the path <code class="language-plaintext highlighter-rouge">BUCKET/backups/NAMESPACE</code>:</p>
+
+<p><img src="/assets/images/velero_ibm_block_csi_santricity_03.png" alt="Backup data in S3" /></p>
+
+<p>And while I'm at it, let's demonstrate one of the key points here, without any elaboration at first:</p>
+
+<p><img src="/assets/images/velero_ibm_block_csi_santricity_02.png" alt="Velero data in Versity Gateway's S3 data path" /></p>
+
+<p>That's a directory listing of this job's backup path on system. What about it?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Last login: Wed Apr 29 04:07:04 2026 from 10.113.4.16
+
+root@h3:~#<span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-lat</span> ./data/velero/backups/demo/
+total 88
+drwxr-xr-x 2 root root 4096 Apr 29 12:09 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 root root 6029 Apr 29 12:09 demo.tar.gz
+<span class="nt">-rw-r--r--</span> 1 root root 3727 Apr 29 12:09 velero-backup.json
+<span class="nt">-rw-r--r--</span> 1 root root  455 Apr 29 12:09 demo-volumeinfo.json.gz
+<span class="nt">-rw-r--r--</span> 1 root root  351 Apr 29 12:09 demo-itemoperations.json.gz
+<span class="nt">-rw-r--r--</span> 1 root root   49 Apr 29 12:08 demo-results.gz
+<span class="nt">-rw-r--r--</span> 1 root root  234 Apr 29 12:08 demo-resource-list.json.gz
+<span class="nt">-rw-r--r--</span> 1 root root   29 Apr 29 12:08 demo-volumesnapshots.json.gz
+<span class="nt">-rw-r--r--</span> 1 root root   29 Apr 29 12:08 demo-podvolumebackups.json.gz
+drwxr-xr-x 3 root root 4096 Apr 29 12:08 ..
+<span class="nt">-rw-r--r--</span> 1 root root 4358 Apr 29 12:08 demo-logs.gz
+</code></pre></div></div>
+
+<p>What about it (apart from the obvious, which is that I wouldn't run Versity S3 Gateway as <code class="language-plaintext highlighter-rouge">root</code>)?</p>
+
+<p>Well, this being a <em>stateless</em> S3 <em>gateway</em>, my DR solution can be a single command in OS job scheduler. I don't even need to use <code class="language-plaintext highlighter-rouge">rclone</code>, let alone storage-based replication.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rsync /root/data/velero remote_site_host:/data/
+</code></pre></div></div>
+
+<p>But I can use <a href="/2026/03/18/protect-netapp-eseries-with-proxmox-backup-client.html">Proxmox Backup client</a> to backup this directory to a remote Proxmox Backup Server, for example. Or <code class="language-plaintext highlighter-rouge">rclone</code> to low-cost public cloud with Object Lock enabled.</p>
+
+<h2 id="limitations">Limitations</h2>
+
+<p>SANtricity snapshots have numerious limitations, so it's not like this is some super-magnificent break through that frees us from those limitations. I wrote about that in the Velero FBS post and also in recent posts related to SANtricity snapshots. What I also wrote in those other posts is the importance of snapshots is declining, so most users don't need more than just basic functionality:</p>
+
+<ul>
+  <li>Ephemeral snapshots for backups (which we can do)</li>
+  <li>Precautionary snapshots before major upgrades (which doesn't even need to be done in Kubernetes, but yes, we can do that as well now)</li>
+</ul>
+
+<p>Related to how Velero backups are created:</p>
+
+<ul>
+  <li>Velero can also take a "backup" by simply creating a snapshot (and using that as backup location). This exists - I suppose - because it's definitively faster to revert from a snapshot than restore potentially TBs of data from S3</li>
+  <li>SANtricity (and not just SANtricity) doesn't care if you delete a volume that has snapshots and linked clones that depend on it</li>
+  <li>That means that without that "data mover" approach, you can fat-finger a PVC together with all its snapshots and linked clones. If you try to restore from a snapshot, Velero will tell you that snapshot can't be found</li>
+</ul>
+
+<p>Related to how SANtricity snapshots are deleted:</p>
+
+<ul>
+  <li>Oldest first</li>
+</ul>
+
+<p>That means you can't just take and delete snapshots in any order you like. I wrote about this in other snapshot-related posts, but the bottom line is: it's possible to mitigate that, but I'm not going to try because I see ephemeral snapshots as sufficient. We can create a CSI snapshot, remove it just before next Velero CSI backup job and create it after. And we can create a SANtricity snapshot schedule to create and rotate crash-consistent snapshots completely independently from CSI snapshots. Or we could create different Volume Snapshot Classes that allow "parallel CSI snapshot tracks" which would require a bit of extra development. It's not an unsolvable problem - it's just not very convenient and workarounds exist. If you need to maintain a snapshot at all times, I recommmend using a SANtricity snapshot schedule because it can't be accidentally messed up.</p>
+
+<p>There are also implementation-related limitations - currently this is single/individual volume only and read-only Linked Clones (not read-write).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Snapshots and read-only Linked Clones for individual volumes are available in a feature branch and will be merged into the main <code class="language-plaintext highlighter-rouge">santricity</code> branch and tagged with <code class="language-plaintext highlighter-rouge">v1.13.2</code>. I can't say they're super-robust and production ready as I'm the only user, but I'll certainly use them with non-trivial use cases.</p>
+
+<p>I said in <a href="/2026/01/16/santricity-eseries-datalake-storage.html">here</a> that block storage is most suitable for databases - even those that instantly tier to S3 need logging, disk cache and space for temporary data. E-Series excels at those workloads, but snapshots are barely ever used there. We don't really need snapshots.</p>
+
+<p><img src="/assets/images/eseries-datalake-storage-layout-02.png" alt="E-Series in Data Lake and Analytics" /></p>
+
+<p>That's why I believe basic CSI snapshot functionality, even with the various limitations outlined above and in other post, fills most of the gap.</p>
+
+<p>There <strong>are</strong> various <em>general</em> workloads - virtual infrastructure, for example - where snapshots are needed a lot more, but as we saw in the <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">Proxmox Backup Server</a> and <a href="/2026/03/14/veeam-proxmox-netapp-eseries.html">Proxmox Velero</a> post, snapshots are created, used and deleted on hypervisor. There's nothing for us to do there.</p>
+
+<p>What's next for IBM Block CSI with SANtricity patch:</p>
+
+<ul>
+  <li>Read-only Consistency Group (CG) Linked Clones. This is a somewhat common scenario for E-Series and needs to be added. Most modern scale-out databases take own cluster-wisde snapshots, but a few don't</li>
+  <li>CG snapshots need to be implemented before that</li>
+</ul>
+
+<p>As an example of how things work these days: at first, I used <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk SOK namespace</a> in testing. But, since SOK auto-recovers some resources, it's not possible to restore namespace resources without considering Operator - there be conflicts. Because of that I had to create a simpler workload in another namespace to test with. <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">Elasticsearch also uses Operator</a>, so neither of these can or should be protected with storage snapshots of moving targets such as these. It simply isn't supported and can't work well. That's why - although NOSQL and scale-out SQL databases are many - most people can't use CG snapshots as much as they expect. In fact, it is rare to find a DB that doesn't do it better on its own.</p>
+
+<p>There's another CSI driver for SANtricity, <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, a Go-based CSI driver for SANtricity. I'd like to add read-only Linked Clones for both individual volumes and CGs to it as well.</p>
+
+<p>Read-write Linked Clones of individual volumes and CGs are "nice to have". It's not much harder, but it takes time to develop, test, document and I just don't think it's a popular use case. In theory it is but, in practice, it's rarely used and from what I've seen it's usually done wrong. I probably won't work on it unless someone needs it (and maybe wants to contribute). The few who really need this and aren't doing it wrong can simply snapshot volumes, create read-write Linked Clones and present them as static persistent volumes using Terraform Provider SANtricity or Ansible.</p>
+
+<h2 id="appendix-a-velero-backup-details">Appendix A: Velero backup details</h2>
+
+<p>Backup job details show data mover was used and backup successful.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup describe demo <span class="nt">--details</span>
+Name:         demo
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.32.12
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>32
+
+Phase:  Completed
+
+
+Namespaces:
+  Included:  demo
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included cluster-scoped:    &lt;none&gt;
+  Excluded cluster-scoped:    volumesnapshotcontents.snapshot.storage.k8s.io
+  Included namespace-scoped:  <span class="k">*</span>
+  Excluded namespace-scoped:  volumesnapshots.snapshot.storage.k8s.io
+
+Label selector:  &lt;none&gt;
+
+Or label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:    <span class="nb">true
+</span>File System Backup <span class="o">(</span>Default<span class="o">)</span>:  <span class="nb">false
+</span>Snapshot Move Data:            <span class="nb">true
+</span>Data Mover:                    velero
+
+TTL:  720h0m0s
+
+CSISnapshotTimeout:    10m0s
+ItemOperationTimeout:  4h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2026-04-29 17:08:12 +0000 UTC
+Completed:  2026-04-29 17:09:17 +0000 UTC
+
+Expiration:  2026-05-29 17:08:12 +0000 UTC
+
+Total items to be backed up:  9
+Items backed up:              9
+
+Backup Item Operations:
+  Operation <span class="k">for </span>persistentvolumeclaims demo/demo-pvc:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-2455cbbc-ef67-4caf-9151-00d42247889a.54a54fdf-f7a1-4559a1c8a
+    Items to Update:
+                           datauploads.velero.io velero/demo-zx9sf
+    Phase:                 Completed
+    Progress description:  Completed
+    Created:               2026-04-29 17:08:18 +0000 UTC
+    Started:               2026-04-29 17:08:33 +0000 UTC
+    Updated:               2026-04-29 17:09:08 +0000 UTC
+Resource List:
+  v1/ConfigMap:
+    - demo/kube-root-ca.crt
+  v1/Event:
+    - demo/velero-demo-pvc-wlw9w.18aae197997f03d3
+    - demo/velero-demo-pvc-wlw9w.18aae19820ec63c8
+    - demo/velero-demo-pvc-wlw9w.18aae19820ef05fb
+  v1/Namespace:
+    - demo
+  v1/PersistentVolume:
+    - pvc-54a54fdf-f7a1-4558-a631-e1337dd6dadc
+  v1/PersistentVolumeClaim:
+    - demo/demo-pvc
+  v1/Pod:
+    - demo/pvc-mounter
+  v1/ServiceAccount:
+    - demo/default
+
+Backup Volumes:
+  Velero-Native Snapshots: &lt;none included&gt;
+
+  CSI Snapshots:
+    demo/demo-pvc:
+      Data Movement:
+        Operation ID: du-2455cbbc-ef67-4caf-9151-00d42247889a.54a54fdf-f7a1-4559a1c8a
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result: succeeded
+
+  Pod Volume Backups: &lt;none included&gt;
+
+HooksAttempted:  0
+HooksFailed:     0
+</code></pre></div></div>
+
+<p>A copy of backup job definition file lands in the Velero repository (<code class="language-plaintext highlighter-rouge">s3://velero/backup/{NAMESPACE}</code>), and in there, too, we can see <code class="language-plaintext highlighter-rouge">snapshotMoveData</code> was used.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Backup"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero.io/v1"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demo"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"namespace"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"uid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2455cbbc-ef67-4caf-9151-00d42247889a"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"resourceVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10882442"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"generation"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"creationTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-29T17:08:12Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"velero.io/storage-location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"velero.io/resource-timeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10m0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"velero.io/source-cluster-k8s-gitversion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"v1.32.12"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"velero.io/source-cluster-k8s-major-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"velero.io/source-cluster-k8s-minor-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"32"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"managedFields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"manager"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"operation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Update"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero.io/v1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-29T17:08:12Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"fieldsType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FieldsV1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"fieldsV1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"f:spec"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"."</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:includedNamespaces"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:snapshotMoveData"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:snapshotVolumes"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"f:status"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"manager"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero-server"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"operation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Update"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero.io/v1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-29T17:09:16Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"fieldsType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FieldsV1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"fieldsV1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"f:metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"f:annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"."</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:velero.io/resource-timeout"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:velero.io/source-cluster-k8s-gitversion"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:velero.io/source-cluster-k8s-major-version"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:velero.io/source-cluster-k8s-minor-version"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"f:labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"."</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:velero.io/storage-location"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"f:spec"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"f:csiSnapshotTimeout"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:defaultVolumesToFsBackup"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:excludedClusterScopedResources"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:excludedNamespaceScopedResources"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:itemOperationTimeout"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:storageLocation"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:ttl"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:volumeGroupSnapshotLabelKey"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:volumeSnapshotLocations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"f:status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"f:backupItemOperationsAttempted"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:backupItemOperationsCompleted"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:expiration"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:formatVersion"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:hookStatus"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:phase"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:progress"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nl">"."</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:itemsBackedUp"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+              </span><span class="nl">"f:totalItems"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"f:startTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"f:version"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"spec"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nl">"includedNamespaces"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"demo"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"excludedClusterScopedResources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"volumesnapshotcontents.snapshot.storage.k8s.io"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"excludedNamespaceScopedResources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"volumesnapshots.snapshot.storage.k8s.io"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"snapshotVolumes"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"ttl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"720h0m0s"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeGroupSnapshotLabelKey"</span><span class="p">:</span><span class="w"> </span><span class="s2">"velero.io/volume-group"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nl">"storageLocation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"volumeSnapshotLocations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"default"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"defaultVolumesToFsBackup"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"csiSnapshotTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10m0s"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"itemOperationTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4h0m0s"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"snapshotMoveData"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"formatVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.1.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"expiration"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-05-29T17:08:12Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"phase"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Completed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"startTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-29T17:08:12Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"completionTimestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-29T17:09:17Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"progress"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"totalItems"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"itemsBackedUp"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"backupItemOperationsAttempted"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"backupItemOperationsCompleted"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"hookStatus"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/backup" class="page__taxonomy-item p-category" rel="tag">backup</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/data-mover" class="page__taxonomy-item p-category" rel="tag">data-mover</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-04-30T00:00:00+08:00">2026-04-30 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Velero+CSI+backup+with+SANtricity+Snapshots+and+read-only+Linked+Clones%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F04%2F30%2Fvelero-csi-data-mover-backup-santricity-kubernetes.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html" class="pagination--pager" title="Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html" rel="permalink">Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-28T00:00:00+08:00">2026-04-28 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Ubuntu 26.04 LTS NVMe/RoCE without DOCA with NetApp E-Series (plus DM-MP and VDO)
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html" rel="permalink">Forward E-Series SANtricity logs to Victoria Logs syslog receiver
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-26T00:00:00+08:00">2026-04-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to forward SANtricity logs to Victoria Logs syslog receiver
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/23/epa_400_beta.html" rel="permalink">EPA 4 development update
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-23T00:00:00+08:00">2026-04-23 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared to EPA 3
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/22/single-volume-snapshot-ibm-block-csi-santricity.html" rel="permalink">Single volume snapshots on IBM Block CSI with SANtricity patch
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-22T00:00:00+08:00">2026-04-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to create single volume snapshots in IBM Block CSI with SANtricity patch
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
