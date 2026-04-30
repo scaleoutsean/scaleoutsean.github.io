@@ -496,17 +496,17 @@ drwxr-xr-x 3 root root 4096 Apr 29 12:08 ..
 
 <h2 id="capacity-utilization">Capacity utilization</h2>
 
-<p>One of several nice things about how this approach uses snapshots and clones is they don't take almost any capacity - these are purely ephemeral snapshots that consume capacity for base volume modifications while backup jobs run.</p>
+<p>One of the nice things about how this approach uses snapshots and clones is they don't take almost any capacity - these are purely ephemeral snapshots that consume capacity for base volume modifications while backup jobs run.</p>
 
 <p>Linked clones don't even have any reservation capacity because they're read-only.</p>
 
-<p>The moment backup job is done, the underlying snapshot is immediately deleted, returning capacity to the system. That's why I like this approach. It doesn't "reserve" 20% or 40% of storage capacity just in case.</p>
+<p>The moment backup job is done, the underlying snapshot is immediately deleted, freeing capacity in the reserve. That's why I like this approach. It doesn't "reserve" 20% or 40% of storage capacity just in case.</p>
 
 <p>If volume data is changing at 5 MB/s rate and backup job takes 30 minutes, that's some 10 GB in Copy-on-Write data. Daily change is then around 423 GB, which at 4% change rate is what you may expect from a volume with 10 TiB of data. In other words, your repo group could be just 2% (20 GB) and still large enough for these backup jobs.</p>
 
-<p>To be exact, the way it's implemented (read the various SANtricity snapshot posts here for the details) is a fixed reservation as percentage of Base Volume capacity <em>is</em> assigned and remains in place. But, since the snapshot goes away right after backup job is done, there's no harm in insta-nuking these reservations (repo groups). SANtricity could default to a smaller percentage than it currently does, but it already uses less than the default SANtricity snapshot wizard recommendation (40% of Base Volume capacity).</p>
+<p>To be exact, the way it's implemented (read the various SANtricity snapshot posts here for the details) is a fixed reservation as percentage of Base Volume capacity <em>is</em> assigned and <em>remains</em> in place. Ephemeral snapshot deletion returns the capacity to the system, but snapshot reserve remains in place. However, since the snapshot goes away right after backup job is done, there's no harm in insta-nuking these reservations (repo groups). IBM Block CSI with SANtricity patch could default to a very tiny reserve and that could be configurable, but it already uses less than the default SANtricity snapshot wizard recommendation (40% of Base Volume capacity).</p>
 
-<p>If you aren't a snapshot hoarder, you can delete those repo groups and let CSI plugin recreate them when/if next snapshot is taken. How? Loop through all the repo groups and nuke all non-schedule owned that have no snapshots. That's all. Tools <a href="/2026/04/21/santricity-client-update.html">exist</a>. If you don't delete them, you can simply monitor them in EPA just to see how much is being used (and not, i.e. wasted).</p>
+<p>If you aren't a snapshot hoarder, you can delete those repo groups and let CSI plugin recreate them when/if next snapshot is taken. How? Simly loop through the repo groups and nuke all non-snapshot-schedule-owned ones that have 0 snapshots. That's it. Tools <a href="/2026/04/21/santricity-client-update.html">exist</a>. If you don't delete them, you can simply monitor them in EPA just to see how much is being used (and not, i.e. wasted).</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
