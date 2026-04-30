@@ -1,0 +1,1196 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Single node Qdrant with Kubernetes and NetApp E-Series CSI | Acting Technologist</title>
+<meta name="description" content="Getting started with singleton Qdrant on Kubernetes with E-Series">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Single node Qdrant with Kubernetes and NetApp E-Series CSI">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+
+  <meta property="og:description" content="Getting started with singleton Qdrant on Kubernetes with E-Series">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Single node Qdrant with Kubernetes and NetApp E-Series CSI">
+  <meta name="twitter:description" content="Getting started with singleton Qdrant on Kubernetes with E-Series">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-04-30T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Single node Qdrant with Kubernetes and NetApp E-Series CSI">
+    <meta itemprop="description" content="Getting started with single node Qdrant database, an E-Series CSI driver and Velero CSI backup">
+    <meta itemprop="datePublished" content="2026-04-30T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html" itemprop="url">Single node Qdrant with Kubernetes and NetApp E-Series CSI
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-30T00:00:00+08:00">2026-04-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          15 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#wth-is-qdrant">WTH is Qdrant</a></li><li><a href="#how-qdrant-uses-storage">How Qdrant uses storage</a></li><li><a href="#deploy-and-use">Deploy and use</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-backup-of-qdrant-with-velero-csi">Appendix A: Backup of Qdrant with Velero CSI</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p><a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">It appears</a> my IBM Block CSI patched for SANtricity can now do both FSB and CSI backups. Still, I did a very simple test for that post and felt the urge to do another, more demanding one.</p>
+
+<p>When I started work on <a href="/2025/12/22/reautomating-eseries.html">re-automating E-Series</a> for my purpose, I knew it was going to take weeks of invisible grind and no fun, but after client libraries were done, not to mention Terraform Provider and CSI drivers, it's been great! So far I've tried Versity S3 Gateway, Elasticsearch, <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk</a> and Velero. Most were just touch-testing, but that's exactly what should be done at this stage.</p>
+
+<p>Qdrant is one of the ISVs I've been interested in but never blogged about. Today I thought I should get started and set it up with one of the CSI drivers.</p>
+
+<h2 id="wth-is-qdrant">WTH is Qdrant</h2>
+
+<p><a href="https://qdrant.tech">Qdrant</a> and is currently best known for its vector search (and database), Qdrant. Here's how they describe it.</p>
+
+<blockquote>
+  <p>Qdrant is the most advanced vector search with highest RPS, minimal latency, fast indexing, high control with accuracy, and so much more.</p>
+</blockquote>
+
+<p>It's only natural that, just like with Elasticsearch and Splunk, one would expect to find posts about Qdrant with E-Series.</p>
+
+<p>Qdrant can run on bare metal servers, in VMs, Docker and, of course, Kubernetes.</p>
+
+<p>Before I had CSI drivers, I always had to say "this should also run on Kubernetes with TopoLVM". That was true, but I didn't like it. Now that I have not one, but two CSI drivers to play with, I test on Kubernetes first and <del>don't need to</del> say "this can also run in Docker or bare metal systems".</p>
+
+<h2 id="how-qdrant-uses-storage">How Qdrant uses storage</h2>
+
+<p>Qdrant supports scale-out clusters as well as scale-up expansion. For scale-up on premises, you need paid support and then you can (among other things) extend CSI volumes, for example. Which both SANtricity CSI and IBM Block CSI for SANtricity can do.</p>
+
+<p>In this early stage evaluation, there's no diference between single and scale-out deployments as far as CSI is concerned. A PVC is a PVC.</p>
+
+<p>"Bbbut, how would you do Consistency Group snapshots?"</p>
+
+<p>I actually wouldn't.</p>
+
+<p>As I said in conclusion of the previous <a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html#conclusion">Velero post</a> and elsewhere: SANtricity supports CG snapshots (and linked clones), and while I plan to add support for these, the fact is most databases have no use for them. We'll see how Qdrant deals with that shortly.</p>
+
+<p>Next, let's see how: the Qdrant uses storage?</p>
+
+<p>The truth is, Qdrant doesn't care about it. They obviously need it to persist data (and logs, etc.) and work fast. Which isn't much, but that's exactly what E-Series does well.</p>
+
+<p>There's replication, there are "snapshots" (D2D dumps, really) and the user may choose to use more or less disks. You need one to store DB data, one for logs (if you want to keep them), while snapshots and audit volumes (or paths) are optional. It's that simple.</p>
+
+<p>In my evaluation I modified default Qdrant configuration file to use all of them not because I needed to audit myself, but because I wanted to kick tires on my CSI snapshots &amp; clones. Also on Velero CSI backup and Versity S3 Gateway.</p>
+
+<p>This was my storage/PVC configuration:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">/qdrant/logs</code> - 10Gi</li>
+  <li><code class="language-plaintext highlighter-rouge">/qdrant/snapshots</code> - 10Gi</li>
+  <li><code class="language-plaintext highlighter-rouge">/qdrant/snapshots_temp</code> - 10Gi</li>
+  <li><code class="language-plaintext highlighter-rouge">/qdrant/storage</code> - 50Gi</li>
+  <li><code class="language-plaintext highlighter-rouge">/qdrant/audit</code> - 10Gi</li>
+</ul>
+
+<h2 id="deploy-and-use">Deploy and use</h2>
+
+<p>It is very easy to deploy Qdrant. Much easier than installing Oracle 8i Parallel Server, for example.</p>
+
+<p>I disabled HTTPS for this to avoid dealing with TLS certificates and so on.</p>
+
+<p>I had a Storage Class (RAID 6-based, although RAID 1 would have been appropriate) ready and the PVCs and internal mount paths were already hard-coded, so all it took was <code class="language-plaintext highlighter-rouge">./deploy.sh ${STORAGE_CLASS}</code>. I put this stuff in my ESeries repo, by the way.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-01.png" alt="Deploy Qdrant" /></p>
+
+<p>That one command created PVCs, loaded a custom configuration file and started Qdrant.</p>
+
+<p>After that I connected to the Web UI (the <code class="language-plaintext highlighter-rouge">/dashboard</code> link). Everything seemed in order. I just had to flip the UI to dark mode.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-02-qdrant-ui.png" alt="Qdrant Web UI" /></p>
+
+<p>Next thing to check was the CSI volumes in the SANtricity Web UI. Ouch! Would you look at those volume names!</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-03-eseries-pvs.png" alt="Qdrant volumes in SANtricity Web UI" /></p>
+
+<p>Being unable to tell what the hell I'm looking at <em>while</em> I'm looking at something was a funny feeling. But I've already commented on CSI volume names in several posts I've written about IBM Block CSI driver, so let's continue.</p>
+
+<p>I thought it might be a good idea to watch IO, but - not having a clue which volume is which (and I had 1-2 existing ones) - I wanted to enable monitoring for <em>all</em> <code class="language-plaintext highlighter-rouge">csi_</code> volumes. But the UI reminded me that up to 5 individual volumes can be watched at the same time.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-15-qdrant-santricity-perf-monitor.png" alt="SANtricity Web UI monitoring" /></p>
+
+<p>Oh, well. That's just enough for my purpose, but <em>which</em> five?</p>
+
+<p>I didn't want to spend time finding out. Instead, I decided to try my EPA 4.0, currently still in beta (Beta 2 currently).</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-04-epa-monitor.png" alt="EPA 4 Beta 2" /></p>
+
+<p>After spotting and solving 2-3 new EPA 4 bugs, I was ready to go. Let's enable all <code class="language-plaintext highlighter-rouge">csi_</code> volumes…</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-05-epa-volume-monitor.png" alt="Enable volumes in the Volumes dashboard" /></p>
+
+<p>After that, I was ready to use Qdrant.</p>
+
+<p>They nicely include three sample data sets which can be loaded as collections directly from the Web UI.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-06-qdrant-built-in-samples.png" alt="Sample Qdrant data sets" /></p>
+
+<p>I loaded all three, but since they're not very large and I had just one node (no replication enabled), I didn't expect much in terms of I/O.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-07-qdrant-snapshots.png" alt="Collections" /></p>
+
+<p>Notice that right-click menu in the screenshot above: see that "Snapshots"?</p>
+
+<p>That's a snapshot you won't need to create. Not on Kubernetes or storage anyway.</p>
+
+<p>When you "snapshot" a collection, that copies it to that <code class="language-plaintext highlighter-rouge">snapshot</code> PVC we created. The other snapshot-related PVC, <code class="language-plaintext highlighter-rouge">snapshots_temp</code>, is used if temporary space is needed to package those snapshots. Bottom line: you don't need storage snapshots or CSI snapshots here, either to backup or restore.</p>
+
+<p>This is what happens when you create one. I didn't look, but I expect this dumps the collection to that snapshot PVC.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-17-qdrant-collection.png" alt="Qdrant snapshot" /></p>
+
+<p>These snapshots can be downloaded for backup or use in another Qdrant cluster. You'd probably use the API to automatically get them and put them to something like <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html">Versity S3 Gateway</a> or StorageGRID.</p>
+
+<p>This may seem trivial, but there's more to it than meets a snapshot hoarder's eye:</p>
+
+<ul>
+  <li>It's a pattern we should remember from <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">Elasticsearch S3 snapshots</a></li>
+  <li>The other <a href="/2026/01/16/santricity-eseries-datalake-storage.html">pattern</a> is "S3 as the Single Source of Truth"</li>
+  <li>Closely related, StorageGRID S3 has <a href="/2025/10/09/storagegrid-s3-cache-branch-buckets.html">bucket snapshots</a></li>
+</ul>
+
+<p>What that means is <strong>both</strong> the DB (block) and S3 (object) work <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html">use the same pattern</a> and work together:</p>
+
+<ul>
+  <li>Data land into buckets either via direct ingress or streams</li>
+  <li>Qdrant uses a variant of <a href="/2025/07/23/s3-vector-search-02-diy.html">GO NATS</a> to create vector embeddings for that data</li>
+  <li>A "snapshot" of both Qdrant collection and the bucket data can be taken at the same time. All data can then be copied to to another, immutable S3 bucket for compliance, governance and more</li>
+  <li>After that, the Qdrant collection can be dropped. If it was the only collection, the entire instance can be deleted, together with PVCs</li>
+  <li>To deploy this in production, you'd simply download that snapshot and deploy vector database. S3 data wouldn't even need to be downloaded, although it could be downloaded or just cached</li>
+</ul>
+
+<p>That's not much different from how Elasticsearch S3 snapshots, mentioned earlier, works. We're not inventing - we don't have to - something new here.</p>
+
+<p>In this way, we need block storage that that has the following:</p>
+
+<ul>
+  <li>Fast and reliable RAID 1 and RAID 6 storage for different Qdrant volume types</li>
+  <li>Basic CSI driver with create, delete and expand volume capabilities</li>
+</ul>
+
+<p>CSI snapshots aren't required, but some folks may want to backup the PVC with audit logs (although that information ought to be available in Qdrant application logs as well, and those can be forwarded to something like Elasticsearch or <a href="/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html">Victoria Logs</a>). Whether that's a thing or not, several PVCs with 300 MB of data was a good chance to test Velero CSI!</p>
+
+<p>Velero with CSI was installed as per my previous blog post. I just needed one command to create and submit a new backup job.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME   STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   QUEUE POSITION   SELECTOR
+demo   Completed   0        0          2026-04-29 17:08:12 +0000 UTC   29d       default                             &lt;none&gt;
+
+<span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> qdrant
+NAME                      READY   STATUS    RESTARTS   AGE
+qdrant-767ff657f7-bm6vh   1/1     Running   0          56m
+
+<span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> qdrant
+NAME                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                   VOLUMEATTRIBUTESCLASS   AGE
+qdrant-pvc-audit            Bound    pvc-3e40aee2-5e65-407e-b459-5d264637b307   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 56m
+qdrant-pvc-logs             Bound    pvc-4097a00f-29d6-44f0-a517-ccd6c28b030e   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 56m
+qdrant-pvc-snapshots        Bound    pvc-f9aa4973-3fb5-4d82-8d68-67c283726cf1   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 56m
+qdrant-pvc-snapshots-temp   Bound    pvc-b2bca7c5-c9a9-493e-af71-c30cfc562eaa   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 56m
+qdrant-pvc-storage          Bound    pvc-bfbc3cb8-95a9-4222-a161-6c3f7226e42a   50Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 56m
+
+<span class="nv">$ </span>velero backup create qdrant <span class="nt">--include-namespaces</span> qdrant <span class="nt">--snapshot-volumes</span> <span class="nt">--snapshot-move-data</span>
+Backup request <span class="s2">"qdrant"</span> submitted successfully.
+</code></pre></div></div>
+
+<p>Qdrant PVCs using <code class="language-plaintext highlighter-rouge">demo-storageclass-santricity</code> as mentioned at the top:</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-16-qdrant-pvcs.png" alt="Qdrant PVCs" /></p>
+
+<p>After this started, I rushed to the SANtricity Web UI to check out snapshots and linked clones.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-08-qdrant-velero-backup.png" alt="Snapshots during Qdrant backup" /></p>
+
+<p>By the time I got to taking a screenshot of linked clones, some of them were already disappearing, as Velero data mover was completing jobs and deleting those clones.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-09-qdrant-velero-linked-clones.png" alt="Linked clones during Qdrant backup" /></p>
+
+<p>That was good to see. Minutes later, it was all over.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-10-qdrant-velero-backup.png" alt="Completed Qdrant backup job" /></p>
+
+<p>I headed over to Versity S3 Gateway to see if data made it.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-11-qdrant-versity-s3-backup.png" alt="Versity S3 Gateway with Qdrant data" /></p>
+
+<p>Like in the previous post, I logged in to the bare metal server that was running Versity S3 Gateway and checked out the "command" and "data" directories:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@h3:~# <span class="nb">du</span> <span class="nt">-sh</span> ./data/velero/backups/qdrant/
+92K     ./data/velero/backups/qdrant/
+
+root@h3:~# <span class="nb">du</span> <span class="nt">-sh</span> ./data/velero/kopia/qdrant/
+445M    ./data/velero/kopia/qdrant/
+
+root@h3:~# <span class="nb">ls</span> <span class="nt">-lat</span> ./data/velero/kopia/qdrant/ | <span class="nb">head
+</span>total 454844
+drwxr-xr-x 2 root root     4096 Apr 30 08:39 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 root root     1032 Apr 30 08:39 _log_20260430133943_d87d_1777556383_1777556384_1_49066f0de03347ac97b4214767248f7b
+<span class="nt">-rw-r--r--</span> 1 root root      176 Apr 30 08:39 xn0_faa004a9eb900708bdb7f5028dce05f2-s7d69a2bde7930d7d140-c1
+<span class="nt">-rw-r--r--</span> 1 root root     4331 Apr 30 08:39 q1f25c7f0c24877d167e71c8dcb29d9e8-s7d69a2bde7930d7d140
+<span class="nt">-rw-r--r--</span> 1 root root      143 Apr 30 08:39 xn0_843f8d7ee205409decbaacb0e2299fd6-s3688f85048f46fcc140-c1
+<span class="nt">-rw-r--r--</span> 1 root root     4298 Apr 30 08:39 qcb85d95fb53c5db43896658ba1213314-s3688f85048f46fcc140
+<span class="nt">-rw-r--r--</span> 1 root root    11344 Apr 30 08:39 _log_20260430133904_d9bc_1777556344_1777556348_1_ced3fdb4a10cb0a5c1e951e3dc0d1af8
+<span class="nt">-rw-r--r--</span> 1 root root    12482 Apr 30 08:39 xn0_04ca7fa4815bae19707ba3d9dd9b006d-s12f18af1e682af15140-c1
+<span class="nt">-rw-r--r--</span> 1 root root    81468 Apr 30 08:39 q10c3baa29b5bc968254258c667ba7f78-s12f18af1e682af15140
+</code></pre></div></div>
+
+<p>The same as a screenshot:</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-12-qdrant-versity-s3-filesystem.png" alt="Velero and data mover (Kopia) data on Versity S3 Gateway" /></p>
+
+<p>It all just worked, with few hundred MB in backup data that landed on Versity S3 Gateway.</p>
+
+<p>I did not try to restore, but I will do it later as I continue with Velero CSI testing although that is <strong>not</strong> needed for Qdrant which we would neither backup nor restore this way.</p>
+
+<p>A few words on EPA and monitoring in this context:</p>
+
+<ul>
+  <li>The few hundred MB in raw data wasn't enough to produce much on EPA dashboards which used 60 second granularity. Proper load tests will be needed</li>
+  <li>IBM Block CSI has weird volume names, but SANtricity CSI does not (it uses the usual <code class="language-plaintext highlighter-rouge">pvc-...</code> strings). Not only that, but EPA parses SANtricity CSI's volume metadata, making it much easier to figure out which volumes to monitor. Maybe next time!</li>
+  <li>Controllers' utilization barely registered any activity (CPU utilization was around 5%, on EF600)</li>
+</ul>
+
+<p><img src="/assets/images/qdrant-eseries-csi-13-qdrant-epa-overview.png" alt="EPA overview dashboard with Qdrant and IBM Block CSI" /></p>
+
+<p>Among the more interesting panels was this one with "Current Failures". Why those are interesting to me, I explained in the <a href="/2026/04/23/epa_400_beta.html">EPA 4 Beta post</a>, but even without knowing here's what we see (I masked the array name):</p>
+
+<ul>
+  <li>(1) Battery unknownStat - no status, probably dead. Awesome!</li>
+  <li>(2) nonPreferredPath - at least one LUN was not on its preferred path. Nice!</li>
+  <li>(3) pitGroupRepositoryOverThreshold - wow, that is great! That's exactly what we're supposed to see and EPA 4 has a snapshots-related <a href="/2026/04/23/epa_400_beta.html#dashboards">dashboard</a> which is precisely where one would look next, as opposed to trying to login to SANtricity and see it there. This "over threshold" is likely fine because (see my SANtricity snashot posts) one usually sets snapshot schedules to auto-purge old snapshots, which means they're amost expected to always be over the threshold (you can adjust the warning level to get rid of this, or lower the maximum number of snapshots to not max out repo group capacity for the volume, etc.)</li>
+</ul>
+
+<p><img src="/assets/images/qdrant-eseries-csi-14-qdrant-epa-current-failures.png" alt="EPA current failures" /></p>
+
+<p>The last failure is about write-back caching being disabled, which obviously harms the performance, but that is on purpose - we want to harm the performance by always seeing non-cached, write-through performance. So it's not really a failure, but our deliberate decision which I explicitly mentioned in <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#nfs-server-configuration">some posts</a> where performance tests were run. Factory default is Enabled (both read and write caching).</p>
+
+<p>It was great to see that this panel works well, as MEL is being removed from EPA.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Qdrant is easy to install and well documented.</p>
+
+<p>It's good to see that (at least) one of HA CSI drivers for E-Series works with it without issues. Not only that, even CSI snashots and backup worked fine. I suspect those aren't necessary, but in the unlikely case anyone needs them…</p>
+
+<p>Given the growing importance of vector databases in many workloads, this is likely just the first of several posts on Qdrant.</p>
+
+<p>This focus didn't on using Qdrant, but it's not a toy database so it can't be covered in a single post in any case.</p>
+
+<p>After this CSI stuff (mostly read-only CG snapshots in this driver, but also implementation of snapshots in SANtricity CSI) is done, I'd like to revisit vector search and try <a href="/2025/07/23/s3-vector-search-02-diy.html">GO-NATS</a> with Qdrant and SANtricity CSI.</p>
+
+<h2 id="appendix-a-backup-of-qdrant-with-velero-csi">Appendix A: Backup of Qdrant with Velero CSI</h2>
+
+<p>This section has backup job logs for Qdrant backup.</p>
+
+<p>After the Qdrant job started running, I got the early log.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup create qdrant <span class="nt">--include-namespaces</span> qdrant <span class="nt">--snapshot-volumes</span> <span class="nt">--snapshot-move-data</span>^C
+
+<span class="nv">$ </span>velero backup describe qdrant
+Name:         qdrant
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.32.12
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>32
+
+Phase:  InProgress
+
+
+Namespaces:
+  Included:  qdrant
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included cluster-scoped:    &lt;none&gt;
+  Excluded cluster-scoped:    volumesnapshotcontents.snapshot.storage.k8s.io
+  Included namespace-scoped:  <span class="k">*</span>
+  Excluded namespace-scoped:  volumesnapshots.snapshot.storage.k8s.io
+
+Label selector:  &lt;none&gt;
+
+Or label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:    <span class="nb">true
+</span>File System Backup <span class="o">(</span>Default<span class="o">)</span>:  <span class="nb">false
+</span>Snapshot Move Data:            <span class="nb">true
+</span>Data Mover:                    velero
+
+TTL:  720h0m0s
+
+CSISnapshotTimeout:    10m0s
+ItemOperationTimeout:  4h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2026-04-30 13:37:22 +0000 UTC
+Completed:  &lt;n/a&gt;
+
+Expiration:  2026-05-30 13:37:22 +0000 UTC
+
+Estimated total items to be backed up:  44
+Items backed up so far:                 0
+
+Backup Volumes:
+  Velero-Native Snapshots: &lt;none included&gt;
+
+  CSI Snapshots: &lt;none included or not detectable&gt;
+
+  Pod Volume Backups: &lt;none included&gt;
+</code></pre></div></div>
+
+<p>A minute later, it was done.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup get
+NAME     STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   QUEUE POSITION   SELECTOR
+demo     Completed   0        0          2026-04-29 17:08:12 +0000 UTC   29d       default                             &lt;none&gt;
+qdrant   Completed   0        0          2026-04-30 13:37:22 +0000 UTC   29d       default                             &lt;none&gt;
+</code></pre></div></div>
+
+<p>After backup finished, per-PVC data mover logs were clearly visible.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>velero backup describe qdrant
+Name:         qdrant
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.32.12
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>32
+
+Phase:  WaitingForPluginOperations
+
+
+Namespaces:
+  Included:  qdrant
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included cluster-scoped:    &lt;none&gt;
+  Excluded cluster-scoped:    volumesnapshotcontents.snapshot.storage.k8s.io
+  Included namespace-scoped:  <span class="k">*</span>
+  Excluded namespace-scoped:  volumesnapshots.snapshot.storage.k8s.io
+
+Label selector:  &lt;none&gt;
+
+Or label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:    <span class="nb">true
+</span>File System Backup <span class="o">(</span>Default<span class="o">)</span>:  <span class="nb">false
+</span>Snapshot Move Data:            <span class="nb">true
+</span>Data Mover:                    velero
+
+TTL:  720h0m0s
+
+CSISnapshotTimeout:    10m0s
+ItemOperationTimeout:  4h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2026-04-30 13:37:22 +0000 UTC
+Completed:  &lt;n/a&gt;
+
+Expiration:  2026-05-30 13:37:22 +0000 UTC
+
+Total items to be backed up:  49
+Items backed up:              49
+
+Backup Item Operations:  2 of 5 completed successfully, 0 failed <span class="o">(</span>specify <span class="nt">--details</span> <span class="k">for </span>more information<span class="o">)</span>
+Backup Volumes:
+  Velero-Native Snapshots: &lt;none included&gt;
+
+  CSI Snapshots:
+    qdrant/qdrant-pvc-logs:
+      Data Movement: included, specify <span class="nt">--details</span> <span class="k">for </span>more information
+    qdrant/qdrant-pvc-snapshots:
+      Data Movement: included, specify <span class="nt">--details</span> <span class="k">for </span>more information
+    qdrant/qdrant-pvc-snapshots-temp:
+      Data Movement: included, specify <span class="nt">--details</span> <span class="k">for </span>more information
+    qdrant/qdrant-pvc-storage:
+      Data Movement: included, specify <span class="nt">--details</span> <span class="k">for </span>more information
+    qdrant/qdrant-pvc-audit:
+      Data Movement: included, specify <span class="nt">--details</span> <span class="k">for </span>more information
+
+  Pod Volume Backups: &lt;none included&gt;
+
+HooksAttempted:  0
+HooksFailed:     0
+root@h2:~# velero backup describe qdrant <span class="nt">--details</span>
+Name:         qdrant
+Namespace:    velero
+Labels:       velero.io/storage-location<span class="o">=</span>default
+Annotations:  velero.io/resource-timeout<span class="o">=</span>10m0s
+              velero.io/source-cluster-k8s-gitversion<span class="o">=</span>v1.32.12
+              velero.io/source-cluster-k8s-major-version<span class="o">=</span>1
+              velero.io/source-cluster-k8s-minor-version<span class="o">=</span>32
+
+Phase:  WaitingForPluginOperations
+
+
+Namespaces:
+  Included:  qdrant
+  Excluded:  &lt;none&gt;
+
+Resources:
+  Included cluster-scoped:    &lt;none&gt;
+  Excluded cluster-scoped:    volumesnapshotcontents.snapshot.storage.k8s.io
+  Included namespace-scoped:  <span class="k">*</span>
+  Excluded namespace-scoped:  volumesnapshots.snapshot.storage.k8s.io
+
+Label selector:  &lt;none&gt;
+
+Or label selector:  &lt;none&gt;
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:    <span class="nb">true
+</span>File System Backup <span class="o">(</span>Default<span class="o">)</span>:  <span class="nb">false
+</span>Snapshot Move Data:            <span class="nb">true
+</span>Data Mover:                    velero
+
+TTL:  720h0m0s
+
+CSISnapshotTimeout:    10m0s
+ItemOperationTimeout:  4h0m0s
+
+Hooks:  &lt;none&gt;
+
+Backup Format Version:  1.1.0
+
+Started:    2026-04-30 13:37:22 +0000 UTC
+Completed:  &lt;n/a&gt;
+
+Expiration:  2026-05-30 13:37:22 +0000 UTC
+
+Total items to be backed up:  49
+Items backed up:              49
+
+Backup Item Operations:
+  Operation <span class="k">for </span>persistentvolumeclaims qdrant/qdrant-pvc-logs:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-b373568c-4a36-4585-b206-cf678948b6e7.4097a00f-29d6-44feaa884
+    Items to Update:
+                           datauploads.velero.io velero/qdrant-gvknx
+    Phase:                 Completed
+    Progress description:  Completed
+    Created:               2026-04-30 13:37:28 +0000 UTC
+    Started:               2026-04-30 13:37:37 +0000 UTC
+    Updated:               2026-04-30 13:37:57 +0000 UTC
+  Operation <span class="k">for </span>persistentvolumeclaims qdrant/qdrant-pvc-snapshots:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-b373568c-4a36-4585-b206-cf678948b6e7.f9aa4973-3fb5-4d8ee1630
+    Items to Update:
+                           datauploads.velero.io velero/qdrant-8wkst
+    Phase:                 Completed
+    Progress:              21938752 of 21938752 <span class="nb">complete</span> <span class="o">(</span>Bytes<span class="o">)</span>
+    Progress description:  Completed
+    Created:               2026-04-30 13:37:33 +0000 UTC
+    Started:               2026-04-30 13:38:02 +0000 UTC
+    Updated:               2026-04-30 13:38:38 +0000 UTC
+  Operation <span class="k">for </span>persistentvolumeclaims qdrant/qdrant-pvc-snapshots-temp:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-b373568c-4a36-4585-b206-cf678948b6e7.b2bca7c5-c9a9-4936494a5
+    Items to Update:
+                           datauploads.velero.io velero/qdrant-csdpx
+    Phase:                 Completed
+    Progress description:  Completed
+    Created:               2026-04-30 13:37:38 +0000 UTC
+    Started:               2026-04-30 13:38:42 +0000 UTC
+    Updated:               2026-04-30 13:39:01 +0000 UTC
+  Operation <span class="k">for </span>persistentvolumeclaims qdrant/qdrant-pvc-storage:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-b373568c-4a36-4585-b206-cf678948b6e7.bfbc3cb8-95a9-422516b8c
+    Items to Update:
+                           datauploads.velero.io velero/qdrant-bl8gh
+    Phase:                 New
+    Progress description:  Prepared
+    Created:               2026-04-30 13:37:43 +0000 UTC
+  Operation <span class="k">for </span>persistentvolumeclaims qdrant/qdrant-pvc-audit:
+    Backup Item Action Plugin:  velero.io/csi-pvc-backupper
+    Operation ID:               du-b373568c-4a36-4585-b206-cf678948b6e7.3e40aee2-5e65-407d18aee
+    Items to Update:
+                           datauploads.velero.io velero/qdrant-x8wmw
+    Phase:                 New
+    Progress description:  Prepared
+    Created:               2026-04-30 13:37:48 +0000 UTC
+Resource List:
+  apps/v1/Deployment:
+    - qdrant/qdrant
+  apps/v1/ReplicaSet:
+    - qdrant/qdrant-767ff657f7
+  discovery.k8s.io/v1/EndpointSlice:
+    - qdrant/qdrant-n6cwq
+  v1/ConfigMap:
+    - qdrant/kube-root-ca.crt
+    - qdrant/qdrant-config
+  v1/Endpoints:
+    - qdrant/qdrant
+  v1/Event:
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22df4a575299
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22df8771309e
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e113a9973b
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e178c57fe8
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e178e77358
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e179249a1b
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e198c3f53a
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e19c5fb6dc
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e3ef18622a
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e549b16aee
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e54ad22666
+    - qdrant/qdrant-767ff657f7-bm6vh.18ab22e551bad4b0
+    - qdrant/qdrant-767ff657f7.18ab22df4a4f8dec
+    - qdrant/qdrant-pvc-audit.18ab22df46010860
+    - qdrant/qdrant-pvc-audit.18ab22df46fbacf4
+    - qdrant/qdrant-pvc-audit.18ab22e04caecfa5
+    - qdrant/qdrant-pvc-logs.18ab22df42e0df14
+    - qdrant/qdrant-pvc-logs.18ab22df42ed38d8
+    - qdrant/qdrant-pvc-logs.18ab22df876fd94f
+    - qdrant/qdrant-pvc-snapshots-temp.18ab22df44716b09
+    - qdrant/qdrant-pvc-snapshots-temp.18ab22df46d8ad02
+    - qdrant/qdrant-pvc-snapshots-temp.18ab22dfe2910d2e
+    - qdrant/qdrant-pvc-snapshots.18ab22df43a58178
+    - qdrant/qdrant-pvc-snapshots.18ab22df43ad2184
+    - qdrant/qdrant-pvc-snapshots.18ab22dfb3b98681
+    - qdrant/qdrant-pvc-storage.18ab22df453b165a
+    - qdrant/qdrant-pvc-storage.18ab22df46e3e376
+    - qdrant/qdrant-pvc-storage.18ab22e010b6ab0b
+    - qdrant/qdrant.18ab22df49370b94
+  v1/Namespace:
+    - qdrant
+  v1/PersistentVolume:
+    - pvc-3e40aee2-5e65-407e-b459-5d264637b307
+    - pvc-4097a00f-29d6-44f0-a517-ccd6c28b030e
+    - pvc-b2bca7c5-c9a9-493e-af71-c30cfc562eaa
+    - pvc-bfbc3cb8-95a9-4222-a161-6c3f7226e42a
+    - pvc-f9aa4973-3fb5-4d82-8d68-67c283726cf1
+  v1/PersistentVolumeClaim:
+    - qdrant/qdrant-pvc-audit
+    - qdrant/qdrant-pvc-logs
+    - qdrant/qdrant-pvc-snapshots
+    - qdrant/qdrant-pvc-snapshots-temp
+    - qdrant/qdrant-pvc-storage
+  v1/Pod:
+    - qdrant/qdrant-767ff657f7-bm6vh
+  v1/Service:
+    - qdrant/qdrant
+  v1/ServiceAccount:
+    - qdrant/default
+
+Backup Volumes:
+  Velero-Native Snapshots: &lt;none included&gt;
+
+  CSI Snapshots:
+    qdrant/qdrant-pvc-logs:
+      Data Movement:
+        Operation ID: du-b373568c-4a36-4585-b206-cf678948b6e7.4097a00f-29d6-44feaa884
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result:
+    qdrant/qdrant-pvc-snapshots:
+      Data Movement:
+        Operation ID: du-b373568c-4a36-4585-b206-cf678948b6e7.f9aa4973-3fb5-4d8ee1630
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result:
+    qdrant/qdrant-pvc-snapshots-temp:
+      Data Movement:
+        Operation ID: du-b373568c-4a36-4585-b206-cf678948b6e7.b2bca7c5-c9a9-4936494a5
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result:
+    qdrant/qdrant-pvc-storage:
+      Data Movement:
+        Operation ID: du-b373568c-4a36-4585-b206-cf678948b6e7.bfbc3cb8-95a9-422516b8c
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result:
+    qdrant/qdrant-pvc-audit:
+      Data Movement:
+        Operation ID: du-b373568c-4a36-4585-b206-cf678948b6e7.3e40aee2-5e65-407d18aee
+        Data Mover: velero
+        Uploader Type: kopia
+        Moved data Size <span class="o">(</span>bytes<span class="o">)</span>: 0
+        Result:
+
+  Pod Volume Backups: &lt;none included&gt;
+</code></pre></div></div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/embeddings" class="page__taxonomy-item p-category" rel="tag">embeddings</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/qdrant" class="page__taxonomy-item p-category" rel="tag">qdrant</a><span class="sep">, </span>
+    
+      <a href="/tags/vector-database" class="page__taxonomy-item p-category" rel="tag">vector-database</a><span class="sep">, </span>
+    
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-04-30T00:00:00+08:00">2026-04-30 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Single+node+Qdrant+with+Kubernetes+and+NetApp+E-Series+CSI%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F04%2F30%2Fsingleton-qdrant-vector-db-netapp-eseries-santricity-csi.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html" class="pagination--pager" title="Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity">Previous</a>
+    
+    
+      <a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html" class="pagination--pager" title="Velero CSI backup with SANtricity Snapshots and read-only Linked Clones">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html" rel="permalink">Velero CSI backup with SANtricity Snapshots and read-only Linked Clones
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-30T00:00:00+08:00">2026-04-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          18 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Not just Poor Man's Backup - improved Velero functionality for SANtricity with IBM Block CSI with SANtricity patches 1.13.2
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html" rel="permalink">Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-28T00:00:00+08:00">2026-04-28 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Ubuntu 26.04 LTS NVMe/RoCE without DOCA with NetApp E-Series (plus DM-MP and VDO)
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html" rel="permalink">Forward E-Series SANtricity logs to Victoria Logs syslog receiver
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-26T00:00:00+08:00">2026-04-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to forward SANtricity logs to Victoria Logs syslog receiver
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/04/23/epa_400_beta.html" rel="permalink">EPA 4 development update
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-04-23T00:00:00+08:00">2026-04-23 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">EPA 4 is close to public beta. This posts explains what will change in EPA 4 compared to EPA 3
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
