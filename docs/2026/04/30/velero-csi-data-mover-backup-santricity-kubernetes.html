@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          15 minute read
+          17 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#better-or-just-different">Better or just different?</a></li><li><a href="#csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</a></li><li><a href="#setup-and-workflow">Setup and workflow</a></li><li><a href="#s3-repository">S3 repository</a></li><li><a href="#limitations">Limitations</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-velero-backup-details">Appendix A: Velero backup details</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#better-or-just-different">Better or just different?</a></li><li><a href="#csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</a></li><li><a href="#setup-and-workflow">Setup and workflow</a></li><li><a href="#s3-repository">S3 repository</a></li><li><a href="#limitations">Limitations</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#capacity-utilization">Capacity utilization</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-velero-backup-details">Appendix A: Velero backup details</a></li></ul>
             </nav>
           </aside>
         
@@ -359,7 +359,7 @@ velero         velero-7cd8f46bc6-vhzsx                   1/1     Running   0    
       <span class="na">storage</span><span class="pi">:</span> <span class="s">4Gi</span>                          <span class="c1"># Must match or exceed the original PVC size</span>
 </code></pre></div></div>
 
-<p>To do it manually, we  create a PVC, snapshot it, create a read-only Linked Clone from it.</p>
+<p>To do it manually, we create a PVC, snapshot it, and create a read-only Linked Clone from that snapshot.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl apply <span class="nt">-f</span> snap-demo-pvc.yml
 volumesnapshot.snapshot.storage.k8s.io/demo-pvc-snap created
@@ -491,6 +491,22 @@ drwxr-xr-x 3 root root 4096 Apr 29 12:08 ..
 <p>I won't add Velero dashboards, but I do intend to document how to monitor both in same Grafana instance. Velero has own metrics and there are community dashboards out there. Some are outdated and others usable but maybe not suitable for this specific purpose, so it takes time to check out a few and showcase an approach.</p>
 
 <p>Related to IBM Block CSI, I mentioned in all posts that I don't intend to mess around with the way it names volumes and linked clones. See more <a href="/2026/04/22/single-volume-snapshot-ibm-block-csi-santricity.html">here</a>. Because of that the improvements in EPA 4 will be more helpful to these integrations when my own SANtricity CSI is used.</p>
+
+<p>Why is monitoring important? Because you need to keep an eye on available space and snapshot count. For example, "orphaned" snapshots could interfere with Velero's ability to delete its newer ephemeral snapshots. Or they could keep consuming capacity or snapshot count. That's why it's smart to watch those things and start gradually.</p>
+
+<h2 id="capacity-utilization">Capacity utilization</h2>
+
+<p>One of several nice things about how this approach uses snapshots and clones is they don't take almost any capacity - these are purely ephemeral snapshots that consume capacity for base volume modifications while backup jobs run.</p>
+
+<p>Linked clones don't even have any reservation capacity because they're read-only.</p>
+
+<p>The moment backup job is done, the underlying snapshot is immediately deleted, returning capacity to the system. That's why I like this approach. It doesn't "reserve" 20% or 40% of storage capacity just in case.</p>
+
+<p>If volume data is changing at 5 MB/s rate and backup job takes 30 minutes, that's some 10 GB in Copy-on-Write data. Daily change is then around 423 GB, which at 4% change rate is what you may expect from a volume with 10 TiB of data. In other words, your repo group could be just 2% (20 GB) and still large enough for these backup jobs.</p>
+
+<p>To be exact, the way it's implemented (read the various SANtricity snapshot posts here for the details) is a fixed reservation as percentage of Base Volume capacity <em>is</em> assigned and remains in place. But, since the snapshot goes away right after backup job is done, there's no harm in insta-nuking these reservations (repo groups). SANtricity could default to a smaller percentage than it currently does, but it already uses less than the default SANtricity snapshot wizard recommendation (40% of Base Volume capacity).</p>
+
+<p>If you aren't a snapshot hoarder, you can delete those repo groups and let CSI plugin recreate them when/if next snapshot is taken. How? Loop through all the repo groups and nuke all non-schedule owned that have no snapshots. That's all. Tools <a href="/2026/04/21/santricity-client-update.html">exist</a>. If you don't delete them, you can simply monitor them in EPA just to see how much is being used (and not, i.e. wasted).</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
