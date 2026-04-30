@@ -282,7 +282,18 @@ This post is about making a backup from a static, ephemeral <strong>thin clone</
 
 <p>In the FSB-related Velero post, I used Versity in a Kubernetes name space but this time I used Versity S3 Gateway on a bare metal server to make a point (more on that later).</p>
 
-<p><strong>Unlike</strong> there, Velero was installed with CSI <strong>enabled</strong> and Velero agent (required for data movement in backup/restore jobs) was installed as well.</p>
+<p><strong>Unlike</strong> there, Velero was installed with CSI <strong>enabled</strong> and Velero node agent (required for data movement in backup/restore jobs) was installed as well.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>velero <span class="nb">install</span> <span class="se">\</span>
+  <span class="nt">--features</span><span class="o">=</span>EnableCSI <span class="se">\</span>
+  <span class="nt">--use-node-agent</span> <span class="se">\</span>
+  <span class="nt">--image</span> docker.io/velero/velero:v1.18.0 <span class="se">\</span>
+  <span class="nt">--provider</span> aws <span class="se">\</span>
+  <span class="nt">--plugins</span> velero/velero-plugin-for-aws:v1.14.0 <span class="se">\</span>
+  <span class="nt">--bucket</span> velero <span class="se">\</span>
+  <span class="nt">--secret-file</span>  ~/.aws/credentials <span class="se">\</span>
+  <span class="nt">--use-volume-snapshots</span><span class="o">=</span><span class="nb">true</span> 
+</code></pre></div></div>
 
 <p>Among pods on the box, ibm-block-csi-operator is the (unpatched) IBM Block CSI Operator, ibm-block-csi-controller is the (patched) CSI controller and ibm-block-csi-node is the node, also patched for SANtricity.</p>
 
@@ -484,7 +495,7 @@ drwxr-xr-x 3 root root 4096 Apr 29 12:08 ..
 
 <p>As an example of how things work these days: at first, I used <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk SOK namespace</a> in testing. But, since SOK auto-recovers some resources, it's not possible to restore namespace resources without considering Operator - there be conflicts. Because of that I had to create a simpler workload in another namespace to test with. <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">Elasticsearch also uses Operator</a>, so neither of these can or should be protected with storage snapshots of moving targets such as these. It simply isn't supported and can't work well. That's why - although NOSQL and scale-out SQL databases are many - most people can't use CG snapshots as much as they expect. In fact, it is rare to find a DB that doesn't do it better on its own.</p>
 
-<p>There's another CSI driver for SANtricity, <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, a Go-based CSI driver for SANtricity. I'd like to add read-only Linked Clones for both individual volumes and CGs to it as well.</p>
+<p>There's another CSI driver for SANtricity, <a href="/2026/01/19/netapp-eseries-santricity-csi.html">SANtricity CSI</a>, a Go-based CSI driver for SANtricity. I'd like to add read-only Linked Clones for both individual volumes and CGs to it as well. <a href="/2026/03/06/solidfire-csi-driver.html">Solidfire CSI</a> - obviously not SANtricity-related - already supports Consistency Groups, but hasn't been tested with Velero. That's another to-do item.</p>
 
 <p>Read-write Linked Clones of individual volumes and CGs are "nice to have". It's not much harder, but it takes time to develop, test, document and I just don't think it's a popular use case. In theory it is but, in practice, it's rarely used and from what I've seen it's usually done wrong. I probably won't work on it unless someone needs it (and maybe wants to contribute). The few who really need this and aren't doing it wrong can simply snapshot volumes, create read-write Linked Clones and present them as static persistent volumes using Terraform Provider SANtricity or Ansible.</p>
 
@@ -746,7 +757,9 @@ HooksFailed:     0
     
       <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
     
-      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a><span class="sep">, </span>
+    
+      <a href="/tags/versity" class="page__taxonomy-item p-category" rel="tag">versity</a>
     
     </span>
   </p>
