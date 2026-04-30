@@ -180,7 +180,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="Velero CSI backup with SANtricity Snapshots and read-only Linked Clones">
-    <meta itemprop="description" content="Not just Poor Man's Backup - improved Velero functionality for SANtricity with IBM BLock CSI with SANtricity patches 1.13.2">
+    <meta itemprop="description" content="Not just Poor Man's Backup - improved Velero functionality for SANtricity with IBM Block CSI with SANtricity patches 1.13.2">
     <meta itemprop="datePublished" content="2026-04-30T00:00:00+08:00">
     
 
@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          13 minute read
+          15 minute read
         
       </span>
     
@@ -227,21 +227,29 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</a></li><li><a href="#setup-and-workflow">Setup and workflow</a></li><li><a href="#s3-repository">S3 repository</a></li><li><a href="#limitations">Limitations</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-velero-backup-details">Appendix A: Velero backup details</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#better-or-just-different">Better or just different?</a></li><li><a href="#csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</a></li><li><a href="#setup-and-workflow">Setup and workflow</a></li><li><a href="#s3-repository">S3 repository</a></li><li><a href="#limitations">Limitations</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-velero-backup-details">Appendix A: Velero backup details</a></li></ul>
             </nav>
           </aside>
         
         <h2 id="introduction">Introduction</h2>
 
-<p>Continuing from previous post on this topic, <a href="/2026/04/18/velero-csi-backup-santricity-ibm-block-csi.html">Backup SANtricity CSI volume with Velero and Versity S3 Gateway</a>, today we'll look at a better way to backup E-Series-backed PVCs.</p>
+<p>Continuing from previous post on this topic, <a href="/2026/04/18/velero-csi-backup-santricity-ibm-block-csi.html">Backup SANtricity CSI volume with Velero and Versity S3 Gateway</a>, today we'll look at a <del>better</del> different way to backup E-Series-backed PVCs.</p>
 
-<p>IBM Block CSI, for which I have a SANtricity patch, last week released a minor update in v1.13.1 and then, in a hurry, security patches in v1.13.2. That meant another patch festival, so I used that opportunity to do a bit of extra work. The default branch, <code class="language-plaintext highlighter-rouge">santricity</code>, still hasn't been fully updated for v1.13.2.</p>
+<p>IBM Block CSI, for which I have a SANtricity patch, last week released a minor update in v1.13.1 and then, in a hurry, security patches in v1.13.2 (it's not even on the IBM's Web site yet!). That meant another patching festival for me, so I used that opportunity to do a bit of extra work. The default branch, <code class="language-plaintext highlighter-rouge">santricity</code>, still hasn't been fully updated for v1.13.2.</p>
 
 <p>In the first Velero-with-SANtricity post (the link above), I demonstrated poor man's backup without snapshots, which used FSB <a href="https://velero.io/docs/v1.18/file-system-backup/">File System Backup</a> - it backups live file systems. Many users use that approach, especially on file servers and "database dump" volumes, but it's not usable for live databases, for example.
 uthe
 This post is about making a backup from a static, ephemeral <strong>thin clone</strong> volume, which my SANtricity patch could not do at the time. IBM Block CSI has the feature, but SANtricity CSI code can't take advantage of it without knowing how to work with storage to fulfill such requests.</p>
 
 <p>Since yesterday, it's a bit smarter, making another approach possible. While the default <code class="language-plaintext highlighter-rouge">santricity</code> branch in my repo has generic updates for v1.13.2, this CSI-related work is in a separate branch in the same repo, but I won't link it as that branch will be merged into the main anyway.</p>
+
+<h2 id="better-or-just-different">Better or just different?</h2>
+
+<p>Backups with CSI snapshots aren't necessarily better than FSB backups.</p>
+
+<p>There are cases where data is relatively static. Maybe you dump PostgreSQL to a backup PVC four times a day, or a batch job that uploads data to a database every 6 hours and your backup takes 30 minutes. FSB snapshots are fine for such use cases.</p>
+
+<p>Heck, you don't even need Velero for that - you can simply <code class="language-plaintext highlighter-rouge">rclone</code> those to S3 at will. It's not hard. Velero (or other backup application's) value add consists of keeping track of these in one place.</p>
 
 <h2 id="csi-snapshots-with-velero-data-mover">CSI snapshots with Velero Data Mover</h2>
 
@@ -295,7 +303,7 @@ This post is about making a backup from a static, ephemeral <strong>thin clone</
   <span class="nt">--use-volume-snapshots</span><span class="o">=</span><span class="nb">true</span> 
 </code></pre></div></div>
 
-<p>Among pods on the box, ibm-block-csi-operator is the (unpatched) IBM Block CSI Operator, ibm-block-csi-controller is the (patched) CSI controller and ibm-block-csi-node is the node, also patched for SANtricity.</p>
+<p>Among the pods on the box, ibm-block-csi-operator is the (unpatched) IBM Block CSI Operator, ibm-block-csi-controller is the (patched) CSI controller and ibm-block-csi-node is the node, also patched for SANtricity.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@h2:~/code# kubectl get pods <span class="nt">-A</span>
 NAMESPACE      NAME                                      READY   STATUS    RESTARTS      AGE
@@ -473,6 +481,16 @@ drwxr-xr-x 3 root root 4096 Apr 29 12:08 ..
 <p>There are also implementation-related limitations - currently this is single/individual volume only and read-only Linked Clones (not read-write).</p>
 
 <p>Velero has its own limitations and bugs, which are out of scope here. But - on the happy side - IBM Block CSI happens to be tested with OpenShift. While that doesn't mean my SANtricity patch is tested or supported (it isn't!), <a href="https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/backup_and_restore/oadp-application-backup-and-restore#oadp-features-plugins">OpenShift OADP</a> has helpful hints for OpenShift users.</p>
+
+<h2 id="monitoring">Monitoring</h2>
+
+<p>As I mentioned in the <a href="/2026/04/23/epa_400_beta.html">EPA 4</a> post, I look forward to documenting ways to monitor snapshots, clones and backups.</p>
+
+<p>You can see in that post that snapshots and clones are already monitored. The dashboards aren't super complex, but the metrics are in there and can create better dashboards for your own use.</p>
+
+<p>I won't add Velero dashboards, but I do intend to document how to monitor both in same Grafana instance. Velero has own metrics and there are community dashboards out there. Some are outdated and others usable but maybe not suitable for this specific purpose, so it takes time to check out a few and showcase an approach.</p>
+
+<p>Related to IBM Block CSI, I mentioned in all posts that I don't intend to mess around with the way it names volumes and linked clones. See more <a href="/2026/04/22/single-volume-snapshot-ibm-block-csi-santricity.html">here</a>. Because of that the improvements in EPA 4 will be more helpful to these integrations when my own SANtricity CSI is used.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -754,6 +772,8 @@ HooksFailed:     0
       <a href="/tags/data-mover" class="page__taxonomy-item p-category" rel="tag">data-mover</a><span class="sep">, </span>
     
       <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/oadp" class="page__taxonomy-item p-category" rel="tag">oadp</a><span class="sep">, </span>
     
       <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
     
