@@ -2358,7 +2358,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Velero CSI backup with SANtricity Snapshots and read-only Linked Clones",
-        "excerpt":"Introduction Continuing from previous post on this topic, Backup SANtricity CSI volume with Velero and Versity S3 Gateway, today we’ll look at a better way to backup E-Series-backed PVCs. IBM Block CSI, for which I have a SANtricity patch, last week released a minor update in v1.13.1 and then, in...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"Introduction Continuing from previous post on this topic, Backup SANtricity CSI volume with Velero and Versity S3 Gateway, today we’ll look at a better way to backup E-Series-backed PVCs. IBM Block CSI, for which I have a SANtricity patch, last week released a minor update in v1.13.1 and then, in...","categories": ["storage","e-series","kubernetes","projects"],
         "tags": ["velero","netapp","csi","data-mover","s3","backup","versity"],
         "url": "/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html",
         "teaser": null
