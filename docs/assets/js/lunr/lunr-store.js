@@ -2369,6 +2369,12 @@ var store = [{
         "url": "/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html",
         "teaser": null
       },{
+        "title": "Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI",
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots (this post) PART TWO: CloudNativePG with plugins (future post) Introduction The number of things known-to-work with IBM Block CSI patched for SANtricity is increasing: so far “first pass” CSI tests have been completed for Versity S3 Gateway, Splunk, Elasticsearch, and Qdrant. Thanks to a...","categories": ["storage","e-series","solidfire","kubernetes"],
+        "tags": ["cloudnativepg","postgresql","database","netapp","ibm","csi"],
+        "url": "/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2382,7 +2388,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Velero CSI backup with SANtricity Snapshots and read-only Linked Clones 2026-04-30 00:00 17 minute read Not just Poor Man’s Backup - improved Velero functionality for SANtricity with IBM Block CSI with SANtricity patches 1.13.2 Single node Qdrant with Kubernetes and NetApp E-Series CSI 2026-04-30 00:00 15 minute read Getting started...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI 2026-05-01 00:00 17 minute read Cloud-Native PostgreSQL with NetApp SANtricity and SolidFire CSI (VolumeSnapshots) Velero CSI backup with SANtricity Snapshots and read-only Linked Clones 2026-04-30 00:00 17 minute read Not just Poor Man’s Backup - improved Velero functionality for SANtricity with IBM...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental thing (April 2026). I’m trying to (manually) create accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Notes on E-Series with Proxmox (PVE, PBS) NetApp E-Series and...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3922,6 +3928,12 @@ var store = [{
   },{
     "title": "oadp",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/oadp/"
+  },{
+    "title": "cloudnativepg",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudnativepg/"
+  },{
+    "title": "ibm",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ibm/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
