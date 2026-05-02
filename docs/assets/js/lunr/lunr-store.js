@@ -2357,7 +2357,7 @@ var store = [{
         "url": "/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html",
         "teaser": null
       },{
-        "title": "Single node Qdrant with Kubernetes and NetApp E-Series CSI",
+        "title": "Single node Qdrant vector database, Kubernetes and NetApp E-Series CSI",
         "excerpt":"Introduction It appears my IBM Block CSI patched for SANtricity can now do both FSB and CSI backups. Still, I did a very simple test for that post and felt the urge to do another, more demanding one. When I started work on re-automating E-Series for my purpose, I knew...","categories": ["storage","e-series","ai","kubernetes"],
         "tags": ["vector-database","embeddings","velero","netapp","csi","qdrant"],
         "url": "/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html",
