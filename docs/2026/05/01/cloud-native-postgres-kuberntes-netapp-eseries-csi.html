@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          17 minute read
+          18 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#cloudnative-postgresql-with-e-series">CloudNative PostgreSQL with E-Series</a></li><li><a href="#postgres-clustering-with-cloudnativepg">Postgres clustering with CloudNativePG</a><ul><li><a href="#approaches">Approaches</a></li><li><a href="#how-many-replicas-do-you-want">How many replicas do you want?</a></li><li><a href="#what-about-replication">What about replication?</a></li><li><a href="#cloudnative-pg-documentation-on-storage">CloudNative PG documentation on storage</a></li></ul></li><li><a href="#cloudnativepg-with-csi-snapshots">CloudNativePG with CSI snapshots</a><ul><li><a href="#prepare-santricity-or-solidfire-and-csi-plugin">Prepare SANtricity or SolidFire and CSI plugin</a></li><li><a href="#deploy-cloudnativepg">Deploy CloudNativePG</a></li><li><a href="#backup">Backup</a></li><li><a href="#fail-over-and-fail-back">Fail-over and fail-back</a></li><li><a href="#why-just-one-sc">Why just one SC?</a></li></ul></li><li><a href="#csi-related-monitoring">CSI-related monitoring</a></li><li><a href="#solidfire-and-santricity-csi-plugins">SolidFire and SANtricity CSI plugins</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-solidfire-csi-v100-beta11">Appendix A: SolidFire CSI v1.0.0-beta.11</a></li><li><a href="#appendix-b-cloudnative-pg-with-solidfire-csi-in-solidfire-ui">Appendix B: CloudNative PG with SolidFire CSI in SolidFire UI</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#cloudnative-postgresql-with-e-series">CloudNative PostgreSQL with E-Series</a></li><li><a href="#postgres-clustering-with-cloudnativepg">Postgres clustering with CloudNativePG</a><ul><li><a href="#approaches">Approaches</a></li><li><a href="#how-many-replicas-do-you-want">How many replicas do you want?</a></li><li><a href="#what-about-storage-replication">What about storage replication?</a></li><li><a href="#cloudnative-pg-documentation-on-storage">CloudNative PG documentation on storage</a></li></ul></li><li><a href="#cloudnativepg-with-csi-snapshots">CloudNativePG with CSI snapshots</a><ul><li><a href="#prepare-santricity-or-solidfire-and-csi-plugin">Prepare SANtricity or SolidFire and CSI plugin</a></li><li><a href="#deploy-cloudnativepg">Deploy CloudNativePG</a></li><li><a href="#backup">Backup</a></li><li><a href="#fail-over-and-fail-back">Fail-over and fail-back</a></li><li><a href="#why-just-one-sc">Why just one SC?</a></li></ul></li><li><a href="#csi-related-monitoring">CSI-related monitoring</a></li><li><a href="#solidfire-and-santricity-csi-plugins">SolidFire and SANtricity CSI plugins</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-solidfire-csi-v100-beta11">Appendix A: SolidFire CSI v1.0.0-beta.11</a></li><li><a href="#appendix-b-cloudnative-pg-with-solidfire-csi-in-solidfire-ui">Appendix B: CloudNative PG with SolidFire CSI in SolidFire UI</a></li></ul>
             </nav>
           </aside>
         
@@ -346,7 +346,7 @@
 
 <p>You don't get HA by running 0 replicas. If you want, use classic Active-Passive HA for that.</p>
 
-<h3 id="what-about-replication">What about replication?</h3>
+<h3 id="what-about-storage-replication">What about storage replication?</h3>
 
 <p>This is one of the questions "storage professionals" sometimes ask me because SANtricity didn't implement synchronous replication in NVMe-native arrays (currently, only the NL-SAS (SSD, HDD) model - E4000 - has it).</p>
 
@@ -487,7 +487,13 @@ backup-on-demand   6s    cluster-example   volumeSnapshot   completed
 
 <p><img src="/assets/images/cloud_native_pg_solidfire_santricity_05_snapshot.png" alt="CNPG snapshot on SolidFire" /></p>
 
-<p>Because we have a replicated cluster and I'd likely have to delete both and re-install to test recovery from a full backup, I'll just leave this for next time.</p>
+<p>Because we have a replicated cluster and I'd likely have to delete both and re-install to test recovery from a full backup, I'll just leave this for next time. From TFM:</p>
+
+<blockquote>
+  <p>In CloudNativePG, recovery is not performed in-place on an existing cluster. Instead, it is used to bootstrap a new cluster from a physical backup.</p>
+</blockquote>
+
+<p>So, there's really nothing to prove - we'd have to stand up a new one, using a backup - either from a CSI snapshot, or <em>copy</em> of data created by a CloudNative backup plugin, or a data mover (from a snapshot-derived clone, to something like S3 - <a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">see how that's done with Velero CSI and Kopia data mover with E-Series CSI</a>).</p>
 
 <h3 id="fail-over-and-fail-back">Fail-over and fail-back</h3>
 
@@ -621,7 +627,7 @@ cluster-example-2   0/1     Init:0/1   0          4s
   <li>Everything just works, including backups</li>
 </ul>
 
-<p>In recent days I tried Kubernetes operators for "modern" databases like Splunk and Elasticsearch, but CloudNativePG doesn't look like it manages a "legacy" database at all.</p>
+<p>In recent days I tried and blogged about various Kubernetes operators for "modern" databases such as Splunk and Elasticsearch, but CloudNativePG doesn't look like it manages a "legacy" database at all.</p>
 
 <p>Every time I try one of the applications suitable for E-Series using one of my CSI drivers, it makes me even more convinced E-Series is most suitable for these workloads in Kubernetes environments, too.</p>
 
@@ -718,6 +724,8 @@ solidfire-csi-node-xpfg2                    2/2     Running   0               16
 <p>Volume metadata shown on mouse hover:</p>
 
 <p><img src="/assets/images/cloud_native_pg_solidfire_santricity_02_volume_metadata.png" alt="SolidFire CSI Volume Metadata" /></p>
+
+<p>The first metadata key is a SolidFire CSI setting related to the use of Recycle Bin for deleted volumes. <code class="language-plaintext highlighter-rouge">delete</code> means that even accidentally deleted PVCs with retention policy <code class="language-plaintext highlighter-rouge">Delete</code> would remain in rescue-able for a few hours.</p>
 
 <p>CloudNativePG-created CSI snapshot:</p>
 
