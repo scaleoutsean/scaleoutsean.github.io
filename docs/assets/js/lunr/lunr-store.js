@@ -2375,6 +2375,12 @@ var store = [{
         "url": "/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html",
         "teaser": null
       },{
+        "title": "Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series",
+        "excerpt":"Introduction I have a long post on Proxmox Backup Server 4.1 here. This one is about PBS 4.2, focuses on just S3-backed datastores and will be short. In Proxmox Backup Server (PBS) 4.2, S3 support graduated from a technology preview to a supported feature. S3 users with many hundreds of...","categories": ["storage","e-series","virtualization"],
+        "tags": ["e-series","backup","pbs","netapp","s3","proxmox","pbs","versity"],
+        "url": "/2026/05/10/proxmox-backup-server-versity-s3-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2388,7 +2394,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI 2026-05-01 00:00 18 minute read Cloud-Native PostgreSQL with NetApp SANtricity and SolidFire CSI (VolumeSnapshots) Velero CSI backup with SANtricity Snapshots and read-only Linked Clones 2026-04-30 00:00 17 minute read Not just Poor Man’s Backup - improved Velero functionality for SANtricity with IBM...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series 2026-05-10 00:00 5 minute read Back both PBS 4.2+ block and S3 datastores with NetApp E-Series Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI 2026-05-01 00:00 18 minute read Cloud-Native PostgreSQL with NetApp SANtricity and SolidFire CSI (VolumeSnapshots) Velero CSI...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4201,4 +4207,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page66/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
   }]
