@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -257,7 +257,7 @@
 
 <p>Then I added this S3 to PBS and had no problems setting it up whatsoever. The only annoyance was the usual PBS requirement to get a certificate fingerprint for self-signed TLS certificates while defining S3 endpoint, which I did by examining the VGW certificate from the browser.</p>
 
-<p>I deployed PBS 4.2 in a VM (OK for testing) and configured a ZFS datastore backed by E-Series LVM, as well as an S3-backed backup area. This was for comparison purposes in case of any compatibility issues (which I did not notice).</p>
+<p>I deployed PBS 4.2 in a VM (good enough for testing), configured a ZFS datastore on the second VM volume backed by E-Series LVM, and a separate S3-backed backup repository. This was so that I can compare the two in case of any issues with the S3-backed  backup repository.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_00_add_pbs_datastore.png" alt="PBS with 2 backends - datastore and S3" /></p>
 
@@ -265,7 +265,7 @@
 
 <p><img src="/assets/images/pbs_s3_backup_01_pbs_s3_datastore.png" alt="VGW in PBS 4.2.0" /></p>
 
-<p>That bucket, <code class="language-plaintext highlighter-rouge">pbs</code>, viewed in the Versity UI, is currently empty.</p>
+<p>That bucket, <code class="language-plaintext highlighter-rouge">pbs</code>, viewed in the Versity UI, initially holds just several objects generated when configuring it.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_02_vgw_s3_bucket.png" alt="Versity S3 Gateway UI with a few of the PBS bucket pbs" /></p>
 
@@ -275,7 +275,7 @@
 
 <p><img src="/assets/images/pbs_s3_backup_03_ct_on_sanmox_datastore.png" alt="CT101 for backup/restore testing" /></p>
 
-<p>The first backup to S3 was smooth and comparable to backing up to regular PBS datastore on ZFS (but remember, S3 uses temporary directory in PBS to store data).</p>
+<p>The first backup to S3 was taken with the container running (PVE handles that easily) and it went smoothly, comparable to backing up to a standard PBS datastore on ZFS (but remember that S3 uses temporary directory in PBS to store data, so traditional filesystem datastores may be more robust).</p>
 
 <p><img src="/assets/images/pbs_s3_backup_04_ct_backup_to_s3.png" alt="Backup from SANtricity-backed LVM to SANtricity-backed S3" /></p>
 
@@ -293,9 +293,13 @@
 
 <p><img src="/assets/images/pbs_s3_backup_07_ct_backup_data_in_pbs.png" alt="Container data in PBS S3 datastore pane" /></p>
 
-<p>The same in a larger view, showing job verification went fine and over 500 MB in backup data.</p>
+<p>The same in a larger view, showing job verification was successful and that 500 MB file was there.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_08_ct_backup_data_in_pbs_ui_large.png" alt="Data in PBS S3 Web UI" /></p>
+
+<p>In S3 object store, backup data chunks are stored in the chunks subdirectories (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;/&lt;s3_endpoint_name&gt;/.chunks/[0000-ffff]</code>).</p>
+
+<p><img src="/assets/images/pbs_s3_backup_12_versity_chunks.png" alt="Chunk data in VGW UI" /></p>
 
 <p>I went back to PVE 9 and navigated to the CT, <code class="language-plaintext highlighter-rouge">Backup &gt; vgw3</code>, to view the CT backups on S3.</p>
 
