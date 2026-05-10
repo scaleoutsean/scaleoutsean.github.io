@@ -441,9 +441,9 @@ rootfs lvm_sanmox:vm-102-disk-0 3.0G 582.9M  2.2G 19.1 /
 
 <p>This is sequential IO and E-Series handles it well. The need to do this offline is the main inconvenience and "cost" of these operations. Other than that, many TBs can be easily shuffled around in an afternoon even without storage-side offload.</p>
 
-<p>To kick tires on that, I moved a standard (default options) 8GB VM disk from shared LVM to local (SSD) and then back to shared LVM (on SANtricity).</p>
+<p>To kick tires on that, I moved a standard (default options) 8GB VM disk from shared LVM to local (SSD) and then back to shared LVM (on SANtricity). VM disks can be storage-moved online (while VM is running) from one block device to another.</p>
 
-<p>The blue line shows the movement of the 8GB disk to local datastore. The pink-ish line is the movement back to shred LVM. That IO peaked around 800 MB/s and was done in seconds (10 seconds at 800 MB/s).</p>
+<p>The blue line shows the movement of the 8GB disk to local datastore. The pink-ish line is the movement back to shared LVM. That IO peaked around 800 MB/s and was done in seconds (10 seconds at 800 MB/s).</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_11_pve_vm_disk_move_peak.png" alt="PVE VM disk move storage peak" /></p>
 
@@ -459,9 +459,11 @@ rootfs lvm_sanmox:vm-102-disk-0 3.0G 582.9M  2.2G 19.1 /
 
 <p><img src="/assets/images/pve_storage_monitoring_14_pve_vm_disk_live_move_duration.png" alt="PVE VM live disk move storage task" /></p>
 
-<p>A move <em>from</em> shared LVM to local datastore (read on shared LVM, in blue) followed by a move <em>to</em> shared LVM (write, in pink) completed quickly without any post-movement churn, so I'm not sure if "re-thin" (<code class="language-plaintext highlighter-rouge">fstrim</code> as built-in post-movement step) is correct or not. Maybe it always happens, but because I moved the disk several times, there was nothing to discard this time.</p>
+<p>A move <em>from</em> shared LVM to local datastore (read on shared LVM, in blue) followed by a move <em>to</em> shared LVM (write, in pink) completed quickly without any post-movement churn, so I'm not sure if "re-thin" guess (<code class="language-plaintext highlighter-rouge">fstrim</code> as a built-in post-movement step) is correct or not.</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_15_pve_vm_disk_live_move_throughput.png" alt="PVE VM live disk move storage throughput" /></p>
+
+<p>Maybe it always happens but, because I moved the disk several times within minutes, there was nothing to discard after this last move.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
