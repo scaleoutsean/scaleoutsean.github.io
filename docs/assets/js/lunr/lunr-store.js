@@ -2400,7 +2400,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Storage monitoring in Proxmox PVE and NetApp E-Series environments 2026-05-11 00:00 12 minute read Monitor disk space in datastores, VMs and CTs on shared LVM stores on E-Series SANtricity systems Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series 2026-05-10 00:00 9 minute read Back both PBS 4.2+ block...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Storage monitoring in Proxmox PVE and NetApp E-Series environments 2026-05-11 00:00 13 minute read Monitor disk space in datastores, VMs and CTs on shared LVM stores on E-Series SANtricity systems Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series 2026-05-10 00:00 9 minute read Back both PBS 4.2+ block...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

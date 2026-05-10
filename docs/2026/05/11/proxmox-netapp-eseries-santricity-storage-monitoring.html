@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -293,12 +293,12 @@
 
 <p>PVE's "create VM" wizard does let you complete the second item, but it's still up to you to install the package and power-cycle the VM.</p>
 
-<p>TLDR for Debian-style distributions:</p>
+<p>TLDR for Debian-style <em>guests</em>:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt <span class="nb">install </span>qemu-guest-agent <span class="nt">-y</span> <span class="p">;</span> poweroff
 </code></pre></div></div>
 
-<p>On Windows, install VirtIO <a href="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso">ISO</a>, power-cycle and make sure related services are running.</p>
+<p>On Windows guests, install VirtIO from the usual <a href="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso">ISO</a>, power-cycle the VM and make sure related services are running after you power it on.</p>
 
 <h2 id="tools">Tools</h2>
 
@@ -324,7 +324,7 @@
 
 <p>If you have multiple datastores or VM/CT disks and use scripts, remember to check each individually, not calculate some "average" value per VM.</p>
 
-<p>Shared LVM datastores are monitored on a PVE server level, it's just that you can't (for example) see whether some shared LVM device <em>can</em> be extended because you don't know if the underlying SANtricity storage pool has spare capacity.</p>
+<p>Shared LVM datastores are monitored on PVE servers, it's just that you can't (for example) see whether some shared LVM device <em>can</em> be extended because you don't know if the underlying SANtricity storage pool has the spare capacity to do it - you'd have to look that up separately.</p>
 
 <p>Like with all all-in-one tools, whatever is not in there may maybe hard to add by yourself. Pluse is OSS, but even so - it's not trivial to add another target such as E-Series arrays.</p>
 
@@ -443,17 +443,25 @@ rootfs lvm_sanmox:vm-102-disk-0 3.0G 582.9M  2.2G 19.1 /
 
 <p>To kick tires on that, I moved a standard (default options) 8GB VM disk from shared LVM to local (SSD) and then back to shared LVM (on SANtricity).</p>
 
-<p>The blue line shows the movement of the 8GB disk to local datastore. The orange-ish is the movement back to shred LVM. That IO peaked around 800 MB/s and was done in seconds (10 seconds at 800 MB/s).</p>
+<p>The blue line shows the movement of the 8GB disk to local datastore. The pink-ish line is the movement back to shred LVM. That IO peaked around 800 MB/s and was done in seconds (10 seconds at 800 MB/s).</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_11_pve_vm_disk_move_peak.png" alt="PVE VM disk move storage peak" /></p>
 
-<p>The task itself took two minutes, due to some processing on PVE node. That may have been discard-on-move (to re-thin) - I haven't investigated because it wasn't significant enough.</p>
+<p>The task itself took two minutes, due to some processing on PVE node. That may have been discard-on-move (to re-thin upon migration?) but I haven't investigated because it wasn't significant enough.</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_12_pve_vm_disk_move_task.png" alt="PVE VM disk move storage duration" /></p>
 
-<p>This low-rate write churn was also obvious in SANtricity, but it's almost negligible and we could move dozens of disks in parallel on SSD-based LVMs without this causing impact. (I have write cache disabled on the array to avoid getting cache-assisted performance results.)</p>
+<p>This low-rate write churn was also obvious in SANtricity performance monitor, but it's almost negligible and we could move dozens of disks in parallel on SSD-based LVMs without this causing major impact. (I do have write cache disabled on the array to avoid getting cache-assisted performance results.)</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_13_pve_vm_disk_move_duration.png" alt="PVE VM disk move storage throughput" /></p>
+
+<p>When moving the same disk to, and then from, local disk on a live VM, there was no churn. 6 seconds was all it took.</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_14_pve_vm_disk_live_move_duration.png" alt="PVE VM live disk move storage task" /></p>
+
+<p>A move <em>from</em> shared LVM to local datastore (read on shared LVM, in blue) followed by a move <em>to</em> shared LVM (write, in pink) completed quickly without any post-movement churn, so I'm not sure if "re-thin" (<code class="language-plaintext highlighter-rouge">fstrim</code> as built-in post-movement step) is correct or not. Maybe it always happens, but because I moved the disk several times, there was nothing to discard this time.</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_15_pve_vm_disk_live_move_throughput.png" alt="PVE VM live disk move storage throughput" /></p>
 
 <h2 id="conclusion">Conclusion</h2>
 
