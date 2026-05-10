@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -237,7 +237,7 @@
 
 <p>E-Series (SANtricity) systems are commonly referred to as block storage. Which they are, except there's nothing that prevents you from deploying Linux <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html">NFS servers</a>, S3 and other storage services <strong>backed by</strong> SANtricity block storage. I blogged about that <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html">here</a>, so I won't repeat the same points.</p>
 
-<p>Deploying does require some extra effort and time, so I wouldn't call those approaches "free". Deploying additional services based on open source software is certainly inexpensive. But it is because each may be differently managed and monitored, that I won't discuss those options. Ultimately, if each is backed by E-Series, we need to monitor that first.</p>
+<p>Deploying does require some extra effort and time, so I wouldn't call those approaches "free". Deploying additional services based on open source software is certainly inexpensive. But it is because each may be differently managed and monitored, that I won't discuss those options. Ultimately, if each is backed by E-Series, we need to monitor that first and foremost.</p>
 
 <h2 id="what-to-monitor">What to monitor</h2>
 
@@ -245,9 +245,9 @@
 
 <p><img src="/assets/images/pve_storage_monitoring_03_what_to_monitor.png" alt="Monitoring datastores, VMs, CTs" /></p>
 
-<p>Above that, we have shared LVM - to take the common case - which can be grown online in two steps: enlarge the volume on SANtricity (UI, API, CLI), then enlarge LVM on the PVE node (UI, API, CLI).</p>
+<p>Above that, we have shared LVM - to take the common case - which can be grown online in two steps: extend the volume on SANtricity (UI, API, CLI), then extend LVM on the PVE node (UI, API, CLI).</p>
 
-<p>Finally, we need visibility into individual VMs and CTs, to make sure available filesystem space is sufficient. "Sufficient" may mean 5% on very large volumes to 35% on database servers. It depends.</p>
+<p>Finally, we need visibility into individual VMs and CTs, to make sure available filesystem space is sufficient. "Sufficient" may mean anywhere between 5% on very large and relatively static volumes to 40% on database server's log devices where you don't want to see over 90% capacity utilization (risk and performance impact). "It depends", as they say.</p>
 
 <h3 id="capacity">Capacity</h3>
 
@@ -259,19 +259,19 @@
 
 <p>Ideally, we want to provision just enough disk capacity to VMs and CTs, and keep filesystems not more than 70-80% full (adjust for your needs depending on service and requirements).</p>
 
-<p>PVE lets us view LVM datastore utilization, but getting VMs and CTs utilization may require some extra steps.</p>
+<p>PVE lets us view LVM datastore utilization, but getting the capacity utilization of VMs and CTs may require several extra steps.</p>
 
 <h3 id="performance">Performance</h3>
 
 <p>This is easier, I suppose, because PVE has IOPS- and bandwidth-limiting controls that can manage performance.</p>
 
-<p>From a SANtricity perspective, there's no performance management as such. There's performance monitoring both in the UI and API (as well as tools that consume that API), so combined with PVE's monitoring we can add up all VMs and CTs that share a shared LVM device and the sum of their IOPS and bandwidth is expected to be similar to the SANtricity volume performance. For performance management, rely on the PVE features.</p>
+<p>From a SANtricity perspective, there's no granular per-volume performance management as such. There's performance monitoring both in the UI and API (as well as tools that consume that API), so combined with PVE's monitoring we can add up all VMs and CTs that share a shared LVM device and the sum of their IOPS and bandwidth is expected to be similar to the SANtricity volume performance. For performance management, we need to rely on the PVE performance management features.</p>
 
 <p>How to tell if a shared LVM disk is being maxed out? Watch read and write latency as well as queue depth on the volume using PVE node (using the volume) or SANtricity tools.</p>
 
-<p>The maximum queue depth possible on a volume is large, but it's ultimately constrained by actual disk performance (which, in case of HDDs, is directly proportional to the number of disks in the storage pool backing the volume used for shared LVM). The queue may be "only" 200, but if you have 5 HDDs in a RAID 5 group ("storage pool"), that would be huge and a sign of "piled up" IO requests that can't be processed due to the limited IOPS available on the storage pool backing the shared LVM disk.</p>
+<p>The maximum queue depth possible on a SANtricity volume is large, but it's ultimately constrained by actual disk performance (which, in the case of HDDs, is directly proportional to the number of disks in the storage pool backing the volume used for shared LVM). The queue may be "only" 200, but if you have 5 HDDs in a RAID 5 group ("storage pool"), 200 would be a lot and a sign of "piled up" IO requests that can't be processed due to the limited IOPS available on the storage pool backing the shared LVM disk.</p>
 
-<p>When creating a VM, optionally set these to limit throughput or IO/s for the VM and adjust later as necessary.</p>
+<p>When creating a VM, optionally set these to limit throughput or IO/s for the VM and adjust them later as necessary.</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_08_pve_vm_performance_limits.png" alt="PVE bandwidth and IOPS control" /></p>
 
@@ -298,11 +298,11 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt <span class="nb">install </span>qemu-guest-agent <span class="nt">-y</span> <span class="p">;</span> poweroff
 </code></pre></div></div>
 
-<p>On Windows, install VirtIO <a href="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso">ISO</a> and make sure they're running. You also need to power-cycle the VM.</p>
+<p>On Windows, install VirtIO <a href="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso">ISO</a>, power-cycle and make sure related services are running.</p>
 
 <h2 id="tools">Tools</h2>
 
-<p>On the one hand, PVE does provide PVE-side of the story: you can see fullness of shared LVMs, for example. On the other, PVE doesn't easily provide VM- and CT-side view. I think that must be on their radar, so to speak, and so I wouldn't spend much time over-engineering something that may become available within months.</p>
+<p>On the one hand, PVE does provide PVE-side of the story: you can see the fullness of shared LVMs, for example. On the other, PVE doesn't easily provide VM- and CT-side view. I think that must be on their radar, so to speak, and so I wouldn't spend much time over-engineering something that may become available within months.</p>
 
 <p>If you want all-in-one and don't want some "standard" approach, Pulse (below) is easy and works. If you want a standard approach, then a PVE Prometheus Exporter plus something to collect and report on the collected.</p>
 
@@ -358,7 +358,7 @@
 
 <p>This isn't of immediate concern, but if filesystem usage isn't available from LUKS-encrypted disks, that information would have to be obtained by a scheduled script (10 line-script to send <code class="language-plaintext highlighter-rouge">df</code> output to some internal service) or a service/agent such as <a href="https://docs.influxdata.com/telegraf/v1/install/#download-and-install-telegraf">Telegraf</a> client.</p>
 
-<p>When LUKS becomes supported, physical disk utilization won't change for SANtricity, but may change for storage that thinly provisions VM/CT disks because of encryption. Last time I checked (using SolidFire), I recall LUKS destroyed storage efficiency, but I don't recall if it was completely or partially (which would be the case when savings from thin provisioning remained, but from compression and dedupe did not). Because SANtricity won't be impacted in either case, I won't try to find out.</p>
+<p>When LUKS becomes supported, physical disk utilization won't change for SANtricity-backed datastore, but may change for storage systemsf that thinly provisions VM/CT disks because of encryption. Last time I checked (using SolidFire), I recall LUKS destroyed storage efficiency, but I don't recall if it was completely or partially (which would be the case when savings from thin provisioning remained, but from compression and dedupe did not). Because SANtricity won't be impacted in either case, I won't try to find out. If you plan to use LUKS on flash storage at scale (not just for your CEO's desktop VM), you may want to find out.</p>
 
 <h2 id="enlarge-shared-lvm-vm-and-ct-disk-space">Enlarge shared LVM, VM and CT disk space</h2>
 
@@ -383,11 +383,11 @@
 
 <p>Shared LVM disks use the usual <code class="language-plaintext highlighter-rouge">pvresize</code> and <code class="language-plaintext highlighter-rouge">lvresize</code> commands mentioned at the second reference link.</p>
 
-<p>CTs are less common, so let's see an example. Create a CT with a 3 GB disk:</p>
+<p>CTs are less common than VMs, so let's see an example. Create a CT with a 3 GB disk:</p>
 
 <p><img src="/assets/images/pve_storage_monitoring_04_resize_ct.png" alt="CT with 3GB image" /></p>
 
-<p>We may view disk fulness in the CLI like so:</p>
+<p>We may check disk fullness from the CLI like so:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@h3:~# pct list
 VMID       Status     Lock         Name
@@ -425,11 +425,35 @@ rootfs lvm_sanmox:vm-102-disk-0 3.0G 582.9M  2.2G 19.1 /
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>qm resize &lt;vmid&gt; &lt;disk&gt; &lt;size&gt; 
 </code></pre></div></div>
 
+<p>In the UI, pick a disk and choose <code class="language-plaintext highlighter-rouge">Resize</code> in <code class="language-plaintext highlighter-rouge">Disk Action</code> commands.</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_10_pve_vm_disk_action.png" alt="PVE VM disk action - Resize" /></p>
+
 <p>Linux VMs should see the new capacity right away. See the reference link for the Windows steps.</p>
 
-<p>The main requirement is we need to notice it's required. With ample space available on shared LVM disks, one could easily auto-grow disks that are running out of capacity.</p>
+<p>The main requirement is we need to be able to learn that resizing may be needed. With ample space available on shared LVM disks, one could easily auto-grow disks that are running out of capacity. But in the worst case we could make shared LVM volumes "auto-run-out-capacity" this way.</p>
 
-<p>It is better, though, to enlarge VM and CT disks when it's justified and necessary, and not simply because it's possible.</p>
+<p>It is much better to enlarge VM and CT disks when it's justified and necessary and not simply because it's possible. While doing that we may want to consider balancing capacity and performance (especially on HDD-based shared LVM disks) as well. Sometimes it's appropriate to simply expand a volume, and sometimes it's better to move the VM/CT to another datastore and expand it there.</p>
+
+<p>The same <code class="language-plaintext highlighter-rouge">Volume Action</code> (for CTs; it's <code class="language-plaintext highlighter-rouge">Disk Action</code> for VMs) button has the <code class="language-plaintext highlighter-rouge">Move Storage</code> feature that lets you move a disk to another (block) datastore.</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_09_pve_vm_storage_move.png" alt="PVE - Move CT or VM disk to another datastore" /></p>
+
+<p>This is sequential IO and E-Series handles it well. The need to do this offline is the main inconvenience and "cost" of these operations. Other than that, many TBs can be easily shuffled around in an afternoon even without storage-side offload.</p>
+
+<p>To kick tires on that, I moved a standard (default options) 8GB VM disk from shared LVM to local (SSD) and then back to shared LVM (on SANtricity).</p>
+
+<p>The blue line shows the movement of the 8GB disk to local datastore. The orange-ish is the movement back to shred LVM. That IO peaked around 800 MB/s and was done in seconds (10 seconds at 800 MB/s).</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_11_pve_vm_disk_move_peak.png" alt="PVE VM disk move storage peak" /></p>
+
+<p>The task itself took two minutes, due to some processing on PVE node. That may have been discard-on-move (to re-thin) - I haven't investigated because it wasn't significant enough.</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_12_pve_vm_disk_move_task.png" alt="PVE VM disk move storage duration" /></p>
+
+<p>This low-rate write churn was also obvious in SANtricity, but it's almost negligible and we could move dozens of disks in parallel on SSD-based LVMs without this causing impact. (I have write cache disabled on the array to avoid getting cache-assisted performance results.)</p>
+
+<p><img src="/assets/images/pve_storage_monitoring_13_pve_vm_disk_move_duration.png" alt="PVE VM disk move storage throughput" /></p>
 
 <h2 id="conclusion">Conclusion</h2>
 
