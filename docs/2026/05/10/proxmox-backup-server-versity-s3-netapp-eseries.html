@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          6 minute read
+          9 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#deploy-backup-restore">Deploy, backup, restore</a></li><li><a href="#side-notes">Side notes</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-backup-verify-restore-test">Appendix A: Backup, verify, restore test</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#deploy-backup-restore">Deploy, backup, restore</a></li><li><a href="#side-notes">Side notes</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-backup-verify-restore-test">Appendix A: Backup, verify, restore test</a></li><li><a href="#appendix-b-configuration-and-disk-space-management">Appendix B: Configuration and disk space management</a></li></ul>
             </nav>
           </aside>
         
@@ -261,21 +261,33 @@
 
 <p><img src="/assets/images/pbs_s3_backup_00_add_pbs_datastore.png" alt="PBS with 2 backends - datastore and S3" /></p>
 
-<p>This is an VGW S3 Endpoint in PBS 4.2.0 settings. Notice I use <code class="language-plaintext highlighter-rouge">/tmp/</code> as my temporary directory, which should be some more persistent path.</p>
+<p>The endpoint:</p>
+
+<p><img src="/assets/images/pbs_s3_backup_14_s3_endpoint.png" alt="PBS S3 Endpoint" /></p>
+
+<p>This is a VGW S3 Endpoint in PBS 4.2.0 settings.</p>
+
+<p>Notice that, in datastore (not S3 endpoint) settings, I used <code class="language-plaintext highlighter-rouge">/tmp/</code> as my temporary directory, which should be configured to a persistent path (I just didn't want that to occupy my disk space after these tests).</p>
 
 <p><img src="/assets/images/pbs_s3_backup_01_pbs_s3_datastore.png" alt="VGW in PBS 4.2.0" /></p>
+
+<p>This - <code class="language-plaintext highlighter-rouge">Local Cache</code> - is the place where you should pick a persistent path for S3 cache. It doesn't have to be large or very fast (it just has to be faster than S3) - see the PBS documentation for more.</p>
+
+<p><img src="/assets/images/pbs_s3_backup_15_s3_datastore_cache.png" alt="S3 datastore cache" /></p>
 
 <p>That bucket, <code class="language-plaintext highlighter-rouge">pbs</code>, viewed in the Versity UI, initially holds just several objects generated when configuring it.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_02_vgw_s3_bucket.png" alt="Versity S3 Gateway UI with a few of the PBS bucket pbs" /></p>
 
-<p>The same VGW instance is used to host a bucket for Velero (used to backup E-Series CSI data), so you can consolidate your Kubernetes and PVE backups on the same S3 storage.</p>
+<p>The same VGW instance is used to host a bucket for Velero (used to backup E-Series CSI data), so you can consolidate your Kubernetes and PVE backups on the same S3 storage instance.</p>
 
 <p>An LXC container has been created on a SANtricity LVM device for the purpose of backup/restore testing.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_03_ct_on_sanmox_datastore.png" alt="CT101 for backup/restore testing" /></p>
 
-<p>The first backup to S3 was taken with the container running (PVE handles that easily) and it went smoothly, comparable to backing up to a standard PBS datastore on ZFS (but remember that S3 uses temporary directory in PBS to store data, so traditional filesystem datastores may be more robust).</p>
+<p>In the case you wonder why this storage type is <code class="language-plaintext highlighter-rouge">lvm_sanmox</code> - the reason is that's my basic <a href="/2026/03/31/proxmox-plugin-netapp-eseries-santricity.html">plugin for shared LVM storage on NetApp E-Series</a>. At present, it's virtually identical to built-in shared LVM storage type. See the post for more.</p>
+
+<p>The first backup to S3 was taken with the container running (PVE handles that easily) and it went smoothly. It was comparable to backing up to a standard PBS datastore on ZFS.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_04_ct_backup_to_s3.png" alt="Backup from SANtricity-backed LVM to SANtricity-backed S3" /></p>
 
@@ -283,7 +295,9 @@
 
 <p><img src="/assets/images/pbs_s3_backup_05_ct_backup_data_in_vgw_bucket.png" alt="VGW bucket with PBS data" /></p>
 
-<p>I didn't RTFM to see if object versioning (which I had enabled on VGW) would be any useful. On the other hand, note that on VGW, object versioning is still experimental, and requires a separate "versioning" path (in addition to data path) when starting VGW service.</p>
+<p>I only glanced over the PBS manual to see if object versioning (which I had enabled on VGW) would be any useful - it seems not, apart from DIY approaches to recover overwritten objects. On the other hand, note that on VGW, object versioning is still experimental, and requires a separate "versioning" path (in addition to data path) when starting VGW service.</p>
+
+<p>So, in any event, this particular combination isn't something very reliable as far as Object Lock is concerned - StorageGRID SDS in VMs running on a stand-alone PVE node is a better way if you need reliable and secure S3 SDS.</p>
 
 <p>Then I enabled and executed data verification for that backup job, which was successful.</p>
 
@@ -293,11 +307,11 @@
 
 <p><img src="/assets/images/pbs_s3_backup_07_ct_backup_data_in_pbs.png" alt="Container data in PBS S3 datastore pane" /></p>
 
-<p>The same in a larger view, showing job verification was successful and that 500 MB container disk backup file was there.</p>
+<p>The same in a larger view, showing job verification was successful and that a backed-up 500 MB container disk was there.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_08_ct_backup_data_in_pbs_ui_large.png" alt="Data in PBS S3 Web UI" /></p>
 
-<p>In S3 object store, backup data chunks are stored in the chunks subdirectories (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;/&lt;s3_endpoint&gt;/.chunks/[0000-ffff]</code>).</p>
+<p>In the S3 object store, backup data chunks are stored in the chunks subdirectories (<code class="language-plaintext highlighter-rouge">&lt;bucket&gt;/&lt;s3_endpoint&gt;/.chunks/[0000-ffff]</code>).</p>
 
 <p><img src="/assets/images/pbs_s3_backup_12_versity_chunks.png" alt="Chunk data in VGW UI" /></p>
 
@@ -309,21 +323,46 @@
 
 <p><img src="/assets/images/pbs_s3_backup_10_ct_restore_ok.png" alt="PBS restore OK" /></p>
 
-<p>One thing I had forgotten, and should mention it, is that it's possible to restore <em>individual</em> files and/or directories.</p>
+<p>One thing I had forgotten, but I should mention, is that it's possible to restore <em>individual</em> files and/or directories.</p>
 
 <p><img src="/assets/images/pbs_s3_backup_11_ct_file_level_restore_ok.png" alt="File-level restore" /></p>
 
-<p>That's done by downloading selected file(s) and/or directories. Very nice!</p>
+<p>That's done by downloading selected file(s) and/or directories. Or, from the CLI, you can mount - assuming you have the permissions - a backup with FUSE, and use <code class="language-plaintext highlighter-rouge">cp</code> to copy what you need. Very nice!</p>
 
 <h2 id="side-notes">Side notes</h2>
 
-<p>I initially had glitches resulting from trying to serve S3 over HTTP (so that I can avoid TLS). Maybe it was that, or the funny default service port that VGW uses (7070).</p>
+<p>I initially had issues resulting from trying to serve S3 over HTTP (so that I can avoid setting up TLS).</p>
 
-<p>After switching to HTTPS and registering the certificate fingerprint with PBS (in S3 endpoint configuration), everything worked fine.</p>
+<p>Annoyingly, PBS 4.2 does not HTTP. After switching to HTTPS and registering the certificate fingerprint with PBS (in PBS'es S3 Endpoint configuration), everything worked fine.</p>
+
+<p>The other thing - mentioned above - is that you shouldn't use a non-persistent directory for S3 cache. It's really a bug in PBS (missing read-only cache should be simply re-initialized in the configured directory), but regardless - that doesn't work and PBS stumbles.</p>
+
+<p><img src="/assets/images/pbs_s3_backup_13_s3_datastore_cache.png" alt="PBS with missing S3 cache" /></p>
+
+<p>It's ludicrous that a missing read-only cache can down a data store, but they will probably get it fixed once paying users create enough support issues. (I do agree one shouldn't pick <code class="language-plaintext highlighter-rouge">/tmp/</code> for cache, but that's not a good excuse - I could lose the underlying local cache disk on PBS and shouldn't be able to lose access to S3 backups, yes?)</p>
+
+<p>As far as I could tell my S3 <em>was</em> available. It was just that <code class="language-plaintext highlighter-rouge">Local Cache</code> that was cleared after a PBS VM reboot.</p>
+
+<p><img src="/assets/images/pbs_s3_backup_16_s3_datastore_down.png" alt="PBS - S3 cache down means S3 datastore down" /></p>
+
+<p>There's no obvious way to "reset" the cache setting and re-initialize local cache. Perhaps it's possible to remove and then re-use existing S3 bucket/datastore, but I wasn't curious enough to investigate further.</p>
+
+<p>It's great that PBS S3 repos support push- and pull-style jobs:</p>
+
+<ul>
+  <li>Go to S3 repository</li>
+  <li>Add a push or pull job; these can be set up with local or remote datastores</li>
+</ul>
+
+<p><img src="/assets/images/pbs_s3_backup_17_s3_datastore_pull_push.png" alt="PBS S3 push-pull" /></p>
+
+<p>In this screenshot I use the ZFS-backed <code class="language-plaintext highlighter-rouge">datastore</code> datastore to replicate to the VGW S3 datastore. Very convenient feature!</p>
+
+<p>I had both the ZFS and S3 datastores on SSDs so I did not notice significant difference in performance, but if you were to have S3 backed by NL-SAS HDDs and a ZFS or XFS datastore on SSDs, you could pull or push older backups from filesystem-backed datastore to S3 and keep only recent ones on SSDs.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>PBS now has official support for S3 backup stores.</p>
+<p>PBS 4.2.0 has <em>official</em> support for S3 backup stores. Before, S3 datastores were a technology preview.</p>
 
 <p>E-Series has all-flash, hybrid and NL-SAS models that are all suitable for PBS. As discussed in the first PBS post, ZFS (or other) on E-Series NL-SAS is the simplest and least risky option. If you want to use S3, though, you can. It may be easier for those who backup, or replicate backup data, to remote locations and want to protect backups with S3 Object Lock.</p>
 
@@ -407,6 +446,75 @@ merging backed-up and given configuration..
 TASK OK
 </code></pre></div></div>
 
+<h2 id="appendix-b-configuration-and-disk-space-management">Appendix B: Configuration and disk space management</h2>
+
+<p>My S3 Endpoint in PBS:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pbs:~# <span class="nb">cat</span> /etc/proxmox-backup/s3.cfg
+s3-endpoint: versity
+        access-key admin
+        endpoint 10.1.2.3
+        fingerprint 64:EC:69:99:E9:E6:7F:14:70:CD:E1:BA:94:E3:14:88:3D:78:E6:42:85:C5:61:AB:E2:4E:81:06:B6:B8:6E:AD
+        path-style <span class="nb">true
+        </span>port 7070
+        provider-quirks delete-objects-via-delete-object
+        region us-east-1
+        secret-key kma^2
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">Local Cache</code> is not shown because the above is S3 Endpoint configuration and local cache is a property of a datastore.</p>
+
+<p>The PBS docs are detailed enough by now, but I want to mention something related to disk capacity monitoring.</p>
+
+<ul>
+  <li>ZFS doesn't make it easy, while XFS and ext4 do</li>
+  <li>I added a small datastore (XFS-formatted <code class="language-plaintext highlighter-rouge">/dev/sdc</code>) to compare</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pbs:~# proxmox-backup-manager disk list
+┌──────┬─────────┬─────┬───────────┬─────────────┬───────────────┬─────────┬────────┐
+│ name │ used    │ gpt │ disk-type │        size │ model         │ wearout │ status │
+╞══════╪═════════╪═════╪═══════════╪═════════════╪═══════════════╪═════════╪════════╡
+│ sda  │ lvm     │   1 │ hdd       │ 34359738368 │ QEMU_HARDDISK │       - │ passed │
+├──────┼─────────┼─────┼───────────┼─────────────┼───────────────┼─────────┼────────┤
+│ sdb  │ zfs     │   1 │ hdd       │ 10737418240 │ QEMU_HARDDISK │       - │ passed │
+├──────┼─────────┼─────┼───────────┼─────────────┼───────────────┼─────────┼────────┤
+│ sdc  │ mounted │   0 │ hdd       │  2147483648 │ QEMU_HARDDISK │       - │ passed │
+└──────┴─────────┴─────┴───────────┴─────────────┴───────────────┴─────────┴────────┘
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">qm agent 100 get-fsinfo</code> will get me filesystem utilization for all "regular" filesystems including the second, XFS-backed filesystem, but not ZFS (pool). I know there are easy ways to get ZFS pool information out, but considering that PBS data is pre-compressed at source, and deduplication is usually not used, it's an anecdote on how the ZFS stack requires relatively more management compared to regular filesystems.</p>
+
+<p>The XFS entry in <code class="language-plaintext highlighter-rouge">get-fsinfo</code> output:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"disk"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"bus"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"bus-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scsi"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/dev/sdc"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"pci-controller"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"bus"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"domain"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"function"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"slot"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"serial"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0QEMU_QEMU_HARDDISK_drive-scsi2"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"target"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"unit"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"mountpoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/xfs"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sdc"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"total-bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">2080374784</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"total-bytes-privileged"</span><span class="p">:</span><span class="w"> </span><span class="mi">2080374784</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xfs"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"used-bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">109461504</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>If you use XFS or ext4, there's no need to figure out another way.</p>
+
         
       </section>
 
@@ -489,7 +597,7 @@ TASK OK
       <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html" class="pagination--pager" title="Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/05/11/proxmox-netapp-eseries-santricity-storage-monitoring.html" class="pagination--pager" title="Storage monitoring in Proxmox PVE and NetApp E-Series environments">Next</a>
     
   </nav>
 
@@ -506,6 +614,54 @@ TASK OK
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/11/proxmox-netapp-eseries-santricity-storage-monitoring.html" rel="permalink">Storage monitoring in Proxmox PVE and NetApp E-Series environments
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-11T00:00:00+08:00">2026-05-11 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          11 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Monitor disk space in datastores, VMs and CTs on shared LVM stores on E-Series SANtricity systems
+</p>
+  </article>
+</div>
+
     
       
       
@@ -646,54 +802,6 @@ TASK OK
 
 
     <p class="archive__item-excerpt" itemprop="description">Getting started with single node Qdrant database, an E-Series CSI driver and Velero CSI backup
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/04/28/ubuntu-26-resolute-raccoon-eseries-nvme-roce.html" rel="permalink">Ubuntu 26.04 LTS NVMe/RoCE with NetApp E-Series SANtricity
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-04-28T00:00:00+08:00">2026-04-28 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          12 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Ubuntu 26.04 LTS NVMe/RoCE without DOCA with NetApp E-Series (plus DM-MP and VDO)
 </p>
   </article>
 </div>

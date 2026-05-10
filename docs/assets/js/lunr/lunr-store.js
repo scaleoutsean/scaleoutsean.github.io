@@ -2381,6 +2381,12 @@ var store = [{
         "url": "/2026/05/10/proxmox-backup-server-versity-s3-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Storage monitoring in Proxmox PVE and NetApp E-Series environments",
+        "excerpt":"Introduction E-Series (SANtricity) systems are commonly referred to as block storage. Which they are, except there’s nothing that prevents you from deploying Linux NFS servers, S3 and other storage services backed by SANtricity block storage. I blogged about that here, so I won’t repeat the same points. Deploying does require...","categories": ["storage","e-series","virtualization","monitoring"],
+        "tags": ["e-series","netapp","proxmox","epa"],
+        "url": "/2026/05/11/proxmox-netapp-eseries-santricity-storage-monitoring.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2394,7 +2400,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series 2026-05-10 00:00 6 minute read Back both PBS 4.2+ block and S3 datastores with NetApp E-Series Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI 2026-05-01 00:00 18 minute read Cloud-Native PostgreSQL with NetApp SANtricity and SolidFire CSI (VolumeSnapshots) Velero CSI...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Storage monitoring in Proxmox PVE and NetApp E-Series environments 2026-05-11 00:00 11 minute read Monitor disk space in datastores, VMs and CTs on shared LVM stores on E-Series SANtricity systems Proxmox Backup Server 4.2, Versity S3 Gateway and NetApp E-Series 2026-05-10 00:00 9 minute read Back both PBS 4.2+ block...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
