@@ -775,7 +775,7 @@ var store = [{
       },{
         "title": "Milvus with SolidFire and E-Series",
         "excerpt":"WTF is Milvus Storage-related stuff Meta storage (etcd) Logs and queues Object store Storage efficiency High availability of block and S3 storage services Aggregate performance on E-Series WTF is Milvus Milvus is a vector database built for scalable similarity search. Storage-related stuff To get Milvus up and running I first...","categories": ["analytics","storage"],
-        "tags": ["lnn","milvus","netapp","search","storage","vector database"],
+        "tags": ["lnn","milvus","netapp","search","storage","vector-database"],
         "url": "/2022/07/07/milvus-with-solidfire-e-series.html",
         "teaser": null
       },{
@@ -2960,7 +2960,7 @@ var store = [{
     "title": "storage",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/storage/"
   },{
-    "title": "vector database",
+    "title": "vector-database",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/vector-database/"
   },{
     "title": "cassandra",
@@ -3937,9 +3937,6 @@ var store = [{
   },{
     "title": "vdo",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/vdo/"
-  },{
-    "title": "vector-database",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vector-database/"
   },{
     "title": "embeddings",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/embeddings/"
