@@ -2393,6 +2393,12 @@ var store = [{
         "url": "/2026/05/12/microk8s-kubernetes-netapp-eseries-santricity-csi.html",
         "teaser": null
       },{
+        "title": "Kasten 8, SANtricity CSI 1 and NetApp E-Series",
+        "excerpt":"Introduction Just like with IBM Block CSI with SANtricity patch, the first “warm-up” backup test for SANtricity CSI would be a simple filesystem backup test that doesn’t require snapshots and clones. Since I have SANtricity CSI deployed on MicroK8s, I thought to try Kasten right away. I started blogging about...","categories": ["storage","e-series","kubernetes"],
+        "tags": ["netapp","csi","microk8s","kasten","veeam"],
+        "url": "/2026/05/12/veeam-kasten-santricity-csi-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2406,7 +2412,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ubuntu MicroK8s with SANtricity CSI and NetApp E-Series 2026-05-12 00:00 9 minute read Introduction Storage monitoring in Proxmox PVE and NetApp E-Series environments 2026-05-11 00:00 13 minute read Monitor disk space in datastores, VMs and CTs on shared LVM stores on E-Series SANtricity systems Proxmox Backup Server 4.2, Versity S3...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 2 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam Ubuntu MicroK8s with SANtricity CSI and NetApp E-Series 2026-05-12 00:00 9 minute read Introduction Storage monitoring in Proxmox PVE and NetApp E-Series environments 2026-05-11 00:00 13 minute...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
