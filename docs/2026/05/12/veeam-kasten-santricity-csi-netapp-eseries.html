@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          3 minute read
         
       </span>
     
@@ -245,13 +245,13 @@
 
 <p>I didn't run the usual pre-flight check because it's such a simple situation. Singleton MicroK8s running a stable (not even "latest", because v1.36 came out before Kasten 8.5.8) version - what could possibly go wrong?</p>
 
-<p>The first issue was several pods were crashing. After some unsuccessful troubleshooting I realized the host-path Storage Class plugin was default Storage Class - the same as my SANtricity CSI. I uninstalled Kasten, deleted the host-path Storage Class and re-installed Kasten. Same problem. But at least I could see Kasten was using my storage class without any glitches. Yay!</p>
+<p>The first issue was several pods were crashing. After some unsuccessful troubleshooting I realized the host-path Storage Class plugin was default Storage Class - the same as my SANtricity CSI (that is, I had two default SCs without knowing). I uninstalled Kasten, deleted the host-path Storage Class and re-installed Kasten. Same problem. But at least I could see Kasten was using my storage class without any glitches. Yay!</p>
 
 <p><img src="/assets/images/kasten_santricity_csi_00_install.png" alt="Installation" /></p>
 
-<p>The second time around I spotted an error in one of the containers was "Failed to change state owner… mkdir //mnt/k10state/kasten-io/: permission denied". Okay, so it seems to run as a non-root UID/GID and that doesn't work. I changed all permissions from a sidecar container. Then I had a new problem.</p>
+<p>The second time around I spotted an error in one of the containers was "Failed to change state owner… mkdir //mnt/k10state/kasten-io/: permission denied". Okay, so it seems to run as a non-root UID/GID and that doesn't work. I changed ownership of all those volumes from a sidecar container. I thought that was it, but then I hit another problem.</p>
 
-<p>It seemed as if some Kubernetes components were missing. This was purely speculative, but as I mentioned in the previous post, that's not unreasonable to think if you work with MicroK8s or any slim Kubernetes distribution. I installed some of the extra stuff and resumed from this point.</p>
+<p>It seemed as if some Kubernetes components were missing. This was purely speculative, but as I mentioned in the previous post, that's hardly an unreasonable thought if you work with MicroK8s or any slim Kubernetes distribution. I enabled some of the extra stuff (ingress, prometheus) that was related to the failing Kasten pods and restarted those pods.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>microk8s status
 microk8s is running
@@ -271,7 +271,7 @@ addons:
     observability        <span class="c"># (core) A lightweight observability stack for logs, traces and metrics</span>
 </code></pre></div></div>
 
-<p>That didn't help either. I uninstalled again, and this time decided to run Kasten's pre-flight check. Lo and behold…</p>
+<p>That didn't help either. I uninstalled Kasten again. This time I decided to run Kasten's pre-flight check before I install again. Lo and behold…</p>
 
 <p><img src="/assets/images/kasten_santricity_csi_01_preflight_check.png" alt="Kasten K10 pre-flight check" /></p>
 
@@ -282,7 +282,7 @@ addons:
   <li>(2) Kubernetes v1.33 is the highest supported version?</li>
 </ul>
 
-<p>That's unbelievable! It's been over a year since <a href="https://kubernetes.io/blog/2025/04/23/kubernetes-v1-33-release/">v1.33</a> came out.</p>
+<p>That's unbelievable! It's been <em>over a year</em> since <a href="https://kubernetes.io/blog/2025/04/23/kubernetes-v1-33-release/">v1.33</a> came out!</p>
 
 <p>That's disappointing. Kasten 8.5.8 was released almost 370 days after Kubernetes v1.33.</p>
 
@@ -290,10 +290,10 @@ addons:
 
 <ul>
   <li>SANtricity CSI was recognized</li>
-  <li>One error does appear, but that's related to the missing VolumeSnapshot CRDs which are indeed not installed <em>and</em> the reason for that is there's no use for that since SANtricity CSI does not yet support Volume Snapshots or Linked Clones.</li>
+  <li>One error did appear in that section, but that's related to the missing VolumeSnapshot CRDs which were indeed not installed <em>and</em> the reason for that was there's no use for them - SANtricity CSI does not yet support Volume Snapshots or Clones.</li>
 </ul>
 
-<p>So nothing can be tested at all.</p>
+<p>So, nothing can be tested at all.</p>
 
 <h2 id="part-two-tbc">Part two: TBC</h2>
 
@@ -301,11 +301,11 @@ addons:
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This failed miserThis isn't , Kasten - ably. I should have checked TFM before trying, but being one year behind is totally weird. It's also weird that even v1.35 - released <strong>last year</strong> - is not supported in mid-May. You're supposed to keep up, Kasten!</p>
+<p>This failed miserably. I should have checked TFM before trying, but being more than one year behind is totally weird. It's also weird that even v1.35 - which was released <strong>last year</strong> - is not supported in mid-May. You're supposed to keep up, Kasten!</p>
 
-<p>I'm going to post this now, and continue later, when I either install an ageing Kubernetes version or Kasten wakes up from their winter (and spring) hibernation.</p>
+<p>I'm going to post this now, and update this post at a later time, when I either install an ageing Kubernetes version or Kasten wakes up from their winter (and spring) hibernation.</p>
 
-<p>In the meantime, it wouldn't hurt to implement snapshots and clones so that more than just filesystem backup can be demonstrated.</p>
+<p>In the meantime, it wouldn't hurt to implement snapshots and clones in SANtricity CSI, so that more than just filesystem backup can be demonstrated.</p>
 
         
       </section>
