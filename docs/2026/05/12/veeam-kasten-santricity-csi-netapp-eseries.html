@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          8 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#part-one-santricity-on-microk8s">Part one: SANtricity on MicroK8s</a></li><li><a href="#part-two-tbc">Part two: TBC</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#part-one-kasten-with-microk8s-and-santricity">Part one: Kasten with MicroK8s and SANtricity</a></li><li><a href="#part-two-kasten-with-santricity-and-vanilla-kubernetes">Part two: Kasten with SANtricity and vanilla Kubernetes</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -237,7 +237,7 @@
 
 <p>Since I have SANtricity CSI deployed on MicroK8s, I thought to try Kasten right away. I started blogging about Kasten years ago, and like it very much.</p>
 
-<h2 id="part-one-santricity-on-microk8s">Part one: SANtricity on MicroK8s</h2>
+<h2 id="part-one-kasten-with-microk8s-and-santricity">Part one: Kasten with MicroK8s and SANtricity</h2>
 
 <p>Latest &amp; greatest version 8.5.8 was released in late April, 2026. Perfect! I have MicroK8s v1.3.5. Let's go!</p>
 
@@ -293,19 +293,91 @@ addons:
   <li>One error did appear in that section, but that's related to the missing VolumeSnapshot CRDs which were indeed not installed <em>and</em> the reason for that was there's no use for them - SANtricity CSI does not yet support Volume Snapshots or Clones.</li>
 </ul>
 
-<p>So, nothing can be tested at all.</p>
-
-<h2 id="part-two-tbc">Part two: TBC</h2>
-
-<p>TODO</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>This failed miserably. I should have checked TFM before trying, but being more than one year behind is totally weird. It's also weird that even v1.35 - which was released <strong>last year</strong> - is not supported in mid-May. You're supposed to keep up, Kasten!</p>
+<p>So, nothing can be tested at all. This failed miserably. I should have checked TFM before trying, but being more than one year behind is totally weird. It's also weird that even v1.35 - which was released <strong>last year</strong> - is not supported in mid-May. You're supposed to keep up, Kasten!</p>
 
 <p>I'm going to post this now, and update this post at a later time, when I either install an ageing Kubernetes version or Kasten wakes up from their winter (and spring) hibernation.</p>
 
 <p>In the meantime, it wouldn't hurt to implement snapshots and clones in SANtricity CSI, so that more than just filesystem backup can be demonstrated.</p>
+
+<h2 id="part-two-kasten-with-santricity-and-vanilla-kubernetes">Part two: Kasten with SANtricity and vanilla Kubernetes</h2>
+
+<p>I realized the other cluster, which I featured in recent posts on IBM Block CSI with SANtricity patch, runs vanilla Kubernetes v1.32. Good to know.</p>
+
+<p>Since SANtricity CSI won't have snapshots <em>that</em> soon, I thought I'll wrap up Kasten testing with IBM Block CSI with SANtricity patch instead. There I created a new namespace with a SANtricity-backed PVC and a pod and protected it with a snapshot and backup policy.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_03_ibm_block_csi.png" alt="Setup with IBM Block CSI and vanilla Kubernetes" /></p>
+
+<p>Secondly, I had that Versity S3 Gateway (used in recent posts) around, so I configured that as my S3 backup repository (S3 is one of the destinations Kasten can "backup" stuff to).</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_04_versity_s3.png" alt="Kasten with Versity S3 Gateway" /></p>
+
+<p>To set that up, I simply created a bucket (<code class="language-plaintext highlighter-rouge">kasten</code>), disabled TLS validation to overcome my snake-oil certificates, and this basic setup just worked.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_07_kasten_versity_s3_gateway.png" alt="VGW configuration for Kasten" /></p>
+
+<p>What's relevant to SANtricity or IBM Block CSI with SANtricity patch here?</p>
+
+<p>First, the driver fully passes Kasten's pre-flight checks. Initially it did not, so there was a bug in CSI driver ID due to this being a patched IBM CSI driver, and that was fixed. Kasten nicely defaulted to using the default SC based on IBM Block CSI with SANtricity patches, so all Katen K10 volumes were on E-Series.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_06_kasten_ibm_block_csi_validation.png" alt="Kasten 8.5.8 with IBM Block CSI with SANtricity patch" /></p>
+
+<p>Second, it may help you if you create (and use) a custom Storage Class just for backups (from SANtricity Linked Clones), so that - after backup to S3 is done - the Linked Clone volume is dropped. This applies to all CSI - I <a href="/2023/09/15/velero-csi-snapshot-data-movement-with-netapp-solidfire.html">used that with SolidFire as well</a>, because it can have up to 32 snapshots per volume - but SANtricity is <a href="/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html">much worse</a> so I'd say this isn't optional.</p>
+
+<p>When configuring Export jobs, go to advanced settings and add such a custom Storage Class (the main thing is, its reclaim policy should be "Delete").</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_08_kasten_custom_sc_for_backup.png" alt="Custom SC" /></p>
+
+<p>One nice thing you can do is specify a non-default prefix to those volumes, so that - despite the horrendous naming strings - you can still tell Kasten-generated Read-Only Linked Clones from regular volumes and non-Kasten-generated Linked Clones.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_12_kasten_sc_rolc.png" alt="Custom SC prefix" /></p>
+
+<p>And thirdly, I did discover a CSI bug that I did not see with Velero - Linked Clones weren't getting deleted, and that was fixed.</p>
+
+<p>As snapshots are taken and backups (to S3) exported,</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_11_kasten_vgw_data.png" alt="Kasten data in VGW bucket" /></p>
+
+<p>In Kasten UI, we can see new restore points. Some say "Snapshot", others "Export". It's working!</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_05_restore_points.png" alt="Kasten restore points" /></p>
+
+<p>You can right-click on those and run validation.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_10_kasten_validation.png" alt="Kasten validation" /></p>
+
+<p>I did that multiple times (on different items) and didn't have any issues. You can see the top item here is a successfully passed validation run.</p>
+
+<p><img src="/assets/images/kasten_santricity_csi_09_kasten_actions.png" alt="Kasten action log" /></p>
+
+<p>What's more, at the top of of that screenshot - just below "Action Durations" - you can see almost 200 actions have completed by then, across snapshots, backups, restores and validation.</p>
+
+<p>Restore actions can be tricky:</p>
+
+<ul>
+  <li>Early on, they were succeeding (according to Kasten), but not really, because they were happening on Linked Clones. Not the right place! Restores should go to a <strong>new</strong> volume, not happen in-pace.</li>
+  <li>There are different ways to restore - from a snapshot, from an export (backup to S3, here), in place, etc. Some of those may be suitable for only some use cases. I think for SANtricity - due to the way snapshots work - the way to go is (a) keep just one snapshot per volume, and ship everything else to S3 and immediately delete ephemeral Linked Clone (already done by Kasten, but you need to create those policies like that)</li>
+</ul>
+
+<p>The whole thing (Kubernetes backup and restore) is actually not very simple once you add snapshots to the mix. They are efficient, but not native to Kubernetes. Kubernetes has no concept of in-place snapshot restore, for example. Given that SANtricity snapshots aren't particularly good to begin with, that makes it easier to stick to the established pattern of making copies to S3; snapshots (and thin/linked clones) are helpful, but used very sparingly.</p>
+
+<p>As you can see in the VGW data screenshot, Kopia is used to copy data to S3, so it has to re-read all data chunks every time to export (backup) data, but it doesn't use tiny chunks and SANtricity is very good with sequential workloads, so this is all good stuff.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Kasten 8.5 works well (in Part Two at least). Compared to 3-4 years ago, it does feel more complicated. Of course, it also works better for all those uses who needed those extra capabilities.</p>
+
+<p>I set out to evaluate SANtricity CSI with Kasten, but ended up evaluating the other CSI driver for E-Series. That was fortunate because I discovered two-three code bugs and several documentation bugs. I think IBM Block CSI with SANtricity Patch for upstream 1.13.2 is now "finished" (until next time IBM updates their Block CSI). I also realized that IBM Block CSI does not support Volume Group Snapshots, so I won't try to implement Consistency Groups in the patch, which is what I thought I'd do.</p>
+
+<p>The SANtricity patch leverages <code class="language-plaintext highlighter-rouge">santricity-client</code> (my Python client library for SANtricity) and that library may add some extra features as we wait for IBM to add Volume Group snapshots, it's just that I won't rush to include them into the CSI driver. The Python client library would benefit from:</p>
+
+<ul>
+  <li>Volume Copy wrapper/automation - this is for thick (thicc?) copy-volumes, not thin (aka linked) clone volumes. Volume Copy is actually <a href="https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/">a thing in CSI as well</a>, it's just that <code class="language-plaintext highlighter-rouge">dataSource: PersistentVolumeClaim</code> is relatively less used by the average user. Still, we want this for non-CSI uses as well, so we want it in the library</li>
+  <li>Read-Write Linked Clones - these are not yet implemented in santricity-client, but also not urgently needed. Read-Only Linked Clones seem to work great for backup-to-S3 and - as I've mentioned earlier - restores should go to a new volume, not a linked clone. But it may be useful for use cases outside of CSI, so that's on my to-do list as well</li>
+</ul>
+
+<p>Block volume mode is something that would be very nice to have and purely a CSI feature. IBM Block CSI already supports it, but I'll look into that after next IBM's release - in this release (1.13.2) SANtricity added support for snapshots and linked clones - it's a big step forward and what it possible to use Kasten this way.</p>
+
+<p>SANtricity CSI doesn't support CSI snapshots yet, but that's on my to-do list and with IBM Block CSI with SANtricity patch currently (for practical purposes) feature-complete, I'll probably spend time on SANtricity CSI this month.</p>
 
         
       </section>
