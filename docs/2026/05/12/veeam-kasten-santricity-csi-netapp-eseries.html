@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -333,6 +333,19 @@ addons:
 
 <p>And thirdly, I did discover a CSI bug that I did not see with Velero - Linked Clones weren't getting deleted, and that was fixed.</p>
 
+<p><code class="language-plaintext highlighter-rouge">demo-kasten-santricity-sc</code> is the custom SC used for backup/cloning (set to <code class="language-plaintext highlighter-rouge">Delete</code> abandoned Linked Clones), with a copy stored in the Github repo for this project. The k10 volume snapshot class was automatically created by Kasten, shadowing your VSC with reclaim changed <code class="language-plaintext highlighter-rouge">Retain</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get sc
+NAME                           PROVISIONER                    RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+demo-kasten-santricity-sc      santricity.block.csi.ibm.com   Delete          Immediate           <span class="nb">false                  </span>26h
+demo-storageclass-santricity   santricity.block.csi.ibm.com   Retain          Immediate           <span class="nb">true                   </span>28h
+
+<span class="nv">$ </span>kubectl get volumesnapshotclass
+NAME                                            DRIVER                         DELETIONPOLICY   AGE
+demo-volumesnapshotclass-santricity             santricity.block.csi.ibm.com   Delete           26h
+k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   Retain           31h
+</code></pre></div></div>
+
 <p>As snapshots are taken and backups (to S3) exported, data shows in the <code class="language-plaintext highlighter-rouge">kasten</code> bucket.</p>
 
 <p><img src="/assets/images/kasten_santricity_csi_11_kasten_vgw_data.png" alt="Kasten data in VGW bucket" /></p>
@@ -360,7 +373,9 @@ addons:
 
 <p>The whole thing (Kubernetes backup and restore) is actually not very simple once you add snapshots to the mix. They are efficient, but not native to Kubernetes. Kubernetes has no concept of in-place snapshot restore, for example. Given that SANtricity snapshots aren't particularly good to begin with, that makes it easier to stick to the established pattern of making copies to S3; snapshots (and thin/linked clones) are helpful, but used very sparingly.</p>
 
-<p>As you can see in the VGW data screenshot, Kopia is used to copy data to S3, so it has to re-read all data chunks every time to export (backup) data, but it doesn't use tiny chunks and SANtricity is very good with sequential workloads, so this is all good stuff.</p>
+<p>As you can see in the VGW data screenshot, Kopia is used to copy data to S3, so it has to re-read all data chunks every time to export (backup) data, but it doesn't read tiny chunks - it's sequential workload and SANtricity is very good with those, so this is all good stuff.</p>
+
+<p>I haven't done much restore testing yet, but knowing that backups pass validation <em>and</em> there's no dependency on "restore from snapshot" working (rather, the way it works is "copy and unpack Kopia backup to a new PVC"), I'd say I don't expect big problems in common restore operations. (It should be possible to manually restore backups from S3 using just the Kopia CLI and <code class="language-plaintext highlighter-rouge">kubectl</code>.)</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
