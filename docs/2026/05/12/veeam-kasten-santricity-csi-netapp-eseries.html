@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -381,7 +381,7 @@ k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   R
 
 <h3 id="restore-a-snapshot">Restore a snapshot</h3>
 
-<p>It seems best to delete all resources within the namespace (including PVC, assuming the PV has <code class="language-plaintext highlighter-rouge">Retain</code> set and your snapshot includes all resources), execute a SANtricity rollback-from-snapshot using a SANtricity CLI or the Web UI, and then use Kasten to restore non-PVC namespace resources and start the application.</p>
+<p>It seems best to delete all non-PVC resources within the namespace, execute a SANtricity rollback-from-snapshot using a SANtricity CLI or the Web UI. Then use Kasten to restore non-PVC namespace resources and start the application.</p>
 
 <p>Using just Kasten, I'd only restore from snapshot to a <em>new</em> namespace.</p>
 
@@ -393,7 +393,7 @@ k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   R
 
 <p>The CSI driver could be improved to fight Kubernetes and restore in place. But that is a bad idea. IBM Block CSI would have to be butchered, getting more bugs and complexity in the process. It's just not how CSI is supposed to work. Even for SANtricity CSI, it'd be an unnecessary overhead and I don't want to add such "features".</p>
 
-<p>And - while we're on this topic - this is why every snapshot should be exported to S3. It's not inefficient and once you have it there, your restore PVC fully from backup, and don't need that extra step by the admin. Then, for smaller PVCs, every snapshot is also available as backup, and for sub-TB PVCs, it becomes convenient enough to just restore from backup and keep array snapshot there just in case that fails, or the PV is very large.</p>
+<p>And - while we're on this topic - this is why every snapshot should be exported to S3. It's not inefficient and once you have it there, your restore PVC fully from backup, and don't need that extra step by the admin. Then, for smaller PVCs, every snapshot is also available as export/backup, and for sub-TB PVCs, it becomes convenient enough to just restore from backup and keep array snapshot there just in case that fails, or the PV is very large.</p>
 
 <h3 id="restore-a-backup">Restore a backup</h3>
 
@@ -422,6 +422,32 @@ k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   R
 <p><img src="/assets/images/kasten_santricity_csi_13_k8s-santricity-report.png" alt="K8s-SANtricity Mapping" /></p>
 
 <p>It does make it easier to figure out those cryptic IBM names, in addition to aiding regular maintenance of both Kubernetes and storage.</p>
+
+<p>For the "restore from snapshot" scenario where we delete namespace resources to clean up everything except PVC, roll-back from latest snapshot using storage API, wait until it's done, and finally complete recovery restoring non-PVC resources in Kasten:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>santricity snapshots list-snapshots
+                                                                                                                      
+  Snapshot Group   Pit Ref                                    Seq <span class="c">#    Timestamp   Created By   Repo Use %   Status   </span>
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  vol1_SG_01       3233343536373839303134323600000000000000       1   1778824596   user                  5   optimal  
+  vol1_SG_01       3233343536373839303134323700000000000000       2   1778825370   user                  5   optimal  
+
+<span class="nv">$ PIT</span><span class="o">=</span><span class="s1">'3233343536373839303134323700000000000000'</span>
+<span class="nv">$ </span>santricity snapshots restore <span class="k">${</span><span class="nv">PIT</span><span class="k">}</span> <span class="se">\</span>
+    <span class="nt">--base-url</span> https://a.santricity.dev:8443/devmgr/v2 <span class="se">\</span>
+    <span class="nt">--username</span> storage <span class="se">\</span>
+    <span class="nt">--password</span> <span class="s2">""</span> <span class="se">\</span>
+    <span class="nt">--no-verify</span>
+Rollback initiated successfully. Result: <span class="s2">"ok"</span>
+</code></pre></div></div>
+
+<p>We just need these 2 steps in the CLI or UI. Remember that SANtricity roll-backs actually copy data, so you need to wait for that to complete because if you resume workload too early, it will not have access to the volume. If your Kasten policy takes snapshots every 60 minutes, it may take a minute to roll back depending on the amount of CoW data.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sleep </span>30<span class="p">;</span> santricity volumes copy-status
+<span class="o">[]</span>
+</code></pre></div></div>
+
+<p>Now we're good to restore the non-PVC resources from Kasten snapshot.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
