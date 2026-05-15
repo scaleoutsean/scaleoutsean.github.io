@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          12 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#part-one-kasten-with-microk8s-and-santricity">Part one: Kasten with MicroK8s and SANtricity</a></li><li><a href="#part-two-kasten-with-santricity-and-vanilla-kubernetes">Part two: Kasten with SANtricity and vanilla Kubernetes</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#part-one-kasten-with-microk8s-and-santricity">Part one: Kasten with MicroK8s and SANtricity</a></li><li><a href="#part-two-kasten-with-santricity-and-vanilla-kubernetes">Part two: Kasten with SANtricity and vanilla Kubernetes</a><ul><li><a href="#restore-a-snapshot">Restore a snapshot</a></li><li><a href="#restore-a-backup">Restore a backup</a></li></ul></li><li><a href="#tools">Tools</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -377,16 +377,56 @@ k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   R
 
 <p>I haven't done much restore testing yet, but knowing that backups pass validation <em>and</em> there's no dependency on "restore from snapshot" working (rather, the way it works is "copy and unpack Kopia backup to a new PVC"), I'd say I don't expect big problems in common restore operations. (It should be possible to manually restore backups from S3 using just the Kopia CLI and <code class="language-plaintext highlighter-rouge">kubectl</code>.)</p>
 
+<p>In brief, this is what works for me:</p>
+
+<h3 id="restore-a-snapshot">Restore a snapshot</h3>
+
+<p>It seems best to delete all resources within the namespace (including PVC, assuming the PV has <code class="language-plaintext highlighter-rouge">Retain</code> set and your snapshot includes all resources), execute a SANtricity rollback-from-snapshot using a SANtricity CLI or the Web UI, and then use Kasten to restore non-PVC namespace resources and start the application.</p>
+
+<p>Using just Kasten, I'd only restore from snapshot to a <em>new</em> namespace.</p>
+
+<p>In the "common-sense" scenario (keep the namespace and even the PVC, and then run restore-from-snapshot in Kasten), one wouldn't <em>have</em> a restorable snapshot unless the PV exists (with a damaged filesystem, or whatever). But snapshot data can't be restored in place here, so that wouldn't help you with in-place restore. There would <em>have to be</em> be a new PVC.</p>
+
+<p>If, alternatively, you destroy a PVC with a damaged filesystem, it still won't be gone because you need <code class="language-plaintext highlighter-rouge">Retain</code> on it. Not having <code class="language-plaintext highlighter-rouge">Retain</code> would also nuke the snapshot which you intend to restore.</p>
+
+<p>So, presently there's no way to work around this - it must be a new volume unless you use that manual step which I think is trivial compared to the complexity of CSI. It's literally one CLI command outside of Kubernetes. The only downside is the command must be executed by a storage admin (against SANtricity API endpoint) and not a Kubernetes user.</p>
+
+<p>The CSI driver could be improved to fight Kubernetes and restore in place. But that is a bad idea. IBM Block CSI would have to be butchered, getting more bugs and complexity in the process. It's just not how CSI is supposed to work. Even for SANtricity CSI, it'd be an unnecessary overhead and I don't want to add such "features".</p>
+
+<p>And - while we're on this topic - this is why every snapshot should be exported to S3. It's not inefficient and once you have it there, your restore PVC fully from backup, and don't need that extra step by the admin. Then, for smaller PVCs, every snapshot is also available as backup, and for sub-TB PVCs, it becomes convenient enough to just restore from backup and keep array snapshot there just in case that fails, or the PV is very large.</p>
+
+<h3 id="restore-a-backup">Restore a backup</h3>
+
+<p>Restore S3 backup: works fine by restoring to a new PVC. I haven't tried advanced options which may be used when PVC remains.</p>
+
+<p>As I've just mentioned in the "restore a snapshot" comments, restoring from a backup is the recommended approach for:</p>
+
+<ul>
+  <li>Self-service approach (no need to have direct admin access to storage)</li>
+  <li>Good for smaller volumes or when storage admin isn't around</li>
+</ul>
+
+<p>The assumption is that every snapshot recovery point is copied to S3, which means there's no difference in RPO between the two approaches - only in RTO. Restore from backup would be slower, but the difference for sub-100 GB volumes wouldn't be significant.</p>
+
+<h2 id="tools">Tools</h2>
+
+<p>It's not like there's a bunch of them but:</p>
+
+<ul>
+  <li>My santricity-client repository has a PVC-to-SANtricity mapping script that maps PVC names to the weird IBM Block CSI "codes". That can help you find orphaned volumes and Linked Clones. You still have to be careful when deleting physical resources because there may be other Kubernetes clusters using the same storage array, or even another CSI in the same Kubernetes cluster (I ran into this as SANtricity CSI used to be deployed as well, and some orphaned PVs were created there; of course, I could not delete them from kubectl after the CSI driver was no longer there)</li>
+  <li>My SANtricity clients (PowerShell, Python) can help you perform simple workflows faster or create CLI reports like the sample Kubernetes script</li>
+</ul>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>Kasten 8.5 works well (in Part Two at least). Compared to 3-4 years ago, it does feel more complicated. Of course, it also works better for all those uses who needed those extra capabilities.</p>
 
-<p>I set out to evaluate SANtricity CSI with Kasten, but ended up evaluating the other CSI driver for E-Series. That was fortunate because I discovered two-three code bugs and several documentation bugs. I think IBM Block CSI with SANtricity Patch for upstream 1.13.2 is now "finished" (until next time IBM updates their Block CSI). I also realized that IBM Block CSI does not support Volume Group Snapshots, so I won't try to implement Consistency Groups in the patch, which is what I thought I'd do.</p>
+<p>I set out to evaluate SANtricity CSI with Kasten, but ended up evaluating the other CSI driver for E-Series. That was fortunate because I discovered two-three code bugs and several documentation bugs in my patch. I think IBM Block CSI with SANtricity patch for upstream 1.13.2 is now "finished" (until next time IBM updates their Block CSI). I also realized that IBM Block CSI does not support Volume Group Snapshots, so I won't try to implement Consistency Groups in the patch, which is what I thought I'd do.</p>
 
 <p>The SANtricity patch leverages <code class="language-plaintext highlighter-rouge">santricity-client</code> (my Python client library for SANtricity) and that library may add some extra features as we wait for IBM to add Volume Group snapshots, it's just that I won't rush to include them into the CSI driver. The Python client library would benefit from:</p>
 
 <ul>
-  <li>Volume Copy wrapper/automation - this is for thick (thicc?) copy-volumes, not thin (aka linked) clone volumes. Volume Copy is actually <a href="https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/">a thing in CSI as well</a>, it's just that <code class="language-plaintext highlighter-rouge">dataSource: PersistentVolumeClaim</code> is relatively less used by the average user. Still, we want this for non-CSI uses as well, so we want it in the library</li>
+  <li>Volume Copy wrapper/automation - this is for thick (thicc?) copy-volumes, not thin (aka linked) clone volumes. Volume Copy is actually <a href="https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/">a thing in CSI as well</a>, it's just that <code class="language-plaintext highlighter-rouge">dataSource: PersistentVolumeClaim</code> is relatively less used by the average user. Still, we want this for non-CSI uses as well, so we want it in the library.</li>
   <li>Read-Write Linked Clones - these are not yet implemented in santricity-client, but also not urgently needed. Read-Only Linked Clones seem to work great for backup-to-S3 and - as I've mentioned earlier - restores should go to a new volume, not a linked clone. But it may be useful for use cases outside of CSI, so that's on my to-do list as well</li>
 </ul>
 
