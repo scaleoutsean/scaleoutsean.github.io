@@ -2395,7 +2395,7 @@ var store = [{
       },{
         "title": "Kasten 8, SANtricity CSI 1 and NetApp E-Series",
         "excerpt":"Introduction Just like with IBM Block CSI with SANtricity patch, the first “warm-up” backup test for SANtricity CSI would be a simple filesystem backup test that doesn’t require snapshots and clones. Since I have SANtricity CSI deployed on MicroK8s, I thought to try Kasten right away. I started blogging about...","categories": ["storage","e-series","kubernetes"],
-        "tags": ["netapp","csi","microk8s","kasten","veeam"],
+        "tags": ["netapp","csi","microk8s","kasten","veeam","ibm-block-csi"],
         "url": "/2026/05/12/veeam-kasten-santricity-csi-netapp-eseries.html",
         "teaser": null
       },{
@@ -3958,6 +3958,9 @@ var store = [{
   },{
     "title": "microk8s",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/microk8s/"
+  },{
+    "title": "ibm-block-csi",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ibm-block-csi/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
