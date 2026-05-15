@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          13 minute read
+          14 minute read
         
       </span>
     
@@ -441,15 +441,27 @@ k10-clone-demo-volumesnapshotclass-santricity   santricity.block.csi.ibm.com   R
 Rollback initiated successfully. Result: <span class="s2">"ok"</span>
 </code></pre></div></div>
 
-<p>We just need these 2 steps in the CLI or UI. Remember that SANtricity roll-backs actually copy data, so you need to wait for that to complete because if you resume workload too early, it will not have access to the volume. If your Kasten policy takes snapshots every 60 minutes, it may take a minute to roll back depending on the amount of CoW data.</p>
+<p>We just need these 2 steps in the CLI or UI and can complete the Kasten restore steps (non-PVC part).</p>
+
+<p>If your Kasten policy takes snapshots every 60 minutes, it may take a minute to roll back depending on the amount of CoW data.</p>
+
+<p>As for roll-back progress, we can monitor it in the UI or CLI.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sleep </span>30<span class="p">;</span> santricity volumes copy-status
 <span class="o">[]</span>
 </code></pre></div></div>
 
-<p>Now we're good to restore non-PVC resources from our Kasten snapshot.</p>
+<p>Realize that SANtricity roll-backs to active volumes <strong>consume</strong>, rather than reduce, CoW data. Because of that, a roll-back usually creates <em>more</em> CoW data! I think that, once the PIT (snapshot) has been deleted, CoW data from snapshot <em>and</em> roll-back is finally released. (And so - in theory at least - a very large snapshot restored to a busy (write-wise) volume might take so long to roll back as to max out the repo group capacity unless you watched its progress and .)</p>
 
-<p>An all-in-one script would poll restore progress then run the Kasten workflow. It could be created in ArgoCD, but for most users this is rare enough to not require integration in automation workflows.</p>
+<p>Sadly, <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-storage/start-snapshot-image-rollback-for-base-volume.html">TFM</a> misses to explain any of that that…</p>
+
+<blockquote>
+  <p>The host can immediately access the new rolled-back base volume, but the existing base volume does not allow the host read-write access after the rollback begins.</p>
+</blockquote>
+
+<p><img src="/assets/images/assets/images/confused_math_lady.gif" alt="Confused Math Lady" /></p>
+
+<p>More on the topic of SANtricity snapshots can be found in <a href="/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html">The shocking truth about SANtricity snapshots</a>.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -460,7 +472,7 @@ Rollback initiated successfully. Result: <span class="s2">"ok"</span>
 <p>The SANtricity patch leverages <code class="language-plaintext highlighter-rouge">santricity-client</code> (my Python client library for SANtricity) and that library may add some extra features as we wait for IBM to add Volume Group snapshots, it's just that I won't rush to include them into the CSI driver. The Python client library would benefit from:</p>
 
 <ul>
-  <li>Volume Copy wrapper/automation - this is for thick (thicc?) copy-volumes, not thin (aka linked) clone volumes. Volume Copy is actually <a href="https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/">a thing in CSI as well</a>, it's just that <code class="language-plaintext highlighter-rouge">dataSource: PersistentVolumeClaim</code> is relatively less used by the average user. Still, we want this for non-CSI uses as well, so we want it in the library.</li>
+  <li>Volume Copy wrapper/automation - this is for thick (thicc?) copy-volumes, not thin (aka linked) clone volumes. Volume Copy is actually <a href="https://kubernetes.io/docs/concepts/storage/volume-pvc-datasource/">a thing in CSI as well</a>, it's just that <code class="language-plaintext highlighter-rouge">dataSource: PersistentVolumeClaim</code> is relatively rarely used by the average user. Still, we want this for non-CSI uses as well, so we want it in the library. (Note: Volume Copy was added to SANtricity Library on May 15).</li>
   <li>Read-Write Linked Clones - these are not yet implemented in santricity-client, but also not urgently needed. Read-Only Linked Clones seem to work great for backup-to-S3 and - as I've mentioned earlier - restores should go to a new volume, not a linked clone. But it may be useful for use cases outside of CSI, so that's on my to-do list as well</li>
 </ul>
 
