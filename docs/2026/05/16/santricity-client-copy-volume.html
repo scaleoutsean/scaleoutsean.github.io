@@ -410,14 +410,18 @@
 
 <p>If you need something quickly, Linked Clones are near-instant and can be provisioned in seconds. But they're "fake" volumes that depend on real base volumes. I've blogged about snapshots and clones so you can see those other posts for more on that topic.</p>
 
-<p>Speaking of Linked Clones: I've noticed there's no "volume group copy", so that may be one use case for Linked Clones. I have not yet tested Linked Clone-to-Regular Volume copy, but I will. Since Consistency Groups can be snapshot, one way to get CGs copied to regular volumes would be to create a CG snapshot (which we can do) and copy all those volumes to regular volumes. Then the CG snapshot can be deleted. When copying from an LC:</p>
+<p>Speaking of Linked Clones: I've noticed there's no "volume group copy", so that may be one use case for Linked Clones.</p>
+
+<p>Also for LC-to-Regular Volume Copy. One way to get CGs copied to regular volumes would be to create a CG snapshot (which we can do) and copy all those volumes to regular volumes. Then the CG snapshot can be deleted. When copying from an LC volume:</p>
 
 <ul>
-  <li>In a fully automated workflow, perform an <strong>offline</strong> copy using <code class="language-plaintext highlighter-rouge">--offline</code>. Now, SANtricity Client can create only read-only LCs (whether stand-alone or CGs) and those aren't writable, obviously, so online volume copy from a R-O LC will fail. I've tried this and indeed, <code class="language-plaintext highlighter-rouge">--offline</code> worked.</li>
-  <li>If you create R-W LCs on a schedule you created, then <code class="language-plaintext highlighter-rouge">--online</code> is possible, but currently SANtricity offers no way to schedule LC updates or creation - you need to implement this by yourself</li>
+  <li>In a fully automated workflow, perform an <strong>offline</strong> copy using <code class="language-plaintext highlighter-rouge">--offline</code>. Now, SANtricity Client can create only read-only LCs (whether stand-alone or CGs) and those aren't writable, obviously. Online volume copy from an R-O LC would fail.</li>
+  <li>If you create R-W LCs on a schedule you created or through own automation, then <code class="language-plaintext highlighter-rouge">--online</code> would be possible. SANtricity offers no way to schedule LC updates or creation - it has to be done by calling the API from the outside</li>
 </ul>
 
-<p>And finally, clean-up. Why is clean-up needed? Because ephemeral repo groups may stay behind hogging your capacity. That's why SANtricity Client and E-Series Performance Analyzer 4 expose them.</p>
+<p>And finally, clean-up.</p>
+
+<p>Why is clean-up needed? Because ephemeral repo groups may stay behind hogging your capacity. That's why SANtricity Client and E-Series Performance Analyzer 4 expose them.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>santricity snapshots list-repo-volumes
                                                     Repository-related Volumes                                                    
@@ -445,6 +449,8 @@ Cleanup routine executed successfully.
 <p>(This command (<code class="language-plaintext highlighter-rouge">copy-cleanup</code>) one wasn't in the screenshot earlier, but it was added later.)</p>
 
 <p>Now this can be added to IBM Block CSI with SANtricity patch as well. I may not do it right away, but it's there should we need it.</p>
+
+<p>Obviously, if you use this, evaluate first and make sure it doesn't do anything you don't want it to do.</p>
 
 
         
