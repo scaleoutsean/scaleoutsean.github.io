@@ -2399,6 +2399,12 @@ var store = [{
         "url": "/2026/05/12/veeam-kasten-santricity-csi-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Volume Copy in santricity-client (Python)",
+        "excerpt":"SANtricity Client (Python) has added volume copy commands. I wrote about the need for it in the CSI post yesterday. First, how does “Copy Volume” work in the first place? From TFM: The create volumeCopy command creates a volume copy and starts the volume copy operation. This command is valid...","categories": ["storage","e-series","automation"],
+        "tags": ["python","santricity-client"],
+        "url": "/2026/05/16/santricity-client-copy-volume.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2412,7 +2418,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 14 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam Ubuntu MicroK8s with SANtricity CSI and NetApp E-Series 2026-05-12 00:00 9 minute read Overcome MicroK8s annoyances and set up SANtricity CSI driver for NetApp E-Series Storage monitoring...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 14 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam Ubuntu MicroK8s with SANtricity CSI and NetApp E-Series 2026-05-12 00:00 9 minute read Overcome MicroK8s...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3961,6 +3967,9 @@ var store = [{
   },{
     "title": "ibm-block-csi",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ibm-block-csi/"
+  },{
+    "title": "santricity-client",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-client/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
