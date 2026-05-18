@@ -2405,6 +2405,12 @@ var store = [{
         "url": "/2026/05/16/santricity-client-copy-volume.html",
         "teaser": null
       },{
+        "title": "CouplaReleases",
+        "excerpt":"Introduction I had a fun weekend. SolidFire CSI v1.0.0 SolidFire CSI came out in March (as Beta 2 at the time) - but I’d been working a lot on E-Series projects and haven’t had time to finish it. Until today. Today, it occurred to me that I’ve barely made any...","categories": ["storage","kubernetes","solidfire","automation","projects"],
+        "tags": ["e-series","csi","santricity"],
+        "url": "/2026/05/17/couple-o-releases.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2418,7 +2424,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Volume Copy Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 14 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam Ubuntu MicroK8s with SANtricity CSI and NetApp E-Series 2026-05-12 00:00 9 minute read...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Volume Copy Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 14 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
