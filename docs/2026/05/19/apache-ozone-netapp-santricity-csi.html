@@ -233,7 +233,7 @@
         
         <p>Back in 2022 I kicked tires on Apache Ozone v1 with NetApp E-Series (<a href="/2022/07/06/apache-ozone-netapp-eseries.html">blog post</a>).</p>
 
-<p>Since we now have <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">all these E-Series CSI drivers</a> to play with, I picked one - accidentally IBM Block CSI with SANtricity patch - to try with current <a href="https://ozone.apache.org/docs/">Ozone</a>, v2.1.0.</p>
+<p>Since we now have <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">all these E-Series CSI drivers</a> to play with, I picked one - accidentally IBM Block CSI with SANtricity patch (Ozone couldn't start on MicroK8s where I had SANtricity CSI installed) - to try with current <a href="https://ozone.apache.org/docs/">Ozone</a>, v2.1.0.</p>
 
 <p>Long story short, it works. Ozone still works the same way, plus there have been improvements since 2022, of course. And "why E-Series?" still applies just like it applies to HDFS and other workloads.</p>
 
@@ -264,7 +264,7 @@ om-public         NodePort    10.99.117.252    &lt;none&gt;        9874:30810/TC
 
 <p><img src="/assets/images/apache-ozone-s3-e-series-08_santricity_csi_scaling.png" alt="Apache Ozone stateful set scaling" /></p>
 
-<p>Storage gets provisioned on the fly - <code class="language-plaintext highlighter-rouge">data-datanode-3</code> is new here.</p>
+<p>Storage gets provisioned on the fly - <code class="language-plaintext highlighter-rouge">data-datanode-3</code> is new here (created 30+ minutes after the first three).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                   VOLUMEATTRIBUTESCLASS   AGE
 data-datanode-0   Bound    pvc-f53532cd-183c-4293-9efe-bb189321d5c2   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 38m
@@ -279,7 +279,7 @@ data-datanode-3   Bound    pvc-16cc73dc-9152-4eca-be79-972fb40ba988   10Gi      
 statefulset.apps/datanode scaled
 </code></pre></div></div>
 
-<p>When the reclaim policy is Delete, disks simply go away. If you want to "park" data elsewhere, use rclone and delete Ozone if you don't need it. If you need more of it, scale out and/or expand the size of PVC.</p>
+<p>When the reclaim policy is Delete, disks simply go away. If you want to "park" data elsewhere, use rclone and delete Ozone if you don't need it. If you need more of it, scale out and/or expand the size of your PVCs.</p>
 
 <p>The UI looks quite familiar with how it was in the previous review. You can see the available RF/EC settings in OM (Ozone Manager).</p>
 
@@ -292,6 +292,8 @@ statefulset.apps/datanode scaled
 <p>I saw in one place they mention some user with 10 billion objects. That <em>is</em> a lot, but it's also not by enterprise S3 standards - you can PUT that much in half a dozen StorageGRID nodes that take 6RU and save a lot by not having to micro-manage those boxes for next 5 years.</p>
 
 <p>Another example: EC 6+3 lets you avoid buying "expensive" hardware, but it takes 10 nodes (N+1) - likely 2U servers. That's half a rack of servers (and a lot of CPUs, RAM and network ports) and S3 is the only thing it can do. Yet you can get the same with 25% less rack space, fewer servers, and you can run a combination of all storage services. Even if you need just Ozone S3, you may be better off with 6-7 1U servers and one EF50 box. It's not <em>always</em> like that, sometimes you'll be better off with cheapest white box servers, but I'd say not everyone would get this result.</p>
+
+<p>Scenario for 120 NL-SAS disks:</p>
 
 <table>
   <thead>

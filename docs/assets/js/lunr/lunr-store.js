@@ -2412,7 +2412,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Apache Ozone S3 with NetApp E-Series, SANtricity CSI",
-        "excerpt":"Back in 2022 I kicked tires on Apache Ozone v1 with NetApp E-Series (blog post). Since we now have all these E-Series CSI drivers to play with, I picked one - accidentally IBM Block CSI with SANtricity patch - to try with current Ozone, v2.1.0. Long story short, it works....","categories": ["storage","kubernetes","e-series","analytics","projects"],
+        "excerpt":"Back in 2022 I kicked tires on Apache Ozone v1 with NetApp E-Series (blog post). Since we now have all these E-Series CSI drivers to play with, I picked one - accidentally IBM Block CSI with SANtricity patch (Ozone couldn’t start on MicroK8s where I had SANtricity CSI installed) -...","categories": ["storage","kubernetes","e-series","analytics","projects"],
         "tags": ["csi","santricity","ozone"],
         "url": "/2026/05/19/apache-ozone-netapp-santricity-csi.html",
         "teaser": null
