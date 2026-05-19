@@ -2411,6 +2411,12 @@ var store = [{
         "url": "/2026/05/17/couple-o-releases.html",
         "teaser": null
       },{
+        "title": "Apache Ozone S3 with NetApp E-Series, SANtricity CSI",
+        "excerpt":"Back in 2023 I kicked tires on Apache Ozone v1 with NetApp E-Series (blog post). Since we now have all these E-Series CSI drivers to play with, I picked one - accidentally IBM Block CSI with SANtricity patch - to try with current Ozone, v2.1.0. Long story short, it works....","categories": ["storage","kubernetes","e-series","analytics","projects"],
+        "tags": ["csi","santricity","ozone"],
+        "url": "/2026/05/19/apache-ozone-netapp-santricity-csi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2424,7 +2430,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Volume Copy Kasten 8, SANtricity CSI 1 and NetApp E-Series 2026-05-12 00:00 14 minute read Backup SANtricity CSI with enterprise-grade backup - Kasten by Veeam...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Volume Copy Kasten...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4246,4 +4252,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page68/"
   }]
