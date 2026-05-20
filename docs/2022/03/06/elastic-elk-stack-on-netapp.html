@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          33 minute read
+          31 minute read
         
       </span>
     
@@ -261,7 +261,7 @@
   <li><a href="#appendix-b-kubernetes-helm-chart-for-trident-and-cinder-csi">Appendix B: Kubernetes Helm Chart for Trident and Cinder CSI</a></li>
 </ul>
 
-<p>I've written several posts on Elasticsearch (look for ELK and Elasticsearch posts in Archive). This article is about getting started with Elasticsearch 8 and focuses on integration with NetApp block storage in physical, virtual, Docker and Kuberntes environments.</p>
+<p>I've written several posts on Elasticsearch (look for ELK and Elasticsearch posts in Archive). This article is about getting started with Elasticsearch 8 and focuses on integration with NetApp block storage in physical, virtual, Docker and Kubernetes environments.</p>
 
 <p>It's also about the new Elasticsearch version 8 (previous articles were about version 7) and opinionated in the sense that it's not necessarily based on the official NetApp documentation.</p>
 
@@ -271,136 +271,115 @@
 
 <p>Which one should you use? There are too many buts, ifs and "it depends", so I won't try to cover them all and "prove" that my opinion is correct.</p>
 
-<p>Here's a couple of general criteria I'd consider and (below that) why:</p>
+<p>Here's a couple of general criteria I'd consider and (below that) why for <em>Hot Tier</em>:</p>
 
 <table>
   <thead>
     <tr>
       <th style="text-align: left"> </th>
-      <th style="text-align: left">SolidFire</th>
       <th style="text-align: left">ONTAP</th>
       <th style="text-align: left">E-Series</th>
+      <th style="text-align: left">SolidFire</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td style="text-align: left">Docker, K8s proto</td>
       <td style="text-align: left">iSCSI</td>
+      <td style="text-align: left">iSCSI,</td>
       <td style="text-align: left">iSCSI</td>
-      <td style="text-align: left">iSCSI, BeeGFS FS</td>
     </tr>
     <tr>
-      <td style="text-align: left">VI, physical</td>
-      <td style="text-align: left">iSCSI</td>
-      <td style="text-align: left">iSCSI, FC…</td>
-      <td style="text-align: left">iSCSI, FC, SAS</td>
+      <td style="text-align: left">Protocol</td>
+      <td style="text-align: left">block; file only for small</td>
+      <td style="text-align: left">block</td>
+      <td style="text-align: left">block</td>
     </tr>
     <tr>
       <td style="text-align: left">Media</td>
-      <td style="text-align: left">Flash-only</td>
-      <td style="text-align: left">Use flash</td>
-      <td style="text-align: left">Use flash or hybrid</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">ELK hot tier</td>
-      <td style="text-align: left">0-10 TB</td>
-      <td style="text-align: left">0-50 TB</td>
-      <td style="text-align: left">0-500 TB</td>
+      <td style="text-align: left">TLC flash</td>
+      <td style="text-align: left">TLC flash</td>
+      <td style="text-align: left">TLC flash</td>
     </tr>
     <tr>
       <td style="text-align: left">Docker</td>
       <td style="text-align: left">Trident</td>
+      <td style="text-align: left">LVM, Terraform Provider</td>
       <td style="text-align: left">Trident</td>
-      <td style="text-align: left">Static, LVM</td>
     </tr>
     <tr>
       <td style="text-align: left">Kubernetes</td>
       <td style="text-align: left">Trident CSI</td>
-      <td style="text-align: left">Trident CSI</td>
-      <td style="text-align: left">LVM, Local Path, BeeGFS CSI</td>
+      <td style="text-align: left">TopoLVM, <a href="https://scaleoutsean.github.io/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">SANtricity CSI</a></td>
+      <td style="text-align: left">TopoLVM, Trident CSI, SolidFire CSI</td>
     </tr>
     <tr>
       <td style="text-align: left">Rel. cost of perf</td>
-      <td style="text-align: left">$$$</td>
       <td style="text-align: left">$$</td>
       <td style="text-align: left">$</td>
+      <td style="text-align: left">$$$</td>
     </tr>
     <tr>
       <td style="text-align: left">Rel. cost of cap</td>
-      <td style="text-align: left">$$$</td>
       <td style="text-align: left">$$</td>
       <td style="text-align: left">$</td>
+      <td style="text-align: left">$$$</td>
     </tr>
     <tr>
       <td style="text-align: left">Rec. replicas</td>
       <td style="text-align: left">1</td>
-      <td style="text-align: left">1</td>
       <td style="text-align: left">1 (S,M) or 2 (L+)</td>
+      <td style="text-align: left">1</td>
     </tr>
     <tr>
       <td style="text-align: left">Rec. vol size</td>
-      <td style="text-align: left">&lt;= 1 TiB</td>
       <td style="text-align: left">2-4 TiB</td>
       <td style="text-align: left">&gt; 2 TiB</td>
+      <td style="text-align: left">1 TiB</td>
     </tr>
     <tr>
       <td style="text-align: left">Rec. thruput</td>
-      <td style="text-align: left">&lt;= 1 GB/s</td>
-      <td style="text-align: left">&lt;= 4 GB/s</td>
+      <td style="text-align: left">&lt;= 6 GB/s</td>
       <td style="text-align: left">any</td>
+      <td style="text-align: left">&lt; 1 GiB/s</td>
     </tr>
     <tr>
       <td style="text-align: left">Rec. scale</td>
-      <td style="text-align: left">S, up to M</td>
       <td style="text-align: left">S, M</td>
       <td style="text-align: left">M, L, XL, XXL</td>
+      <td style="text-align: left">S</td>
     </tr>
   </tbody>
 </table>
 
 <p>(Rel. = relative; Rec. = recommended)</p>
 
+<p>This is highly subjective, of course, and doesn't consider any individual or special circumstances. Maybe I'd make a different recommendation in individual cases.</p>
+
+<p>Several points (updated in May 2026):</p>
 <ul>
-  <li>SolidFire only supports iSCSI so if you want to run in a FC environment, don't consider it. ONTAP and E-series also support other protocols (even iSER and Infiniband, in the case of E-Series)
+  <li>SolidFire from the first to the last column</li>
+  <li>Now it's clarified these are meant for Hot Tier and "flash" has been changed to "TLC flash"</li>
+  <li>Not much has changed in version 9; <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">Elastcisearch snapshot-to-S3</a> is becoming more popular, as is <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">ECK</a> (Elasticsearch on Kubernetes)</li>
+  <li>E-Series used to be weakest in the Kubernetes row due to being kicked out of Trident, but the ECK documentation mentions TopoLVM as a viable option making E-Series a highly qualified contender. There are other CSI options, too, including static PVCs which we can provision with Terraform Provider SANtricity</li>
+  <li>Number of <em>data copies</em>: it's confusing what's considered a "copy" is. Here a <em>replica</em> assumes there's the original, so "1 replica" means 2 copies of same data, what's commonly known as RF2. RF2 is the minimum because a filesystem may get corrupt and one is not supposed to roll-back (and lose minutes or hours of events) to recover from that. What we avoid with all three systems - being protected storage - is the need to use RF3 that one might default to with unprotected "JBOD" storage</li>
+  <li>Considering Elasticsearch requirements and E-Series' viability in the Kubernetes space and price/performance leadership, E-Series systems are top contender;
     <ul>
-      <li>SolidFire is all-flash, while the other two can be hybrid (SSD/HDD); I wouldn't bother with non-flash tiers for hot data, though - use S3 and ILM if you want to cost-down</li>
-    </ul>
-  </li>
-  <li>ELK hot tier size: we can certainly store more than mentioned in that row, but I would suggest to consider those as loose rules of thumb - for SolidFire and ONTAP, storing over 100 TB of Elasticsearch data would get pricey</li>
-  <li>Docker: if you run in Docker, unless you want to use static (manual) provisioning which would allow maximum flexibility and minimum manageability, you'd likely use NetApp Astra Trident iSCSI driver for that, so you'd be limited to iSCSI (which works very well with 10 or 25 GigE - we get <a href="/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html">multiple GB/s per second with iSCSI</a>)
-    <ul>
-      <li>With BeeGFS on E-Series you could use any storage supported by BeeGFS filesystem which means any storage interface E-Series supports</li>
-      <li>Caveat: I am not aware of any testing done with Elasticsearch on BeeGFS so with E-Series it's safer to use manually provisioned volumes, especially because Elasticsearch volumes are meant to be set-and-forget and not require attention</li>
-    </ul>
-  </li>
-  <li>Kubernetes: Trident CSI supports only iSCSI at this time, while BeeGFS CSI supports BeeGFS on any E-Series system. For BeeGFS the Docker caveat above applies. There are other provisioners that can be used with Kubernetes and E-Series.</li>
-  <li>Recommended volume size: while we can certainly create a bunch of 16 TB volumes my personal preference is to have at least 2 and at most 16 volumes, so that volume size becomes something like TOTAL_SIZE/8. As an example, let's say your total ELK data (no extra copies, just sharded) on ONTAP iSCSI is 32 TB; using 4 TB volumes that could be 3 VMs with 3 x 4 TB volumes each (36 TB capacity). Although 3 VMs with a single 12TB volume would be fine as well, personally I prefer to spread data a bit more</li>
-  <li>Data replicas: for Hadoop and Ceph, which NetApp customers sometimes use with E-Series, NetApp recommends 2 copies rather than 3. The reason is disks are already protected so having just 1 copy protects you from disk or controller failures. Having 2 copies on two E-Series arrays in different racks also protects you from rack failure, which is nice to have when your Hadoop cluster is large. You could do 2 copies with SolidFire and ONTAP as well, but I wouldn't recommend two copies in the same SolidFire or ONTAP array - it's wasteful and expensive. <strong>But</strong>, as I've mentioned in other posts before and after, any VM or container downtime equals disruption simply because service to affected shards goes down (even if they aren't "damaged"). So for HA (not for data consistency) RF1 (i.e. the 2nd copy) is unavoidable.</li>
-  <li>Cost: cost of performance and capacity is relative
-    <ul>
-      <li>SolidFire already uses two-copy data protection and it's designed for used for small-to-medium workloads with data that can be compressed and deduplicated. Elasticsearch compresses data natively and can consume a lot of bandwidth, so running a large ELK on SolidFire - especially if you make multiple copies of Elasticsearch data - can be expensive in both capacity and performance. That's why I wouldn't recommend it for medium or large Elasticsearch clusters</li>
-      <li>ONTAP also provides efficiency features and many advanced data management features that you may not necessarily use with Elastic, but unlike SolidFire it doesn't use RF2 to protect data, so it's more economical for ELK</li>
-      <li>E-Series is designed for low latency and high performance IO. That's it. These features make it the most cost-effective NetApp back-end for Elasticsearch in DAS or SAN environments</li>
+      <li>E-Series performance used to be good 10 years go - see this from <a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">2021</a> on Elasticsearch with EF280 (current equivalent model is EF50)</li>
+      <li>Containerized Elasticsearch 8.6 (Docker) performance examples can be found <a href="/2023/02/25/elasticsearch-eseries-performance.html">here</a></li>
+      <li>E-Series does everything Elasticsearch on protected storage needs</li>
     </ul>
   </li>
 </ul>
-
-<p>From the <a href="/2021/01/04/elasticsearch-on-netapp-h615c-ef280.html">post</a> on Elasticsearch with EF280 (current equivalent model is EF300):</p>
-
-<p><img src="/assets/images/elasticsearch-3vms-9shards-1-replica-indexing-cluster-cpu-and-disk-grafana.png" alt="EF280 - 1GB/s write with ELK in single ESXi" /></p>
-
-<p>Additional performance tests with containerized Elasticsearch 8.6 and all-flash E-Series can be found <a href="/2023/02/25/elasticsearch-eseries-performance.html">here</a>.</p>
-
-<p>(All images can be opened in new browser tab.)</p>
 
 <h3 id="sizing-and-management">Sizing and management</h3>
 
 <p>I discussed the relative <em>cost</em> of performance above, so this is purely about performance and capacity sizing as well as some high level management aspects:</p>
 
 <ul>
-  <li>SolidFire gets you few hundred MB/s per node and scales out to 40 nodes; additional nodes can be added in increments of one. It's best to have two to four volumes per each SolidFire node</li>
-  <li>ONTAP iSCSI clusters scale to 12 nodes and each appliance has two controllers. Depending on the model you can get GB/s per each appliance but at large scale this becomes expensive. We'd want at least one data volume per controller (so at least 2 per appliance)</li>
+  <li>ONTAP clusters scale to &gt;10 nodes. Depending on the model you can get GB/s per each appliance but at large scale this becomes expensive. We'd want at least one data volume per controller (so at least 2 per appliance)</li>
   <li>E-Series doesn't scale out but the fastest model (currently that's EF600) can deliver tens of GB/s which means many customers wouldn't need to scale out at all</li>
+  <li>SolidFire gets you few hundred MB/s per node and scales out to 40 nodes; additional nodes can be added in increments of one. It's best to have two to four volumes per each SolidFire node</li>
 </ul>
 
 <p>Scale-out storage isn't necessary for Elasticsearch - it can scale out on application level - but in smaller and medium Elasticsearch environments it makes storage provisioning easier, which is why some users like to use enterprise storage for Elasticsearch.</p>

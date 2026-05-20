@@ -273,13 +273,13 @@ data-datanode-2   Bound    pvc-8849056e-b894-4d20-9ed3-bffdc367c550   10Gi      
 data-datanode-3   Bound    pvc-16cc73dc-9152-4eca-be79-972fb40ba988   10Gi       RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 6m37s
 </code></pre></div></div>
 
-<p>If we wanted to scaled down to two (which would be possible if we had RF2 and data could fit), we could.</p>
+<p>If we wanted to scaled down to two (which would be possible if we had RF2 and data could fit), we could. Obviously we'd want to query Ozone and make sure data is re-protected after removing nodes, or - even better - drain data nodes before removing them.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl scale statefulsets datanode <span class="nt">--replicas</span> 2 <span class="nt">-n</span> ozone-test
 statefulset.apps/datanode scaled
 </code></pre></div></div>
 
-<p>When the reclaim policy is Delete, disks simply go away. If you want to "park" data elsewhere, use rclone and delete Ozone if you don't need it. If you need more of it, scale out and/or expand the size of your PVCs.</p>
+<p>When data node's PVC reclaim policy is set to Delete, disks simply go away. If you want to "park" data elsewhere, use rclone to copy it and then delete or scale down Ozone if you don't need it for time being. And if you need more of it, scale out and/or expand the size of your PVCs.</p>
 
 <p>The UI looks quite familiar with how it was in the previous review. You can see the available RF/EC settings in OM (Ozone Manager).</p>
 
@@ -321,7 +321,9 @@ statefulset.apps/datanode scaled
 
 <p>The new CSI drivers make E-Series significantly more usable and cost effective in these scenarios. No VMware tax, no OS tax, no complex bare metal provisioning. With up to 5 servers, you don't even need a dedicated storage network switch because the new models have a decent number of high-speed network ports on 'em.</p>
 
-<p><img src="/assets/images/ef-series-models-2026-03.png" alt="12 x 200G" /></p>
+<p><img src="/assets/images/ef-series-models-2026-03.png" alt="EF80: 12 x 200G" /></p>
+
+<p>If you use such multi-node pods, you can build still bigger clusters without storage switches.</p>
 
 <p>It takes 60s to get from <code class="language-plaintext highlighter-rouge">kubectl apply</code> (or <code class="language-plaintext highlighter-rouge">terraform apply</code> in the Terraform Provider variant) to first results.</p>
 
