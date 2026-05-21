@@ -2418,7 +2418,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SANmox updates for Proxmox-NetApp E-Series",
-        "excerpt":"Introduction A summary of how it was with the initial release of SANmox and SANtricity Plug-in for PVE: Text user interfaces (TUIs) still much better than Proxmox storage plug-ins Separately, a minimal santricity_lvm plugin was created as a stub for future development in the case Proxmox storage plug-ins start making...","categories": ["storage","e-series","virtualization","projects"],
+        "excerpt":"Introduction A summary of how it was with the initial release of SANmox and SANtricity Plug-in for PVE: Text user interfaces (TUIs) are much better than Proxmox storage plug-ins Separately, a minimal santricity_lvm plugin was created as a stub for future development in the case Proxmox storage plug-ins start making...","categories": ["storage","e-series","virtualization","projects"],
         "tags": ["sanmox","santricity","proxmox"],
         "url": "/2026/05/21/sanmox-updates.html",
         "teaser": null
