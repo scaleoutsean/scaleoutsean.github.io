@@ -2417,6 +2417,12 @@ var store = [{
         "url": "/2026/05/19/apache-ozone-netapp-santricity-csi.html",
         "teaser": null
       },{
+        "title": "SANmox updates for Proxmox-NetApp E-Series",
+        "excerpt":"Introduction A summary of how it was with the initial release of SANmox and SANtricity Plug-in for PVE: Text user interfaces (TUIs) still much better than Proxmox storage plug-ins Separately, a minimal santricity_lvm plugin was created as a stub for future development in the case Proxmox storage plug-ins start making...","categories": ["storage","e-series","virtualization","projects"],
+        "tags": ["sanmox","santricity","proxmox"],
+        "url": "/2026/05/21/sanmox-updates.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2430,7 +2436,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend Volume Copy in santricity-client (Python) 2026-05-16 00:00 7 minute read santricity-client adds Volume Copy Kasten...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"SANmox updates for Proxmox-NetApp E-Series 2026-05-21 00:00 6 minute read What is new in SANmox Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
