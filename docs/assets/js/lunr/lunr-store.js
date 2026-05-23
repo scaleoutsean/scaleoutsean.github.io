@@ -2040,7 +2040,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Ceph with NetApp E-Series",
-        "excerpt":"Introduction Once upon a time, NetApp E-Series had this nicely documented in Technical Reports (“TR”). Almost a decade later those are less relevant, but still useful if you want to read the value proposition as it was at the time. I don’t know if this TR-4549 is the last released...","categories": ["storage","eseries"],
+        "excerpt":"PART 1 - Ceph with E-Series (this post) PART 2 - Rook Ceph on Kubernetes backed by E-Series Introduction Once upon a time, NetApp E-Series had this nicely documented in Technical Reports (“TR”). Almost a decade later those are less relevant, but still useful if you want to read the...","categories": ["storage","eseries"],
         "tags": ["ceph","netapp","santricity","storage","tr-4549"],
         "url": "/2025/12/28/ceph-with-netapp-eseries.html",
         "teaser": null
