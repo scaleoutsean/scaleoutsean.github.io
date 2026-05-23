@@ -361,17 +361,17 @@ rook-ceph-mgr-dashboard-external-https   NodePort    10.100.25.110    &lt;none&g
 
 <p>In my Linux NFS VM tests you could see hundreds of Tier 2 (or 3) VMs can be served by a single Linux NFS VM (the post <a href="/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#realistic-vi-8kib-7030-rw-vmscts">about Linux NFS VM on PVE shared above</a>) shows 20,000 IOPS (8 KiB, 100% write)). You can deploy multiple VMs (one per department, or tier) and let Proxmox VE (or other hypervisor, or Corosync/Pacemaker HA) take care of their availability, and you'll have eggs in 2-3 baskets that require very little management. If what Linux NFS server can do is not enough, then it's time to look at ZFS, Ceph or NAS appliances.</p>
 
-<p>And, as you consider Ceph, it's better to start with some other approach rather than Rook. Rook may seem easier to deploy and use, but that is only as long as everything (OS, Kubernetes, CSI, Roook) works. If you get into a multi-day Kubernetes networking issue, that may be too much even for users with Tier 4 workloads. The simplest approach would probably be Ceph in VMs, with VM data on hypervisor's data store.</p>
+<p>And, as you consider Ceph, it's better to start with some other approach rather than Rook if you're new to Ceph <em>or</em> Kubernetes. Rook may <em>seem</em> easier to deploy and use, but that is only as long as everything (OS, Kubernetes, CSI, Roook) works. If you get into a multi-day Kubernetes networking issue, that may be too much even for users with Tier 4 workloads. The simplest approach would probably be Ceph in VMs, with VM data on hypervisor's data store.</p>
 
 <h2 id="use-cases-for-rook-on-pvcs">Use cases for Rook on PVCs</h2>
 
-<p>"I need Ceph for 23 TB of Tier 3 VMs". Hmm, perhaps. And perhaps not. You could put that on a single Linux NFS VM with a 28TB disk that gets HA from SAN and hypervisor VM failover and can be trivially easily backed up, restored, and replicated.</p>
+<p>"I need Ceph for 23 TB of Tier 3 VMs". Hmm, maybe, And maybe not. You could put that on a single Linux NFS VM with a 28TB disk that gets HA from SAN and hypervisor VM failover and can be trivially easily backed up, restored, and replicated.</p>
 
 <p>Similarly, there are S3 use cases where you may be better off with <a href="/2026/05/10/proxmox-backup-server-versity-s3-netapp-eseries.html">Versity S3 Gateway</a>. It takes one line to start, consumes very little resources, and is trivial to protect.</p>
 
 <p>But if you have 100 TBs of VMs and containers that can be deduplicated to 20% of their logical size, that could be a good use case. You save 80TB, you spend some extra time on managing Ceph (whether it's Rook or some other), but it may pay off in the end.</p>
 
-<p>Or maybe you need 10 GB/s from a single file sharing namespace. Your Linux NAS VM gives you just five and you can't use two. Depending on what the workload is, BeeGFS BeeOND or even some S3 storage may be a better approach.</p>
+<p>Or maybe you need 10 GB/s from a single file sharing namespace. Your Linux NAS VM gives you just 5 GB/s and you can't easily combine two VMs in one namespace. Depending on what the workload is, BeeGFS BeeOND or even some S3 storage may be a better approach.</p>
 
 <p>Block-on-block is a weird use case, but not entirely dismissable. Consuming E-Series block devices from Rook (or Ceph in general) only to share them as Ceph block devices could be justified due to flexibility and savings. Maybe you need to run 500 KubeVirt VMs that are virtually identical, so you get 10x deduplication and save close to 500 x 50 GB (25 TB) of SSD capacity with block-on-block that way. Whether that's better done with a ZFS-based file server that runs on Proxmox off E-Series RAID 10 devices, or with Ceph, I don't know but I'd consider both if I knew all criteria and requirements involved.</p>
 
