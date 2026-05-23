@@ -364,11 +364,11 @@ solidfire-csi-controller-65677f4746-bm5j2   solidfire-csi-driver   0m           
 
 <p>SolidFire CSI doesn't employ some magic "maintenance" or "metadata refresh" algorithm to turn SolidFire CSI into a metadata or volume inventory management system. SolidFire storage is the source of truth. CSI attributes rarely (if ever?) need to change, but when they do (maybe after a restore from backup? We'll find out when we test Velero!), all it takes one <code class="language-plaintext highlighter-rouge">ModifyVolume</code> API call to update them the way you see fit, and your DR, backup or other workflows can then rely on that information.</p>
 
-<p>This <a href="https://github.com/scaleoutsean/awesome-solidfire/blob/master/scripts/set-sfqosexception.psm1">sample PowerShell script</a> manipulates volume QoS settings for pre-post backup actions and takes care to not interfere with the Trident KVs in volume attributes simply because it's not clear how changing them might impact Trident CSI. You could adjust it for attribute manipulation of SolidFire CSI.</p>
+<p>This <a href="https://github.com/scaleoutsean/awesome-solidfire/blob/master/scripts/set-sfqosexception.psm1">sample PowerShell script</a> manipulates volume QoS settings for pre-post backup actions and takes care to not interfere with the Trident KVs in volume attributes simply because it's not clear how changing them might impact Trident CSI. You could adjust it for attribute manipulation of SolidFire CSI. I should mention that Kasten lets you specify custom Storage Class for backup (which clones a snapshot and copies data off ephemeral clone, usually to S3) which means you can create a high performance Storage Class that's automatically applied to backup-to-S3 only.</p>
 
 <p>So, SolidFire CSI sets these for you, and you can edit them directly on SolidFire if you micro-manage your volumes. Because SolidFire CSI doesn't care about them (volume handles are all it cares about), it is recommended to let SolidFire CSI "write" to attributes and read them for whatever purpose you need. You may, of course, ignore this and turn those into a microscopic version of SQLite if you want.</p>
 
-<p>SolidFire did a lousy job "selling" those Attributes (they can't even be set in the UI in version 12.5, despite being generally useful for non-Kubernetes use cases as well!), but they're accessible through the API and I've been using them for many years. Trident CSI uses them, too.</p>
+<p>SolidFire did a lousy job "selling" Volume Attributes (they can't even be <em>set</em> in the UI in version 12.5, despite being generally useful for non-Kubernetes use cases as well!), but they're accessible through the API and I've been using them for many years. Trident CSI uses them, too.</p>
 
 <p>SolidFire CSI's "volume ID first" works the same way everywhere, of course. Example from Talos 1.12.4:</p>
 
@@ -533,7 +533,7 @@ solidfire-csi-controller-65677f4746-bm5j2   solidfire-csi-driver   0m           
 
 <p>One may offload high-churn, low-value PVCs to Btrfs which should be nice for KubeVirt VMs. For example: software CI/CD and developer experimentation in KubeVirt environments. I mention <a href="https://docs.kernel.org/filesystems/btrfs.html">Btrfs</a> because of its support for compression and writable snapshots. <a href="https://btrfs.readthedocs.io/en/latest/Status.html">Not all Btrfs features</a> are stable, but there's nothing in this use case that requires unstable Btrfs features (which are mostly those related to Btrfs software RAID). See this <a href="https://www.flatcar.org/docs/latest/setup/debug/btrfs-troubleshooting/">Flatcar guide for Btrfs</a> if interested.</p>
 
-<p>ZFS requires a separate workflow because it has a volume manager (it's like creating an LVM configuration, not just <code class="language-plaintext highlighter-rouge">mkfs.&lt;something&gt;</code>). That is very different from plain single-volume filesystems. The correct pattern for volume managers is to provision one or more <code class="language-plaintext highlighter-rouge">Block</code> (not <code class="language-plaintext highlighter-rouge">Filesystem</code>) and use a sidecar or operator to configure your fileystem of choice. For SolidFire I recommend <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#zfs-in-containers">single-volume ZFS</a> with <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#efficiency---zpools-on-solifire-vs-global-solidfire-efficiencies"><code class="language-plaintext highlighter-rouge">zstd</code> compression</a>. Zpools don't make enough sense on SolidFire. (<a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">It's different for E-Series</a>.)</p>
+<p>ZFS requires a separate workflow because it has a volume manager (it's like creating an LVM configuration, not just <code class="language-plaintext highlighter-rouge">mkfs.&lt;something&gt;</code>). That is very different from plain single-volume filesystems. The correct pattern for volume managers is to provision one or more <code class="language-plaintext highlighter-rouge">Block</code> (not <code class="language-plaintext highlighter-rouge">Filesystem</code>) mode PVCs and use a sidecar or operator to configure your fileystem of choice, and <em>this is a DIY workflow</em>. If you want to do this on your own, for SolidFire I'd recommend <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#zfs-in-containers">single-volume ZFS</a> with <a href="/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#efficiency---zpools-on-solifire-vs-global-solidfire-efficiencies"><code class="language-plaintext highlighter-rouge">zstd</code> compression</a>. Zpools don't make enough sense on SolidFire. (<a href="/2024/02/26/zfs-deduplication-netapp-eseries.html">It's different for E-Series</a>.)</p>
 
 <p>Additional single-disk, mkfs-supporting filesystems may be added if justified. Let me know on X or Github (in SolidFire CSI issues) if you need some other <code class="language-plaintext highlighter-rouge">mkfs</code>-compatible Linux-native filesystem.</p>
 
@@ -961,6 +961,54 @@ solidfire-csi-node-s8cwr                    2/2     Running   0             11h
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/05/22/ceph-kubernetes-eseries.html" rel="permalink">Rook Ceph on NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-22T00:00:00+08:00">2026-05-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Deploy Rook Ceph on CSI backed by NetApp E-Series
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2026/05/21/sanmox-updates.html" rel="permalink">SANmox updates for Proxmox-NetApp E-Series
 </a>
       
@@ -1090,54 +1138,6 @@ solidfire-csi-node-s8cwr                    2/2     Running   0             11h
 
 
     <p class="archive__item-excerpt" itemprop="description">What I've been up to this weekend
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/05/16/santricity-client-copy-volume.html" rel="permalink">Volume Copy in santricity-client (Python)
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-05-16T00:00:00+08:00">2026-05-16 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          8 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">santricity-client adds Volume Copy
 </p>
   </article>
 </div>

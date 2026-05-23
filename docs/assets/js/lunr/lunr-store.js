@@ -2423,6 +2423,12 @@ var store = [{
         "url": "/2026/05/21/sanmox-updates.html",
         "teaser": null
       },{
+        "title": "Rook Ceph on NetApp E-Series",
+        "excerpt":"Introduction In Part 1 (Ceph on E-Series), I went over the details (architecture, features and benefits) of an old NetApp Technical Report on Ceph with E-Series. Everything that made sense years ago still applies today. We mentioned several ways to make Ceph with E-Series work: bare metal, MicroCeph, Rook, Proxmox...","categories": ["storage","e-series","projects","kubernetes"],
+        "tags": ["ceph","rook","proxmox","nfs"],
+        "url": "/2026/05/22/ceph-kubernetes-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2436,7 +2442,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SANmox updates for Proxmox-NetApp E-Series 2026-05-21 00:00 6 minute read What is new in SANmox Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes CouplaReleases 2026-05-17 00:00 9 minute read What I’ve been up to this weekend...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy Rook Ceph on CSI backed by NetApp E-Series SANmox updates for Proxmox-NetApp E-Series 2026-05-21 00:00 6 minute read What is new in SANmox Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3988,6 +3994,9 @@ var store = [{
   },{
     "title": "santricity-client",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-client/"
+  },{
+    "title": "rook",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rook/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"

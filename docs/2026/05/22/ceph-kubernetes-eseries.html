@@ -1,0 +1,752 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Rook Ceph on NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="Ceph-on-PVCs approach">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Rook Ceph on NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/05/22/ceph-kubernetes-eseries.html">
+
+
+  <meta property="og:description" content="Ceph-on-PVCs approach">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Rook Ceph on NetApp E-Series">
+  <meta name="twitter:description" content="Ceph-on-PVCs approach">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/05/22/ceph-kubernetes-eseries.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-05-22T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/05/22/ceph-kubernetes-eseries.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Rook Ceph on NetApp E-Series">
+    <meta itemprop="description" content="Deploy Rook Ceph on CSI backed by NetApp E-Series">
+    <meta itemprop="datePublished" content="2026-05-22T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/05/22/ceph-kubernetes-eseries.html" itemprop="url">Rook Ceph on NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-22T00:00:00+08:00">2026-05-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#how-it-works">How it works</a></li><li><a href="#rook-ceph">Rook Ceph</a></li><li><a href="#other-steps-in-rook-configuration">Other steps in Rook configuration</a></li><li><a href="#rook-ceph-vs-other-approaches">Rook Ceph vs other approaches</a></li><li><a href="#use-cases-for-rook-on-pvcs">Use cases for Rook on PVCs</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>In <strong>Part 1</strong> (<a href="/2025/12/28/ceph-with-netapp-eseries.html">Ceph on E-Series</a>), I went over the details (architecture, features and benefits) of an old NetApp Technical Report on Ceph with E-Series. Everything that made sense years ago still applies today.</p>
+
+<p>We mentioned several ways to make Ceph with E-Series work: bare metal, MicroCeph, Rook, <a href="https://pve.proxmox.com/wiki/Deploy_Hyper-Converged_Ceph_Cluster">Proxmox VE</a>, etc. MicroCeph was introduced as the simplest approach.</p>
+
+<p>This post introduces Rook Ceph, a community project that focuses on Ceph in Kubernetes environments.</p>
+
+<h2 id="how-it-works">How it works</h2>
+
+<p>There's no need to rehash what's already documented in the Rook or Ceph project documentation: this section explains just the E-Series side of it.</p>
+
+<p>If you run Ceph on bare metal or in virtual machines, you'd likely let every node see only its own Ceph disks. In other words, SAN may be used, but Ceph nodes won't see disks that belong to other nodes. Even if you use a disk array, you'd probably want to avoid storage switches if you can direct-attach and avoid that cost. MicroCeph clusters would likely use the same approach.</p>
+
+<p>What's interesting about Rook Ceph on Kubernetes is it has several modes, one of which is Rook-on-PVCs:</p>
+
+<ul>
+  <li>Ceph runs in containers</li>
+  <li>PVCs can be anywhere as long as they're reachable/schedulable or there's replication or Erasure Coding to provide availability and prevent downtime beause of individual failures</li>
+</ul>
+
+<p>E-Series just needs a CSI driver (for dynamic provisioning) or a static PVC (PV may be provisioned in advance with Terraform Provider for SANtricity, for example) and Rook Ceph can be deployed.</p>
+
+<p>In that first post I mentioned this as the easiest approach and when there's no need for RAID-type micro-management:</p>
+<ul>
+  <li>Use the same DDP storage pool that I recommend for E-Series CSI drivers and Proxmox VE</li>
+  <li>Use RAID 1-type volumes when you need fastest (active database transaction logs), and RAID 6 for more reliable and economical volumes</li>
+</ul>
+
+<p><img src="/assets/images/kinetica-eseries-pod-with-ddp-01.png" alt="E-Series DDP for Ceph" /></p>
+
+<h2 id="rook-ceph">Rook Ceph</h2>
+
+<p>I won't belittle Ceph management skills and say Ceph is easy to manage. You can get simple block from E-Series, simple NAS from Linux VMs, and simple S3 from Versity Gateway. If you need more and like your storage cheap, you can get that from Ceph but expect to do more to manage it (or alternatively, buy a NAS appliance).</p>
+
+<p>But we can say "Ceph is easy to deploy" because it is.</p>
+
+<p>Here's what I used:</p>
+
+<ul>
+  <li>Ubuntu 24.04 LTS</li>
+  <li>Kubernetes 1.35</li>
+  <li>IBM Block CSI 1.13.2 with SANtricity patch</li>
+  <li>E-Series EF600 (NVMe/RoCE)</li>
+  <li>Rook Ceph 1.19.5</li>
+</ul>
+
+<p>I had the OS, Kubernetes, CSI driver and a Storage Class (based on the patched IBM Block CSI driver). So I just ran a couple of commands to deploy ready-made Rook Ceph manifests from Rook 1.19.5.</p>
+
+<p>After 2-3 minutes, my E-Series-backed Rook Ceph cluster was ready. Rook deployed Ceph with my default Storage Class and it automatically provisioned several PVCs, including three for data disks ("OSDs").</p>
+
+<p><img src="/assets/images/ceph_on_k8s_00_install.png" alt="Deploy Rook Ceph" /></p>
+
+<p>At this point you need to wait until things settle.</p>
+
+<p>I should mention that - for HA and other reasons - one should have several workers, although you may override that or even use Rook's Minikube deployment manifests which already work that way. I did override the manifests because Ceph could not start without that (I had only one Kubernetes worker), but if your number of Kubernetes workers is greater than, or equal to, the number of Ceph replicas or EC width, you won't have to.</p>
+
+<p>Here we can see we passed that point where all pods were running without periodic restarting. IBM Block CSI didn't have any issues.</p>
+
+<p><img src="/assets/images/ceph_on_k8s_01_running.png" alt="Ceph pods" /></p>
+
+<p>Note the age of Rook pods. Deployment took four minutes. If I also deployed CSI and few other manifests, it still wouldn't take over five minutes. Also note that "<code class="language-plaintext highlighter-rouge">ceph cluster</code>" showed the Ceph cluster was healthy.</p>
+
+<p>One key detail - which I'd forgotten myself until I deployed - was that Ceph OSDs obvoiusly does not use ext4 or XFS, so how could that even work?</p>
+
+<p>The reason IBM Block CSI could (and SANtricity CSI, as of today, could not) is IBM Block CSI supports Block mode PVCs.</p>
+
+<p><img src="/assets/images/ceph_on_k8s_02_block_mode.png" alt="Ceph Block Mode PVCs" /></p>
+
+<p>KubeVirt and Ceph are the two top reasons why I aimed to have that at least one CSI driver - which happened to be IBM Block CSI with SANtricity patches - support Block mode (<a href="/2026/05/17/couple-o-releases.html#ibm-block-csi-with-santricity-patch-v1132">that happened last weekend</a>). SANtricity CSI will get Block mode support soon.</p>
+
+<p>This is where the role of E-Series and CSI ends. The rest is all Ceph.</p>
+
+<p><img src="/assets/images/ceph_on_k8s_03_cluster_dashboard.png" alt="Rook dashboard" /></p>
+
+<p>These are the three data disks:</p>
+
+<p><img src="/assets/images/ceph_on_k8s_04_osds.png" alt="Rook OSDs" /></p>
+
+<p>I had no events, errors, or pod restarts. Let's look at OSD details.</p>
+
+<p><img src="/assets/images/ceph_on_k8s_05_osds_big.png" alt="Rook OSDs big" /></p>
+
+<p>In the case the screenshot above is too small, this one below shows that OSDs use E-Series PVCs (see the value of <code class="language-plaintext highlighter-rouge">device_ids</code> in the middle: NVMe namespace 26).</p>
+
+<p><img src="/assets/images/ceph_on_k8s_06_osd_zoom.png" alt="OSDs on E-Series PVCs" /></p>
+
+<p>That LUN (namespace) 26 viewed in SANtricity Web UI, and easily recognizable due to the cryptic CSI volume name that IBM Block CSI hands out.</p>
+
+<p><img src="/assets/images/ceph_on_k8s_07_pvc.png" alt="Rook OSD in SANtricity" /></p>
+
+<p>As the dashboard was enabled and deployed, we looked up services in the Rook namespace:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl <span class="nt">-n</span> rook-ceph get service
+NAME                                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>             AGE
+rook-ceph-exporter                       ClusterIP   10.111.221.95    &lt;none&gt;        9926/TCP            40m
+rook-ceph-mgr                            ClusterIP   10.98.134.139    &lt;none&gt;        9283/TCP            40m
+rook-ceph-mgr-dashboard                  ClusterIP   10.108.240.168   &lt;none&gt;        8443/TCP            40m
+rook-ceph-mgr-dashboard-external-https   NodePort    10.100.25.110    &lt;none&gt;        8443:32180/TCP      60s
+</code></pre></div></div>
+
+<p>We needed to use port 32180 here. Generate a password and head to the port for <code class="language-plaintext highlighter-rouge">rook-ceph-mgr-dashboard-external-https</code> at https://${NODE}:32180 to see the Web UI (username: admin).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl <span class="nt">-n</span> rook-ceph get secret rook-ceph-dashboard-password <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">"{['data']['password']}"</span> | <span class="nb">base64</span> <span class="nt">--decode</span> <span class="o">&amp;&amp;</span> <span class="nb">echo</span>
+<span class="o">[</span><span class="nv">zdCGw</span><span class="o">=</span>/le<span class="o">}</span>c8N+<span class="o">}</span>+&lt;bQ
+</code></pre></div></div>
+
+<h2 id="other-steps-in-rook-configuration">Other steps in Rook configuration</h2>
+
+<p>The above gets Ceph ready to use, but there are still additional steps - you may want to configure NFS, or just use CephFS. You will need at least one storage class, and possibly other steps.</p>
+
+<p>This is the "it depends" area. <a href="https://rook.io">The Rook Ceph documentation</a> is good and there are example deployment manifests for everything.</p>
+
+<p>As I've mentioned, I slightly loosened the strict anti-affinity criteria to be able to deploy Rook-on-PVCs using one worker, but you may be able to do the same with the unchanged Rook-Minikube manifests. My manifests will be posted to <a href="https://github.com/scaleoutsean/eseries/tree/master/kubernetes">the usual place</a> for my Kubernetes-on-E posts.</p>
+
+<h2 id="rook-ceph-vs-other-approaches">Rook Ceph vs other approaches</h2>
+
+<p>Rook Ceph seems like is a nice solution for E-Series. The way I see it:</p>
+
+<ul>
+  <li>It creates a pool for storage class types E-Series cannot support without 3rd party software (whether it's Rook or BeeGFS or something else)</li>
+  <li>It can live on top of Kubernetes which, on the one hand, adds some risks, but on the other makes it very easy to use. Just like E-Series-backed Linux NFS VMs in Proxmox VE, these are complementary to main storage. If your critical workloads use E-Series, and Tier 2 on Linux NFS or Rook, the risk is entirely different from having everything on Rook backed by a bunch of JBODs</li>
+  <li>You could also deploy Rook on separate 1U servers that consume static PVs and run outside of Kubernetes or PVE - dedicated nodes, single application workload, very careful maintenance/upgrades of underlying OS… There's nothing wrong with that, but now you have three 1U servers just for those services. It's OK if you need that much, but can be wasteful if you don't</li>
+  <li>This Rook-on-PVCSs approach is similar to Proxmox VE's Ceph-on-Proxmox. Depending on how many containers and VMs you ave - if you can move Tier 2 or Tier 3 to Kubernetes, maybe you can keep the rest (databases, large VMs) on Proxmox with shared LVM (E-Series block) and move all Tier 2 nd Tier 3 to Kubernetes. Also remember that Rook-on-PVCs can serve external clients, so you could also use it from PVE or KVM as NFS mounts</li>
+</ul>
+
+<p>Personally, I wouldn't consider using Ceph without proper justification. In the Linux NFS VM tests you could see hundreds of Tier 2 (or 3) VMs can be served by a single NFS VM. You can deploy multiple and let Proxmox VE (or other hypervisor, or HA) take care of their availability, and you'll have eggs in 2-3 baskets that require very little management. If what Linux NFS server can do is not enough, then it's time to look at ZFS, Ceph or NAS appliances.</p>
+
+<p>And, as you consider Ceph, it's better to start with some other approach rather than Rook. Rook may seem easier to deploy and use, but that is only as long as everything (OS, Kubernetes, CSI, Roook) works. If you get into a multi-day Kubernetes networking issue, that may be too much even for users with Tier 4 workloads. The simplest approach would probably be Ceph in VMs, with VM data on hypervisor's data store.</p>
+
+<h2 id="use-cases-for-rook-on-pvcs">Use cases for Rook on PVCs</h2>
+
+<p>"I need Ceph for 23 TB of Tier 3 VMs". Hmm, perhaps. And perhaps not. You could put that on a single Linux NFS VM with a 28TB disk that gets HA from SAN and hypervisor VM failover and can be trivially easily backed up, restored, and replicated.</p>
+
+<p>Similarly, there are S3 use cases where you may be better off with <a href="/2026/05/10/proxmox-backup-server-versity-s3-netapp-eseries.html">Versity S3 Gateway</a>. It takes one line to start, consumes very little resources, and is trivial to protect.</p>
+
+<p>But if you have 100 TBs of VMs and containers that can be deduplicated to 20% of their logical size, that could be a good use case. You save 80TB, you spend some extra time on managing Ceph (whether it's Rook or some other), but it may pay off in the end.</p>
+
+<p>Or maybe you need 10 GB/s from a single file sharing namespace. Your Linux NAS VM gives you just five and you can't use two. Depending on what the workload is, BeeGFS BeeOND or even some S3 storage may be a better approach.</p>
+
+<p>Block-on-block is a weird use case, but not entirely dismissable. Consuming E-Series block devices from Rook (or Ceph in general) only to share them as Ceph block devices could be justified due to flexibility and savings. Maybe you need to run 500 KubeVirt VMs that are virtually identical, so you get 10x deduplication and save close to 500 x 50 GB (25 TB) of SSD capacity with block-on-block that way. Whether that's better done with a ZFS-based file server that runs on Proxmox off E-Series RAID 10 devices, or with Ceph, I don't know but I'd consider both if I knew all criteria and requirements involved.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We have covered one more way to deploy Ceph atop NetApp E-Series. Not all tasks have been completed in this post because I haven't been through the entire workflow myself, but they're also out of scope for E-Series and CSI. There is nothing E-Series or CSI driver-specific left beyond that deployment step and what was described in the initial post (design choices prior to deployent).</p>
+
+<p>From the perspective of file and object storage services for E-Series, in recent weeks we've covered:</p>
+
+<ul>
+  <li>Linux NFS VMs for simple file sharing cases (NFS for Proxmox VE)</li>
+  <li>Versity S3 Gateway for simple object storage services (S3 for backup-to-S3)</li>
+  <li>Rook Ceph for scale-out use cases for object and file (even block is available; it's mostly unnecessary when you can get faster and more stable block from E-Series, although there are use cases for that, too)</li>
+</ul>
+
+<p>Ceph on E-Series works and makes sense when you need non-trivial file or object, and even block storage services that E-Series does not provide (deduplication, compression). In this approach - Ceph on PVCs - your Ceph-backed services also depend on Kubernetes, but this is just one of the approaches. It takes minutes to deploy and it's reasonably economical.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/ceph" class="page__taxonomy-item p-category" rel="tag">ceph</a><span class="sep">, </span>
+    
+      <a href="/tags/nfs" class="page__taxonomy-item p-category" rel="tag">nfs</a><span class="sep">, </span>
+    
+      <a href="/tags/proxmox" class="page__taxonomy-item p-category" rel="tag">proxmox</a><span class="sep">, </span>
+    
+      <a href="/tags/rook" class="page__taxonomy-item p-category" rel="tag">rook</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/projects" class="page__taxonomy-item p-category" rel="tag">projects</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-05-22T00:00:00+08:00">2026-05-22 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Rook+Ceph+on+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F05%2F22%2Fceph-kubernetes-eseries.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/05/22/ceph-kubernetes-eseries.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/05/21/sanmox-updates.html" class="pagination--pager" title="SANmox updates for Proxmox-NetApp E-Series">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/21/sanmox-updates.html" rel="permalink">SANmox updates for Proxmox-NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-21T00:00:00+08:00">2026-05-21 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What is new in SANmox
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/19/apache-ozone-netapp-santricity-csi.html" rel="permalink">Apache Ozone S3 with NetApp E-Series, SANtricity CSI
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-19T00:00:00+08:00">2026-05-19 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/17/couple-o-releases.html" rel="permalink">CouplaReleases
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-17T00:00:00+08:00">2026-05-17 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What I've been up to this weekend
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/16/santricity-client-copy-volume.html" rel="permalink">Volume Copy in santricity-client (Python)
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-16T00:00:00+08:00">2026-05-16 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">santricity-client adds Volume Copy
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
