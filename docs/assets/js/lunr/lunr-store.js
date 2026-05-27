@@ -2358,7 +2358,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Single node Qdrant vector database, Kubernetes and NetApp E-Series CSI",
-        "excerpt":"Introduction It appears my IBM Block CSI patched for SANtricity can now do both FSB and CSI backups. Still, I did a very simple test for that post and felt the urge to do another, more demanding one. When I started work on re-automating E-Series for my purpose, I knew...","categories": ["storage","e-series","ai","kubernetes"],
+        "excerpt":"Part 1: Single-Node Qdrant on Kubernetes with NetApp E-Series (this post) Part 2: Multi-Node Qdrant on Kubernetes with NetApp E-Series (including Backup/Restore) Introduction It appears my IBM Block CSI patched for SANtricity can now do both FSB and CSI backups. Still, I did a very simple test for that post...","categories": ["storage","e-series","ai","kubernetes"],
         "tags": ["vector-database","embeddings","velero","netapp","csi","qdrant"],
         "url": "/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html",
         "teaser": null
@@ -2429,6 +2429,12 @@ var store = [{
         "url": "/2026/05/22/ceph-kubernetes-eseries.html",
         "teaser": null
       },{
+        "title": "Multi-node Qdrant on Kubernetes with NetApp E-Series",
+        "excerpt":"Part 1: Single-Node Qdrant on Kubernetes with NetApp E-Series Part 2: Multi-Node Qdrant on Kubernetes with NetApp E-Series (focus on Backup/Restore) (this post) Introduction In the first Qdrant-related post we saw how to deploy single-node Qdrant vector database on Kubernetes backed by NetApp E-Series. Nothing was different from how it’d...","categories": ["storage","e-series","ai","kubernetes"],
+        "tags": ["vector-database","embeddings","velero","netapp","csi","qdrant"],
+        "url": "/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2442,7 +2448,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy Rook Ceph on CSI backed by NetApp E-Series SANmox updates for Proxmox-NetApp E-Series 2026-05-21 00:00 6 minute read What is new in SANmox Apache Ozone S3 with NetApp E-Series, SANtricity CSI 2026-05-19 00:00 4 minute read Trying out Apache...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Multi-node Qdrant on Kubernetes with NetApp E-Series 2026-05-26 00:00 14 minute read Thoughts on Qdrant backup and restore and storage management on Kubernetes Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy Rook Ceph on CSI backed by NetApp E-Series SANmox updates for Proxmox-NetApp E-Series 2026-05-21 00:00 6...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

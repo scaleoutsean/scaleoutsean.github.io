@@ -1,0 +1,922 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Multi-node Qdrant on Kubernetes with NetApp E-Series | Acting Technologist</title>
+<meta name="description" content="Backup, restore and few other things with multi-node Qdrant on Kubernetes">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Multi-node Qdrant on Kubernetes with NetApp E-Series">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+
+  <meta property="og:description" content="Backup, restore and few other things with multi-node Qdrant on Kubernetes">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Multi-node Qdrant on Kubernetes with NetApp E-Series">
+  <meta name="twitter:description" content="Backup, restore and few other things with multi-node Qdrant on Kubernetes">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-05-26T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Multi-node Qdrant on Kubernetes with NetApp E-Series">
+    <meta itemprop="description" content="Thoughts on Qdrant backup and restore and storage management on Kubernetes">
+    <meta itemprop="datePublished" content="2026-05-26T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html" itemprop="url">Multi-node Qdrant on Kubernetes with NetApp E-Series
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-26T00:00:00+08:00">2026-05-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          14 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a></li><li><a href="#qdrant-snapshots">Qdrant snapshots</a></li><li><a href="#qdrant-backups">Qdrant backups</a></li><li><a href="#database-snapshot-and-backup-workflows">Database snapshot and backup workflows</a><ul><li><a href="#irregular-restore">Irregular restore</a></li><li><a href="#day-to-day-backup-and-restore">Day-to-day backup and restore</a></li><li><a href="#other-notes">Other notes</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-demo">Appendix: demo</a></li></ul>
+            </nav>
+          </aside>
+        
+        <ul>
+  <li>
+    <p>Part 1: <a href="/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html">Single-Node Qdrant on Kubernetes with NetApp E-Series</a></p>
+  </li>
+  <li>
+    <p><strong>Part 2: Multi-Node Qdrant on Kubernetes with NetApp E-Series (focus on Backup/Restore)</strong> (this post)</p>
+  </li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In the first Qdrant-related post we saw how to deploy single-node Qdrant vector database on Kubernetes backed by NetApp E-Series. Nothing was different from how it'd work on Docker or in VM, except that it seemed easier. Not just the deployment, but also CSI-assisted backup and restore.</p>
+
+<p>In this post we'll use a three-node cluster and take a look at one particular detail of storage management, Qdrant's native backup &amp; restore.</p>
+
+<h2 id="environment">Environment</h2>
+
+<ul>
+  <li>Kubernetes 1.36.1</li>
+  <li>SolidFire CSI 1.0 (tested) and SANtricity CSI 1.0 (upcoming)</li>
+  <li>Qdrant 1.18.0</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME   STATUS   ROLES           AGE   VERSION
+s78    Ready    &lt;none&gt;          25h   v1.36.1
+s79    Ready    &lt;none&gt;          25h   v1.36.1
+s80    Ready    control-plane   25h   v1.36.1
+</code></pre></div></div>
+
+<p>Using Qdrant's Helm chart, I deployed a three-node Qdrant cluster and one utility pod of mine.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> qdrant-multi
+NAME             READY   STATUS    RESTARTS      AGE
+qdrant-multi-0   2/2     Running   0             11h
+qdrant-multi-1   2/2     Running   1 <span class="o">(</span>11h ago<span class="o">)</span>   11h
+qdrant-multi-2   2/2     Running   2 <span class="o">(</span>11h ago<span class="o">)</span>   11h
+qdrant-utils     1/1     Running   0             7h19m
+</code></pre></div></div>
+
+<p>I created a test database ("collection") named <code class="language-plaintext highlighter-rouge">test</code> to make use of storage.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-22-test-collection.png" alt="Qdrant test database aka collection" /></p>
+
+<p><strong>Note:</strong> Qdrant does not store images that you see in this screenshot. Those are merely the inputs used to create embeddings. The images were, and are in a bucket reachable to my Web browser. This is what people often overlook.</p>
+
+<h2 id="qdrant-snapshots">Qdrant snapshots</h2>
+
+<p>ISVs have different names for DB dumps and it's "anything goes". Snapshot is one popular term for that.</p>
+
+<p>Old school way of doing this was backup to disk (well, maybe also to tape, before my time). Some databases can backup directly to S3 (I blogged about Elasticsearch'es snapshot-to-S3), others need plugins to backup to S3 (the recent post about Cloud Native Postgres recently), etc.</p>
+
+<p>In the case of Qdrant - but that is true in general - you don't want to dump data to the same volume where your database lives.</p>
+
+<p>That's why you want to have the second disk, or even more than just one. Here, each Qdrant node has one PVC for data and one for dump-to-disk.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span> qdrant-multi
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+qdrant-snapshots-qdrant-multi-0   Bound    pvc-ae0506c8-4c17-40db-856d-820f757cad06   10Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+qdrant-snapshots-qdrant-multi-1   Bound    pvc-bd64c7b7-3ddc-4863-bae3-f732b243fb46   10Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+qdrant-snapshots-qdrant-multi-2   Bound    pvc-7001d9e1-dc96-4288-9462-a2574746c349   10Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+qdrant-storage-qdrant-multi-0     Bound    pvc-a4c6cf82-7743-4711-be3f-0e1283201bf9   50Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+qdrant-storage-qdrant-multi-1     Bound    pvc-9a75cded-3d51-45cc-8a69-d3f904e9003f   50Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+qdrant-storage-qdrant-multi-2     Bound    pvc-f4272122-ac40-4477-bc4a-ebf2349b2615   50Gi       RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 11h
+</code></pre></div></div>
+
+<p>Because collection data gets distributed across all nodes, each node asynchronously dumps its "share" of collection data to own snapshot disk.</p>
+
+<p>In the UI, a collection's snapshot tab lists disk dump files ("snapshots"), if any.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-18-qdrant-snapshot.png" alt="Qdrant snapshot" /></p>
+
+<p>Recall that what you see here isn't "Qdrant cluster snapshots" but Qdrant node snapshots. If you look at that "<code class="language-plaintext highlighter-rouge">get pvc</code>" output above, this Web UI shows snapshots on <code class="language-plaintext highlighter-rouge">qdrant-snapshots-qdrant-multi-0</code> which is attached to <code class="language-plaintext highlighter-rouge">qdrant-multi-0</code>. <code class="language-plaintext highlighter-rouge">qdrant-multi-1</code> would have different snapshot file names (or even snapshots from different times or collections, as currently snapshots are taken individually on each node!).</p>
+
+<p>As you can see in database info tab, only one shard was created. That's a consequence of how the collection was created and will be discussed further below.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-23-test-collection-info.png" alt="Qdrant collection info" /></p>
+
+<p>This is where things get interesting from a storage perspective.</p>
+
+<p>It almost feels disturbing that one can delete or download these backups. I know it doesn't <em>have</em> to be that way - the UI wouldn't be accessible to non-admins - but even the fact that admins could download collections is disturbing if you're in a highly regulated sector.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-24-test-collection-snapshot-take-download.png" alt="Qdrant snapshot download and delete" /></p>
+
+<p>A collection can be created two ways:</p>
+
+<ul>
+  <li>(1) Create a collection (button)</li>
+  <li>(2) Restore a collection</li>
+</ul>
+
+<p>The first is a wizard that creates a collection configuration file, basically. The second is what lets you get data into a new instance.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-26-test-collection-restore-to-new.png" alt="Qdrant snapshot restore" /></p>
+
+<p>The Qdrant documentation explains other ways how it can be done, but the UI has this easy to use, two-step wizard for developers.</p>
+
+<p>The less prominent way - to use the CLI or API - is what enterprise and cloud-first users would use in production. No one will download, or be able to restore with confidence, data dumped to own notebook.</p>
+
+<p>When it comes to choosing between Qdrant "snapshots" (in this blog post) and CSI snapshots (covered in the first post on Quadrant), what would most users prefer for production?</p>
+
+<p>I think for most that would be Qdrant snapshots, even though they make longer to dump to disk and longer to restore (recover).</p>
+
+<p>An advantage of CSI snapshots is that with very large (multi-TB) Qdrant databases, restoring from a snapshot still takes seconds, whether it's SolidFire or E-Series. But the user may prefer to use <a href="https://qdrant.tech/documentation/distributed_deployment/#replication">replication</a> with servers and storage in own fault domains. The same preference I tried to express in this diagram: you can create AZ-like availability zones from racks and entry-level E-Series EF300 models, each with <em>own instance of CSI driver</em> for best redundancy.</p>
+
+<p><img src="/assets/images/elasticsearch-eck-santricity-csi-three-rack.png" alt="Replication with redundancy" /></p>
+
+<p>SolidFire can logically allocate nodes to <a href="/2021/06/08/solidfire-availability-zones.html">Protection Domains</a>, but you still have one cluster. Some see that as bad, some as good. Qdrant's designed for the approach shown in the picture - fewer smaller arrays better.</p>
+
+<p>What about "backups", or copies of data outside of Qdrant cluster?</p>
+
+<h2 id="qdrant-backups">Qdrant backups</h2>
+
+<p>To do that, simply copy or move Qdrant snapshots to an S3 bucket, possibly with Object Lock and appropriate policies (governance, compliance, tiering, replication, etc.).</p>
+
+<p>You can use NetApp StorageGRID or Versity S3 Gateway for that, for example.</p>
+
+<p>I created a bucket called <code class="language-plaintext highlighter-rouge">qdrant</code> and a utility that helped me deal with data protection in this environment. And my "backup" simply copies Qdrant snapshots to <code class="language-plaintext highlighter-rouge">s3:&lt;bucket&gt;/&lt;collection&gt;</code>. Here's how it looks like for the collection "test".</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-19-vgw-bucket.png" alt="Qdrant backup bucket" /></p>
+
+<p>Below that level, we have Qdrant node name path of key, as each node holds its fraction of the collection.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-20-vgw-bucket-node-backups.png" alt="Qdrant backup bucket details" /></p>
+
+<p>And finally, there may be several snapshot files in each node directory.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-21-vgw-bucket-snapshot-view.png" alt="Qdrant backup node snapshot detail" /></p>
+
+<h2 id="database-snapshot-and-backup-workflows">Database snapshot and backup workflows</h2>
+
+<p>I'm not sure if mainstream data protection software has Qdrant integration even when it's not running on Kubernetes. The options for multi-node clusters on Kubernetes are likely two:</p>
+
+<ul>
+  <li>Kasten or Veeam with CSI snapshots that leverage Volume Group Snapshot, followed by Data Mover database file copy to S3</li>
+  <li>Native integration (Qdrant backup-to-disk followed by upload to S3)</li>
+</ul>
+
+<p>Even though CSI snapshots are available with both SolidFire and SANtricity, I think more users would prefer the latter, Qdrant-native approach. Not just because it's more predictable, but also because native database dumps seem more flexible (not in Open Source Qdrant, but in Enterprise version) and should be more reliable than database files copied from data disk snapshot.</p>
+
+<p>It would seem also right to take such Qdrant-native snapshots from within Kubernetes, either on schedule or on-demand from some workflow. Not through the Web UI, that is.</p>
+
+<p>As snapshots get dumped to snapshot PVCs, they can be uploaded to a bucket in object store where you have full protection, auditing, and so on.</p>
+
+<p>To restore, it's the same process but in reverse.</p>
+
+<p>That <code class="language-plaintext highlighter-rouge">qdrant-utils</code> pod is what I created to see how user-friendly that feels in action for these use cases:</p>
+
+<ul>
+  <li>Option 1: irregular restores</li>
+  <li>Option 2: day-to-day backup and restore</li>
+</ul>
+
+<h3 id="irregular-restore">Irregular restore</h3>
+
+<p>Let's say you ship embedded application based on specific state of an S3 bucket, specific Qdrant collection, and other details recorded in the Github repository and release.</p>
+
+<p>Now there's a problem or you need to get back to that point-in-time, to debug, patch or troubleshoot.</p>
+
+<p>Kubernetes and S3 make that easy. I can deploy multi-node Qdrant using Helm chart mentioned at the top, but I can also name a collection in init section, to not just deploy multi-node Qdrant, but also restore collection in one go.</p>
+
+<p>This can happen years, or days, after you ship. S3 works just the same. And not only that, you can restore to <em>any</em> cloud, anywhere, as long as you can get to that S3 bucket. Compared to the traditional approach, that is absolutely amazing.</p>
+
+<p>But there's more! I've written about S3 bucket snapshots (got 0 questions so far, we'll see how many years before someone asks about it) in StorageGRID 12: that lets me get a point-in-time view of the bucket that holds data used to create the Qdrant collection and that is <em>without</em> prior knowledge we'd need it.</p>
+
+<p>If that application was released on 2025-06-30 14:43:12 and last DB backup was created at 14:41:38, it's trivial for me to restore the entire stack:</p>
+
+<ul>
+  <li>deploy a 3 node Qdrant cluster in 30 seconds</li>
+  <li>restore Qdrant database ("collection") in 2 minutes</li>
+  <li>create a point-in-time view of the S3 bucket that the Qdrant collection vectorized (at the time DB was backed up) in 30 seconds</li>
+  <li>access that data anywhere</li>
+</ul>
+
+<p>You gain access to data (used to create vector embeddings), database collection itself, and the entire software stack in minutes.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-25-s3-backup-and-sg-bucket-snapshot.png" alt="Restore inputs to PiT with StorageGRID branch buckets" /></p>
+
+<p>The green-colored bucket is something I want to emphasize here:</p>
+
+<ul>
+  <li>Database backups were uploaded to backup bucket after releases</li>
+  <li>Git repositories and artifacts were tagged on release</li>
+  <li>However, <strong>input data</strong> (objects) in the <code class="language-plaintext highlighter-rouge">data</code> bucket are merely versioned in terms of S3 versions, so how to get a view from that point-in-time (PiT)?</li>
+</ul>
+
+<p>StorageGRID 12 lets me create a bucket <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html">snapshot</a> from an <strong>arbitrary</strong> point in time. All versions are in the bucket, I just need to pick the time in order to spin a read-only or read-write "snapshot bucket".</p>
+
+<p>If DB backup for v1 was created at 14:41:38, I'd create a snapshot bucket for the same point in time (and date, of course).</p>
+
+<p><img src="/assets/images/storagegrid_branch-bucket_02.png" alt="PiT bucket snapshot" /></p>
+
+<p>While we keep all versions of objects, objects used to calculate embeddings aren't expected to change that much, and we can expire old versions of we want to. But the ability to create bucket snapshots gives us an unlimited number of recovery points (1,440/day due to minute-granularity in the Web UI; the API allows millisecond precision).</p>
+
+<p>This ability significantly simplifies my database operations. I don't have to coordinate my backups with the source (bucket), coordinate with the bucket owner, or figure out how to create a point-in-time view of a versioned bucket. All that is solved for you - just upload those dump files to S3.</p>
+
+<h3 id="day-to-day-backup-and-restore">Day-to-day backup and restore</h3>
+
+<p>This is simpler:</p>
+
+<ul>
+  <li>Create snapshot dumps snapshot data to snapshot PVC (can be NL-SAS, if I want to keep them around for a while)</li>
+  <li>Upload snapshot copies snapshot data to S3</li>
+  <li>I can delete snapshots to remove the junk</li>
+  <li>I can restore, or restore the latest snapshot I have in S3</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl <span class="nb">exec</span> <span class="nt">-it</span> <span class="nt">-n</span> qdrant-multi qdrant-utils <span class="nt">--</span> python /work/qdrant-test.py <span class="nt">-h</span>
+usage: qdrant-test.py <span class="o">[</span><span class="nt">-h</span><span class="o">]</span> <span class="o">[</span><span class="nt">--collection</span> COLLECTION] <span class="o">[</span><span class="nt">--remote</span> REMOTE] <span class="o">[</span><span class="nt">--snapshots</span> SNAPSHOTS]
+                      <span class="o">{</span>create,upload,restore,restore-latest,list,list-snapshots,delete-snapshots<span class="o">}</span>
+
+Qdrant snapshot management
+
+positional arguments:
+  <span class="o">{</span>create,upload,restore,restore-latest,list,list-snapshots,delete-snapshots<span class="o">}</span>
+                        Operation to run against the Qdrant cluster
+
+options:
+  <span class="nt">-h</span>, <span class="nt">--help</span>            show this <span class="nb">help </span>message and <span class="nb">exit</span>
+  <span class="nt">--collection</span> COLLECTION
+                        Collection name <span class="k">for </span>snapshot, upload, restore, or list-snapshots
+  <span class="nt">--remote</span> REMOTE       Rclone destination, e.g. vgw:qdrant or s3:qdrant
+  <span class="nt">--snapshots</span> SNAPSHOTS
+                        Comma-separated snapshot sources <span class="k">for </span>restore, either full Qdrant snapshot URLs or remote paths like vgw:qdrant/test/qdrant-
+                        multi-0/file.snapshot
+
+create: create per-node snapshots and print their node-local URLs
+upload: create per-node snapshots, download them from Qdrant, and upload them to the configured remote
+restore: use <span class="nt">--snapshots</span> with comma-separated remote paths or snapshot URLs and recover them back to matching nodes
+restore-latest: pick the latest remote snapshot per node under <span class="nt">--remote</span>/--collection and recover them back to matching nodes
+delete-snapshots: remove all snapshots <span class="k">for </span>the collection on every node
+
+</code></pre></div></div>
+
+<p>When we delete snapshots, we don't have to deal with individual pods, we just talk to each node, ask it to get a list of snapshots related to a collection and then to delete it, which cleans it up from the snapshot PVCs (<code class="language-plaintext highlighter-rouge">qdrant-snapshots-qdrant-multi-[0,1,2]</code>).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl <span class="nb">exec</span> <span class="nt">-it</span> <span class="nt">-n</span> qdrant-multi qdrant-utils <span class="nt">--</span> python /work/qdrant-test.py delete-snapshots <span class="nt">--collection</span> <span class="nb">test
+</span>Deleting test-8404107304685885-2026-05-26-09-08-51.snapshot on http://qdrant-multi-0.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-8404107304685885-2026-05-26-09-20-56.snapshot on http://qdrant-multi-0.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-8404107304685885-2026-05-26-09-21-49.snapshot on http://qdrant-multi-0.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-8404107304685885-2026-05-26-16-20-49.snapshot on http://qdrant-multi-0.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-8404107304685885-2026-05-26-09-12-04.snapshot on http://qdrant-multi-0.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-7655613874606540-2026-05-26-09-20-56.snapshot on http://qdrant-multi-1.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-7655613874606540-2026-05-26-09-21-49.snapshot on http://qdrant-multi-1.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-387279780726943-2026-05-26-09-12-05.snapshot on http://qdrant-multi-2.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-387279780726943-2026-05-26-09-20-56.snapshot on http://qdrant-multi-2.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-387279780726943-2026-05-26-09-08-51.snapshot on http://qdrant-multi-2.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-387279780726943-2026-05-26-07-45-58.snapshot on http://qdrant-multi-2.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+Deleting test-387279780726943-2026-05-26-09-21-50.snapshot on http://qdrant-multi-2.qdrant-multi-headless.qdrant-multi.svc.cluster.local:6333
+</code></pre></div></div>
+
+<p>"Restore latest" is what we'd use to restore the most recent backup to a new collection.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl <span class="nb">exec</span> <span class="nt">-it</span> <span class="nt">-n</span> qdrant-multi qdrant-utils <span class="nt">--</span> python /work/qdrant-test.py restore-latest <span class="nt">--collection</span> <span class="nb">test
+</span>Restoring latest snapshots: <span class="o">[</span><span class="s1">'vgw:qdrant/test/qdrant-multi-0/test-8404107304685885-2026-05-26-09-08-51.snapshot'</span>, <span class="s1">'vgw:qdrant/test/qdrant-multi-1/test-7655613874606540-2026-05-26-09-08-51.snapshot'</span>, <span class="s1">'vgw:qdrant/test/qdrant-multi-2/test-387279780726943-2026-05-26-09-08-51.snapshot'</span><span class="o">]</span>
+Downloading test-8404107304685885-2026-05-26-09-08-51.snapshot <span class="k">for </span>qdrant-multi-0 from vgw:qdrant/test/qdrant-multi-0/test-8404107304685885-2026-05-26-09-08-51.snapshot
+Downloading test-7655613874606540-2026-05-26-09-08-51.snapshot <span class="k">for </span>qdrant-multi-1 from vgw:qdrant/test/qdrant-multi-1/test-7655613874606540-2026-05-26-09-08-51.snapshot
+Downloading test-387279780726943-2026-05-26-09-08-51.snapshot <span class="k">for </span>qdrant-multi-2 from vgw:qdrant/test/qdrant-multi-2/test-387279780726943-2026-05-26-09-08-51.snapshot
+Uploading test-8404107304685885-2026-05-26-09-08-51.snapshot into <span class="nb">test </span>on qdrant-multi-0 <span class="k">for </span>recovery
+Uploading test-7655613874606540-2026-05-26-09-08-51.snapshot into <span class="nb">test </span>on qdrant-multi-1 <span class="k">for </span>recovery
+Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb">test </span>on qdrant-multi-2 <span class="k">for </span>recovery
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">vgw:qdrant</code> probably looks familiar to Rclone users. I use rclone to interface with Versity S3 Gateway, and Qdrant API to upload/download snapshots to/from Qdrant nodes.</p>
+
+<p>As a "storage guy", you may think how much faster it would be to clone a collection. The problem is, you'd also clone all other collections on the PVCs disks. The clone user may or may not be allowed to access those clones. Or you may want to restore to a Kubernetes cluster (e.g. dev/test) that's not even attached to the same storage. And instead of interfacing with the Qdrant API (to get a list of available snapshots, for example), I'd have to interact with PVC metadata. Unless CSI snapshots can help you work 100x faster, it's not worth the trouble.</p>
+
+<h3 id="other-notes">Other notes</h3>
+
+<p>A Kubernetes workflow like that would seem reasonable and convenient.</p>
+
+<p>There are caveats, of course. Not in these approaches, but in the way Qdrant Helm chart or backup/restore works. There may be certain limitations in the free version, and so on, but it impacts the other approach (CSI snapshots) as well.</p>
+
+<p>For example, the free version doesn't make it easy to restore a snapshot taken from a five-node cluster onto a three-node cluster. But this is even worse if your backups use CSI snapshots - here I can easily deploy the required number of nodes with fewer per-node resources, to match the number of snapshot files per collection.</p>
+
+<p>Another tricky part is that <a href="https://qdrant.tech/documentation/distributed_deployment/#sharding">sharding</a> and some limitations from the free version may get in your way, so after a restore, you may still need to re-shard or create an additional workflow if you want to do something differently. For example, a useful case that I've described above - would be to instantiate a multi-node Qdrant cluster <em>and</em> run a "restore-from-latest" in the same go. That can work, but sharding will get in your way and - depending on the objective - you may need to re-shard or do other extra things to make database fit for your purpose.</p>
+
+<p>If you just need to debug some old database release for correctness, it's unlikely that you'll need to re-shard. See the Qdrant Helm chart README and Qdrant documentation for these details.</p>
+
+<p>One of the performance-related observations is my Qdrant utilities pod is that it isn't very efficient. Take the restore workflow as an example:</p>
+
+<ul>
+  <li>It downloads each node's dump file to the utilities pod (it does not download directly to snapshot volume)</li>
+  <li>It uploads each Qdrant node's snapshot to the right node's snapshot volume (<code class="language-plaintext highlighter-rouge">qdrant-snapshots-qdrant-multi-[1,2,3]</code>)</li>
+  <li>As soon as that upload to Qdrant is done, Qdrant's "restore snapshot" API "loads" that dump</li>
+</ul>
+
+<p>A smarter way would be to have sidecars running in each Stateful Set pod, and have those download each node's data <em>directly</em> to the Qdrant node's snapshot PVC from S3. We could even stream backups into collection. It should also be possible to add a switch that can optionally stream "snapshots" directly to S3, when you want to to take a snapshot, but not have it land on disk.</p>
+
+<p>Storage cost-wise, SolidFire can't economize on capacity, but on E-Series I'd we should use two storage classes if we had a lot of snapshot data:</p>
+
+<ul>
+  <li>SSD-based RAID 1 Storage Class for data and potentially log and audit PVC</li>
+  <li>NL-SAS RAID 6-based for snapshots and temporary snapshot area</li>
+</ul>
+
+<p>I can't think of a reason to have a lot of snapshot data on the snapshot PVC, though. You may have 2-3, but all of them can be easily uploaded to S3 and easily restored.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>I still don't know much more than I know about Quadrant, but some things are clearer now.</p>
+
+<p>In the post with single-node Qdrant, we used CSI snapshot (IBM Block CSI with SANtricity patch) to backup Qdrant database to S3.</p>
+
+<p>Multi-node Qdrant works better (no CSI Volume Group Snapshot and application "freeze" are required) with Qdrant's native dump-to-disk ("snapshot") and from there, copy-to-S3.</p>
+
+<p>The benefits of this approach multiply if you follow that S3-centric approach I sometimes write about, including <a href="/2026/01/16/santricity-eseries-datalake-storage.html">this post</a> from which I'll borrow this illustration: Qdrant would run on persistent disks on Dynamic Disk Pool (storage pool of E-Series), but processed data (including dumps of vector embeddings) would be parked on S3 (step 3), just like we did it in this post.</p>
+
+<p><img src="/assets/images/eseries-datalake-storage-layout-02.png" alt="S3 as single source of truth" /></p>
+
+<p>Qdrant "lives" on block devices, so block storage is necessary. But it's also costly and inconvenient for long-term retention. If you park your Qdrant backups on S3, you not only get all the benefits I described in this post, but can also take advantage of StorageGRID's bucket snapshots to achieve <strong>coordination-free</strong> "consistency snapshots"-like effect for the buckets where data inputs came from and where their embeddings are backed up.</p>
+
+<p>One remaining objective is to deploy multi-node Qdrant on E-Series with SANtricity CSI, so that we get some reference performance and capacity data for high level rule-of-thumb sizing. That information will be added soon.</p>
+
+<h2 id="appendix-demo">Appendix: demo</h2>
+
+<p>Some bugs in the utility script can be seen, but overall it works correctly. I'll try to create another video with SANtricity CSI later.</p>
+
+<ul>
+  <li><a href="https://rumble.com/v7afu8s-multi-node-qdrant-db-with-backuprestore-with-netapp-solidfire-and-santricit.html">Multi-node Qdrant DB with backup/restore with NetApp SolidFire</a> - 4m24s</li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/embeddings" class="page__taxonomy-item p-category" rel="tag">embeddings</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/qdrant" class="page__taxonomy-item p-category" rel="tag">qdrant</a><span class="sep">, </span>
+    
+      <a href="/tags/vector-database" class="page__taxonomy-item p-category" rel="tag">vector-database</a><span class="sep">, </span>
+    
+      <a href="/tags/velero" class="page__taxonomy-item p-category" rel="tag">velero</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-05-26T00:00:00+08:00">2026-05-26 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Multi-node+Qdrant+on+Kubernetes+with+NetApp+E-Series%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F05%2F26%2Fmulti-node-qdrant-vector-db-netapp-eseries-santricity-csi.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/05/22/ceph-kubernetes-eseries.html" class="pagination--pager" title="Rook Ceph on NetApp E-Series">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/22/ceph-kubernetes-eseries.html" rel="permalink">Rook Ceph on NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-22T00:00:00+08:00">2026-05-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Deploy Rook Ceph on CSI backed by NetApp E-Series
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/21/sanmox-updates.html" rel="permalink">SANmox updates for Proxmox-NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-21T00:00:00+08:00">2026-05-21 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What is new in SANmox
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/19/apache-ozone-netapp-santricity-csi.html" rel="permalink">Apache Ozone S3 with NetApp E-Series, SANtricity CSI
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-19T00:00:00+08:00">2026-05-19 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Trying out Apache Ozone 2.1 on NetApp E-Series-backed Kubernetes
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/17/couple-o-releases.html" rel="permalink">CouplaReleases
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-17T00:00:00+08:00">2026-05-17 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What I've been up to this weekend
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
