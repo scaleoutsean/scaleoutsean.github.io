@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          16 minute read
+          18 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a></li><li><a href="#qdrant-snapshots">Qdrant snapshots</a></li><li><a href="#qdrant-backups">Qdrant backups</a></li><li><a href="#database-snapshot-and-backup-workflows">Database snapshot and backup workflows</a><ul><li><a href="#irregular-restore">Irregular restore</a></li><li><a href="#day-to-day-backup-and-restore">Day-to-day backup and restore</a></li><li><a href="#other-notes">Other notes</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-demo">Appendix: demo</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a></li><li><a href="#qdrant-snapshots">Qdrant snapshots</a></li><li><a href="#qdrant-backups">Qdrant backups</a></li><li><a href="#database-snapshot-and-backup-workflows">Database snapshot and backup workflows</a><ul><li><a href="#irregular-restore">Irregular restore</a></li><li><a href="#day-to-day-backup-and-restore">Day-to-day backup and restore</a></li><li><a href="#other-notes">Other notes</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-demo-video">Appendix A: Demo video</a></li><li><a href="#appendix-b-manually-resharded-collection">Appendix B: "Manually" resharded collection</a></li></ul>
             </nav>
           </aside>
         
@@ -510,9 +510,11 @@ Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb
 
 <p>For example, a useful case that I've described above - would be to instantiate a multi-node Qdrant cluster <em>and</em> run a "restore-from-latest" in the same go. That can work, but (the lack of re-)sharding can get in your way and - depending on the objective - you may need to use various tricks to perform a "poor man's re-shard" and other things (such as delete shardless nodes from the cluster) to make database/storage layout fit for your purpose.</p>
 
-<p>Let's say you're a freeloader who backed up a three-node DB that contained three shards to S3. Now you need to run that through four-node performance tests, but after a restore you'll still have just three shards. That's one of those cases.</p>
+<p>Let's say you're a freeloader who backed up a three-node DB that contained three shards to S3. Now you need to run that through four-node performance tests, but after a restore you'll still have just three shards. That's one of those cases. Since there's no resharding in the free version, one has to read records and store them into a new collection. As an example, this screenshot shows two resharded collections (see Appendix B for more details on the larger collection).</p>
 
-<p>If you just need to debug some old database release for correctness or security updates, it's unlikely that you'll need to re-shard. See the Qdrant Helm chart README and Qdrant documentation for these details.</p>
+<p><img src="/assets/images/qdrant-eseries-csi-27-resharded-collections.png" alt="Resharded DBs" /></p>
+
+<p>If you just need to debug some old database release for correctness or security updates, it's unlikely that you'll need re-sharding. See the Qdrant Helm chart README and Qdrant documentation for these details.</p>
 
 <p>One of the performance-related observations is my Qdrant utilities pod is that it isn't very efficient. Take the restore workflow as an example:</p>
 
@@ -522,9 +524,9 @@ Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb
   <li>As soon as that upload to Qdrant is done, Qdrant's "restore snapshot" API "loads" that dump</li>
 </ul>
 
-<p>A smarter way would be to have sidecars running in each Stateful Set pod, and have those download each node's data <em>directly</em> to the Qdrant node's snapshot PVC from S3. We could even stream backups into collection. It should also be possible to add a switch that can optionally stream "snapshots" directly to S3, when you want to to take a snapshot, but not have it land on disk.</p>
+<p>A smarter way would be to have restore from each node by <a href="https://qdrant.tech/documentation/snapshots/#recover-from-a-url-or-local-file">reading <em>directly</em> from S3</a>.</p>
 
-<p>Storage cost-wise, SolidFire can't economize on capacity, but on E-Series I'd we should use two storage classes if we had a lot of snapshot data:</p>
+<p>Storage cost-wise, SolidFire can't economize on capacity as there's only one type of volume, but on E-Series I'd we should use two storage classes if we had a lot of snapshot data:</p>
 
 <ul>
   <li>SSD-based RAID 1 Storage Class for data and potentially log and audit PVC</li>
@@ -581,15 +583,142 @@ persistentvolumeclaim/qdrant-storage-qdrant-multi-2                Bound    pvc-
 
 <p>Qdrant "lives" on block devices, so block storage is necessary. But it's also costly and inconvenient for long-term retention. If you park your Qdrant backups on S3, you not only get all the benefits I described in this post, but can also take advantage of StorageGRID's bucket snapshots to achieve <strong>coordination-free</strong> "consistency snapshots"-like effect for the buckets where data inputs came from and where their embeddings are backed up.</p>
 
-<p>One remaining objective is to deploy multi-node Qdrant on E-Series with SANtricity CSI, so that we get some reference performance and capacity data for high level rule-of-thumb sizing. That information will be added soon.</p>
+<p>Appendix B shows the same deployment on E-Series with IBM Block CSI with SANtricity patch.</p>
 
-<h2 id="appendix-demo">Appendix: demo</h2>
+<h2 id="appendix-a-demo-video">Appendix A: Demo video</h2>
 
 <p>Some bugs in the utility script can be seen, but overall it works correctly. I'll try to create another video with SANtricity CSI later.</p>
 
 <ul>
   <li><a href="https://rumble.com/v7afu8s-multi-node-qdrant-db-with-backuprestore-with-netapp-solidfire-and-santricit.html">Multi-node Qdrant DB with backup/restore with NetApp SolidFire</a> - 4m24s</li>
 </ul>
+
+<h2 id="appendix-b-manually-resharded-collection">Appendix B: "Manually" resharded collection</h2>
+
+<p>While working on SANtricity where I had more capacity and performance, I took the "Prefix Cache" dataset available from the UI (fixed settings), read all records (163K) and exported them to a <em>new</em> collection created with 6 shards with RF2 (12 shards total).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Dataset Name</td>
+      <td>Prefix Cache</td>
+    </tr>
+    <tr>
+      <td>Snapshot size</td>
+      <td>398 MB</td>
+    </tr>
+    <tr>
+      <td>Dimensions</td>
+      <td>384</td>
+    </tr>
+    <tr>
+      <td>Vectors count</td>
+      <td>163,075</td>
+    </tr>
+    <tr>
+      <td>JSONL size</td>
+      <td>800 MB</td>
+    </tr>
+    <tr>
+      <td>On-disk (RF2)</td>
+      <td>6.2 GB</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Resulting collection <code class="language-plaintext highlighter-rouge">test-6x2</code> (Prefix Cache dataset; 6 shards, 2 replicas):</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-28-disk-consumption-prefix-cache-6x2.png" alt="Resharded Prefix Cache 6x2" /></p>
+
+<p>That's almost 20x from snapshot size to on-disk size across all three nodes, and almost 8x from JSONL size to on-disk size.</p>
+
+<p><code class="language-plaintext highlighter-rouge">GET /collections/test-6x2</code> output:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"green"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"optimizer_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"indexed_vectors_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"points_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">163075</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"segments_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"vectors"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">384</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"distance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cosine"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"shard_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"replication_factor"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"write_consistency_factor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"on_disk_payload"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"hnsw_config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"m"</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"ef_construct"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"full_scan_threshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"max_indexing_threads"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"on_disk"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"optimizer_config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"deleted_threshold"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"vacuum_min_vector_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"default_segment_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"max_segment_size"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"memmap_threshold"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"indexing_threshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"flush_interval_sec"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"max_optimization_threads"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"prevent_unoptimized"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"wal_config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"wal_capacity_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"wal_segments_ahead"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"wal_retain_closed"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"quantization_config"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"payload_schema"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nl">"update_queue"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"length"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00226129</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">config</code> section in the official collection (before resharding):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">    </span><span class="nl">"config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"vectors"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">384</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"distance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cosine"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"on_disk"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"shard_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"replication_factor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"write_consistency_factor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"on_disk_payload"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Prefix Cache collection shards in the Web UI:</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-29-prefix-cache-6x2-shards.png" alt="Prefix Cache 6x2 shards" /></p>
+
+<p>Here we also used the approach with many dedicated disks.</p>
+
+<p><img src="/assets/images/qdrant-eseries-csi-30-multi-qdrant-pvc-santricity.png" alt="PVCs with IBM Block CSI with SANtricity patches" /></p>
+
+<p>Using regular Python client to insert records did not stress the system, so there isn't much to report in terms of performance. We'd need a larger collection and an optimized client.</p>
 
         
       </section>
