@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          14 minute read
+          16 minute read
         
       </span>
     
@@ -261,7 +261,7 @@ s79    Ready    &lt;none&gt;          25h   v1.36.1
 s80    Ready    control-plane   25h   v1.36.1
 </code></pre></div></div>
 
-<p>Using Qdrant's Helm chart, I deployed a three-node Qdrant cluster and one utility pod of mine.</p>
+<p>Using <a href="https://github.com/qdrant/qdrant-helm">Qdrant's Helm chart</a>, I deployed a three-node Qdrant cluster and one utility pod of mine.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> qdrant-multi
 NAME             READY   STATUS    RESTARTS      AGE
@@ -275,7 +275,7 @@ qdrant-utils     1/1     Running   0             7h19m
 
 <p><img src="/assets/images/qdrant-eseries-csi-22-test-collection.png" alt="Qdrant test database aka collection" /></p>
 
-<p><strong>Note:</strong> Qdrant does not store images that you see in this screenshot. Those are merely the inputs used to create embeddings. The images were, and are in a bucket reachable to my Web browser. This is what people often overlook.</p>
+<p><strong>Note:</strong> Qdrant does not store images that you see in this screenshot. Those are merely the inputs used to create embeddings. The images were, and are, in an object store bucket reachable from my Web browser.</p>
 
 <h2 id="qdrant-snapshots">Qdrant snapshots</h2>
 
@@ -419,13 +419,13 @@ qdrant-storage-qdrant-multi-2     Bound    pvc-f4272122-ac40-4477-bc4a-ebf2349b2
 
 <p>StorageGRID 12 lets me create a bucket <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html">snapshot</a> from an <strong>arbitrary</strong> point in time. All versions are in the bucket, I just need to pick the time in order to spin a read-only or read-write "snapshot bucket".</p>
 
-<p>If DB backup for v1 was created at 14:41:38, I'd create a snapshot bucket for the same point in time (and date, of course).</p>
+<p>If a DB backup for v1 was created at 14:41:38, I'd create a snapshot bucket of my data bucket for the same point in time (and date, of course). From the post on bucket snapshots:</p>
 
 <p><img src="/assets/images/storagegrid_branch-bucket_02.png" alt="PiT bucket snapshot" /></p>
 
-<p>While we keep all versions of objects, objects used to calculate embeddings aren't expected to change that much, and we can expire old versions of we want to. But the ability to create bucket snapshots gives us an unlimited number of recovery points (1,440/day due to minute-granularity in the Web UI; the API allows millisecond precision).</p>
+<p>While we keep all versions of objects in data buckets, objects used to calculate embeddings aren't expected to change that much and we can expire old versions of we want to. But the ability to create bucket snapshots gives us <strong>an unlimited number of recovery points</strong> (1,440/day due to minute-granularity in the Web UI; the API allows millisecond precision) without any "snapshot schedule".</p>
 
-<p>This ability significantly simplifies my database operations. I don't have to coordinate my backups with the source (bucket), coordinate with the bucket owner, or figure out how to create a point-in-time view of a versioned bucket. All that is solved for you - just upload those dump files to S3.</p>
+<p>This ability significantly simplifies my database operations. I don't have to coordinate my backups with the source (data bucket), coordinate database backups with the data bucket owner, or figure out how to create a point-in-time view of a versioned bucket to match my DB backup. All that is solved - we just upload DB dump files to S3 and create bucket views retroactively based on your Qdrant snapshot timestamp when we need them.</p>
 
 <h3 id="day-to-day-backup-and-restore">Day-to-day backup and restore</h3>
 
@@ -502,13 +502,17 @@ Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb
 
 <p>A Kubernetes workflow like that would seem reasonable and convenient.</p>
 
-<p>There are caveats, of course. Not in these approaches, but in the way Qdrant Helm chart or backup/restore works. There may be certain limitations in the free version, and so on, but it impacts the other approach (CSI snapshots) as well.</p>
+<p>There are caveats, of course. Not in these approaches, but in the way Qdrant Helm chart or backup/restore works. There may be certain limitations in the free version, and so on, but the same issues impact the other approach (CSI snapshots) as well.</p>
 
-<p>For example, the free version doesn't make it easy to restore a snapshot taken from a five-node cluster onto a three-node cluster. But this is even worse if your backups use CSI snapshots - here I can easily deploy the required number of nodes with fewer per-node resources, to match the number of snapshot files per collection.</p>
+<p>For example, the free version doesn't make it easy to restore a snapshot taken from a five-node cluster onto a three-node cluster. But this is even worse if your backups use CSI snapshots - without CSI, I have dump files neatly placed in an S3 bucket (<code class="language-plaintext highlighter-rouge">s3:/BUCKET/COLLECTION/SERVER_ID/SNAP_ID</code>; with CSI, I have database files stuck on PVs.</p>
 
-<p>Another tricky part is that <a href="https://qdrant.tech/documentation/distributed_deployment/#sharding">sharding</a> and some limitations from the free version may get in your way, so after a restore, you may still need to re-shard or create an additional workflow if you want to do something differently. For example, a useful case that I've described above - would be to instantiate a multi-node Qdrant cluster <em>and</em> run a "restore-from-latest" in the same go. That can work, but sharding will get in your way and - depending on the objective - you may need to re-shard or do other extra things to make database fit for your purpose.</p>
+<p>Another tricky part is that <a href="https://qdrant.tech/documentation/distributed_deployment/#sharding">sharding</a> and some <a href="https://github.com/qdrant/qdrant-helm#limitations">limitations from the free version</a> may get in your way, so after a restore, you may still need an additional workflow if you want to do something differently.</p>
 
-<p>If you just need to debug some old database release for correctness, it's unlikely that you'll need to re-shard. See the Qdrant Helm chart README and Qdrant documentation for these details.</p>
+<p>For example, a useful case that I've described above - would be to instantiate a multi-node Qdrant cluster <em>and</em> run a "restore-from-latest" in the same go. That can work, but (the lack of re-)sharding can get in your way and - depending on the objective - you may need to use various tricks to perform a "poor man's re-shard" and other things (such as delete shardless nodes from the cluster) to make database/storage layout fit for your purpose.</p>
+
+<p>Let's say you're a freeloader who backed up a three-node DB that contained three shards to S3. Now you need to run that through four-node performance tests, but after a restore you'll still have just three shards. That's one of those cases.</p>
+
+<p>If you just need to debug some old database release for correctness or security updates, it's unlikely that you'll need to re-shard. See the Qdrant Helm chart README and Qdrant documentation for these details.</p>
 
 <p>One of the performance-related observations is my Qdrant utilities pod is that it isn't very efficient. Take the restore workflow as an example:</p>
 
@@ -524,10 +528,42 @@ Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb
 
 <ul>
   <li>SSD-based RAID 1 Storage Class for data and potentially log and audit PVC</li>
-  <li>NL-SAS RAID 6-based for snapshots and temporary snapshot area</li>
+  <li>NL-SAS RAID 6-based for snapshots and temporary snapshot area. These PVCs could bet set to <code class="language-plaintext highlighter-rouge">reclaimPolicy: Retain</code></li>
 </ul>
 
 <p>I can't think of a reason to have a lot of snapshot data on the snapshot PVC, though. You may have 2-3, but all of them can be easily uploaded to S3 and easily restored.</p>
+
+<p>I also tried this customized version with separate PVCs for logs, audit logs, and snapshot restoration (this last PVC lets me copy-for-restore to a dedicated PVC, so that when I upload snapshots to S3, I don't re-upload snapshots copied from S3 to Qdrant snapshot PVC in order to restore it).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ kubectl get pods,pvc -n qdrant-multi 
+NAME                 READY   STATUS    RESTARTS   AGE
+pod/qdrant-multi-0   2/2     Running   0          48m
+pod/qdrant-multi-1   2/2     Running   0          48m
+pod/qdrant-multi-2   2/2     Running   0          48m
+pod/qdrant-utils     1/1     Running   0          47m
+
+NAME                                                               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/qdrant-audit-qdrant-multi-0                  Bound    pvc-95d56df2-a11c-45bb-9997-3eefe13c40dc   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-audit-qdrant-multi-1                  Bound    pvc-6352631e-dff1-4ec7-aa02-b3e894649aa1   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-audit-qdrant-multi-2                  Bound    pvc-53c88fd8-21c5-4c76-ac18-59cc655fdbbb   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-logs-qdrant-multi-0                   Bound    pvc-1e4ffe49-44ab-4ea7-800b-9eed7e7d67a0   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-logs-qdrant-multi-1                   Bound    pvc-fb2c46fb-159f-459e-8cfd-908671347a4b   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-logs-qdrant-multi-2                   Bound    pvc-807db8fc-84a1-4fee-84b0-3a08d6a21af8   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshot-restoration-qdrant-multi-0   Bound    pvc-4d48696c-0a00-4403-b2fa-ed3ab70624a1   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshot-restoration-qdrant-multi-1   Bound    pvc-55fc26f7-ae28-4b43-8654-313a973caae0   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshot-restoration-qdrant-multi-2   Bound    pvc-4fa3b2f2-30f7-41d7-95a6-9ec13fe48483   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-qdrant-multi-0              Bound    pvc-4db65376-62c6-44d0-b673-82088951acfe   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-qdrant-multi-1              Bound    pvc-c5181f87-8644-426c-9747-95e905d9bca2   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-qdrant-multi-2              Bound    pvc-589cf58b-eb16-4dcf-99c1-882909e7ae06   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-temp-qdrant-multi-0         Bound    pvc-66e02c92-8caa-43c9-a6b7-bb0a2ef1eb32   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-temp-qdrant-multi-1         Bound    pvc-c7a151fa-61c9-400f-9c48-cbf10fd036f0   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-snapshots-temp-qdrant-multi-2         Bound    pvc-cfcf627e-c92c-4796-97fb-9ecfcb70a01a   10Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-storage-qdrant-multi-0                Bound    pvc-eeac7a9e-04b1-4401-a253-fba5a5066111   50Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-storage-qdrant-multi-1                Bound    pvc-5736a153-40f8-4de6-a2f1-7bbd4a026bff   50Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+persistentvolumeclaim/qdrant-storage-qdrant-multi-2                Bound    pvc-5ab94dc3-a01a-408a-8ca9-2864f5e903e8   50Gi       RWO            solidfire-bronze   &lt;unset&gt;                 48m
+</code></pre></div></div>
+
+<p>What I haven't done yet is an analysis of per-volume performance and capacity utilization. I hope to do that with SANtricity CSI rather than SolidFire, but I also need to prepare more data and come up with a data loading approach that will exercise storage in a non-trivial fashion.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
