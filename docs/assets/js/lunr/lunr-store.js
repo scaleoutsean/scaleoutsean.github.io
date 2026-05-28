@@ -2454,7 +2454,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Firemox (Proxmox-SolidFire TUI) updates 2026-05-27 00:00 1 minute read What’s new in Firemox in May 2026 Multi-node Qdrant on Kubernetes with NetApp E-Series 2026-05-26 00:00 18 minute read Thoughts on Qdrant backup and restore and storage management on Kubernetes Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Firemox (Proxmox-SolidFire TUI) updates 2026-05-27 00:00 1 minute read What’s new in Firemox in May 2026 Multi-node Qdrant on Kubernetes with NetApp E-Series 2026-05-26 00:00 19 minute read Thoughts on Qdrant backup and restore and storage management on Kubernetes Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
