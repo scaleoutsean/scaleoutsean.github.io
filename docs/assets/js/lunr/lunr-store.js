@@ -773,7 +773,7 @@ var store = [{
         "url": "/2022/07/06/apache-ozone-netapp-eseries.html",
         "teaser": null
       },{
-        "title": "Milvus with SolidFire and E-Series",
+        "title": "Milvus with NetApp SolidFire and E-Series",
         "excerpt":"WTF is Milvus Storage-related stuff Meta storage (etcd) Logs and queues Object store Storage efficiency High availability of block and S3 storage services Aggregate performance on E-Series WTF is Milvus Milvus is a vector database built for scalable similarity search. Storage-related stuff To get Milvus up and running I first...","categories": ["analytics","storage"],
         "tags": ["lnn","milvus","netapp","search","storage","vector-database"],
         "url": "/2022/07/07/milvus-with-solidfire-e-series.html",

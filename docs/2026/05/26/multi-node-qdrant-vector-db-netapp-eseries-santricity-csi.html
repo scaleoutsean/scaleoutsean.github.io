@@ -262,7 +262,7 @@ s79    Ready    &lt;none&gt;          25h   v1.36.1
 s80    Ready    control-plane   25h   v1.36.1
 </code></pre></div></div>
 
-<p>Using <a href="https://github.com/qdrant/qdrant-helm">Qdrant's Helm chart</a>, I deployed a three-node Qdrant cluster and one utility pod of mine.</p>
+<p>Using <a href="https://github.com/qdrant/qdrant-helm">Qdrant's Helm chart</a>, I deployed a three-node Qdrant cluster. I also added a utility pod of mine, which I use to automate Qdrant snapshots (more on that later).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> qdrant-multi
 NAME             READY   STATUS    RESTARTS      AGE
@@ -527,7 +527,7 @@ Uploading test-387279780726943-2026-05-26-09-08-51.snapshot into <span class="nb
   <li>As soon as that upload to Qdrant is done, Qdrant's "restore snapshot" API "loads" that dump</li>
 </ul>
 
-<p>A smarter way would be to have restore from each node by <a href="https://qdrant.tech/documentation/snapshots/#recover-from-a-url-or-local-file">reading <em>directly</em> from S3</a>.</p>
+<p>A smarter way would be to have restore from each node by <a href="https://qdrant.tech/documentation/snapshots/#recover-from-a-url-or-local-file">reading them <em>directly</em> from S3</a>.</p>
 
 <p>Storage cost-wise, SolidFire can't economize on capacity as there's only one type of volume, but on E-Series I'd we should use two storage classes if we had a lot of snapshot data:</p>
 
@@ -723,7 +723,11 @@ persistentvolumeclaim/qdrant-storage-qdrant-multi-2                Bound    pvc-
 
 <p><img src="/assets/images/qdrant-eseries-csi-30-multi-qdrant-pvc-santricity.png" alt="PVCs with IBM Block CSI with SANtricity patches" /></p>
 
-<p>Using regular Python client to insert records did not stress the system, so there isn't much to report in terms of performance. We'd need a larger collection and an optimized client. Qdrant has a benchmark suite, but it's done for Docker, so it can't be used with Kubernetes out-of-box.</p>
+<p>Using regular Python client to insert records did not stress the system, so there isn't much to report in terms of performance. We'd need a larger collection and an optimized client.</p>
+
+<p>Qdrant has a benchmark suite, but it's done for Docker, so it can't be used with Kubernetes out-of-box. I'll do that if someone actually asks me for it.</p>
+
+<p>By the looks of it, this isn't going to be very different from <a href="/2022/07/07/milvus-with-solidfire-e-series.html">Milvus with E-Series</a> - few hundred MB/s on three-node cluster serving a busy collection may be possible and is trivial for E-Series to deliver.</p>
 
         
       </section>
