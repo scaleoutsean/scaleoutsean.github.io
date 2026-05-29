@@ -2441,6 +2441,12 @@ var store = [{
         "url": "/2026/05/27/firemox-update-proxmox-tui-solidfire.html",
         "teaser": null
       },{
+        "title": "MS SQL Server on Kubernetes with NetApp E-Series",
+        "excerpt":"Introduction Only six months ago, if you wanted to automate SQL Server with E-Series maybe AI wouldn’t have made much difference, because there was literally nothing to work with. Since early 2026, that’s become easy on bare metal servers and VMs. After the CSI drivers came out, it’s not just...","categories": ["storage","e-series","kubernetes","projects"],
+        "tags": ["netapp","csi","sql","database"],
+        "url": "/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2454,7 +2460,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Firemox (Proxmox-SolidFire TUI) updates 2026-05-27 00:00 1 minute read What’s new in Firemox in May 2026 Multi-node Qdrant on Kubernetes with NetApp E-Series 2026-05-26 00:00 19 minute read Thoughts on Qdrant backup and restore and storage management on Kubernetes Rook Ceph on NetApp E-Series 2026-05-22 00:00 9 minute read Deploy...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"MS SQL Server on Kubernetes with NetApp E-Series 2026-05-29 00:00 7 minute read How to deploy and connect to SQL Server Stateful Set on Kubernetes with E-Series Firemox (Proxmox-SolidFire TUI) updates 2026-05-27 00:00 1 minute read What’s new in Firemox in May 2026 Multi-node Qdrant on Kubernetes with NetApp E-Series...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
