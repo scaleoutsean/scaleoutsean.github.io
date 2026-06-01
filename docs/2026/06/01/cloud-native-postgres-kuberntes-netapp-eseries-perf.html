@@ -314,7 +314,7 @@ service/cluster-example-rw         ClusterIP   10.109.63.158    &lt;none&gt;    
 
 <p><img src="/assets/images/cnpg-perf-02-select.png" alt="Select" /></p>
 
-<p>Kubernetes had some overheads, approximately 2 vCPUs, and other workloads were consuming some CPU and RAM as well.</p>
+<p>Kubernetes added some overheads, approximately 2 vCPUs, and other workloads were consuming some CPU and RAM as well.</p>
 
 <p><img src="/assets/images/cnpg-perf-03-cpu-hogs.png" alt="CPU hogs" /></p>
 
@@ -377,7 +377,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  42382.3 avail Mem
 
 <p><img src="/assets/images/cnpg-perf-06-select-run-mbps.png" alt="IOPS on Select" /></p>
 
-<p>The scaling from 4 -&gt; 8 -&gt; 16 -&gt; 32 looks nice and all this did't consume even 30% of CPU resources with 2 x 16 cores on this system, which means Kubernetes, PostgreSQL clients and server and everything else could all fit in 12 vCPUs.</p>
+<p>The scaling from 4 -&gt; 8 -&gt; 16 -&gt; 32 looked nice, and still left some CPU resources unused on this 2 x 16 cores on this system.</p>
 
 <p>Some of the results:</p>
 
@@ -568,7 +568,9 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  42382.3 avail Mem
   </tbody>
 </table>
 
-<p>The scripts I used came from <a href="https://github.com/instaclustr/code-samples/tree/main/Postgres/Postgres-ANF">here</a> and were adjusted to run with CNPG.</p>
+<p>The <code class="language-plaintext highlighter-rouge">pgbench</code> wrapper scripts I used for this came from <a href="https://github.com/instaclustr/code-samples/tree/main/Postgres/Postgres-ANF">here</a> and were adjusted to work with CNPG.</p>
+
+<p>I ran them like this:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ CNPG_SECRET_NAME</span><span class="o">=</span>eseries-auth <span class="se">\</span>
   <span class="nv">CNPG_NAMESPACE</span><span class="o">=</span>cnpg-backup <span class="se">\ </span>
@@ -590,13 +592,13 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  42382.3 avail Mem
   ./run-remote.sh
 </code></pre></div></div>
 
-<p>In this post, I only highlighted the results from tests that ran at scale 10000 (&gt;100 GiB database size, on this system with 64 GiB RAM <strong>and</strong> none of the noise removed - you can see above, I had a multi-instance Qdrant cluster, MS SQL Server, Ceph on Kubernetes, KubeVirt and everything else running at the same time).</p>
+<p>The tests that are more representative of performance under stress are those with scale 10000 (&gt;100 GiB database size, on this system with 64 GiB RAM <strong>and</strong> none of the noise removed - you can see above, I had a multi-instance Qdrant cluster, MS SQL Server, Ceph on Kubernetes, KubeVirt and everything else running at the same time).</p>
 
-<p>Ultimately, at 32 clients, server CPU limits started to became visible, so we couldn't see true scalability beyond 32 clients on this server. Appendix A has some examples of how maxed out the CPUs were during tests with 64 clients.</p>
+<p>Ultimately, at 32 clients, server CPU limits started to became visible, so I couldn't see scalability beyond 32 clients on this server. Appendix A has some examples of how maxed out the CPUs were during tests with 64 clients.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This "worst case" test yielded great results.</p>
+<p>This "worst case" setup yielded very nice results.</p>
 
 <p>We haven't even scratched the surface here. We know E-Series <a href="/2023/10/17/netapp-eseries-raid1-vs-raid6-ddp-comparison.html">can do a lot better</a> with PostgreSQL. But even this casual test shows that - for most users - there's no need to tune anything if you use EF-Series.</p>
 
@@ -626,7 +628,6 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  42382.3 avail Mem
 
 <p><img src="/assets/images/cnpg-perf-11-cpu-max-out-64-clients-iops-rw.png" alt="CPU maxed out with 64 clients - IOPS with Read-Write" /></p>
 
-<p>Even at 32 clients, system load average was indicating CPU saturation.</p>
 
         
       </section>
