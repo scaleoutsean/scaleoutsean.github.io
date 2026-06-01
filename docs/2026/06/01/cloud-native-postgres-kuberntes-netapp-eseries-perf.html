@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          7 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a><ul><li><a href="#what-was-different">What was different</a></li></ul></li><li><a href="#observations">Observations</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a><ul><li><a href="#what-was-different">What was different</a></li></ul></li><li><a href="#observations">Observations</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-test-with-64-clients-and-postgres-on-the-same-node">Appendix A: test with 64 clients and Postgres on the same node</a></li></ul>
             </nav>
           </aside>
         
@@ -239,9 +239,9 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>In the first post, I didn't have time to evaluate performance.</p>
+<p>In the first post, I didn't have time to evaluate the performance of CPNG with SANtricty.</p>
 
-<p>I still don't, but at least I've done a worst-case scenario test with NVMe/RoCE. This is baseline without any optimization, so it's hard to do <em>worse</em> than this.</p>
+<p>I still don't, but at least I've done a worst-case scenario test with NVMe/RoCE using my IBM Block CSI driver. This is a baseline without any optimization, so it's hard to do <em>worse</em> than this.</p>
 
 <h2 id="environment">Environment</h2>
 
@@ -250,6 +250,7 @@
   <li>IBM Block CSI driver with SANtricity patch 1.13.2</li>
   <li>PostgreSQL 18</li>
   <li>CNPG 1.29.1</li>
+  <li>OS: Ubuntu 24.04.4 LTS</li>
   <li>Host system (for CNPG on Kubernetes <strong>and</strong> PostgreSQL <code class="language-plaintext highlighter-rouge">pgbench</code> on host): dual-CPU Xeon Silver server from last decade</li>
   <li>EF600 (equivalent of today's <strong>entry-level</strong> E-Series flash system, <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">EF-Series EF50</a>) with <strong>14</strong> disks in DDP storage pool</li>
 </ul>
@@ -313,34 +314,55 @@ service/cluster-example-rw         ClusterIP   10.109.63.158    &lt;none&gt;    
 
 <p><img src="/assets/images/cnpg-perf-02-select.png" alt="Select" /></p>
 
-<p>Best of all, PostgreSQL didn't break a sweat - most of time it wasn't near the top of the CPU hog list.</p>
+<p>Kubernetes had some overheads, approximately 2 vCPUs, and other workloads were consuming some CPU and RAM as well.</p>
 
 <p><img src="/assets/images/cnpg-perf-03-cpu-hogs.png" alt="CPU hogs" /></p>
 
-<p>Kubernetes (<code class="language-plaintext highlighter-rouge">kube-apiserver</code>, <code class="language-plaintext highlighter-rouge">kubelet</code>) was top hog.</p>
+<p>Only at the high client count (32) did we notice significant CPU utilization.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>top
-top - 05:59:16 up 45 days, 13:31, 14 <span class="nb">users</span>,  load average: 7.04, 7.41, 7.51
-Tasks: 1226 total,   6 running, 1220 sleeping,   0 stopped,   0 zombie
-%Cpu<span class="o">(</span>s<span class="o">)</span>: 13.5 us,  5.7 sy,  0.0 ni, 74.1 <span class="nb">id</span>,  5.1 wa,  0.0 hi,  1.6 si,  0.0 st
-MiB Mem :  63933.1 total,   4156.3 free,  22009.9 used,  38626.1 buff/cache
-MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
+top - 09:02:22 up 45 days, 16:34,  9 <span class="nb">users</span>,  load average: 29.79, 21.65, 15.59
+Tasks: 1230 total,  23 running, 1207 sleeping,   0 stopped,   0 zombie
+%Cpu<span class="o">(</span>s<span class="o">)</span>: 39.7 us, 25.3 sy,  0.0 ni, 11.3 <span class="nb">id</span>, 13.2 wa,  0.0 hi, 10.6 si,  0.0 st
+MiB Mem :  63933.1 total,    654.6 free,  21550.8 used,  42884.5 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.  42382.3 avail Mem
 
     PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
-1711970 sean      20   0   10.6g   2.4g   2.3g S   1.3   3.9  67:38.31 qdrant
-1711973 sean      20   0   10.0g   2.4g   2.3g S   1.3   3.9  66:48.71 qdrant
-1138654 sean      20   0    9.8g   2.4g   2.3g S   1.6   3.8  84:09.67 qdrant
-   2408 lightdm   20   0 2593664   1.7g  46484 S   0.0   2.7 150:35.06 arctica-greeter
-4044687 root      20   0 2996972   1.7g  80460 S  94.4   2.7     81,51 kube-apiserver
- 792975 10001     20   0   20.3g   1.5g  97136 S   3.6   2.5 106:59.90 sqlservr
-2115263 167       20   0 6259720 824276  58832 S  12.1   1.3      6,11 ceph-mgr
-2464281 root      20   0 5008976 712188  84668 S  77.4   1.1     44,43 kubelet
-2112170 167       20   0  763404 540360  30928 S   3.3   0.8 297:57.54 ceph-mon
-2113361 167       20   0  759892 536196  31604 S   2.0   0.8 272:34.07 ceph-mon
-2115274 167       20   0 5184676 534948  56132 S   0.3   0.8  36:49.89 ceph-mgr
-2110748 167       20   0  677892 454524  31840 S   1.6   0.7 356:05.89 ceph-mon
-2378317 root      20   0 2569212 412540 240104 S   1.0   0.6      6,38 qdrant
-3650803 sean      20   0 4479948 370328 141064 S   0.3   0.6   9:24.77 executor-server
+   2408 lightdm   20   0 2598160   1.7g  28776 S   0.3   2.7 151:17.70 arctica-greeter
+4044687 root      20   0 2996972   1.6g  34916 S 134.0   2.5     85,10 kube-apiserver
+ 792975 10001     20   0   20.3g   1.5g  27620 S   1.6   2.4 111:33.76 sqlservr
+1711973 sean      20   0   10.0g   1.0g 917076 S   1.3   1.6  69:50.80 qdrant
+1711970 sean      20   0   10.6g   1.0g 887392 S   1.3   1.6  70:42.34 qdrant
+2115263 167       20   0 6262792 818328  50808 S   0.7   1.2      6,16 ceph-mgr
+1138654 sean      20   0    9.8g 693152 550796 S   1.6   1.1  87:50.77 qdrant
+2464281 root      20   0 5075112 675324  35140 S  32.7   1.0     46,34 kubelet
+2112170 167       20   0  767524 540380  26700 S   1.0   0.8 301:39.04 ceph-mon
+2113361 167       20   0  761956 533340  27364 S   0.7   0.8 276:03.80 ceph-mon
+2115274 167       20   0 5184676 527616  48800 S   0.3   0.8  37:15.25 ceph-mgr
+2110748 167       20   0  677892 450336  27316 S   1.0   0.7 360:24.49 ceph-mon
+2739713 1001      20   0 4171100 255268  13748 S   3.9   0.4     20,32 virt-operator
+4044685 root      20   0   11.5g 229448  36076 S  16.7   0.4     22,07 etcd
+2378317 root      20   0 2569212 202304  29844 S   0.7   0.3      6,40 qdrant
+3680621 sean      20   0 4426560 186568  70396 S   0.0   0.3 115:31.71 aggregatedapis-
+2739764 1001      20   0 4092140 181792  13108 S   0.0   0.3 183:49.86 virt-operator
+   1851 root      20   0   13.1g 175016  27376 S   3.3   0.3     75,23 containerd
+4044252 root      20   0 1456644 170072  16876 S   3.3   0.3      8,09 kube-controller
+2743225 1001      20   0 4097000 164952   9324 S   0.0   0.3 127:55.52 virt-api
+3452183 26        20   0  226560 151336 147692 D  46.4   0.2   0:37.00 postgres
+3452185 26        20   0  226560 151336 147692 R  47.4   0.2   0:37.37 postgres
+3452197 26        20   0  226560 151304 147660 R  45.1   0.2   0:35.59 postgres
+3452171 26        20   0  226560 151272 147628 R  46.1   0.2   0:36.07 postgres
+3452180 26        20   0  226560 151228 147584 R  45.8   0.2   0:35.58 postgres
+3452195 26        20   0  226560 151212 147568 R  45.8   0.2   0:35.95 postgres
+3452174 26        20   0  226560 151208 147564 R  47.1   0.2   0:37.56 postgres
+3452181 26        20   0  226560 151204 147560 D  46.1   0.2   0:36.55 postgres
+3452184 26        20   0  226560 151204 147560 R  45.8   0.2   0:35.61 postgres
+3452200 26        20   0  226560 151172 147528 R  46.4   0.2   0:36.41 postgres
+3452201 26        20   0  226560 151172 147528 R  46.1   0.2   0:36.22 postgres
+3452173 26        20   0  226560 151164 147520 R  47.7   0.2   0:37.36 postgres
+3452175 26        20   0  226560 151164 147520 D  47.7   0.2   0:37.78 postgres
+3452176 26        20   0  226560 151164 147520 R  47.4   0.2   0:37.21 postgres
+...
 </code></pre></div></div>
 
 <p><code class="language-plaintext highlighter-rouge">SELECT</code> workload from one particular run:</p>
@@ -355,6 +377,8 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
 
 <p><img src="/assets/images/cnpg-perf-06-select-run-mbps.png" alt="IOPS on Select" /></p>
 
+<p>The scaling from 4 -&gt; 8 -&gt; 16 -&gt; 32 looks nice and all this did't consume even 30% of CPU resources with 2 x 16 cores on this system, which means Kubernetes, PostgreSQL clients and server and everything else could all fit in 12 vCPUs.</p>
+
 <p>Some of the results:</p>
 
 <table>
@@ -366,6 +390,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <th>Duration (s)</th>
       <th>TPS</th>
       <th>WAL Gen (MB)</th>
+      <th>Log Dir</th>
     </tr>
   </thead>
   <tbody>
@@ -376,6 +401,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>60</td>
       <td>36500</td>
       <td>0.00</td>
+      <td>logs-1780291115</td>
     </tr>
     <tr>
       <td>10</td>
@@ -384,6 +410,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>60</td>
       <td>69119</td>
       <td>0.00</td>
+      <td>logs-1780291115</td>
     </tr>
     <tr>
       <td>10</td>
@@ -392,6 +419,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>60</td>
       <td>4053</td>
       <td>230.64</td>
+      <td>logs-1780291115</td>
     </tr>
     <tr>
       <td>10</td>
@@ -400,6 +428,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>60</td>
       <td>7965</td>
       <td>453.95</td>
+      <td>logs-1780291115</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -408,6 +437,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>120</td>
       <td>7888</td>
       <td>0.00</td>
+      <td>logs-1780291507</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -416,6 +446,25 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>120</td>
       <td>16643</td>
       <td>0.00</td>
+      <td>logs-1780291507</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>8</td>
+      <td>601</td>
+      <td>18543</td>
+      <td>6.65</td>
+      <td>logs-1780297634</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>8</td>
+      <td>601</td>
+      <td>19385</td>
+      <td>6.64</td>
+      <td>logs-1780301079</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -424,6 +473,16 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>120</td>
       <td>35029</td>
       <td>0.00</td>
+      <td>logs-1780291507</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>16</td>
+      <td>602</td>
+      <td>43970</td>
+      <td>8.00</td>
+      <td>logs-1780301079</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -432,6 +491,25 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>121</td>
       <td>59531</td>
       <td>0.00</td>
+      <td>logs-1780291507</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>32</td>
+      <td>602</td>
+      <td>73844</td>
+      <td>0.00</td>
+      <td>logs-1780301079</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>64</td>
+      <td>603</td>
+      <td>88469</td>
+      <td>0.00</td>
+      <td>logs-1780301079</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -440,6 +518,7 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>120</td>
       <td>2284</td>
       <td>4158.05</td>
+      <td>logs-1780291507</td>
     </tr>
     <tr>
       <td>10000</td>
@@ -448,13 +527,72 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
       <td>120</td>
       <td>4051</td>
       <td>7293.22</td>
+      <td>logs-1780291507</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>8</td>
+      <td>60</td>
+      <td>4171</td>
+      <td>3788.87</td>
+      <td>logs-1780301079</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>16</td>
+      <td>60</td>
+      <td>6225</td>
+      <td>5603.27</td>
+      <td>logs-1780301079</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>32</td>
+      <td>60</td>
+      <td>9444</td>
+      <td>8376.17</td>
+      <td>logs-1780301079</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>64</td>
+      <td>60</td>
+      <td>12212</td>
+      <td>10585.94</td>
+      <td>logs-1780301079</td>
     </tr>
   </tbody>
 </table>
 
 <p>The scripts I used came from <a href="https://github.com/instaclustr/code-samples/tree/main/Postgres/Postgres-ANF">here</a> and were adjusted to run with CNPG.</p>
 
-<p>I've highlighted results only from my tests that ran at scale 10000 (&gt;100 GiB data on this system with 64 GiB RAM <strong>and</strong> none of the noise removed (you can see I had multi-instance Qdrant, MS SQL Server, Ceph and everything else running at the same time)).</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ CNPG_SECRET_NAME</span><span class="o">=</span>eseries-auth <span class="se">\</span>
+  <span class="nv">CNPG_NAMESPACE</span><span class="o">=</span>cnpg-backup <span class="se">\ </span>
+  <span class="nv">CNPG_CLUSTER</span><span class="o">=</span>cluster-example <span class="se">\</span>
+  <span class="nv">RESET_BENCH_DB</span><span class="o">=</span>0 <span class="se">\</span>
+  <span class="nv">BENCH_DB</span><span class="o">=</span><span class="nb">test</span> <span class="se">\</span>
+  <span class="nv">CNPG_CONNECTION_MODE</span><span class="o">=</span>nodeport <span class="se">\</span>
+  <span class="nv">PGHOST</span><span class="o">=</span>1.2.3.4 <span class="se">\</span>
+  <span class="nv">PGPORT</span><span class="o">=</span>31432 <span class="se">\</span>
+  <span class="nv">PGUSER</span><span class="o">=</span>eseries <span class="se">\</span>
+  <span class="nv">PGPASSWORD</span><span class="o">=</span>eseries <span class="se">\</span>
+  <span class="nv">PGDATABASE</span><span class="o">=</span><span class="nb">test</span> <span class="se">\</span>
+  <span class="nv">SCALES</span><span class="o">=</span><span class="s2">"10000"</span> <span class="se">\</span>
+  <span class="nv">CLIENTS_LIST</span><span class="o">=</span><span class="s2">"8 16 32 64"</span> <span class="se">\</span>
+  <span class="nv">DURATION_RO</span><span class="o">=</span>600 <span class="se">\</span>
+  <span class="nv">DURATION_RW</span><span class="o">=</span>60 <span class="se">\</span>
+  <span class="nv">SLEEP_BETWEEN_RUNS</span><span class="o">=</span>10 <span class="se">\</span>
+  <span class="nv">SLEEP_BETWEEN_PHASES</span><span class="o">=</span>10 <span class="se">\</span>
+  ./run-remote.sh
+</code></pre></div></div>
+
+<p>In this post, I only highlighted the results from tests that ran at scale 10000 (&gt;100 GiB database size, on this system with 64 GiB RAM <strong>and</strong> none of the noise removed - you can see above, I had a multi-instance Qdrant cluster, MS SQL Server, Ceph on Kubernetes, KubeVirt and everything else running at the same time).</p>
+
+<p>Ultimately, at 32 clients, server CPU limits started to became visible, so we couldn't see true scalability beyond 32 clients on this server. Appendix A has some examples of how maxed out the CPUs were during tests with 64 clients.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -462,7 +600,33 @@ MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
 
 <p>We haven't even scratched the surface here. We know E-Series <a href="/2023/10/17/netapp-eseries-raid1-vs-raid6-ddp-comparison.html">can do a lot better</a> with PostgreSQL. But even this casual test shows that - for most users - there's no need to tune anything if you use EF-Series.</p>
 
-<p>CNPG gives you best practices out of box. It takes 60 seconds to deploy and it comes with HA, backup integration (Velero and Kasten, native backup to S3 (Post Two; currently a TODO item)) and few other things. E-Series gives you fantastic performance without any tuning effort (and not just for Postgres database).</p>
+<p>CNPG gives you best practices out of box. It takes 60 seconds to deploy and it comes with HA, backup integration (Velero and Kasten (see Post One), native backup to S3 (Post Two; TODO item)) and few other things.</p>
+
+<p>E-Series gives you fantastic performance without any tuning effort (and not just for Postgres database). But E-Series <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">CSI drivers</a> are the only reason integrations like this are now possible and almost effortless; without them, we couldn't use CNPG and we'd be limited to DIY efforts with VMs (there isn't even a Docker Compose driver for SANtricity, in case you didn't get the memo).</p>
+
+<h2 id="appendix-a-test-with-64-clients-and-postgres-on-the-same-node">Appendix A: test with 64 clients and Postgres on the same node</h2>
+
+<p>That test with 64 clients maxed out the CPUs, but the performance was still remarkably stable.</p>
+
+<p><img src="/assets/images/cnpg-perf-07-cpu-max-out-64-clients.png" alt="CPU maxed out with 64 clients" /></p>
+
+<p>MiB/s during read-only run - 645 MiB/s:</p>
+
+<p><img src="/assets/images/cnpg-perf-08-cpu-max-out-64-clients-mibs-ro.png" alt="CPU maxed out with 64 clients - MiB/s with Read-Only" /></p>
+
+<p>MiB/s during read-write run - 638 MiB/s (ping line shows writes):</p>
+
+<p><img src="/assets/images/cnpg-perf-09-cpu-max-out-64-clients-mibs-rw.png" alt="CPU maxed out with 64 clients - MiB/s with Read-Write" /></p>
+
+<p>IOPS during read-only run - 80K:</p>
+
+<p><img src="/assets/images/cnpg-perf-10-cpu-max-out-64-clients-iops-ro.png" alt="CPU maxed out with 64 clients - IOPS with Read-Only" /></p>
+
+<p>IOPS during read-write run - 42K (pink line shows writes):</p>
+
+<p><img src="/assets/images/cnpg-perf-11-cpu-max-out-64-clients-iops-rw.png" alt="CPU maxed out with 64 clients - IOPS with Read-Write" /></p>
+
+<p>Even at 32 clients, load average was indicating CPU saturation.</p>
 
         
       </section>

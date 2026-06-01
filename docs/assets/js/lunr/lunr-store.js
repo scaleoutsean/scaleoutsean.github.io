@@ -2448,7 +2448,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE",
-        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) (this post) Introduction In the first post, I didn’t have time to evaluate performance. I still don’t, but at least I’ve done a worst-case scenario test with NVMe/RoCE. This...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) (this post) Introduction In the first post, I didn’t have time to evaluate the performance of CPNG with SANtricty. I still don’t, but at least I’ve done a worst-case...","categories": ["storage","e-series","kubernetes"],
         "tags": ["cloudnativepg","postgresql","database","netapp","performance","ibm","csi"],
         "url": "/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html",
         "teaser": null
@@ -2466,7 +2466,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE 2026-06-01 00:00 4 minute read PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test with EF-Serie... MS SQL Server on Kubernetes with NetApp E-Series 2026-05-29 00:00 7 minute read How to deploy and connect...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE 2026-06-01 00:00 7 minute read PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test with EF-Serie... MS SQL Server on Kubernetes with NetApp E-Series 2026-05-29 00:00 7 minute read How to deploy and connect...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
