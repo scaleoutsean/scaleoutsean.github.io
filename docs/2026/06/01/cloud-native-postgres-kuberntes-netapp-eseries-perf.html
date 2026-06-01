@@ -1,0 +1,833 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE | Acting Technologist</title>
+<meta name="description" content="Simple performance test with Cloud-Native PostgreSQL, NetApp SANtricity, IBM Block CSI">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">
+
+
+  <meta property="og:description" content="Simple performance test with Cloud-Native PostgreSQL, NetApp SANtricity, IBM Block CSI">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE">
+  <meta name="twitter:description" content="Simple performance test with Cloud-Native PostgreSQL, NetApp SANtricity, IBM Block CSI">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-06-01T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE">
+    <meta itemprop="description" content="  PART ONE: CloudNativePG with CSI snapshots  PART TWO: CloudNativePG with plugins (future post)  PART THREE: CloudNativePG performance test with IBM Block CSI and NVMe/ROCE (this post)">
+    <meta itemprop="datePublished" content="2026-06-01T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html" itemprop="url">Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-01T00:00:00+08:00">2026-06-01 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment">Environment</a><ul><li><a href="#what-was-different">What was different</a></li></ul></li><li><a href="#observations">Observations</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <ul>
+  <li><a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#solidfire-and-santricity-csi-plugins">PART ONE: CloudNativePG with CSI snapshots</a></li>
+  <li>PART TWO: CloudNativePG with plugins (future post)</li>
+  <li><strong>PART THREE: CloudNativePG performance test with IBM Block CSI and NVMe/ROCE</strong> (this post)</li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In the first post, I didn't have time to evaluate performance.</p>
+
+<p>I still don't, but at least I've done a worst-case scenario test with NVMe/RoCE. This is baseline without any optimization, so it's hard to do <em>worse</em> than this.</p>
+
+<h2 id="environment">Environment</h2>
+
+<ul>
+  <li>Kubernetes 1.36.1</li>
+  <li>IBM Block CSI driver with SANtricity patch 1.13.2</li>
+  <li>PostgreSQL 18</li>
+  <li>CNPG 1.29.1</li>
+  <li>Host system (for CNPG on Kubernetes <strong>and</strong> PostgreSQL <code class="language-plaintext highlighter-rouge">pgbench</code> on host): dual-CPU Xeon Silver server from last decade</li>
+  <li>EF600 (equivalent of today's <strong>entry-level</strong> E-Series flash system, <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">EF-Series EF50</a>) with <strong>14</strong> disks in DDP storage pool</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /proc/cpuinfo 
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 85
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Xeon<span class="o">(</span>R<span class="o">)</span> Silver 4110 CPU @ 2.10GHz
+stepping        : 4
+microcode       : 0x2007006
+cpu MHz         : 799.998
+cache size      : 11264 KB
+physical <span class="nb">id</span>     : 0
+</code></pre></div></div>
+
+<p>The tests is the usual <code class="language-plaintext highlighter-rouge">pgbench</code> test and the DB was much larger than server RAM.</p>
+
+<p>No tuning of any kind was performed. Everything (tables, indexes, log) was on one 256 GiB PVC. The volume had the least optimal setup for a DB - RAID 6 on DDP. It's hard to imagine what else could be done to make results worse.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME   STATUS   ROLES           AGE    VERSION
+h2     Ready    control-plane   100d   v1.36.1
+
+<span class="nv">$ </span>kubectl get pod,pvc,svc <span class="nt">-n</span> cnpg-backup
+NAME                    READY   STATUS    RESTARTS   AGE
+pod/cluster-example-1   1/1     Running   0          3h35m
+
+NAME                                      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/cluster-example-1   Bound    pvc-2f2fd4a2-0d6c-4dee-8383-a4f59ec0e020   256Gi      RWO            demo-storageclass-santricity   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 3h35m
+
+NAME                               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
+service/cluster-example-nodeport   NodePort    10.110.252.11    &lt;none&gt;        5432:31432/TCP   3h35m
+service/cluster-example-r          ClusterIP   10.111.215.116   &lt;none&gt;        5432/TCP         3h35m
+service/cluster-example-ro         ClusterIP   10.98.63.170     &lt;none&gt;        5432/TCP         3h35m
+service/cluster-example-rw         ClusterIP   10.109.63.158    &lt;none&gt;        5432/TCP         3h35m
+</code></pre></div></div>
+
+<h3 id="what-was-different">What was different</h3>
+
+<p>Compared to the first CNPG post:</p>
+
+<ul>
+  <li>I ran just one instance (there was no replica DB)</li>
+</ul>
+
+<h2 id="observations">Observations</h2>
+
+<p>How many times have we seen poor performance in such scenarios? I've seen plenty.</p>
+
+<p>Well, here it wasn't that bad - over 200 MB/s and that's with PostgreSQL client and server sharing the same old box (and yet utilizing just 20% of CPU).</p>
+
+<p><img src="/assets/images/cnpg-perf-00-regular-io.png" alt="Regular run" /></p>
+
+<p>E-Series' performance monitoring dashboard reflected these <code class="language-plaintext highlighter-rouge">dstat</code> figures.</p>
+
+<p><img src="/assets/images/cnpg-perf-01-inserts.png" alt="Inserts" /></p>
+
+<p><code class="language-plaintext highlighter-rouge">SELECT</code> easily went over 1.5 GB/s at times.</p>
+
+<p><img src="/assets/images/cnpg-perf-02-select.png" alt="Select" /></p>
+
+<p>Best of all, PostgreSQL didn't break a sweat - most of time it wasn't near the top of the CPU hog list.</p>
+
+<p><img src="/assets/images/cnpg-perf-03-cpu-hogs.png" alt="CPU hogs" /></p>
+
+<p>Kubernetes (<code class="language-plaintext highlighter-rouge">kube-apiserver</code>, <code class="language-plaintext highlighter-rouge">kubelet</code>) was top hog.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>top
+top - 05:59:16 up 45 days, 13:31, 14 <span class="nb">users</span>,  load average: 7.04, 7.41, 7.51
+Tasks: 1226 total,   6 running, 1220 sleeping,   0 stopped,   0 zombie
+%Cpu<span class="o">(</span>s<span class="o">)</span>: 13.5 us,  5.7 sy,  0.0 ni, 74.1 <span class="nb">id</span>,  5.1 wa,  0.0 hi,  1.6 si,  0.0 st
+MiB Mem :  63933.1 total,   4156.3 free,  22009.9 used,  38626.1 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.  41923.2 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+1711970 sean      20   0   10.6g   2.4g   2.3g S   1.3   3.9  67:38.31 qdrant
+1711973 sean      20   0   10.0g   2.4g   2.3g S   1.3   3.9  66:48.71 qdrant
+1138654 sean      20   0    9.8g   2.4g   2.3g S   1.6   3.8  84:09.67 qdrant
+   2408 lightdm   20   0 2593664   1.7g  46484 S   0.0   2.7 150:35.06 arctica-greeter
+4044687 root      20   0 2996972   1.7g  80460 S  94.4   2.7     81,51 kube-apiserver
+ 792975 10001     20   0   20.3g   1.5g  97136 S   3.6   2.5 106:59.90 sqlservr
+2115263 167       20   0 6259720 824276  58832 S  12.1   1.3      6,11 ceph-mgr
+2464281 root      20   0 5008976 712188  84668 S  77.4   1.1     44,43 kubelet
+2112170 167       20   0  763404 540360  30928 S   3.3   0.8 297:57.54 ceph-mon
+2113361 167       20   0  759892 536196  31604 S   2.0   0.8 272:34.07 ceph-mon
+2115274 167       20   0 5184676 534948  56132 S   0.3   0.8  36:49.89 ceph-mgr
+2110748 167       20   0  677892 454524  31840 S   1.6   0.7 356:05.89 ceph-mon
+2378317 root      20   0 2569212 412540 240104 S   1.0   0.6      6,38 qdrant
+3650803 sean      20   0 4479948 370328 141064 S   0.3   0.6   9:24.77 executor-server
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">SELECT</code> workload from one particular run:</p>
+
+<p><img src="/assets/images/cnpg-perf-04-select-run.png" alt="pgbench SELECT run" /></p>
+
+<p>At the same time, at approximately 6:05am local time, the following <strong>IOPS</strong> (not MiB/s) were observed on E-Series:</p>
+
+<p><img src="/assets/images/cnpg-perf-05-select-run-iops.png" alt="IOPS on Select" /></p>
+
+<p>The same in MiB/s:</p>
+
+<p><img src="/assets/images/cnpg-perf-06-select-run-mbps.png" alt="IOPS on Select" /></p>
+
+<p>Some of the results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scale</th>
+      <th>Type</th>
+      <th>Clients</th>
+      <th>Duration (s)</th>
+      <th>TPS</th>
+      <th>WAL Gen (MB)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>10</td>
+      <td>RO</td>
+      <td>4</td>
+      <td>60</td>
+      <td>36500</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>RO</td>
+      <td>8</td>
+      <td>60</td>
+      <td>69119</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>RW</td>
+      <td>4</td>
+      <td>60</td>
+      <td>4053</td>
+      <td>230.64</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>RW</td>
+      <td>8</td>
+      <td>60</td>
+      <td>7965</td>
+      <td>453.95</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>4</td>
+      <td>120</td>
+      <td>7888</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>8</td>
+      <td>120</td>
+      <td>16643</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>16</td>
+      <td>120</td>
+      <td>35029</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RO</td>
+      <td>32</td>
+      <td>121</td>
+      <td>59531</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>4</td>
+      <td>120</td>
+      <td>2284</td>
+      <td>4158.05</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>RW</td>
+      <td>8</td>
+      <td>120</td>
+      <td>4051</td>
+      <td>7293.22</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The scripts I used came from <a href="https://github.com/instaclustr/code-samples/tree/main/Postgres/Postgres-ANF">here</a> and were adjusted to run with CNPG.</p>
+
+<p>I've highlighted results only from my tests that ran at scale 10000 (&gt;100 GiB data on this system with 64 GiB RAM <strong>and</strong> none of the noise removed (you can see I had multi-instance Qdrant, MS SQL Server, Ceph and everything else running at the same time)).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This "worst case" test yielded great results.</p>
+
+<p>We haven't even scratched the surface here. We know E-Series <a href="/2023/10/17/netapp-eseries-raid1-vs-raid6-ddp-comparison.html">can do a lot better</a> with PostgreSQL. But even this casual test shows that - for most users - there's no need to tune anything if you use EF-Series.</p>
+
+<p>CNPG gives you best practices out of box. It takes 60 seconds to deploy and it comes with HA, backup integration (Velero and Kasten, native backup to S3 (Post Two; currently a TODO item)) and few other things. E-Series gives you fantastic performance without any tuning effort (and not just for Postgres database).</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/cloudnativepg" class="page__taxonomy-item p-category" rel="tag">cloudnativepg</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/ibm" class="page__taxonomy-item p-category" rel="tag">ibm</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/performance" class="page__taxonomy-item p-category" rel="tag">performance</a><span class="sep">, </span>
+    
+      <a href="/tags/postgresql" class="page__taxonomy-item p-category" rel="tag">postgresql</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-06-01T00:00:00+08:00">2026-06-01 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Cloud-Native+Postgres+Performance+with+NetApp+SANtricity+NVMe%2FRoCE%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F06%2F01%2Fcloud-native-postgres-kuberntes-netapp-eseries-perf.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html" class="pagination--pager" title="MS SQL Server on Kubernetes with NetApp E-Series">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html" rel="permalink">MS SQL Server on Kubernetes with NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-29T00:00:00+08:00">2026-05-29 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to deploy and connect to SQL Server Stateful Set on Kubernetes with E-Series
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/27/firemox-update-proxmox-tui-solidfire.html" rel="permalink">Firemox (Proxmox-SolidFire TUI) updates
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-27T00:00:00+08:00">2026-05-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What's new in Firemox in May 2026
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html" rel="permalink">Multi-node Qdrant on Kubernetes with NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-26T00:00:00+08:00">2026-05-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          19 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Thoughts on Qdrant backup and restore and storage management on Kubernetes
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/22/ceph-kubernetes-eseries.html" rel="permalink">Rook Ceph on NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-22T00:00:00+08:00">2026-05-22 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Deploy Rook Ceph on CSI backed by NetApp E-Series
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
