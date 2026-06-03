@@ -1,0 +1,981 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity | Acting Technologist</title>
+<meta name="description" content="Deploy CNPG with Barman with Kubernetes and NetApp E-Series, and backup and restore stuff">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html">
+
+
+  <meta property="og:description" content="Deploy CNPG with Barman with Kubernetes and NetApp E-Series, and backup and restore stuff">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity">
+  <meta name="twitter:description" content="Deploy CNPG with Barman with Kubernetes and NetApp E-Series, and backup and restore stuff">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-06-03T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity">
+    <meta itemprop="description" content="Notes on barman on Kubernetes from a NetApp E-Series perspective">
+    <meta itemprop="datePublished" content="2026-06-03T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html" itemprop="url">Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-03T00:00:00+08:00">2026-06-03 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#pg-barman-and-cnpg-barman">PG Barman and CNPG Barman</a></li><li><a href="#backup-and-restore">Backup and restore</a></li><li><a href="#workflow">Workflow</a><ul><li><a href="#backup">Backup</a></li><li><a href="#restore">Restore</a></li></ul></li><li><a href="#e-series-csi-and-barman-cloud-cnpg-i-backup">E-Series CSI and Barman Cloud CNPG-I backup</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <ul>
+  <li><a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#solidfire-and-santricity-csi-plugins">PART ONE: CloudNativePG with CSI snapshots</a></li>
+  <li><strong>PART TWO: CloudNativePG with plugins</strong> (this post)</li>
+  <li><a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE)</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Parts one and three were done before part two, but I'm about to complete this initial set of three posts on Kubernetes-based PostgreSQL with NetApp E-Series, and - as incredible as it may seem - once again conclude E-Series is a great fit for CNPG in all its incarnations.</p>
+
+<p>I've mentioned why in other posts, so I'll just skip all that.</p>
+
+<h2 id="pg-barman-and-cnpg-barman">PG Barman and CNPG Barman</h2>
+
+<p>In the past I'd used several backup and log-shipping utilities for PostgreSQL, but I hadn't used Barman. I can't recall why I didn't use it, but I think I used other plugins at the time PG Barman did not exist or wasn't well known (the first Github release is dated July 2021).</p>
+
+<p>It seems to be the default for CNPG (understandably so, it seems EnterpriseDB backs both projects), so it's time to try it out. The official name is <a href="https://cloudnative-pg.io/plugin-barman-cloud/docs/intro/">Barman Cloud CNPG-I plugin</a>.</p>
+
+<p>What's most interesting about this approach to me is: there's no Barman server and Barman disk in this CNPG-I approach. From the link above:</p>
+
+<blockquote>
+  <p>The Barman Cloud Plugin for CloudNativePG enables online continuous physical backups of PostgreSQL clusters to object storage using the barman-cloud suite from the Barman project.</p>
+</blockquote>
+
+<p>From database to S3!</p>
+
+<p><img src="/assets/images/cnpg-barman_00_diagram.png" alt="CNPG-I with Barman plugin" /></p>
+
+<p>As depicted here - hopefully correctly, but it might not be - Barman gets data from PostgreSQL (the primary instance, in case of PG clusters), and ships that stuff to S3. It hasn't even a temporary PVC. There's the option to use SSH and rsync instead of this depicted approach, but that seemed silly, so I did not explore that.</p>
+
+<p>My setup:</p>
+
+<ul>
+  <li>Kubernetes v1.36.1</li>
+  <li>CNPG v1.29.1 with (Barman) plugin 0.12.0</li>
+  <li>Versity Gateway 1v.5.0 (S3)</li>
+</ul>
+
+<p>My initial approach used SolidFire CSI, Versity S3 in its own namespace. <code class="language-plaintext highlighter-rouge">cert-manager</code> is required by CNPG. The CNPG "system" namespace runs CNPG control. <code class="language-plaintext highlighter-rouge">cnpg-backup</code> is where the databases run, and where backup and restore will happen.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get ns
+NAME                   STATUS   AGE
+cert-manager           Active   165m
+cnpg-backup            Active   158m
+cnpg-system            Active   2d14h
+solidfire-csi          Active   8d
+versitygw              Active   159m
+</code></pre></div></div>
+
+<p>Here's what I have in terms of pods and PVCs in the two relevant namespaces (my single instance cluster is running in <code class="language-plaintext highlighter-rouge">cnpg-backup</code>):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc,pod <span class="nt">-n</span> cnpg-system
+NAME                                        READY   STATUS    RESTARTS        AGE
+pod/barman-cloud-bf7cc5cc7-bnvz6            1/1     Running   0               140m
+pod/cnpg-controller-manager-b66cbbb-5mk94   1/1     Running   1 <span class="o">(</span>2d13h ago<span class="o">)</span>   2d14h
+
+<span class="nv">$ </span>kubectl get pvc,pod <span class="nt">-n</span> cnpg-backup
+NAME                                      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/cluster-example-1   Bound    pvc-721d8ba5-e81f-4b50-af75-d3c2d1f34d57   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 134m
+
+NAME                    READY   STATUS    RESTARTS   AGE
+pod/cluster-example-1   2/2     Running   0          119m
+</code></pre></div></div>
+
+<p>Like in the first post, I was using SolidFire CSI but I'll update this post with SANtricity CSI-based examples in parts where that is relevant (performance, especially).</p>
+
+<h2 id="backup-and-restore">Backup and restore</h2>
+
+<p>The first post already illustrated backup and restore with CSI snapshots. Here, we don't use CSI snapshots and they're not supported by CNPG Barman in any case (they are supported, but only in the three hyperscalers, not on-premises).</p>
+
+<p>If you prefer CSI snapshots, use them, if you prefer this "cloud-native" way, use it. You can also use Barman Cloud and schedule snapshots separately.</p>
+
+<p>Advantages of Barman's "backup to cloud" approach in CNPG:</p>
+
+<ul>
+  <li>Point-in-time recovery is available thanks to continuous WAL log shipping</li>
+  <li>Near 0 RPO <strong>without</strong> consuming Tier 1 storage capacity through CSI snapshot <a href="/2026/03/21/shocking-truth-netapp-santricity-snapshot-schedules.html">reservations</a> (which is a major factor for E-Series, I would say, especially if you do it right and use RAID 10 NVMe-backed Storage Class for Postgres PVC(s)!)</li>
+  <li>Hot backup only (no cold backup or old school "freeze and snapshot" stuff)</li>
+  <li>Requires backup to object store ("backup to cloud"; other generic Barman approaches can't work)</li>
+</ul>
+
+<p>So, database administrator can restore (or make a clone) a database cluster (single or multi-instance) to any point in time available on timeline; there are no snapshot schedules, just a periodic full baseline backup schedule (say, on Sundays or nightly).</p>
+
+<p>Assuming this sounds cool, and you want to switch from CSI snapshots (or use this <em>in addition</em> to CSI snapshots) what does that mean for your E-Series?</p>
+
+<p>It means more work for it. All WAL logs must be streamed, which amplifies the write workload that's creating WAL data by doing an equal amount of reads (on WAL files) to ship WAL files to Barman.</p>
+
+<p>Then, if you happen to backup to S3-compatible object store (VM, bare metal server, container) using the same E-Series box (but maybe a nearline SAS backed volume), you have some extra sequential writes there.</p>
+
+<p>As we've mentioned, periodically (weekly or nightly) we may stream the <em>entire</em> database to S3 to create a new baseline backup.</p>
+
+<p>And finally, write performance on <em>restore</em> becomes very important - the faster you write to restore target PVC, the sooner you restore. Especially if you're restoring an entire database (which may be a multi-instance cluster with 2-3 PostgreSQL instances, each with own PVC(s)) and not just getting selected WAL files or baseline backup:</p>
+
+<ul>
+  <li>read compressed data from S3 at 500-1,000 MB/s</li>
+  <li>restore data to single volume PVC at &gt; 1,500 MB/s (or 3-4 GB/s for multi-instance CNPG clusters)</li>
+  <li>do not interfere with other workloads and ongoing Barman Cloud backups</li>
+</ul>
+
+<p>Not all arrays can easily handle such workloads even with plenty of disks. It's reasonably safe to say that, if you can't read data from a PVC faster than 2 GiB/s, that baseline backup of a 2 TiB-sized database will take more than 1,000 seconds, while users complain about slow queries.</p>
+
+<p>In Barman Cloud, full restores are done to a new cluster, hence <code class="language-plaintext highlighter-rouge">postgres-cluster-nu</code> here.</p>
+
+<p><img src="/assets/images/cnpg-barman_01_restore-workflow.png" alt="CNPG-I with Barman plugin" /></p>
+
+<p>(Actual restore process is not very simple; there's the usual magic of temporary pods that download all data from S3 backup bucket - a baseline backup plus all subsequent WAL files up to required point-in-time - and run a restore, then PostgreSQL init needs to change ownership of restored data and finally can start.)</p>
+
+<p>Most of these are "extra" workloads that we mentioned in this section don't appear in CSI snapshot workflows. There, we take a snapshot, create a read-only clone from it, and use a Data Mover to read data off that clone and copy it to S3. This is why array performance is important for anyone using CNPG backup-to-cloud plugin this way.</p>
+
+<p>If the original cluster wasn't destroyed, you'd end up with another cluster on restore. In this output below, that's <code class="language-plaintext highlighter-rouge">cluster-restore</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc,pod <span class="nt">-n</span> cnpg-backup
+NAME                                      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/cluster-example-1   Bound    pvc-721d8ba5-e81f-4b50-af75-d3c2d1f34d57   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 134m
+persistentvolumeclaim/cluster-restore-1   Bound    pvc-99c2a755-9122-4b80-8e08-a018f4dd682a   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 67m
+
+NAME                    READY   STATUS    RESTARTS   AGE
+pod/cluster-example-1   2/2     Running   0          119m
+pod/cluster-restore-1   1/1     Running   0          62m
+
+<span class="nv">$ </span>kubectl get pvc,pod <span class="nt">-n</span> cnpg-system
+NAME                                        READY   STATUS    RESTARTS        AGE
+pod/barman-cloud-bf7cc5cc7-bnvz6            1/1     Running   0               140m
+pod/cnpg-controller-manager-b66cbbb-5mk94   1/1     Running   1 <span class="o">(</span>2d13h ago<span class="o">)</span>   2d14h
+
+</code></pre></div></div>
+
+<p>I should add that even in this very particular configuration, there are still many options that can significantly impact backup and restore.</p>
+
+<h2 id="workflow">Workflow</h2>
+
+<p>Check if Barman is running in <code class="language-plaintext highlighter-rouge">cnpg-system</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods   <span class="nt">-n</span> cnpg-system <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>barman-cloud
+NAME                           READY   STATUS    RESTARTS   AGE
+barman-cloud-bf7cc5cc7-bnvz6   1/1     Running   0          4h3m
+</code></pre></div></div>
+
+<p>Our backup destination and restore source was a Versity S3 Gateway mentioned earlier.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get ObjectStore <span class="nt">-n</span> cnpg-backup
+NAME        AGE
+vgw-store   3h44m
+
+<span class="nv">$ </span>kubectl describe ObjectStore <span class="nt">-n</span> cnpg-backup
+Name:         vgw-store
+Namespace:    cnpg-backup
+Labels:       &lt;none&gt;
+Annotations:  &lt;none&gt;
+API Version:  barmancloud.cnpg.io/v1
+Kind:         ObjectStore
+Metadata:
+  Creation Timestamp:  2026-06-03T07:34:23Z
+  Generation:          1
+  Resource Version:    2134847
+  UID:                 2cd0d6df-2db0-4009-a33b-d3dd176945ca
+Spec:
+  Configuration:
+    Destination Path:  s3://barman/
+    Endpoint URL:      http://versitygw.versitygw.svc.cluster.local:7070
+    s3Credentials:
+      Access Key Id:
+        Key:   ACCESS_KEY_ID
+        Name:  vgw-creds
+      Secret Access Key:
+        Key:   ACCESS_SECRET_KEY
+        Name:  vgw-creds
+    Wal:
+      Compression:  <span class="nb">gzip
+</span>Status:
+  Server Recovery Window:
+    Cluster - Example:
+      First Recoverability Point:   2026-06-03T08:01:15Z
+      Last Successful Backup Time:  2026-06-03T08:01:15Z
+Events:                             &lt;none&gt;
+
+</code></pre></div></div>
+
+<h3 id="backup">Backup</h3>
+
+<p>Using the declarative cloud backup approach, we run <code class="language-plaintext highlighter-rouge">kubectl apply -f backup.yaml -n cnpg-backup</code>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">postgresql.cnpg.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Backup</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">second-try</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">cluster</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">cluster-example</span>
+  <span class="na">method</span><span class="pi">:</span> <span class="s">plugin</span>
+  <span class="na">pluginConfiguration</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">barman-cloud.cloudnative-pg.io</span>
+</code></pre></div></div>
+
+<p>This creates a new baseline backup and Barman sends it to S3.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get backups.postgresql.cnpg.io <span class="nt">-n</span> cnpg-backup
+NAME         AGE   CLUSTER           METHOD   PHASE     ERROR
+second-try   5s    cluster-example   plugin   started   
+
+<span class="nv">$ </span>kubectl describe backups.postgresql.cnpg.io second-try <span class="nt">-n</span> cnpg-backup
+Name:         second-try
+Namespace:    cnpg-backup
+Labels:       &lt;none&gt;
+Annotations:  &lt;none&gt;
+API Version:  postgresql.cnpg.io/v1
+Kind:         Backup
+Metadata:
+  Creation Timestamp:  2026-06-03T07:57:50Z
+  Generation:          1
+  Resource Version:    2134849
+  UID:                 1f20f5b1-0d09-498f-bf38-1f6519160418
+Spec:
+  Cluster:
+    Name:  cluster-example
+  Method:  plugin
+  Plugin Configuration:
+    Name:  barman-cloud.cloudnative-pg.io
+Status:
+  Backup Id:    20260603T075751
+  Backup Name:  backup-20260603075751
+  Begin Lsn:    0/D000060
+  Begin Wal:    00000001000000000000001A
+  End Lsn:      0/D0001C8
+  End Wal:      00000001000000000000001A
+  Instance Id:
+    Container Id:  containerd://080334ac68f9f81aeeaff3d8c53f04c3d40a3fc992750450ecdbb3bef2ba0557
+    Pod Name:      cluster-example-1
+    Session Id:    a3f69424-b1f4-43e2-a86b-acf7a145ec82
+  Major Version:   18
+  Method:          plugin
+  Online:          <span class="nb">true
+  </span>Phase:           completed
+  Plugin Metadata:
+    Cluster UID:                 19d5ed3e-bdaa-4547-a3ed-12c92880eb18
+    Display Name:                BarmanCloudInstance
+    Name:                        barman-cloud.cloudnative-pg.io
+    Plugin Name:                 barman-cloud.cloudnative-pg.io
+    Timeline:                    1
+    Version:                     0.12.0
+  Reconciliation Started At:     2026-06-03T07:57:50Z
+  Reconciliation Terminated At:  2026-06-03T08:01:55Z
+  Started At:                    2026-06-03T07:57:53Z
+  Stopped At:                    2026-06-03T08:01:15Z
+Events:                          &lt;none&gt;
+</code></pre></div></div>
+
+<p>This took only 4 minutes because the "demo" database was small. (As I've mentioned, I did not use SANtricity CSI here; when that happens we'll use larger databases).</p>
+
+<h3 id="restore">Restore</h3>
+
+<p>Find a backup to restore and apply a restore manifest.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">postgresql.cnpg.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Cluster</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">cluster-restore</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">instances</span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">imagePullPolicy</span><span class="pi">:</span> <span class="s">IfNotPresent</span>
+  <span class="na">bootstrap</span><span class="pi">:</span>
+    <span class="na">recovery</span><span class="pi">:</span>
+      <span class="na">source</span><span class="pi">:</span> <span class="s">source</span>
+  <span class="na">externalClusters</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">source</span>
+    <span class="na">plugin</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">barman-cloud.cloudnative-pg.io</span>
+      <span class="na">parameters</span><span class="pi">:</span>
+        <span class="na">barmanObjectName</span><span class="pi">:</span> <span class="s">vgw-store</span>
+        <span class="na">serverName</span><span class="pi">:</span> <span class="s">cluster-example</span>
+  <span class="na">storage</span><span class="pi">:</span>
+    <span class="na">storageClass</span><span class="pi">:</span> <span class="s">solidfire-bronze</span>
+    <span class="na">size</span><span class="pi">:</span> <span class="s">2Gi</span>
+</code></pre></div></div>
+
+<p>Note there's no "date" or PiT datetime in this restore job. In that case Barman Cloud restores latest.</p>
+
+<p>If you wanted to restore a backup to a cluster for end-of-month reporting, you could use a PiT for that.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">bootstrap</span><span class="pi">:</span>
+  <span class="na">recovery</span><span class="pi">:</span>
+    <span class="na">source</span><span class="pi">:</span> <span class="s">cluster-eom-report</span>
+    <span class="na">recoveryTarget</span><span class="pi">:</span>
+      <span class="na">time</span><span class="pi">:</span> <span class="s2">"</span><span class="s">2026-06-03</span><span class="nv"> </span><span class="s">23:59:59+00"</span>
+</code></pre></div></div>
+
+<p>Going with our "latest" approach:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl apply <span class="nt">-f</span> /home/sean/code/eseries/kubernetes/postgresql_plugin_backup/restore.yaml <span class="nt">-n</span> cnpg-backup
+cluster.postgresql.cnpg.io/cluster-restore created
+</code></pre></div></div>
+
+<p>This multi-step process takes a while. <code class="language-plaintext highlighter-rouge">cluster-example-1</code> is our existing cluster, while <code class="language-plaintext highlighter-rouge">cluster-restore-1-full-recovery</code> is where database restore is happening.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl get pods <span class="nt">-n</span> cnpg-backup <span class="nt">-w</span>
+NAME                                    READY   STATUS     RESTARTS   AGE
+cluster-example-1                       2/2     Running    0          51m
+cluster-restore-1-full-recovery-g5w6v   0/2     Init:0/2   0          6s
+cluster-restore-1-full-recovery-g5w6v   0/2     Init:0/2   0          21s
+cluster-restore-1-full-recovery-g5w6v   0/2     Init:0/2   0          21s
+cluster-restore-1-full-recovery-g5w6v   0/2     Init:1/2   0          23s
+cluster-restore-1-full-recovery-g5w6v   0/2     Init:1/2   0          50s
+cluster-restore-1-full-recovery-g5w6v   0/2     PodInitializing   0          51s
+cluster-restore-1-full-recovery-g5w6v   1/2     PodInitializing   0          52s
+cluster-restore-1-full-recovery-g5w6v   2/2     Running           0          52s
+</code></pre></div></div>
+
+<p>If you look at the logs of that pod, you can see those different steps mentioned earlier.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl logs <span class="nt">-n</span> cnpg-backup cluster-restore-1-full-recovery-g5w6v
+Defaulted container <span class="s2">"full-recovery"</span> out of: full-recovery, bootstrap-controller <span class="o">(</span>init<span class="o">)</span>, plugin-barman-cloud <span class="o">(</span>init<span class="o">)</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"ts"</span>:<span class="s2">"2026-06-03T08:42:27.952342373Z"</span>,<span class="s2">"msg"</span>:<span class="s2">"Starting webserver"</span>,<span class="s2">"logging_pod"</span>:<span class="s2">"cluster-restore-1-full-recovery"</span>,<span class="s2">"address"</span>:<span class="s2">"localhost:8010"</span>,<span class="s2">"hasTLS"</span>:false<span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"ts"</span>:<span class="s2">"2026-06-03T08:42:28.054560343Z"</span>,<span class="s2">"msg"</span>:<span class="s2">"Restore through plugin detected, proceeding..."</span>,<span class="s2">"logging_pod"</span>:<span class="s2">"cluster-restore-1-full-recovery"</span><span class="o">}</span>
+<span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"ts"</span>:<span class="s2">"2026-06-03T08:42:32.04145153Z"</span>,<span class="s2">"msg"</span>:<span class="s2">"Creating new data directory"</span>,<span class="s2">"logging_pod"</span>:<span class="s2">"cluster-restore-1-full-recovery"</span>,<span class="s2">"pgdata"</span>:<span class="s2">"/controller/recovery/datadir_3302259461"</span>,<span class="s2">"initDbOptions"</span>:[<span class="s2">"--username"</span>,<span class="s2">"postgres"</span>,<span class="s2">"-D"</span>,<span class="s2">"/controller/recovery/datadir_3302259461"</span>,<span class="s2">"--no-sync"</span><span class="o">]}</span>
+</code></pre></div></div>
+
+<p>The end result is a second (single instance) cluster.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods,pvc <span class="nt">-n</span> cnpg-backup
+NAME                                        READY   STATUS     RESTARTS   AGE
+pod/cluster-example-1                       2/2     Running    0          51m
+pod/cluster-restore-1-full-recovery-g5w6v   0/2     Init:0/2   0          10s
+
+NAME                                      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/cluster-example-1   Bound    pvc-721d8ba5-e81f-4b50-af75-d3c2d1f34d57   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 67m
+persistentvolumeclaim/cluster-restore-1   Bound    pvc-99c2a755-9122-4b80-8e08-a018f4dd682a   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 10s
+</code></pre></div></div>
+
+<p>If you wanted to protect this new cluster, you'd have to separately set it up for Barman Cloud backup.</p>
+
+<h2 id="e-series-csi-and-barman-cloud-cnpg-i-backup">E-Series CSI and Barman Cloud CNPG-I backup</h2>
+
+<p>Not everyone who uses Barman uses the CNPG-I approach. Those who don't run CNPG can't, and even those who do may prefer Barman on a separate VM or bare metal server.</p>
+
+<p>Even if you run Barman containerized on Kubernetes, you can still use one of those "traditional" approaches.</p>
+
+<p>Barman Cloud's approach is very different. It's really continuous backup and there's no backup server or even backup disk. Users can also retain CSI backups (or maybe just take CSI snapshots) and use CNPG for continuous backup; you get backup/restore, BC and DR. This is great for E-Series because you don't have to use array replication and - if you avoid CSI snapshots, or always rotate and keep just one CSI snapshot - you get best of both worlds.</p>
+
+<p>Note, however, that an in-place roll-back of a CSI snapshot would mess up your Barman Cloud continuous backup, so it's not recommended to mess around with conflicting data protection schemas on the same database cluster. We would have to make a Linked Clone of that data elsewhere in order to avoid messing up Barman Cloud continuous backup, or roll-back regardless and give up on recent backups done in Barman Cloud (take another baseline and start from scratch).</p>
+
+<p>Barman Cloud adds extra workloads and E-Series is well equipped to deliver on it. For large ,or many small-to-medium, environments:</p>
+
+<ul>
+  <li>Run PostgreSQL on NVMe-based DDP storage pool with a RAID 1-based Storage Class</li>
+  <li>If you use Versity S3 Gateway and have a hybrid (SSD/HDD) E-Series, you can put S3 data on a NL-SAS-based DDP with a RAID 6 Storage Class</li>
+</ul>
+
+<p>As you could see in <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">the performance post</a>, it's easy to get more than 1 GB/s from a PostgreSQL instance (even on a NVMe DDP with a RAID 6-backed SC). We also saw <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html#simple-sequential-workload">in other posts</a> that multiple GB/s can be achieved on a single volume. Assuming 800 MB/s restore performance <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html#appendix-a-test-with-64-clients-and-postgres-on-the-same-node">seen in the CNPG performance post</a>, that means we need just 20 minutes to restore a 1 TiB database in full without losing almost no data.</p>
+
+<p>Let's not forget that CNPG could have an independent replica server, so we wouldn't necessarily have to restore anything if the primary server failed.</p>
+
+<p>Also let's not forget that this gives us not just backups, but Business Continuity and DR, too, which is virtually <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-mirroring/requirements-for-using-asynchronous-mirroring.html?q=minutes+replication#supported-connections">impossible</a> with E-Series as of now:</p>
+
+<ul>
+  <li>There's no async replication for E4000 with iSCSI, for example</li>
+  <li>For EF600 and EF300 controllers, the primary and secondary volumes of an asynchronous mirrored pair must match the same protocol, tray level, segment size, security type, and RAID level</li>
+  <li>EF50 and EF80 support neither sync nor async mirroring</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>CNPG uses cloud-native ways (database replicas, continuous backup) to solve a lot of database and data protection problems related to PostgreSQL that E-Series has no realistic way of solving.</p>
+
+<p>The official recommendation is basically to use CNPG (not literally, let me quote <a href="https://www.netapp.com/media/161736-tr-5018-introduction-to-netapp-ef50-array.pdf">this</a>):</p>
+
+<blockquote>
+  <p>It is recommended to use replication (mirroring) and erasure coding features available in modern applications.</p>
+</blockquote>
+
+<p>Indeed.</p>
+
+<p>Not only does it solve those problems, but it does so in ways that are highly complementary to what E-Series does - reliable, high-performance block targets that lower risks of losing cluster nodes and minimize risk.</p>
+
+<p>By default, SANtricity reserves 40% of base volume capacity for snapshots. With CNPG-I, we can completely eliminate CSI snapshots, or maybe reserve 5% and run a schedule that takes a snapshot every 5 minutes. You save 20-30% of NVMe capacity with log shipping and if the S3 bucket has Object Lock enabled, those database backups are indestructible.</p>
+
+<p>If a disaster strikes, CNPG can bring up replica node within seconds (see the first post in this series) and if that's not possible, you still have near 0 RPO based on backups in object store. Then, if you don't mind losing up to 5 minutes of transactions, you can still get a quick in-place restore with a snapshot rollback, or - alternatively - spend 10-20 minutes to do a full restore and recover virtually all transactions from S3 (which seems like a better deal to me, but that also depends on situation).</p>
+
+<p>Before HA CSI drivers for E-Series existed, one could use something like TopoLVM CSI and run CPNG clusters with replicas for HA, which was fine but sometimes expensive. Now we can choose - replicated or single instance database that can be restarted from another Kubernetes node without putting a lot at risk - and E-Series can easily handle the extra workload of continuous backup and on-demand restores.</p>
+
+<p>I don't know much about Barman and CNPG, but I can tell this is a perfect match for E-Series.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/backup" class="page__taxonomy-item p-category" rel="tag">backup</a><span class="sep">, </span>
+    
+      <a href="/tags/cloudnativepg" class="page__taxonomy-item p-category" rel="tag">cloudnativepg</a><span class="sep">, </span>
+    
+      <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/tags/postgresql" class="page__taxonomy-item p-category" rel="tag">postgresql</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
+    
+      <a href="/categories/kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-06-03T00:00:00+08:00">2026-06-03 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Cloud-Native+Postgres+Backup+%28Barman%29+with+Kubernetes+and+NetApp+SANtricity%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F06%2F03%2Fcloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/06/02/solidfire-csi-state-export-script.html" class="pagination--pager" title="State export script for SolidFire CSI and SolidFire">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/06/02/solidfire-csi-state-export-script.html" rel="permalink">State export script for SolidFire CSI and SolidFire
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-02T00:00:00+08:00">2026-06-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Script to assist with SolidFire failover and failback in Kubernetes environments
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html" rel="permalink">Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-01T00:00:00+08:00">2026-06-01 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">
+  PART ONE: CloudNativePG with CSI snapshots
+  PART TWO: CloudNativePG with plugins (future post)
+  PART THREE: CloudNativePG performance test with EF-Serie...</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html" rel="permalink">MS SQL Server on Kubernetes with NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-29T00:00:00+08:00">2026-05-29 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to deploy and connect to SQL Server Stateful Set on Kubernetes with E-Series
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/05/27/firemox-update-proxmox-tui-solidfire.html" rel="permalink">Firemox (Proxmox-SolidFire TUI) updates
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-05-27T00:00:00+08:00">2026-05-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What's new in Firemox in May 2026
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

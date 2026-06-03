@@ -2370,7 +2370,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI",
-        "excerpt":"PART ONE: CloudNativePG with CSI snapshots (this post) PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test EF-Series (NVMe/RoCE) Introduction The number of things known-to-work with IBM Block CSI patched for SANtricity is increasing: so far “first pass” CSI tests have been completed for Versity S3 Gateway,...","categories": ["storage","e-series","solidfire","kubernetes"],
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots (this post) PART TWO: CloudNativePG with plugins PART THREE: CloudNativePG performance test EF-Series (NVMe/RoCE) Introduction The number of things known-to-work with IBM Block CSI patched for SANtricity is increasing: so far “first pass” CSI tests have been completed for Versity S3 Gateway, Splunk, Elasticsearch,...","categories": ["storage","e-series","solidfire","kubernetes"],
         "tags": ["cloudnativepg","postgresql","database","netapp","ibm","csi"],
         "url": "/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html",
         "teaser": null
@@ -2459,6 +2459,12 @@ var store = [{
         "url": "/2026/06/02/solidfire-csi-state-export-script.html",
         "teaser": null
       },{
+        "title": "Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity",
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (this post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) Introduction Parts one and three were done before part two, but I’m about to complete this initial set of three posts on Kubernetes-based PostgreSQL with NetApp E-Series, and -...","categories": ["storage","e-series","kubernetes"],
+        "tags": ["cloudnativepg","postgresql","database","netapp","backup","csi"],
+        "url": "/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2472,7 +2478,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"State export script for SolidFire CSI and SolidFire 2026-06-02 00:00 3 minute read Script to assist with SolidFire failover and failback in Kubernetes environments Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE 2026-06-01 00:00 7 minute read PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity 2026-06-03 00:00 12 minute read Notes on barman on Kubernetes from a NetApp E-Series perspective State export script for SolidFire CSI and SolidFire 2026-06-02 00:00 3 minute read Script to assist with SolidFire failover and failback in Kubernetes environments Cloud-Native Postgres...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
