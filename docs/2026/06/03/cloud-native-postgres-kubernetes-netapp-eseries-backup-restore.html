@@ -180,7 +180,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity">
-    <meta itemprop="description" content="Notes on barman on Kubernetes from a NetApp E-Series perspective">
+    <meta itemprop="description" content="Notes on Barman Cloud CNPG-I backup from a NetApp E-Series perspective">
     <meta itemprop="datePublished" content="2026-06-03T00:00:00+08:00">
     
 
@@ -606,7 +606,11 @@ persistentvolumeclaim/cluster-restore-1   Bound    pvc-99c2a755-9122-4b80-8e08-a
 
 <p>By default, SANtricity reserves 40% of base volume capacity for snapshots. With CNPG-I, we can completely eliminate CSI snapshots, or maybe reserve 5% and run a schedule that takes a snapshot every 5 minutes. You save 20-30% of NVMe capacity with log shipping and with S3 bucket located outside the cluster has Object Lock enabled, those database backups are practically indestructible.</p>
 
-<p>If a disaster strikes, CNPG can bring up replica node within seconds (see the first post in this series) and if that's not possible, you still have near 0 RPO based on backups in object store. Then, if you don't mind losing up to 5 minutes of transactions, you can still get a quick in-place restore with a snapshot rollback, or - alternatively - spend 10-20 minutes to do a full restore and recover virtually all transactions from S3 (which seems like a better deal to me, but that also depends on situation).</p>
+<p>If a disaster strikes, CNPG can activate a replica within seconds (see the first post in this series) and if that's not possible, you still have near 0 RPO based on backups in object store. If you somehow lose both, then you can still decide to:</p>
+<ul>
+  <li>Restore almost all data with Barman Cloud and suffer 5-30 minutes of downtime (recommended), or</li>
+  <li>Roll-back in place from a CSI or hardware snapshot which would result in less downtime but in more data loss and your Barman Cloud would be broken so you'd have to spend some time on fixing that (not recommended, but if you have a very large database and can't be offline for hours, maybe this is not a terrible trade-off)</li>
+</ul>
 
 <p>Before HA CSI drivers for E-Series existed, one could use something like TopoLVM CSI and run CPNG clusters with replicas for HA, which was fine but sometimes expensive. Now we can choose - replicated or single instance database that can be restarted from another Kubernetes node without putting a lot at risk - and E-Series can easily handle the extra workload of continuous backup and on-demand restores.</p>
 
