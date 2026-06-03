@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -269,7 +269,7 @@
   <li>Versity Gateway 1v.5.0 (S3)</li>
 </ul>
 
-<p>My initial approach used SolidFire CSI, Versity S3 in its own namespace. <code class="language-plaintext highlighter-rouge">cert-manager</code> is required by CNPG. The CNPG "system" namespace runs CNPG control. <code class="language-plaintext highlighter-rouge">cnpg-backup</code> is where the databases run, and where backup and restore will happen.</p>
+<p>My initial approach used SolidFire CSI, Versity S3 in its own namespace. <code class="language-plaintext highlighter-rouge">cert-manager</code> is required by Barman Plugin. The <code class="language-plaintext highlighter-rouge">cnpg-system</code> namespace runs CNPG controller and Barman Cloud plugin, and <code class="language-plaintext highlighter-rouge">cnpg-backup</code> is where the databases run, and where backup and restore will happen.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get ns
 NAME                   STATUS   AGE
@@ -312,9 +312,9 @@ pod/cluster-example-1   2/2     Running   0          119m
   <li>Requires backup to object store ("backup to cloud"; other generic Barman approaches can't work)</li>
 </ul>
 
-<p>So, database administrator can restore (or make a clone) a database cluster (single or multi-instance) to any point in time available on timeline; there are no snapshot schedules, just a periodic full baseline backup schedule (say, on Sundays or nightly).</p>
+<p>So, the database administrator can restore (or make a clone of) a database cluster, single or multi-instance, to any point in time available on Barman Cloud timeline and stored on S3. There are no "snapshot schedules", there's just just a periodic full baseline backup schedule (say, on Sundays or nightly).</p>
 
-<p>Assuming this sounds cool, and you want to switch from CSI snapshots (or use this <em>in addition</em> to CSI snapshots) what does that mean for your E-Series?</p>
+<p>Assuming this sounds appealing, and you want to switch from CSI snapshots (or use this <em>in addition</em> to CSI snapshots) what does that mean for your E-Series?</p>
 
 <p>It means more work for it. All WAL logs must be streamed, which amplifies the write workload that's creating WAL data by doing an equal amount of reads (on WAL files) to ship WAL files to Barman.</p>
 
@@ -322,12 +322,12 @@ pod/cluster-example-1   2/2     Running   0          119m
 
 <p>As we've mentioned, periodically (weekly or nightly) we may stream the <em>entire</em> database to S3 to create a new baseline backup.</p>
 
-<p>And finally, write performance on <em>restore</em> becomes very important - the faster you write to restore target PVC, the sooner you restore. Especially if you're restoring an entire database (which may be a multi-instance cluster with 2-3 PostgreSQL instances, each with own PVC(s)) and not just getting selected WAL files or baseline backup:</p>
+<p>And finally, read and write performance during <em>restores</em> becomes very important - the faster you read from S3, the faster you can write to restore target PVC and the sooner you restore. Especially if you're restoring an entire database - which may be a multi-instance cluster with 2-3 PostgreSQL instances, each with own PVC(s) - and not just getting selected WAL files or downloading selected baseline backup:</p>
 
 <ul>
   <li>read compressed data from S3 at 500-1,000 MB/s</li>
   <li>restore data to single volume PVC at &gt; 1,500 MB/s (or 3-4 GB/s for multi-instance CNPG clusters)</li>
-  <li>do not interfere with other workloads and ongoing Barman Cloud backups</li>
+  <li>avoid interfering with other workloads and ongoing Barman Cloud backups</li>
 </ul>
 
 <p>Not all arrays can easily handle such workloads even with plenty of disks. It's reasonably safe to say that, if you can't read data from a PVC faster than 2 GiB/s, that baseline backup of a 2 TiB-sized database will take more than 1,000 seconds, while users complain about slow queries.</p>
@@ -336,7 +336,7 @@ pod/cluster-example-1   2/2     Running   0          119m
 
 <p><img src="/assets/images/cnpg-barman_01_restore-workflow.png" alt="CNPG-I with Barman plugin" /></p>
 
-<p>(Actual restore process is not very simple; there's the usual magic of temporary pods that download all data from S3 backup bucket - a baseline backup plus all subsequent WAL files up to required point-in-time - and run a restore, then PostgreSQL init needs to change ownership of restored data and finally can start.)</p>
+<p>The restore process is not very simple; there's the usual magic of temporary pods that download all data from S3 backup bucket - a baseline backup plus all subsequent WAL files up to required point-in-time - and run a restore, then PostgreSQL init needs to change ownership of restored data and finally can start. You can find more about it in the Barman Cloud plugin documentation.</p>
 
 <p>Most of these are "extra" workloads that we mentioned in this section don't appear in CSI snapshot workflows. There, we take a snapshot, create a read-only clone from it, and use a Data Mover to read data off that clone and copy it to S3. This is why array performance is important for anyone using CNPG backup-to-cloud plugin this way.</p>
 
@@ -519,13 +519,13 @@ Events:                          &lt;none&gt;
 
 <p>Going with our "latest" approach:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl apply <span class="nt">-f</span> /home/sean/code/eseries/kubernetes/postgresql_plugin_backup/restore.yaml <span class="nt">-n</span> cnpg-backup
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl apply <span class="nt">-f</span> /home/sean/code/eseries/kubernetes/postgresql_plugin_backup/restore.yaml <span class="nt">-n</span> cnpg-backup
 cluster.postgresql.cnpg.io/cluster-restore created
 </code></pre></div></div>
 
 <p>This multi-step process takes a while. <code class="language-plaintext highlighter-rouge">cluster-example-1</code> is our existing cluster, while <code class="language-plaintext highlighter-rouge">cluster-restore-1-full-recovery</code> is where database restore is happening.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl get pods <span class="nt">-n</span> cnpg-backup <span class="nt">-w</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> cnpg-backup <span class="nt">-w</span>
 NAME                                    READY   STATUS     RESTARTS   AGE
 cluster-example-1                       2/2     Running    0          51m
 cluster-restore-1-full-recovery-g5w6v   0/2     Init:0/2   0          6s
@@ -540,7 +540,7 @@ cluster-restore-1-full-recovery-g5w6v   2/2     Running           0          52s
 
 <p>If you look at the logs of that pod, you can see those different steps mentioned earlier.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span> kubectl logs <span class="nt">-n</span> cnpg-backup cluster-restore-1-full-recovery-g5w6v
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl logs <span class="nt">-n</span> cnpg-backup cluster-restore-1-full-recovery-g5w6v
 Defaulted container <span class="s2">"full-recovery"</span> out of: full-recovery, bootstrap-controller <span class="o">(</span>init<span class="o">)</span>, plugin-barman-cloud <span class="o">(</span>init<span class="o">)</span>
 <span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"ts"</span>:<span class="s2">"2026-06-03T08:42:27.952342373Z"</span>,<span class="s2">"msg"</span>:<span class="s2">"Starting webserver"</span>,<span class="s2">"logging_pod"</span>:<span class="s2">"cluster-restore-1-full-recovery"</span>,<span class="s2">"address"</span>:<span class="s2">"localhost:8010"</span>,<span class="s2">"hasTLS"</span>:false<span class="o">}</span>
 <span class="o">{</span><span class="s2">"level"</span>:<span class="s2">"info"</span>,<span class="s2">"ts"</span>:<span class="s2">"2026-06-03T08:42:28.054560343Z"</span>,<span class="s2">"msg"</span>:<span class="s2">"Restore through plugin detected, proceeding..."</span>,<span class="s2">"logging_pod"</span>:<span class="s2">"cluster-restore-1-full-recovery"</span><span class="o">}</span>
@@ -578,11 +578,11 @@ persistentvolumeclaim/cluster-restore-1   Bound    pvc-99c2a755-9122-4b80-8e08-a
   <li>If you use Versity S3 Gateway and have a hybrid (SSD/HDD) E-Series, you can put S3 data on a NL-SAS-based DDP with a RAID 6 Storage Class</li>
 </ul>
 
-<p>As you could see in <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">the performance post</a>, it's easy to get more than 1 GB/s from a PostgreSQL instance (even on a NVMe DDP with a RAID 6-backed SC). We also saw <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html#simple-sequential-workload">in other posts</a> that multiple GB/s can be achieved on a single volume. Assuming 800 MB/s restore performance <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html#appendix-a-test-with-64-clients-and-postgres-on-the-same-node">seen in the CNPG performance post</a>, that means we need just 20 minutes to restore a 1 TiB database in full without losing almost no data.</p>
+<p>As you could see in <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html">the performance post</a>, it's easy to get more than 1 GB/s from a PostgreSQL instance (even on a NVMe DDP with a RAID 6-backed SC). We also saw <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html#simple-sequential-workload">in other posts</a> that multiple GB/s can be achieved on a single volume. Assuming 800 MB/s restore performance <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html#appendix-a-test-with-64-clients-and-postgres-on-the-same-node">seen in the CNPG performance post</a>, that means we need just 20 minutes to restore a 1 TiB database in full without losing almost no transactions.</p>
 
-<p>Let's not forget that CNPG could have an independent replica server, so we wouldn't necessarily have to restore anything if the primary server failed.</p>
+<p>Let's not forget that CNPG could have an independent replica server, so we wouldn't necessarily have to restore anything if the primary server failed - as we saw in Part One, replica would take over in 35 seconds (unplanned) or much less (planned switch-over).</p>
 
-<p>Also let's not forget that this gives us not just backups, but Business Continuity and DR, too, which is virtually <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-mirroring/requirements-for-using-asynchronous-mirroring.html?q=minutes+replication#supported-connections">impossible</a> with E-Series as of now:</p>
+<p>Also let's not forget that the CNPG approach gives us not just backups, but Business Continuity and Disaster Recovery, too, which is virtually <a href="https://docs.netapp.com/us-en/e-series-santricity/sm-mirroring/requirements-for-using-asynchronous-mirroring.html?q=minutes+replication#supported-connections">impossible</a> with E-Series as of now:</p>
 
 <ul>
   <li>There's no async replication for E4000 with iSCSI, for example</li>
@@ -604,13 +604,13 @@ persistentvolumeclaim/cluster-restore-1   Bound    pvc-99c2a755-9122-4b80-8e08-a
 
 <p>Not only does it solve those problems, but it does so in ways that are highly complementary to what E-Series does - reliable, high-performance block targets that lower risks of losing cluster nodes and minimize risk.</p>
 
-<p>By default, SANtricity reserves 40% of base volume capacity for snapshots. With CNPG-I, we can completely eliminate CSI snapshots, or maybe reserve 5% and run a schedule that takes a snapshot every 5 minutes. You save 20-30% of NVMe capacity with log shipping and if the S3 bucket has Object Lock enabled, those database backups are indestructible.</p>
+<p>By default, SANtricity reserves 40% of base volume capacity for snapshots. With CNPG-I, we can completely eliminate CSI snapshots, or maybe reserve 5% and run a schedule that takes a snapshot every 5 minutes. You save 20-30% of NVMe capacity with log shipping and with S3 bucket located outside the cluster has Object Lock enabled, those database backups are practically indestructible.</p>
 
 <p>If a disaster strikes, CNPG can bring up replica node within seconds (see the first post in this series) and if that's not possible, you still have near 0 RPO based on backups in object store. Then, if you don't mind losing up to 5 minutes of transactions, you can still get a quick in-place restore with a snapshot rollback, or - alternatively - spend 10-20 minutes to do a full restore and recover virtually all transactions from S3 (which seems like a better deal to me, but that also depends on situation).</p>
 
 <p>Before HA CSI drivers for E-Series existed, one could use something like TopoLVM CSI and run CPNG clusters with replicas for HA, which was fine but sometimes expensive. Now we can choose - replicated or single instance database that can be restarted from another Kubernetes node without putting a lot at risk - and E-Series can easily handle the extra workload of continuous backup and on-demand restores.</p>
 
-<p>I don't know much about Barman and CNPG, but I can tell this is a perfect match for E-Series.</p>
+<p>I don't know much about Barman and CNPG, but I can easily tell this is a perfect match for E-Series, and I hope to illustrate that with some backup &amp; restore examples with SANtricity CSI in the coming days.</p>
 
         
       </section>
