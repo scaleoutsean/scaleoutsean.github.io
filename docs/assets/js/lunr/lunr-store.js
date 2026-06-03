@@ -2454,8 +2454,8 @@ var store = [{
         "teaser": null
       },{
         "title": "State export script for SolidFire CSI and SolidFire",
-        "excerpt":"SolidFire CSI v1 came out recently, so I’m slowly updating overdue recipes related to SolidFire in Kubernetes environments. Today’s updates: Add a script that dumps SolidFire CSI and SolidFire state into a JSON file. Find it in the Kubefire repo Remove Trident CSI content from the README Here’s what the...","categories": ["storage","solidfire","kubernetes","project"],
-        "tags": ["csi","solidfire-csi"],
+        "excerpt":"SolidFire CSI v1 came out recently, so I’m slowly updating overdue recipes related to SolidFire in Kubernetes environments. Today’s updates: Add a script that dumps SolidFire CSI and SolidFire state into a JSON file. Find it in the Kubefire repo Add a script that uses state file to create Kustomize...","categories": ["storage","solidfire","kubernetes","project"],
+        "tags": ["csi","solidfire-csi","gitops"],
         "url": "/2026/06/02/solidfire-csi-state-export-script.html",
         "teaser": null
       },{
@@ -2472,7 +2472,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"State export script for SolidFire CSI and SolidFire 2026-06-02 00:00 2 minute read Script to assist with SolidFire failover and failback in Kubernetes environments Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE 2026-06-01 00:00 7 minute read PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"State export script for SolidFire CSI and SolidFire 2026-06-02 00:00 3 minute read Script to assist with SolidFire failover and failback in Kubernetes environments Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE 2026-06-01 00:00 7 minute read PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

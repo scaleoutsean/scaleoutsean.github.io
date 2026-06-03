@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          3 minute read
         
       </span>
     
@@ -236,6 +236,7 @@
 <p>Today's updates:</p>
 <ul>
   <li>Add a script that dumps SolidFire CSI and SolidFire state into a JSON file. Find it <a href="https://github.com/scaleoutsean/kubefire">in the Kubefire repo</a></li>
+  <li>Add a script that uses state file to create Kustomize overlay for DR site</li>
   <li>Remove Trident CSI content from the README</li>
 </ul>
 
@@ -329,23 +330,29 @@
 
 <p>It's a very simple script, but it doesn't need to be complex to get you started.</p>
 
-<p>Once you get this, the rest is easy. I also have <a href="https://github.com/scaleoutsean/longhorny">Longhorny</a> that has not only reporting features, but can also set up and tear down replication relationships, you can also use its code to set replication up.</p>
+<p>Once you get this, the rest is easy. I also have <a href="https://github.com/scaleoutsean/longhorny">Longhorny</a> that has not only reporting features, but can also set up and tear down replication relationships, you can also use its code to set replication up. Such volumes paired for replication will then have volume pairing information like in the example above:</p>
 
-<p>Once you have that, you can simply create a VolumeSnapshotClass that enables replication on the snapshot, so any snapshot you take with that VolumeSnapshotClass will be replicated to DR site…</p>
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"dr_replication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"remote_volume_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"remote_volume_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"s3-replica-vol"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
 
-<p>In the past I have <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">created</a> tutorials and scripts for Trident, but the CSI driver was the issue - failback was simply impossible - so it was a waste of time.</p>
+<p>Once you have a pairing set up, you can use a VolumeSnapshotClass that enables replication on the snapshot (a SolidFire CSI feature), so any snapshot you take with that VolumeSnapshotClass will be replicated to DR site. In Asynchronous mode, volume data is replicated at all times, but snapshots can be replicated as well, in both Asynchronous and SnapshotsOnly mode - as long as you tag snapshots for replication. You may have snapshots (e.g. for Velero backup) that you want to keep "local", and others that you want to replicate.</p>
 
-<p><img src="/assets/images/afuera.gif" alt="Trident CSI - Afuera!" /></p>
+<p>SolidFire CSI does't require special handling or sophisticated scripts for failover. You simply promote replicated volumes to <code class="language-plaintext highlighter-rouge">readWrite</code> and - since you have Source-Target mapping information both in volume replication relationships or in the output of state export file, and create static PVC imports. Then you can start applications.</p>
 
-<p>SolidFire CSI does't require special handling or sophisticated scripts for failover and failback.</p>
+<p>The Kubefire repository has another script that takes that state information and produces a Kustomize overlay for PVCs that can be used to bring up the remote site using replica volumes, so you don't even need to edit YAML manifests from the primary site.</p>
 
-<p>You simply promote replicated volumes to <code class="language-plaintext highlighter-rouge">readWrite</code> and - since you have Source-Target mapping information both in volume replication relationships or in state export output, if you prefer to get it there, and create static PVC imports. Then you can start applications.</p>
+<p>You do need to decide which how to map storage classes on the destination and create at least one on the target site, but that's easy. You do need to be careful with <strong>volume reclaim policy</strong> settings for Storage Classes (<code class="language-plaintext highlighter-rouge">Delete</code> can be dangerous, especially if volume auto-purge-on-delete is used), so try it once or twice before you need it.</p>
 
-<p>You do need to decide which how to map storage classes on the destination and create at least one on the target site, but that's easy - just create it and do a search-and-replace in that JSON file. You do need to be careful on volume reclaim policy, so try it once or twice before you need it.</p>
-
-<p>SolidFire CSI is stateless, so failback works exactly the same way.</p>
+<p>SolidFire CSI is stateless, so failback works exactly the same way as failover.</p>
 
 <p>I don't think more scripts or recipes are needed, but if anyone needs help - share your issue in the Kubefire repository.</p>
+
+<p>In the past I <a href="/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html">created</a> tutorials and scripts for Trident CSI, but the CSI driver was the issue - failback was simply impossible to do right - so it was a waste of time. That problem was finally solved today, by removing Trident CSI failover/failback information from the site.</p>
+
+<p><img src="/assets/images/afuera.gif" alt="Trident CSI - Afuera!" /></p>
 
         
       </section>
@@ -363,6 +370,8 @@
     <span itemprop="keywords">
     
       <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
+    
+      <a href="/tags/gitops" class="page__taxonomy-item p-category" rel="tag">gitops</a><span class="sep">, </span>
     
       <a href="/tags/solidfire-csi" class="page__taxonomy-item p-category" rel="tag">solidfire-csi</a>
     
