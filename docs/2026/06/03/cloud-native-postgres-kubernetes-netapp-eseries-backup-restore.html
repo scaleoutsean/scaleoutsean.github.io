@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#pg-barman-and-cnpg-barman">PG Barman and CNPG Barman</a></li><li><a href="#backup-and-restore">Backup and restore</a></li><li><a href="#workflow">Workflow</a><ul><li><a href="#backup">Backup</a></li><li><a href="#restore">Restore</a></li></ul></li><li><a href="#e-series-csi-and-barman-cloud-cnpg-i-backup">E-Series CSI and Barman Cloud CNPG-I backup</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#pg-barman-and-cnpg-barman">PG Barman and CNPG Barman</a></li><li><a href="#backup-and-restore">Backup and restore</a></li><li><a href="#workflow">Workflow</a><ul><li><a href="#backup">Backup</a></li><li><a href="#wal-log-shipping">WAL log shipping</a></li><li><a href="#restore">Restore</a></li></ul></li><li><a href="#e-series-csi-and-barman-cloud-cnpg-i-backup">E-Series CSI and Barman Cloud CNPG-I backup</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -409,9 +409,11 @@ Events:                             &lt;none&gt;
 
 </code></pre></div></div>
 
+<p>Alternatively, we could query Barman Object Store by name (<code class="language-plaintext highlighter-rouge">vgw-store</code>) with: <code class="language-plaintext highlighter-rouge">kubectl get objectstores.barmancloud.cnpg.io -n cnpg-backup vgw-store -o yaml</code></p>
+
 <h3 id="backup">Backup</h3>
 
-<p>Using the declarative cloud backup approach, we run <code class="language-plaintext highlighter-rouge">kubectl apply -f backup.yaml -n cnpg-backup</code>:</p>
+<p>Using declarative cloud backup approach, we run <code class="language-plaintext highlighter-rouge">kubectl apply -f backup.yaml -n cnpg-backup</code> on this backup.yaml file:</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">postgresql.cnpg.io/v1</span>
 <span class="na">kind</span><span class="pi">:</span> <span class="s">Backup</span>
@@ -425,7 +427,7 @@ Events:                             &lt;none&gt;
     <span class="na">name</span><span class="pi">:</span> <span class="s">barman-cloud.cloudnative-pg.io</span>
 </code></pre></div></div>
 
-<p>This creates a new baseline backup and Barman sends it to S3.</p>
+<p>This creates a new baseline backup and Barman Cloud sends it to S3.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get backups.postgresql.cnpg.io <span class="nt">-n</span> cnpg-backup
 NAME         AGE   CLUSTER           METHOD   PHASE     ERROR
@@ -479,6 +481,17 @@ Events:                          &lt;none&gt;
 </code></pre></div></div>
 
 <p>This took only 4 minutes because the "demo" database was small. (As I've mentioned, I did not use SANtricity CSI here; when that happens we'll use larger databases).</p>
+
+<h3 id="wal-log-shipping">WAL log shipping</h3>
+
+<p>This is happening automatically on a continuous basis by <code class="language-plaintext highlighter-rouge">barman-cloud-wal-archive</code> as WAL files are rotated:</p>
+
+<ul>
+  <li>WAL log file is read and streamed to S3</li>
+  <li>That causes extra read workload on WAL logs (which are normally never "read")</li>
+  <li>Writing to S3 - if on E-Series - results in extra write workload on S3 (compared to when there's no log shipping)</li>
+  <li>If there's one or more replica, each causes extra write workload</li>
+</ul>
 
 <h3 id="restore">Restore</h3>
 

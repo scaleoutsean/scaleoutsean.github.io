@@ -1722,7 +1722,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Kubefire for Kubernetes failover/failback with SolidFire",
-        "excerpt":"Introduction Kubefire Simplified version of Longhorny focused on Kubernetes Automated replication service for SolidFire replication in a Kubernetes environment Conclusion Appendix A - implementation ideas Introduction In this post I described how SolidFire Collector collects and stores volume attributes from NetApp Trident CSI. It’s one of several pieces of the...","categories": ["storage","kubernetes","solidfire","projects"],
+        "excerpt":"Introduction Kubefire Simplified version of Longhorny focused on Kubernetes Automated replication service for SolidFire replication in a Kubernetes environment Conclusion Appendix A - implementation ideas NOTE: since mid 2026, I only recommend SolidFire CSI for failover/failback. Trident CSI does not support failover/failback. There’s nothing else to recommend or consider. Introduction...","categories": ["storage","kubernetes","solidfire","projects"],
         "tags": ["automation","failback","failover","netapp","python","replication","solidfire","trident"],
         "url": "/2024/07/05/kubefire-for-failover-failback-of-kubernetes-with-solidfire-backend.html",
         "teaser": null
