@@ -2465,6 +2465,12 @@ var store = [{
         "url": "/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html",
         "teaser": null
       },{
+        "title": "Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series",
+        "excerpt":"Introduction I’ve written about BeeOND (see this post for an example) and it’s clearly the best approach available to E-Series users looking to improve caching performance, cost and effectiveness. If you’re thinking about storing KV cache on E-Series, BeeOND lets you provision one in seconds. Since these are ephemeral filesystems,...","categories": ["storage","e-series","ai"],
+        "tags": ["csi","beegfs","beeond","kv-cache"],
+        "url": "/2026/06/05/above-and-beeond-beeond.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2478,7 +2484,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity 2026-06-03 00:00 13 minute read Notes on Barman Cloud CNPG-I backup from a NetApp E-Series perspective State export script for SolidFire CSI and SolidFire 2026-06-02 00:00 3 minute read Script to assist with SolidFire failover and failback in Kubernetes environments Cloud-Native...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series 2026-06-05 00:00 6 minute read How to get more out of BeeOND on E-Series Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity 2026-06-03 00:00 13 minute read Notes on Barman Cloud CNPG-I backup from a NetApp E-Series perspective State export...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4039,6 +4045,9 @@ var store = [{
   },{
     "title": "solidfire-csi",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/solidfire-csi/"
+  },{
+    "title": "kv-cache",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kv-cache/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
