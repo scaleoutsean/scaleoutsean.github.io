@@ -2471,6 +2471,12 @@ var store = [{
         "url": "/2026/06/05/above-and-beeond-beeond.html",
         "teaser": null
       },{
+        "title": "COSI and sg-cosi",
+        "excerpt":"Introduction NetApp doesn’t have any COSI drivers, so work-wise COSI isn’t a topic for me. Of course, I am aware of it, keep an eye on it and sometimes ask others (builders and users of object storage) what they think about COSI v1alpha1. Tell always me they think it’s garbage...","categories": ["storage","s3","kubernetes"],
+        "tags": ["csi","cosi","s3","minio","storagegrid","versitygw"],
+        "url": "/2026/06/07/cosi-v1alpha1-is-garbage.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2484,7 +2490,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series 2026-06-05 00:00 6 minute read How to get more out of BeeOND on E-Series Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity 2026-06-03 00:00 13 minute read Notes on Barman Cloud CNPG-I backup from a NetApp E-Series perspective State export...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"COSI and sg-cosi 2026-06-07 00:00 17 minute read Why COSI v1alpha1 spec is useless, and why we have to build for garbage specs Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series 2026-06-05 00:00 6 minute read How to get more out of BeeOND on E-Series Cloud-Native Postgres Backup (Barman)...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4048,6 +4054,9 @@ var store = [{
   },{
     "title": "kv-cache",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/kv-cache/"
+  },{
+    "title": "cosi",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cosi/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
