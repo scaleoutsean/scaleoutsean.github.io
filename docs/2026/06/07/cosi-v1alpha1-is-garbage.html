@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          17 minute read
+          18 minute read
         
       </span>
     
@@ -268,7 +268,7 @@ By Sidhartha Mani (Minio, Inc) | Friday, September 02, 2022</p>
 
 <p>Sorry, tech bro, almost no on-premises user who uses object storage at scale cares about that.</p>
 
-<p>But let's not lose sight of the <em>complete</em> lack of situational awareness over an extended period of time, too. Why on earth would any hyperscalers on storage vendor care?</p>
+<p>Also don't lose sight of the <em>complete</em> lack of situational awareness over an extended period of time, too. Why on earth would any hyperscalers on storage vendor care about COSI?</p>
 
 <ul>
   <li>Hyperscalers don't have this problem. Their own solutions just work <em>within</em> their own cloud</li>
@@ -280,6 +280,8 @@ By Sidhartha Mani (Minio, Inc) | Friday, September 02, 2022</p>
 <p>Maybe that COSIeist Manifesto that aims to make it easy to migrate data off MinIO wasn't making their board of directors happy. For whatever reason, the MinIO's COSI dude <a href="https://github.com/kubernetes/enhancements/commits/master/keps/sig-storage/1979-object-storage-support">has been quiet in the COSI repository commits history since v1 Alpha 1</a> and I don't see new ones, so it seems like they let Red Hat inherit all of that mess (there's one relatively regular contributor from Red Hat at this time).</p>
 
 <p><img src="/assets/images/cosi_is_garbage_03_minio_cosi_commits.png" alt="MinIO's COSI contributions" /></p>
+
+<p>In case you haven't noticed, COSI doesn't have the concept of Controller and Node. In CSI, a CSI Node needs to connect to CSI Controller which may be running elsewhere and be the only pod that can manage storage. Not in COSI, where the tech bros were laser-focused on convenience, so if you create a bucket and S3 keys, your COSI controller may connect to both S3 API (<code class="language-plaintext highlighter-rouge">mb cosi/my-bucket</code>) and management API (to issue S3 keys).</p>
 
 <h3 id="cosi-v1alpha1-vs-csi">COSI v1alpha1 vs CSI</h3>
 
@@ -362,7 +364,7 @@ By Sidhartha Mani (Minio, Inc) | Friday, September 02, 2022</p>
 
 <p>To finish on a positive note: the Alpha 2 specification shows some signs of sanity. If Alpha 2 gets <em>implemented</em>, COSI might become usable for a small fraction of production use cases where on-premises Kubernetes applications need access to Object Storage.</p>
 
-<p>Another good option woud be if CSI took over COSI and made it into a CSI sub-project (CSI-O?), since COSI is copying as much as they can from CSI.</p>
+<p>Another good option would be if CSI took over COSI and made it into a CSI sub-project (CSI-O?), since COSI is copying as much as they can from CSI.</p>
 
 <h2 id="sg-cosi"><code class="language-plaintext highlighter-rouge">sg-cosi</code></h2>
 
@@ -628,15 +630,17 @@ coke-s3-credentials   Opaque   1      3h33m
 
 <p>Long story short, the idea to create <code class="language-plaintext highlighter-rouge">group/COSIadmins</code> is not going to work except for the most trivial cases. You'll need entire tenants dedicated to COSI. End of story.</p>
 
-<p>Compared to CSI, COSI is easier. There's not much going on in there.</p>
+<p>They've added another, limited sidecar in Alpha 2 (not yet implemented, of course).</p>
+
+<p>Note that the rando accounts and credentials created by COSI can be abused by anyone who gets them and can access the tenant S3 endpoint for Coke. With some luck and skill, one can create a new namespace, fire up an <code class="language-plaintext highlighter-rouge">rclone</code> pod and exfiltrate Coke's business data to a 3rd world hellhole without breaking a sweat.</p>
+
+<p>If you can't tell <em>who exactly from Kubernetes</em> is sucking data out of StorageGRID, maybe you shouldn't use COSI in environments that can exfiltrate data.</p>
+
+<p>Compared to CSI, COSI is simpler and architecturally easier. There's not much going on in there.</p>
 
 <p><img src="/assets/images/cosi_is_garbage_08_sg-cosi.png" alt="sg-cosi 0.5.0" /></p>
 
-<p>They've added another, limited sidecar in Alpha 2 (not yet implemented, of course).</p>
-
-<p>Note that rando accounts and credentials created by COSI can be abused by anyone who gets them and can access the tenant S3 endpoint for Coke. With some luck and skill, one can create a new namespace, fire up an <code class="language-plaintext highlighter-rouge">rclone</code> pod and exfiltrate Coke's business data to a 3rd world hellhole without breaking a sweat.</p>
-
-<p>If you can't tell <em>who exactly from Kubernetes</em> is sucking data out of StorageGRID, maybe you shouldn't use COSI in environments that can exfiltrate data.</p>
+<p>But they still managed to screw it up.</p>
 
 <h3 id="what-doesnt-work">What doesn't (work)</h3>
 
@@ -705,7 +709,7 @@ Status:
 
 <p>COSI <code class="language-plaintext highlighter-rouge">v1alpha1</code> was/is garbage.</p>
 
-<p>The recentely adopted <code class="language-plaintext highlighter-rouge">v1alpha2</code> does look better, but considering the current pace of development, interest, attention and even the limited usefulness, it could be years before the worst parts of <code class="language-plaintext highlighter-rouge">v1alpha1</code> are gone from COSI controller.</p>
+<p>The recentely adopted <code class="language-plaintext highlighter-rouge">v1alpha2</code> does look better, but considering the current pace of development, interest, attention and even the limited usefulness, it could be years before the worst parts of <code class="language-plaintext highlighter-rouge">v1alpha1</code> are gone from COSI stack.</p>
 
 <p>Maybe this is the right time to start kicking tires. But, where?</p>
 
@@ -825,7 +829,7 @@ Status:
       <a href="/2026/06/05/above-and-beeond-beeond.html" class="pagination--pager" title="Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html" class="pagination--pager" title="StorageGRID bucket snapshots with sg-cosi">Next</a>
     
   </nav>
 
@@ -842,6 +846,54 @@ Status:
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html" rel="permalink">StorageGRID bucket snapshots with <code class="language-plaintext highlighter-rouge">sg-cosi</code>
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-13T00:00:00+08:00">2026-06-13 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to automate creation of read-only snapshot buckets and credential rotation with sg-cosi
+</p>
+  </article>
+</div>
+
     
       
       
@@ -983,56 +1035,6 @@ Status:
 
     <p class="archive__item-excerpt" itemprop="description">Script to assist with SolidFire failover and failback in Kubernetes environments
 </p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html" rel="permalink">Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-06-01T00:00:00+08:00">2026-06-01 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          7 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">
-  PART ONE: CloudNativePG with CSI snapshots
-  PART TWO: CloudNativePG with plugins (future post)
-  PART THREE: CloudNativePG performance test with EF-Serie...</p>
   </article>
 </div>
 

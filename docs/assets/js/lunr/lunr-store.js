@@ -2149,7 +2149,7 @@ var store = [{
       },{
         "title": "Using S3 bucket snapshots in StorageGRID 12",
         "excerpt":"WTF are branch buckets? Those are S3 bucket snapshots on StorageGRID 12. I wrote about them in the post called StorageGRID Branch Buckets and Read Cache . They seem useful to me, but apart from this link above no one has found this feature interesting enough to blog about it...","categories": ["netapp","storage"],
-        "tags": ["analytics","branch bucket","bucket snapshot","e-series","netapp","s3","snapshot","storagegrid"],
+        "tags": ["analytics","branch-bucket","bucket-snapshot","e-series","netapp","s3","snapshot","storagegrid"],
         "url": "/2026/01/30/storagegrid-branch-buckets-snapshots.html",
         "teaser": null
       },{
@@ -2477,6 +2477,12 @@ var store = [{
         "url": "/2026/06/07/cosi-v1alpha1-is-garbage.html",
         "teaser": null
       },{
+        "title": "StorageGRID bucket snapshots with `sg-cosi`",
+        "excerpt":"Introduction The previous post explored the disaster that COSI v1alpha1 specification and implementation have been, and introduced the first use case for which it’s marginally useful - “vending machine for S3 access credentials”. This post is about the second use case, the same use case I find useful for native...","categories": ["netapp","storage","kubernetes"],
+        "tags": ["analytics","snapshot","storagegrid","cosi","bucket-branch"],
+        "url": "/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2490,7 +2496,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"COSI and sg-cosi 2026-06-07 00:00 17 minute read Why COSI v1alpha1 spec is useless, and why we have to build for garbage specs Smart GDS-enabled shared storage with Above-and-BeeOND and NetApp E-Series 2026-06-05 00:00 6 minute read How to get more out of BeeOND on E-Series Cloud-Native Postgres Backup (Barman)...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"StorageGRID bucket snapshots with sg-cosi 2026-06-13 00:00 4 minute read How to automate creation of read-only snapshot buckets and credential rotation with sg-cosi COSI and sg-cosi 2026-06-07 00:00 18 minute read Why COSI v1alpha1 spec is useless, and why we have to build for garbage specs Smart GDS-enabled shared storage...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -3914,10 +3920,10 @@ var store = [{
     "title": "big data",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/big-data/"
   },{
-    "title": "branch bucket",
+    "title": "branch-bucket",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/branch-bucket/"
   },{
-    "title": "bucket snapshot",
+    "title": "bucket-snapshot",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/bucket-snapshot/"
   },{
     "title": "invalid key length",
@@ -4057,6 +4063,9 @@ var store = [{
   },{
     "title": "cosi",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/cosi/"
+  },{
+    "title": "bucket-branch",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bucket-branch/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"

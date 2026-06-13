@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          10 minute read
         
       </span>
     
@@ -290,9 +290,15 @@
   <p>Enable caching only for workloads that are cacheable</p>
 </blockquote>
 
-<p>All right, now we're talking!</p>
+<p>All right, now we're talking! If they only told us how to enable it, that would have been great!</p>
 
-<p>What's cachable may be a predominantly read workload such as those we have in AI and analytics. You may also see this on read-only bucket clones.</p>
+<p>But they didn't so here we are, googling for instructions and screenshots…</p>
+
+<p><code class="language-plaintext highlighter-rouge">Configuration</code> &gt; <code class="language-plaintext highlighter-rouge">Load balancer endpoints</code>:</p>
+
+<p><img src="/assets/images/storagegrid-cache-where-to-enable.png" alt="Enable cache on StorageGRID Gateway" /></p>
+
+<p>What's cacheable may be a predominantly read workloads such as those we have in AI and analytics. You may also see this on read-only bucket clones.</p>
 
 <p>How to know?</p>
 
@@ -300,13 +306,26 @@
   <p>Review audit logs to determine if an existing workload would be a good candidate for caching.</p>
 </blockquote>
 
-<p>An exercise for the user.</p>
+<p>So, another "exercise for the user". We could use <a href="https://github.com/scaleoutsean/storagegrid-audit-analysis">SGAC</a> to figure it out, but we need audit logs for that. You can download audit log from <code class="language-plaintext highlighter-rouge">Support</code> &gt; <code class="language-plaintext highlighter-rouge">Log collection</code>, but that may not be smart if the log is 47 GiB large.</p>
+
+<p>Also, why are they suggesting to edit audit logs when Bucket Cache metrics are readily available (on Admin Node URL, path <code class="language-plaintext highlighter-rouge">/d/bucket-cache/bucket-cache</code>)? I'd prefer to use audit logs myself because I know how flakey "official" metrics can be (cough, <a href="https://github.com/scaleoutsean/eseries-perf-analyzer">EPA</a>, cough), but that information isn't actionable or useful. I somehow get the logs, I am looking at them, and I don't understand what a "good candidate" looks like. Now what?</p>
 
 <blockquote>
   <p>Evaluate a potential cacheable workload by directing it to the cache-enabled endpoint. Monitor and verify the cache hit rate to determine the suitability of the workload for caching.</p>
 </blockquote>
 
-<p>That's not supposed to be so hard, but okay - file that under "initial release". Bottom line is: S3 cache is available and can greatly speed up repeated reads that can be served from multi-tier (that is, RAM and disk) load-balancer cache.</p>
+<p>That's not supposed to be so hard, but while are the details missing? Is a 68% cache hit rate good or not? You'll be relieved to learn there are two metric categories.</p>
+
+<ul>
+  <li>Bucket Cache</li>
+  <li>Cache Service</li>
+</ul>
+
+<p>Makes perfect sense.</p>
+
+<p>I guess that's another one we can file under "the initial release".</p>
+
+<p>Bottom line: S3 cache is available and can greatly speed up repeated reads that can be served from multi-tier (that is, RAM and disk) load-balancer cache.</p>
 
 <p>That can be useful for AI and much of analytics, <em>especially</em> when one considers that - unlike on most enterprise arrays - cache can be selectively enabled on a per-bucket basis, such as for a cloned read-only bucket. Great stuff!</p>
 
@@ -369,7 +388,7 @@
 
 <p>My second related point is we can still make good use of S3 cache - even though it doesn't scale out yet (in 12.0) - by using multiple layers of S3 read cache.</p>
 
-<p>Last weekend I played with a DIY-patched version of Versity S3 Gateway.</p>
+<p>Last weekend I played with a DIY-patched version of the Versity S3 Gateway.</p>
 
 <ul>
   <li>It's a gateway for POSIX filesystems but also S3</li>
@@ -379,9 +398,9 @@
 
 <p>In effect, I can double my performance with this simple approach and read from S3 at 30 or 40 GB/s.</p>
 
-<p>Then I patched Versity S3 Gateway to overflow RAM cache to disk (LRU-based).</p>
+<p>Then I patched the Versity S3 Gateway to overflow RAM cache to disk (LRU-based).</p>
 
-<p>That with EF300C back-end, would give me cache that can go up to tens of TBs QLC SSD (whether this disk-based cache is on BeeGFS or XFS or something else - it doesn't matter).</p>
+<p>That, with an EF300C back-end, would give me cache that can go up to tens of TBs QLC SSD (whether this disk-based cache is on BeeGFS or XFS or something else - it doesn't matter).</p>
 
 <p>It breaks the traceable access feature, but you can run Versity on loopback interface which effectively means it can't be anyone but the user with own, valid credentials.</p>
 
@@ -508,6 +527,54 @@
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html" rel="permalink">StorageGRID bucket snapshots with <code class="language-plaintext highlighter-rouge">sg-cosi</code>
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-06-13T00:00:00+08:00">2026-06-13 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to automate creation of read-only snapshot buckets and credential rotation with sg-cosi
+</p>
+  </article>
+</div>
+
     
       
       
@@ -648,54 +715,6 @@
 
 
     <p class="archive__item-excerpt" itemprop="description">Notes on Barman Cloud CNPG-I backup from a NetApp E-Series perspective
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/06/02/solidfire-csi-state-export-script.html" rel="permalink">State export script for SolidFire CSI and SolidFire
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-06-02T00:00:00+08:00">2026-06-02 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          3 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Script to assist with SolidFire failover and failback in Kubernetes environments
 </p>
   </article>
 </div>
