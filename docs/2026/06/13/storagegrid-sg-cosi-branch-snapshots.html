@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          5 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why">Why</a></li><li><a href="#what">What</a></li><li><a href="#management-of-read-only-bucket-snapshots">Management of read-only bucket snapshots</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why">Why</a></li><li><a href="#what">What</a></li><li><a href="#management-of-read-only-bucket-snapshots">Management of read-only bucket snapshots</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-demo">Appendix A: Demo</a></li></ul>
             </nav>
           </aside>
         
@@ -260,28 +260,30 @@
 
 <p><img src="/assets/images/cosi_is_garbage_09_sg-buckets-for-snapshot.png" alt="SG buckets in v12" /></p>
 
-<p>If you don't pick a PiT, current time is used. In the UI, you may also choose to make the snapshot bucket writable, or read-only. In <code class="language-plaintext highlighter-rouge">sg-cosi</code>, read-only is the only option.</p>
+<p>If you don't pick a PiT, current time is used. What's the point of not picking a PiT? Bucket data remains static.</p>
+
+<p>In the UI, you may also choose to make the snapshot bucket writable, or read-only. In <code class="language-plaintext highlighter-rouge">sg-cosi</code>, read-only is the only option at this time.</p>
 
 <p><img src="/assets/images/cosi_is_garbage_10_sg-read-only-bucket-snapshot.png" alt="Read-only bucket snaspshot" /></p>
 
 <p>These <code class="language-plaintext highlighter-rouge">sg-cosi</code>-generated snapshots buckets have the following characteristics:</p>
 <ul>
   <li>Random name suffixes to prevent name collisions</li>
-  <li>0 object count and 0 bytes (this refers to post-snapshot time; since they can't be written to)</li>
-  <li>Time used for PiT (<code class="language-plaintext highlighter-rouge">Before time</code>)</li>
+  <li>0 object count and 0 bytes (this refers to post-snapshot time, and is expected since they can't be written to)</li>
+  <li>Time used for PiT (<code class="language-plaintext highlighter-rouge">Before time</code> value)</li>
 </ul>
 
 <p><img src="/assets/images/cosi_is_garbage_11_sg-read-only-snapshot-pit-size-count.png" alt="Read-only snaspshot details" /></p>
 
-<p>Parent bucket will usually have something in it, otherwise we wouldn't take a snapshots of it. This one has one object.</p>
+<p>Parent bucket will usually have something in it, otherwise we wouldn't take a snapshot of it. This one had one object, which is still a good use case if we may have been overwriting it periodically. Although - for a single object - we could look at the versions and pick a version rather than clone a bucket, those aren't trivial operations if more objects, or even buckets, are involved.</p>
 
 <p><img src="/assets/images/cosi_is_garbage_12_sg-parent-bucket.png" alt="Parent bucket details" /></p>
 
-<p>Existing snapshots will be listed in <code class="language-plaintext highlighter-rouge">Branches</code> tab of the base bucket.</p>
+<p>Existing snapshots are listed in <code class="language-plaintext highlighter-rouge">Branches</code> tab of a bucket.</p>
 
 <p><img src="/assets/images/cosi_is_garbage_13_sg-parent-bucket-branch-list.png" alt="Parent bucket branches" /></p>
 
-<p><code class="language-plaintext highlighter-rouge">sg-cosi</code> can create disposable S3 keys for S3 clients, if you want. That's part of the first feature and optional in this workflow (if you want to Bring Your Own Credentials, you can). Here, <code class="language-plaintext highlighter-rouge">ba-95390200</code> was created automatically.</p>
+<p><code class="language-plaintext highlighter-rouge">sg-cosi</code> can create disposable S3 keys for S3 clients, if you want. That's part of the other major COSI feature ("credentials vending") and optional in this workflow (if you want to Bring Your Own Credentials, you can). Here, <code class="language-plaintext highlighter-rouge">ba-95390200</code> was created automatically.</p>
 
 <p><img src="/assets/images/cosi_is_garbage_14_sg-read-only-snapshot-user.png" alt="COSI user details for snapshot bucket" /></p>
 
@@ -305,19 +307,25 @@
 
 <p>Bucket snapshots show you how to take this even further. Not only can we periodically dump our vector database state to S3, but in some cases we can simply discard it. Why is that? Because, as long as we keep the source data, we <strong>can create a snapshot from any point in time and recompute all vector embeddings</strong> as we please.</p>
 
-<p>CNPG-I creates continuous database snapshots and backups to S3. StorageGRID bucket snapshots perform continuous unstructured data snapshots and backups on S3. Data lakehouses have material views that provide similar features to petabytes of data backed by S3. Do you recognize a pattern?</p>
+<p>CNPG-I creates continuous database snapshots and backups to S3. StorageGRID bucket snapshots perform continuous unstructured data snapshots and backups on S3. Data lakes have material views that provide similar features to petabytes of data backed by S3. Do you recognize a pattern?</p>
 
-<p>I still need block storage for databases (especially write-ahead logs, which is one of two data types CNPG-I preserves), catalogues and temp/scratch space. But the rest is all Object Store. And that Read-Only Snapshot (the first blue bucket in the diagram below) is now accessible from Kubernetes, too.</p>
+<p>I still need block storage for databases (especially write-ahead logs, which is one of two data types CNPG-I preserves), catalogues and temp/scratch space. But the rest is all in Object Stores. Now that Read-Only Snapshot (the first blue bucket in the diagram below) is now accessible from Kubernetes, too!</p>
 
 <p><img src="/assets/images/eseries-datalake-storage-layout-02.png" alt="Role of S3" /></p>
 
 <p>We can use Ansible or Terraform with StorageGRID to create S3 bucket snapshots and update S3 configuration (S3 endpoint, credentials/secrets) for our job scheduler or compute farm.</p>
 
-<p>COSI does the same from <em>within</em> Kubernetes. It's not new, it's just different. With E-series CSI drivers available, we can now run end-to-end block-and-S3 workflows entirely from Kubernetes backed by E-Series. Cloud-native databases, analytics, remote S3 access with on-disk S3 cache…</p>
+<p>COSI does the same from <em>within</em> Kubernetes (and a bit more, with credentials vending). This isn't new, it's just different.</p>
+
+<p>With E-series CSI drivers available, we can now run end-to-end block-and-S3 workflows entirely from Kubernetes backed by E-Series. Cloud-native databases, analytics, remote S3 access with on-disk S3 cache…</p>
 
 <p>With read-only bucket snapshots added, <code class="language-plaintext highlighter-rouge">sg-cosi</code> seems feature-complete until COSI gets closer to implementing <code class="language-plaintext highlighter-rouge">v1alpha2</code> specification. Nothing else seems worth the trouble.</p>
 
-<p>Two sample workflows (browfield with existing buckets, greenfield with snapshot buckets) with end-to-end YAML files will be published on the sg-cosi repository in coming days.</p>
+<p>Two sample workflows (browfield with existing buckets, greenfield with snapshot buckets) with end-to-end YAML files will be published on the sg-cosi repository in the coming days.</p>
+
+<h2 id="appendix-a-demo">Appendix A: Demo</h2>
+
+<p>Find it <a href="https://rumble.com/v7ba05i-sg-cosi-demo-with-read-only-snapshot-buckets.html">here</a> (1m46s).</p>
 
         
       </section>
