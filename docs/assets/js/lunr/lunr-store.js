@@ -2472,7 +2472,7 @@ var store = [{
         "teaser": null
       },{
         "title": "COSI and sg-cosi",
-        "excerpt":"Introduction NetApp doesn’t have any COSI drivers, so work-wise COSI isn’t a topic for me. Of course, I am aware of it, keep an eye on it and sometimes ask others (builders and users of object storage) what they think about COSI v1alpha1. Tell always me they think it’s garbage...","categories": ["storage","s3","kubernetes"],
+        "excerpt":"Introduction NetApp doesn’t have any COSI drivers, so work-wise COSI isn’t a topic for me. Of course, I am aware of it, keep an eye on it and sometimes ask others (builders and users of object storage) what they think about COSI v1alpha1. Most of those who tried it tell...","categories": ["storage","s3","kubernetes"],
         "tags": ["csi","cosi","s3","minio","storagegrid","versitygw"],
         "url": "/2026/06/07/cosi-v1alpha1-is-garbage.html",
         "teaser": null
