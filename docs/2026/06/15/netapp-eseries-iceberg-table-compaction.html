@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#example-with-tables-iceberg-table-compaction">Example with Tables: Iceberg table compaction</a></li><li><a href="#compaction-scenario">Compaction scenario</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#example-with-tables-iceberg-table-compaction">Example with Tables: Iceberg table compaction</a></li><li><a href="#table-compaction-scenario">Table compaction scenario</a></li><li><a href="#volume-compaction-scenario">Volume compaction scenario</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -263,9 +263,9 @@
 
 <p>Notice how Dremio refers to 1 MiB files as "tiny". Well, folks, <a href="/2024/10/14/minio-versitygw-s3-performance-netapp-ef-series.html"><strong>this</strong> is tiny</a> and yes, there are people who use S3 like that…</p>
 
-<p>Maybe you have a situation like that - hundreds or thousands of table files coming in every day. Compacting them on E-Series should be painless. Why? Because it's fast.</p>
+<p>Maybe you have a situation like that - thousands of table files getting created every day. Compacting them on E-Series should be painless. Why? Because E-Series is fast.</p>
 
-<h2 id="compaction-scenario">Compaction scenario</h2>
+<h2 id="table-compaction-scenario">Table compaction scenario</h2>
 
 <p>Of course, we have to take a look, using a server and E-Series from the 2010s.</p>
 
@@ -346,9 +346,19 @@ Files count: 14, Manifests count: 1
 
 <p>I should have used 100x more data to make this exploration more "scientific", but I didn't think the conclusion would have been different.</p>
 
+<h2 id="volume-compaction-scenario">Volume compaction scenario</h2>
+
+<p>That isn't really a thing, but I name it so because OpenSharing also supports Volume assets. Like Table assets, Volume assets may need "defragging" as well. In fact, the S3 tests with truly tiny files were created for precisely that kind of scenario - thousands of JSON files coming into S3 system every second.</p>
+
+<p>One shouldn't do that; such files should be merged into tables before hitting S3, but stuff happens and the challenge for OpenSharing Volumes is the same: compact or convert before OpenSharing Volume data.</p>
+
+<p>I haven't tried doing similar tests with OpenSharing Volumes yet because this is suer-niche right now.</p>
+
+<p>The ability to use both S3 and (BeeGFS) <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">filesystem notifications</a> makes it even easier to trigger and orchestrate such jobs, so I look forward to first OpenSharing Volumes opportunities.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
-<p>With S3-only storage, it would be challenging to run these jobs routinely, but we can do it with ease with Versity S3 Gateway and E-Series.</p>
+<p>With S3-only storage, it can be challenging to run many compacting jobs routinely, but we can do it with ease with Versity S3 Gateway and E-Series.</p>
 
 <p>We can perform I/O-intensive slicing and dicing locally, and update OpenShare schemas and table names.</p>
 
@@ -358,11 +368,9 @@ Files count: 14, Manifests count: 1
 
 <p>We'd have to run OpenSharing/Versity in scale-out way on BeeGFS (RWX) PVC volumes, as explained <a href="/2023/09/20/versity-gw-s3-posix-gateway-beegfs-eseries.html">here</a>. Or, we could run <a href="/2022/06/22/e-series-hdfs.html">Hadoop 3 on E-Series</a> and get scale-out that way.</p>
 
-<p>But the objective isn't to "replace" S3 appliances or Hadoop clusters, but to use the ability to run "local" jobs on OpenSharing servers if that can help us solve problems that are otherwise difficult to solve. No one should have 128 KiB objects, but many have.</p>
+<p>But the objective isn't to "replace" S3 appliances or Hadoop clusters, but to use the ability to run "local" jobs on OpenSharing servers if that can help us solve problems that are otherwise difficult to solve. No one should have 128 KiB objects, but many have such (or worse) workloads.</p>
 
 <p>Segregating such "bad" workloads onto isolated systems isn't a bad idea. Once tables have been compacted and made more usable, we can read them in an optimal way and use them without any impact on S3 infrastructure.</p>
-
-<p>I haven't tried doing similar tests with OpenSharing Volumes yet, but the argument is the same: whether it's single-volume hosts or BeeGFS environments, OpenSharing with Versity S3 Gateway and the ability to perform local I/O can be valuable. The ability to use both S3 and (BeeGFS) <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">filesystem notifications</a> makes it even easier to trigger and orchestrate such jobs.</p>
 
 
         
