@@ -2484,7 +2484,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Does OpenSharing have anything for NetApp E-Series?",
-        "excerpt":"Introduction Some of your applications gather or create TBs of data that needs to be shared with AI or analytics applications. Easy-peasy! Just put it on shared storage. Even better, keep it there from day 0, so that you don’t have to move or copy it there in the first...","categories": ["netapp","storage","analytics"],
+        "excerpt":"Introduction Some of your applications gather or create TBs of data that needs to be shared with AI or analytics applications. Easy-peasy! Just put it on a network share or S3. Even better, keep it there from day 0, so that you don’t have to move or copy it there...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta","opensharing","delta-lake"],
         "url": "/2026/06/14/netapp-eseries-opensharing-deltasharing.html",
         "teaser": null
@@ -2493,6 +2493,12 @@ var store = [{
         "excerpt":"Introduction This post is a short follow-up on the previous post, on OpenSharing with E-Series, which reaches the following conclusion: One of the things I mentioned in that post is that a solution stack with Versity S3 Gateway sharing E-Series tables or filesystems has some less obvious advantages due to...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta-lake","compaction","opensharing"],
         "url": "/2026/06/15/netapp-eseries-iceberg-table-compaction.html",
+        "teaser": null
+      },{
+        "title": "IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series",
+        "excerpt":"Introduction This post wraps up my initial exploration of OpenSharing with Versity S3 Gateway and NetApp E-Series for a use case I’ve seen before, but did not have time to explore at the time. Application sends super-tiny IoT data to S3 (000s per second) In order to “fix it”, a...","categories": ["netapp","storage","analytics"],
+        "tags": ["analytics","e-series","iceberg","delta-lake","compaction","opensharing","iot","versity"],
+        "url": "/2026/06/16/netapp-eseries-iot-compaction-opensharing.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2508,7 +2514,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Iceberg table compaction with E-Series 2026-06-15 00:00 4 minute read Having fast and reliable protected storage helps Does OpenSharing have anything for NetApp E-Series? 2026-06-14 00:00 9 minute read Does OpenSharing matter to E-Series users? StorageGRID bucket snapshots with sg-cosi 2026-06-13 00:00 5 minute read How to automate creation of...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series 2026-06-16 00:00 7 minute read We take a look at packaging JSON data for OpenSharing-ready serving with Versity S3 Gateway and NetApp E-Series Iceberg table compaction with E-Series 2026-06-15 00:00 4 minute read Having fast and reliable protected storage helps Does...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4093,6 +4099,9 @@ var store = [{
   },{
     "title": "compaction",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/compaction/"
+  },{
+    "title": "iot",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iot/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
