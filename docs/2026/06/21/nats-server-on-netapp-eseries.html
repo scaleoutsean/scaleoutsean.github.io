@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          15 minute read
+          16 minute read
         
       </span>
     
@@ -443,9 +443,9 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>Keep a hot spare in each array so that you can quickly deploy a new R0 "group" and volume for NATS. It takes 30 seconds.</p>
 
-<p>If you have 5 NATS servers, you can lose two servers (or two disks), the same as in RAID 6. If you take 8 disks you can't even create a RAID 6! And if you do, it will all be in a single rack. So how is a single RAID 6 better than five NATS servers each using RAID 0? It's not.</p>
+<p>If you have 5 NATS servers, you can lose two servers (or two disks), the same as in a RAID 6 group. But, if you take 8 disks you can't even create a good RAID 6! And if you do, it will all be in a single rack. So how is a single RAID 6 better than five NATS servers each using own RAID 0? It's not.</p>
 
-<p>File that one "nobody got fired for using RAID 6"….</p>
+<p>File that one under "nobody got fired for using RAID 6"….</p>
 
 <h3 id="why-not-raid-1-on-ddp-storage-pools">Why not RAID 1 on DDP storage pools?</h3>
 
@@ -454,12 +454,11 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 <p>My assumption in this post was:</p>
 
 <ul>
-  <li>"Data" (as in data lake tables) may be predominantly read and prefer RAID 6. Maybe even NL-SAS.</li>
-  <li>Messaging is semi-ephemeral (persistent, but not for long, and also replicated, so individual volumes may be lost), and very small I/O requests</li>
-  <li>With PostgreSQL for Catalog, you have enough workloads to justify mid-sized RAID 1 disk groups (example: 3 RAID 10 of 8 disks per group), so you'd run out of disks in the controller shelf anyway</li>
+  <li>"Data" (as in data lake tables) may be predominantly read and prefer RAID 6. Maybe even NL-SAS. Messaging is semi-ephemeral (persistent, but not for long, and also replicated, so individual volumes may be lost), and very small I/O requests</li>
+  <li>With such a distinct mix of very different workloads, it's not a bad idea to separate workloads if we get to a scale where you have enough disks to create multiple groups. With PostgreSQL as a separate requirements for Catalog (in the Lakekeeper example), we have enough workloads to justify mid-sized RAID 1 disk groups (example: 3 RAID 10 of 8 disks per group), so we'd run out of disks in the controller shelf anyway and probably need multiple arrays where we could justify RAID 1 disk groups</li>
 </ul>
 
-<p>We could use DDP for everything (PostgreSQL, data lake tables, messaging), but if it gets to certain scale such as multiple racks, we can afford to use more specialized storage layouts.</p>
+<p>We <em>could</em> use DDP for everything (PostgreSQL, data lake tables, messaging), but when data gets to certain scale such as multiple racks, we can afford to use more specialized storage layouts.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
