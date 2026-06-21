@@ -2514,13 +2514,13 @@ var store = [{
         "teaser": null
       },{
         "title": "SANtricity CSI adds Block Mode support",
-        "excerpt":"SANtricity CSI v1.1.0 As the title says, SANtricity CSI now works with Block Mode PVCs. It joins IBM Block Driver CSI with SANtricity patches which has enabled this feature weeks ago. SANtricity CSI still can’t do snapshots (which IBM Block CSI driver with SANtricity patches can), but Block Mode was...","categories": ["storage","kubernetes","project","e-series"],
+        "excerpt":"SANtricity CSI v1.1.0 As the title says, SANtricity CSI now works with Block Mode PVCs. It joins IBM Block Driver CSI with SANtricity patches which has enabled this feature (for SANtricity) weeks ago. SANtricity CSI still can’t do snapshots (which IBM Block CSI driver with SANtricity patches can), but Block...","categories": ["storage","kubernetes","project","e-series"],
         "tags": ["csi","santricity-csi"],
         "url": "/2026/06/20/santricity-go-csi-block-mode-support.html",
         "teaser": null
       },{
         "title": "NATS server with NetApp E-Series",
-        "excerpt":"Introduction Yesterday’s post about Lakekeeper mentioned event store as one of key interfaces. NATS and Kafka were mentioned as supported options. I blogged about storage layout, capacity and performance sizing for Kafka from an E-Series perspective. This post will be similar, but about NATS. NATS is less of a resource...","categories": ["netapp","storage","analytics"],
+        "excerpt":"Introduction Yesterday’s post about Lakekeeper mentioned event store as one of key interfaces. NATS and Kafka were mentioned as supported options. I blogged about storage layout, capacity and performance sizing for Kafka from an E-Series perspective. This post will be similar, but about NATS and with less focus on storage...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","message","nats","jetstream"],
         "url": "/2026/06/21/nats-server-on-netapp-eseries.html",
         "teaser": null
@@ -2538,7 +2538,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 15 minute read Thoughts on how NATS server with NetApp E-Series storage SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20 00:00 3 minute read Why...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 15 minute read Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
