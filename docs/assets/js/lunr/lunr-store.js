@@ -2484,7 +2484,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Does OpenSharing have anything for NetApp E-Series?",
-        "excerpt":"Introduction Some of your applications gather or create TBs of data that needs to be shared with AI or analytics applications. Easy-peasy! Just put it on a network share or S3. Even better, keep it there from day 0, so that you don’t have to move or copy it there...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction Some of your applications gather or create TBs of data that needs to be shared with AI...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta","opensharing","delta-lake"],
         "url": "/2026/06/14/netapp-eseries-opensharing-deltasharing.html",
         "teaser": null
@@ -2496,13 +2496,13 @@ var store = [{
         "teaser": null
       },{
         "title": "IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series",
-        "excerpt":"Introduction This post wraps up my initial exploration of OpenSharing with Versity S3 Gateway and NetApp E-Series for a use case I’ve seen before, but did not have time to explore at the time. Application sends super-tiny IoT data to S3 (000s per second) In order to “fix it”, a...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction This post wraps up my initial exploration of OpenSharing with Versity S3 Gateway and NetApp E-Series for...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta-lake","compaction","opensharing","iot","versity"],
         "url": "/2026/06/16/netapp-eseries-iot-compaction-opensharing.html",
         "teaser": null
       },{
         "title": "NetApp volume content sharing with OpenSharing and Versity S3 Gateway",
-        "excerpt":"Introduction The other day I blogged about OpenSharing and E-Series and mentioned how Tables are where almost all of the action must be right now, but Volumes are more (positively) disruptive for E-Series because today, if you have data on an E-Series volume and want to share it, you’re not...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction The other day I blogged about OpenSharing and E-Series and mentioned how Tables are where almost all...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","opensharing","volumes","versity","file-sharing"],
         "url": "/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html",
         "teaser": null
@@ -2519,6 +2519,12 @@ var store = [{
         "url": "/2026/06/20/santricity-go-csi-block-mode-support.html",
         "teaser": null
       },{
+        "title": "NATS server with NetApp E-Series",
+        "excerpt":"Introduction Yesterday’s post about Lakekeeper mentioned event store as one of key interfaces. NATS and Kafka were mentioned as supported options. I blogged about storage layout, capacity and performance sizing for Kafka from an E-Series perspective. This post will be similar, but about NATS. NATS is less of a resource...","categories": ["netapp","storage","analytics"],
+        "tags": ["analytics","e-series","message","nats","jetstream"],
+        "url": "/2026/06/21/nats-server-on-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2532,7 +2538,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20 00:00 3 minute read Why NetApp E-Series - for DB and S3 Object Storage - is all you need for Lakekeeper Iceberg REST Catalog...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 15 minute read Thoughts on how NATS server with NetApp E-Series storage SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20 00:00 3 minute read Why...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4133,6 +4139,15 @@ var store = [{
     "title": "santricity-csi",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-csi/"
   },{
+    "title": "message",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/message/"
+  },{
+    "title": "nats",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nats/"
+  },{
+    "title": "jetstream",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/jetstream/"
+  },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
   },{
@@ -4384,4 +4399,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page60/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page61/"
   }]
