@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          16 minute read
+          18 minute read
         
       </span>
     
@@ -342,7 +342,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>Using three servers on two different RAID levels (RAID 0 and RAID 1, each with same number of physical disks on EF600) gives us some idea about difference in performance from RAID level.</p>
 
-<p>With just three servers, we may run out of resources before we stress out storage array. So we go from 1-64 KiB and then jump 1024 KiB messages (objects) to skip to something that should move the stress-o-meter needle.</p>
+<p>With just three servers, we may run out of resources before we stress out storage array. So we go from 1-64 KiB and then jump 1024 KiB messages (objects) to skip to something that should move the stress-o-meter needle. <strong>UPDATE:</strong> it turned out we didn't run out of anything because tests didn't increase the number of data-generating workers, which then bottlenecked the consumers as well. Another batch of tests (see Appendix B) were executed with multiple nodes, multiple workers and load balancing of everything.</p>
 
 <h3 id="availability">Availability</h3>
 
@@ -496,7 +496,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
   <li>three runs for each object size (1, 4, 8, 16, 32, 64, 1024 KiB) and each of these was executed in immediate and postponed sync to disk, so 3 x 7 x 2 tests</li>
 </ul>
 
-<p>I didn't have enough compute power to push the storage, so we couldn't observe much difference between R0 and R1 runs, but some other details were useful and I highlight them below.</p>
+<p>Note that these highlights are from the single data generator tests without parallelization of workers and consumers; only servers were scaled from 1 (RAID 0) to 3 (R1 and R0), so we didn't get good results from scaling just NATS nodes. In Appendix B we describe the second batch of tests with more parallelism, which produced significant improvements.</p>
 
 <p>Periodic sync flushes pending JetStream objects every so 10-20 seconds. That's why there isn't much going on (maybe some RAFT state dumps, service logs, and such) most of the time. You can see that, every 20 seconds, the piled up uncommitted writes are flushed to disk at once.</p>
 
@@ -546,7 +546,26 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <h2 id="appendix-b-summary-results">Appendix B: Summary results</h2>
 
-<p>The biggest (performance) benefit comes from delayed writes to disk.</p>
+<p>These are for the first batch of tests.</p>
+
+<ul>
+  <li>NATS 2.12.11</li>
+  <li>Ubuntu 24.04 LTS server</li>
+  <li>EF600 (NVMe)</li>
+  <li>NATS test parameters
+    <ul>
+      <li>Object generator: <strong>one</strong></li>
+      <li>Objects per run 10000</li>
+      <li>Consumers: 20 (<strong>all on the first NATS server node</strong> (no load balancing))</li>
+      <li>Objects per consumer: 200</li>
+      <li>Object sizes per individual run: 4, 8, 16, 32, 64, 1024 KiB</li>
+      <li>Replicas: 1, 3</li>
+      <li>RAID: 0, 1</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The biggest (performance) benefit came from delayed writes to disk.</p>
 
 <p>RAID 0 performed well compared to RAID 10, which I did not expect to see in the results considering that I/O was low and nowhere near saturating physical SSD disks.</p>
 
@@ -667,6 +686,156 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 </table>
 
 <p>I should look at low-level IO metrics differences between RAID 10 and RAID 0 disks host-side to see if that's obvious in I/O latency levels as well. RAID 0 volumes aren't supposed to be that much faster - it's literally just 2-3 hundred MiB/s or several thousand IOPS…</p>
+
+<p>The second batch of tests were changed to get parallelism from data-generating workers and clients:</p>
+
+<ul>
+  <li>Allow N workers (and used 3 workers in scenarios below, compared to 1 worker earlier)
+    <ul>
+      <li>Note that this benefitted single NATS server test, because it got 3x the workload, while all clients were always already "load balanced" to it</li>
+    </ul>
+  </li>
+  <li>Spread N workers among M server nodes if possible (i.e. when M&gt;1)
+    <ul>
+      <li>Three data-generating workers on three servers means one worker per server; we should try 9 (3 per server) to keep the number of data generating nodes consistent with the single server scenario</li>
+    </ul>
+  </li>
+  <li>Spread K consumers (default: 20) across M NATS nodes (when M&gt;1)
+    <ul>
+      <li>Had we kept the number of workers per server consistent, we would also have increased consumers by 3x for the three-server tests. Something for future work</li>
+    </ul>
+  </li>
+</ul>
+
+<p>That visibly improved both PUT and GET performance.</p>
+
+<p>8 KiB tests with 3 and balancing of workers and consumers:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Sync</th>
+      <th>Obj/Size KiB</th>
+      <th>Avg Put Obj/s</th>
+      <th>Avg Get Obj/s</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>r0-single</td>
+      <td>immediate</td>
+      <td>8</td>
+      <td>593.41</td>
+      <td>237.36</td>
+    </tr>
+    <tr>
+      <td>r0-single</td>
+      <td>delayed</td>
+      <td>8</td>
+      <td>974.42</td>
+      <td>389.77</td>
+    </tr>
+    <tr>
+      <td>r0-rf3</td>
+      <td>immediate</td>
+      <td>8</td>
+      <td>539.53</td>
+      <td>215.81</td>
+    </tr>
+    <tr>
+      <td>r0-rf3</td>
+      <td>delayed</td>
+      <td>8</td>
+      <td>775.84</td>
+      <td>310.34</td>
+    </tr>
+    <tr>
+      <td>r1-rf3</td>
+      <td>immediate</td>
+      <td>8</td>
+      <td>332.88</td>
+      <td>133.15</td>
+    </tr>
+    <tr>
+      <td>r1-rf3</td>
+      <td>delayed</td>
+      <td>8</td>
+      <td>1036.38</td>
+      <td>414.55</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>1024 KiB tests with 3 and balancing of workers and consumers:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Sync</th>
+      <th>Obj/Size KiB</th>
+      <th>Avg Put Obj/s</th>
+      <th>Avg Get Obj/s</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>r0-single</td>
+      <td>immediate</td>
+      <td>1024</td>
+      <td>99.46</td>
+      <td>39.79</td>
+    </tr>
+    <tr>
+      <td>r0-single</td>
+      <td>immediate</td>
+      <td>1024</td>
+      <td>155.68</td>
+      <td>62.27</td>
+    </tr>
+    <tr>
+      <td>r0-rf3</td>
+      <td>immediate</td>
+      <td>1024</td>
+      <td>82.01</td>
+      <td>32.81</td>
+    </tr>
+    <tr>
+      <td>r0-rf3</td>
+      <td>delayed</td>
+      <td>1024</td>
+      <td>161.76</td>
+      <td>64.70</td>
+    </tr>
+    <tr>
+      <td>r1-rf3</td>
+      <td>immediate</td>
+      <td>1024</td>
+      <td>58.02</td>
+      <td>23.21</td>
+    </tr>
+    <tr>
+      <td>r1-rf3</td>
+      <td>delayed</td>
+      <td>1024</td>
+      <td>165.09</td>
+      <td>66.04</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>RAID 0 still seems unreasonably fast compared to RAID 1, but I did not look into why because there are many other optimizations that should be looked at before that.</p>
+
+<p>Another interesting change with multi-generator and load balancing is that writes happen all the time rather than every few seconds, simply because there's a lot more data coming in. It almost looks like immediate acknowledgement.</p>
+
+<p><img src="/assets/images/nats_eseries_10_r0_rf3_1mib_3w_lb_delayed_ack.png" alt="Delayed ACK with a lot of workload" /></p>
+
+<p>The main takeaway here is with improved parallelism we get better utilization of CPU and storage as we get close to 1 GB/s.</p>
+
+<p><img src="/assets/images/nats_eseries_11_r0_rf3_1mib_3w_lb_better_utilization.png" alt="Better utilization of OS and storage" /></p>
+
+<p>I should have run JetStream baseline tests with memory-based storage to be able to compare RAID 0 against memory, but there's a lot of things that should be done better and there is no time or immediate need. Maybe I'll revisit that in the future.</p>
 
         
       </section>

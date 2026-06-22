@@ -2370,7 +2370,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Cloud-Native Postgres with NetApp SANtricity and SolidFire CSI",
-        "excerpt":"PART ONE: CloudNativePG with CSI snapshots (this post) PART TWO: CloudNativePG with plugins PART THREE: CloudNativePG performance test EF-Series (NVMe/RoCE) Introduction The number of things known-to-work with IBM Block CSI patched for SANtricity is increasing: so far “first pass” CSI tests have been completed for Versity S3 Gateway, Splunk, Elasticsearch,...","categories": ["storage","e-series","solidfire","kubernetes"],
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots (this post) PART TWO: CloudNativePG backup with Barman plugin PART THREE: CloudNativePG performance test EF-Series (NVMe/RoCE) Introduction The number of things known-to-work with IBM Block CSI patched for SANtricity is increasing: so far “first pass” CSI tests have been completed for Versity S3 Gateway,...","categories": ["storage","e-series","solidfire","kubernetes"],
         "tags": ["cloudnativepg","postgresql","database","netapp","ibm","csi"],
         "url": "/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html",
         "teaser": null
@@ -2448,7 +2448,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Cloud-Native Postgres Performance with NetApp SANtricity NVMe/RoCE",
-        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (future post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) (this post) Introduction In the first post, I didn’t have time to evaluate the performance of CPNG with SANtricty. I still don’t, but at least I’ve done a worst-case...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG backup with Barman plugin PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) (this post) Introduction In the first post, I didn’t have time to evaluate the performance of CPNG with SANtricty. I still don’t, but at least I’ve done a worst-case...","categories": ["storage","e-series","kubernetes"],
         "tags": ["cloudnativepg","postgresql","database","netapp","performance","ibm","csi"],
         "url": "/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html",
         "teaser": null
@@ -2460,7 +2460,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Cloud-Native Postgres Backup (Barman) with Kubernetes and NetApp SANtricity",
-        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG with plugins (this post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) Introduction Parts one and three were done before part two, but I’m about to complete this initial set of three posts on Kubernetes-based PostgreSQL with NetApp E-Series, and -...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"PART ONE: CloudNativePG with CSI snapshots PART TWO: CloudNativePG backup with Barman plugin (this post) PART THREE: CloudNativePG performance test with EF-Series (NVMe/ROCE) Introduction Parts one and three were done before part two, but I’m about to complete this initial set of three posts on Kubernetes-based PostgreSQL with NetApp E-Series,...","categories": ["storage","e-series","kubernetes"],
         "tags": ["cloudnativepg","postgresql","database","netapp","backup","csi"],
         "url": "/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html",
         "teaser": null
@@ -2538,7 +2538,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 16 minute read Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 18 minute read Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
