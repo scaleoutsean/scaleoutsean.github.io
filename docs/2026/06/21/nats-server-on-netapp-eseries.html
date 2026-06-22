@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          18 minute read
+          20 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nats-core-vs-nats-jetstream">NATS Core vs NATS JetStream</a></li><li><a href="#e-series-for-nats">E-Series for NATS</a><ul><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#nats-storage-arrays-racks">NATS, storage arrays, racks</a></li><li><a href="#raid-10-or-raid-0">RAID 10 or RAID 0</a></li></ul></li><li><a href="#why-not-raid-1-on-ddp-storage-pools">Why not RAID 1 on DDP storage pools?</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-highlights-from-nats-test-runs">Appendix A: Highlights from NATS test runs</a></li><li><a href="#appendix-b-summary-results">Appendix B: Summary results</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nats-core-vs-nats-jetstream">NATS Core vs NATS JetStream</a></li><li><a href="#e-series-for-nats">E-Series for NATS</a><ul><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#nats-storage-arrays-racks">NATS, storage arrays, racks</a></li><li><a href="#raid-10-or-raid-0">RAID 10 or RAID 0</a></li></ul></li><li><a href="#why-not-raid-1-on-ddp-storage-pools">Why not RAID 1 on DDP storage pools?</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-highlights-from-nats-test-runs">Appendix A: Highlights from NATS test runs</a></li><li><a href="#appendix-b-summary-results">Appendix B: Summary results</a></li><li><a href="#appendix-c-mystery-of-slow-raid-1">Appendix C: Mystery of slow RAID 1</a></li></ul>
             </nav>
           </aside>
         
@@ -836,6 +836,99 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 <p><img src="/assets/images/nats_eseries_11_r0_rf3_1mib_3w_lb_better_utilization.png" alt="Better utilization of OS and storage" /></p>
 
 <p>I should have run JetStream baseline tests with memory-based storage to be able to compare RAID 0 against memory, but there's a lot of things that should be done better and there is no time or immediate need. Maybe I'll revisit that in the future.</p>
+
+<h2 id="appendix-c-mystery-of-slow-raid-1">Appendix C: Mystery of slow RAID 1</h2>
+
+<p>I couldn't resist so I went to evaluate the first RAID 0 vs. first RAID 1 volume.</p>
+
+<p>Test:</p>
+<ul>
+  <li>IOPS: 15,000</li>
+  <li>Request size: 8 KiB</li>
+  <li>R/W: 70/30</li>
+  <li>Queue Depth: 8</li>
+</ul>
+
+<p>They both ran at 15K just fine, but RAID 1 (right-hand side) ran at a higher latency compared to RAID 0 (left-hand side):</p>
+
+<p><img src="/assets/images/nats_eseries_13_mystery_of_slow_r1_r0_vs_r1_latency.png" alt="RAID 0 vs. RAID 1 - latency" /></p>
+
+<p>Summary and comparison of three runs on each LUN:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>RAID 0 avg</th>
+      <th>RAID 1 avg</th>
+      <th>Ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Read IOPS</td>
+      <td>15,000</td>
+      <td>15,000</td>
+      <td>1.00x</td>
+    </tr>
+    <tr>
+      <td>Read lat p50</td>
+      <td>0.16 ms</td>
+      <td>0.17 ms</td>
+      <td>1.05x</td>
+    </tr>
+    <tr>
+      <td>Read lat p99</td>
+      <td>0.40 ms</td>
+      <td>0.40 ms</td>
+      <td>1.00x</td>
+    </tr>
+    <tr>
+      <td>Write IOPS</td>
+      <td>15,000</td>
+      <td>15,000</td>
+      <td>1.00x</td>
+    </tr>
+    <tr>
+      <td>Write lat mean</td>
+      <td>0.16 ms</td>
+      <td>0.30 ms</td>
+      <td>1.84x</td>
+    </tr>
+    <tr>
+      <td>Write lat p50</td>
+      <td>0.12 ms</td>
+      <td>0.26 ms</td>
+      <td>2.21x</td>
+    </tr>
+    <tr>
+      <td>Write lat p95</td>
+      <td>0.32 ms</td>
+      <td>0.42 ms</td>
+      <td>1.31x</td>
+    </tr>
+    <tr>
+      <td>Write lat p99</td>
+      <td>0.44 ms</td>
+      <td>0.56 ms</td>
+      <td>1.27x</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>RAID 0 had a much lower write latency, which then compounded on NATS across RF3, especially in the runs with synchronous writes.</p>
+
+<p>Then I remembered to check that old anti-caching setting and yes, it was on: write cache forcibly disabled and the NATS volumes were all on that list.</p>
+
+<p><img src="/assets/images/nats_eseries_12_mystery_of_slow_r1.png" alt="Write cache forcibly disabled" /></p>
+
+<p>The reason that's disabled is to prevent getting fake good results due to write-caching in the controllers, which is the right away for lab use. I knew about it, but didn't think it I'd notice it in testing.</p>
+
+<p>The only reason I noticed it was because I used RAID 0 which was not affected, so by comparison, this stood out. Otherwise, 0.2ms latency (observed on R1 with write cache disabled) wasn't attention-catching.</p>
+
+<p>RAID 0 writes land on individual disk(s). Each RAID 1 write has to land on two and there's no write caching, which is what gets it. If write cache was enabled, writes would be mirrored to the other controller and instantly acknowledged. Seconds later, they'd be coalesced and flushed. We'd see similar latency for R0 and R1. But, because this basic optimization is disabled, writes to RAID 1 are much slower and writes to RAID 0 are not.</p>
+
+<p>That's really a great find, because now we know RAID 0 works well even without array cache (as long as we don't exhaust disk limits), so the use case for five NATS servers makes more sense, and the KV cache use case (described in <a href="/2026/06/05/above-and-beeond-beeond.html">Above and Beeond</a>) should work well.</p>
 
         
       </section>
