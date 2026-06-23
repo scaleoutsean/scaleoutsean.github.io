@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          20 minute read
+          21 minute read
         
       </span>
     
@@ -319,21 +319,21 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
       <td>0</td>
       <td>1</td>
       <td>1,4,8,16,32,64,1024</td>
-      <td>immediate, delayed writes</td>
+      <td>3 runs with immediate and 3 with delayed writes</td>
     </tr>
     <tr>
       <td style="text-align: left">Three servers</td>
       <td>0</td>
       <td>3</td>
       <td>1,4,8,16,32,64,1024</td>
-      <td>immediate, delayed writes</td>
+      <td>3 runs with immediate and 3 with delayed writes</td>
     </tr>
     <tr>
       <td style="text-align: left">Three servers</td>
       <td>1</td>
       <td>3</td>
       <td>1,4,8,16,32,64,1024</td>
-      <td>immediate, delayed writes</td>
+      <td>3 runs with immediate and 3 with delayed writes</td>
     </tr>
   </tbody>
 </table>
@@ -443,7 +443,13 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>Keep a hot spare in each array so that you can quickly deploy a new R0 "group" and volume for NATS. It takes 30 seconds.</p>
 
-<p>If you have 5 NATS servers, you can lose two servers (or two disks), the same as in a RAID 6 group. But, if you take 8 disks you can't even create a good RAID 6! And if you do, it will all be in a single rack. So how is a single RAID 6 better than five NATS servers each using own RAID 0? It's not.</p>
+<p>If you have 5 NATS servers, you can lose two servers (or two disks), the same as in a RAID 6 group. But, if you take 8 disks you can't even create a good RAID 6! And if you do, it will all be in a single rack. You are one rack failure away from downtime of <strong>all</strong> your services enterprise-wide.</p>
+
+<p><img src="/assets/images/nats_eseries_14_3-rack-5-node-nats.png" alt="5-node NATS in 3 racks using RAID 0" /></p>
+
+<p>So, is a single array with a large RAID 6 in mid-range EF-Series better than five NATS servers each using own disk for RAID 0 on entry-level EF-Series? It's not.</p>
+
+<p>If you can't stomach RAID 0, the same benefit exist with three racks with RAID 1; in fact you'd need just <strong>one</strong> additional disk (scenario (4) above) in the 3rd rack to create three RAID 1 groups instead. But even when RAID 1 is mentioned, I get the same exact comment ("Bbbut, double disk failure"), so I may as well just talk about RAID 0.</p>
 
 <p>File that one under "nobody got fired for using RAID 6"….</p>
 
@@ -484,7 +490,9 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <h2 id="appendix-a-highlights-from-nats-test-runs">Appendix A: Highlights from NATS test runs</h2>
 
-<p>Volume segment size is available for classic disk groups. 32 KiB is the smallest and suitable for small I/O. I created three volumes on each (R1 and R0 disk group) using the pattern described in (3) and (4) above. Each RAID disk group had 2 disks (way too much performance for the NATS workload we could generate).</p>
+<p>Volume segment size setting is available in classic disk group configuration wizard (DDP storage pools don't let you set this, it's set automatically). 32 KiB is the smallest segment size and it's suitable for small I/O requests.</p>
+
+<p>I created three volumes on each (R1 and R0 disk group) using the pattern described in (3) and (4) above. Each RAID disk group had 2 disks (way too much performance for the NATS workload we could generate).</p>
 
 <p><img src="/assets/images/nats_eseries_00_santricity_disks_volumes.png" alt="RAID and Volume Setup" /></p>
 
@@ -555,11 +563,11 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
   <li>NATS test parameters
     <ul>
       <li>Object generator: <strong>one</strong></li>
-      <li>Objects per run 10000</li>
+      <li>Objects per run: 4,000 for PUT, plus more GET</li>
       <li>Consumers: 20 (<strong>all on the first NATS server node</strong> (no load balancing))</li>
       <li>Objects per consumer: 200</li>
       <li>Object sizes per individual run: 4, 8, 16, 32, 64, 1024 KiB</li>
-      <li>Replicas: 1, 3</li>
+      <li>Replicas: 1 (single node), 3 (3 nodes)</li>
       <li>RAID: 0, 1</li>
     </ul>
   </li>
@@ -569,7 +577,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>RAID 0 performed well compared to RAID 10, which I did not expect to see in the results considering that I/O was low and nowhere near saturating physical SSD disks.</p>
 
-<p>8 KiB object sizes with Single, 3 servers on R0, and 3 servers on R1:</p>
+<p>8 KiB object size with Single, 3 servers on R0, and 3 servers on R1 (separate runs with immediate and delayed sync to disk):</p>
 
 <table>
   <thead>
@@ -627,7 +635,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
   </tbody>
 </table>
 
-<p>1024 KiB:</p>
+<p>1,024 KiB object size:</p>
 
 <table>
   <thead>
@@ -709,7 +717,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>That visibly improved both PUT and GET performance.</p>
 
-<p>8 KiB tests with 3 and balancing of workers and consumers:</p>
+<p>8 KiB tests with RF3 (3 servers) and balancing of workers and consumers across all servers (separate runs for immediate and delayed sync to disk):</p>
 
 <table>
   <thead>
@@ -767,7 +775,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
   </tbody>
 </table>
 
-<p>1024 KiB tests with 3 and balancing of workers and consumers:</p>
+<p>1,024 KiB tests with RF3 (3 servers) and balancing of workers and consumers:</p>
 
 <table>
   <thead>
@@ -834,6 +842,8 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 <p>The main takeaway here is with improved parallelism we get better utilization of CPU and storage as we get close to 1 GB/s per volume.</p>
 
 <p><img src="/assets/images/nats_eseries_11_r0_rf3_1mib_3w_lb_better_utilization.png" alt="Better utilization of OS and storage" /></p>
+
+<p>(The large read workload happens on NATS restart, as it checks existing objects for consistency; that's not part of results.)</p>
 
 <p>I should have run JetStream baseline tests with memory-based storage to be able to compare RAID 0 against memory, but there's a lot of things that should be done better and there is no time or immediate need. Maybe I'll revisit that in the future.</p>
 
