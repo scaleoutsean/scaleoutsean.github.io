@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nats-core-vs-nats-jetstream">NATS Core vs NATS JetStream</a></li><li><a href="#e-series-for-nats">E-Series for NATS</a><ul><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#nats-storage-arrays-racks">NATS, storage arrays, racks</a></li><li><a href="#raid-10-or-raid-0">RAID 10 or RAID 0</a></li></ul></li><li><a href="#why-not-raid-1-on-ddp-storage-pools">Why not RAID 1 on DDP storage pools?</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-highlights-from-nats-test-runs">Appendix A: Highlights from NATS test runs</a></li><li><a href="#appendix-b-summary-results">Appendix B: Summary results</a></li><li><a href="#appendix-c-mystery-of-slow-raid-1">Appendix C: Mystery of slow RAID 1</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#nats-core-vs-nats-jetstream">NATS Core vs NATS JetStream</a></li><li><a href="#e-series-for-nats">E-Series for NATS</a><ul><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#nats-storage-arrays-racks">NATS, storage arrays, racks</a></li><li><a href="#raid-1-10-or-raid-0">RAID 1 (10) or RAID 0</a></li></ul></li><li><a href="#why-not-raid-1-on-ddp-storage-pools">Why not RAID 1 on DDP storage pools?</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-highlights-from-nats-test-runs">Appendix A: Highlights from NATS test runs</a></li><li><a href="#appendix-b-summary-results">Appendix B: Summary results</a></li><li><a href="#appendix-c-mystery-of-slow-raid-1">Appendix C: Mystery of slow RAID 1</a></li></ul>
             </nav>
           </aside>
         
@@ -379,7 +379,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>I prefer the approach depicted above, where each rack has own redundant array - just one step above servers with internal storage using RF3. If you need more than one type of RAID or simply don't have the time to pay attention to servers, take disks out to a simple array in the rack.</p>
 
-<h4 id="raid-10-or-raid-0">RAID 10 or RAID 0</h4>
+<h4 id="raid-1-10-or-raid-0">RAID 1 (10) or RAID 0</h4>
 
 <ul>
   <li>Vertical rectangles are physical disks</li>
@@ -449,7 +449,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p>So, is a single array with a large RAID 6 in mid-range EF-Series better than five NATS servers each using own disk for RAID 0 on entry-level EF-Series? It's not.</p>
 
-<p>If you can't stomach RAID 0, the same benefit exist with three racks with RAID 1; in fact you'd need just <strong>one</strong> additional disk (scenario (4) above) in the 3rd rack to create three RAID 1 groups instead. But even when RAID 1 is mentioned, I get the same exact comment ("Bbbut, double disk failure"), so I may as well just talk about RAID 0.</p>
+<p>If you can't stomach RAID 0, the same benefit exist with three racks with RAID 1; in fact you'd need just <strong>one</strong> additional disk (scenario (4) above) in the 3rd rack to create three RAID 1 groups instead. But even when RAID 1 is mentioned, I get the same exact comment ("Bbbbut, double disk failures"), so I may as well just talk about RAID 0.</p>
 
 <p>File that one under "nobody got fired for using RAID 6"….</p>
 
@@ -833,6 +833,8 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
   </tbody>
 </table>
 
+<p>I expected more Get Obj/s, but I was wrong. Maybe I didn't do this test right, but the absence of read I/O shows us those gets always come from NATS server cache, so I doubt that is related to storage.</p>
+
 <p>RAID 0 still seems unreasonably fast compared to RAID 1, but I did not look into why because there are many other optimizations that should be looked at before that.</p>
 
 <p>Another interesting change with multi-generator and load balancing is that writes happen all the time rather than every few seconds, simply because there's a lot more data coming in. It almost looks like immediate acknowledgement.</p>
@@ -932,7 +934,7 @@ NATS JetStream KV putter stats: 30,067 msgs/sec ~ 3.7 MiB/sec ~ 33.26us
 
 <p><img src="/assets/images/nats_eseries_12_mystery_of_slow_r1.png" alt="Write cache forcibly disabled" /></p>
 
-<p>The reason that's disabled is to prevent getting fake good results due to write-caching in the controllers, which is the right away for lab use. I knew about it, but didn't think it I'd notice it in testing.</p>
+<p>The reason that's disabled is to prevent getting fake good results due to write-caching in the controllers, which is the right way for this lab use (we don't want to benefit from write caching). I had known about this, but didn't think it I'd notice it in testing.</p>
 
 <p>The only reason I noticed it was because I used RAID 0 which was not affected, so by comparison, this stood out. Otherwise, 0.2ms latency (observed on R1 with write cache disabled) wasn't attention-catching.</p>
 
