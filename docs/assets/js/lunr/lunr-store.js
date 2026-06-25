@@ -2525,6 +2525,12 @@ var store = [{
         "url": "/2026/06/21/nats-server-on-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Single-volume sequential GET test with Versity S3 on EF600",
+        "excerpt":"Introduction As we look into some interesting analytics use cases, it’s time to take another look at sequential performance of the Versity S3 Gateway. Some use recent use cases involve OpenSharing, for which we need to run some sanity tests to see what to expect from a single node Versity...","categories": ["storage","s3"],
+        "tags": ["versity","s3","versitygw"],
+        "url": "/2026/06/25/versity-sequential-s3-get-test.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2538,7 +2544,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"NATS server with NetApp E-Series 2026-06-21 00:00 21 minute read Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments SANtricity CSI adds Block Mode support 2026-06-20 00:00 5 minute read New SANtricity CSI adds Block Mode support Lakekeeper Iceberg REST Catalog with NetApp E-Series 2026-06-20...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Single-volume sequential GET test with Versity S3 on EF600 2026-06-25 00:00 2 minute read Worst-case sequential GET on all-flash EF600 with Versity Gateway 1.5.0 NATS server with NetApp E-Series 2026-06-21 00:00 22 minute read Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments SANtricity CSI...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
