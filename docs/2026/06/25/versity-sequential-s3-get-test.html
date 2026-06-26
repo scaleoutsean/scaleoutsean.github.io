@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          3 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment-and-test">Environment and test</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-warp-test">Appendix A: Warp test</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#environment-and-test">Environment and test</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-warp-test">Appendix A: Warp test</a></li><li><a href="#appendix-b-demo">Appendix B: Demo</a></li></ul>
             </nav>
           </aside>
         
@@ -252,6 +252,7 @@
     </ul>
   </li>
   <li>Ubuntu 24.04</li>
+  <li>Intel Xeon Silver from last decade</li>
   <li>NVMe/RoCE network</li>
   <li>NetApp E-Series EF600
     <ul>
@@ -263,9 +264,15 @@
 
 <p>I supposed 14 TLS NVMe disks isn't the worst case compared to a smaller DDP on QLC SSDs, but given the disabled read and write cache, it's as bad as it gets. Nobody does runs their E-Series like that.</p>
 
-<p>Thanks to disabled write caching, <code class="language-plaintext highlighter-rouge">PUT</code> performance was terrible (as expected). But <code class="language-plaintext highlighter-rouge">GET</code> was actually nice, which shows that reading RAID 6 data doesn't run into the same "multi-disk I/O synchronization" issues that affects writes when there's no write cache.</p>
+<p>Thanks to disabled write caching, <code class="language-plaintext highlighter-rouge">PUT</code> performance was terrible (as expected; demo video below shows that despite 128 MiB PUTs average write I/O size on array was 1 MiB).</p>
 
-<p>Result: ~5 GiB/s <code class="language-plaintext highlighter-rouge">GET</code>. Latency: sub-1ms on EF600, ~0.6s on Versity S3 Gateway.</p>
+<p>But <code class="language-plaintext highlighter-rouge">GET</code> was actually nice, which shows that reading RAID 6 data doesn't run into the same "multi-disk I/O synchronization" issues that affects writes when there's no write cache.</p>
+
+<p>The RAID 6 volume:</p>
+
+<p><img src="/assets/images/versity-s3-gateway-sequential-noncached-read-02-volume.png" alt="Versity test volume" /></p>
+
+<p>Result: ~5 GiB/s <code class="language-plaintext highlighter-rouge">GET</code>. Latency: sub-0.2ms on EF600, sub-0.6ms on the Versity S3 Gateway.</p>
 
 <p><img src="/assets/images/versity-s3-gateway-sequential-noncached-read-00-gui.png" alt="Versity volume read" /></p>
 
@@ -274,21 +281,23 @@
 <p><img src="/assets/images/versity-s3-gateway-sequential-noncached-read-01-warp.png" alt="MinIO Warp test" /></p>
 
 <ul>
-  <li>(1) Data set was 3.2 TB</li>
-  <li>(2) TTFB was just 2.4ms</li>
+  <li>(1) Data set size was 3.2 TB (server RAM was 96, storage controllers' read cache was disabled)</li>
+  <li>(2) Warp's TTFB was just 2.4ms</li>
 </ul>
 
-<p>Not bad considering the worst possible settings.</p>
+<p>Not bad considering the worst possible settings!</p>
 
 <p>Warp used 128 MiB GET requests and 16 threads.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Running Warp on the same server where Versity S3 Gateway was running probably slowed us down, but at least we used HTTP to save CPU so the impact of that may have been small.</p>
+<p>Running Warp on the same server where Versity S3 Gateway was running probably slowed us down, but at least we used HTTP to save CPU resources, so the impact of that may have been small.</p>
 
-<p>5 GiB/s GET tells us that OpenSharing clients have decent bandwidth to work with. What you can't do with Versity S3 Gateway - because it's a gateway to a filesystem - is put 200K files under one path ("directory") ane expect great results, but if you spread them in a tree, it looks just as good as <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#appendix-a">MinIO</a>. So OpenSharing should be fine.</p>
+<p>5 GiB/s GET tells us that OpenSharing clients have decent bandwidth to work with. What you can't do with Versity S3 Gateway - because it's a gateway to a filesystem - is put 200K files under one path ("directory") ane expect great results, but if you spread them in a tree, it looks just as good as <a href="/2023/09/03/minio-erasure-coding-and-netapp-e-series.html#appendix-a">MinIO</a>. This should be fine for OpenSharing - 5 GiB/s per tenant is decent enough and multiple tenants can be served from each E-Series system using per-tenant OpenSharing/VGW instances.</p>
 
-<p>This performance is also great for S3 read cache use cases, because with 5 GiB/s from back-end and 70-80% cache hit on cache, we could get 10-15 GiB/s from S3 caching layer. We'll explore this in future posts.</p>
+<p>This performance is also great for S3 read cache use cases, because with 5 GiB/s from back-end and a 70-80% cache hit rate on front-end, we could get 10-15 GiB/s from S3 cache. We'll explore this in future posts.</p>
+
+<p>On the <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html">newer EF-Series arrays</a> that are much faster, everything should work even better.</p>
 
 <h2 id="appendix-a-warp-test">Appendix A: Warp test</h2>
 
@@ -317,6 +326,11 @@ Throughput, <span class="nb">split </span>into 597 x 1s:
  <span class="k">*</span> Slowest: 4747.8MiB/s, 37.09 obj/s
 </code></pre></div></div>
 
+<h2 id="appendix-b-demo">Appendix B: Demo</h2>
+
+<ul>
+  <li><a href="https://rumble.com/v7buj8o-single-volume-sequential-get-test-with-versity-s3-gateway-on-e-series-ef600.html">Warp with sequential GET workload on Versity S3 Gateway and EF600</a> - 2m36s</li>
+</ul>
 
         
       </section>
