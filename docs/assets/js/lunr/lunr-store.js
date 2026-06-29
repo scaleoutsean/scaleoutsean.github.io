@@ -2550,7 +2550,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kompromise - control plane for S3 data pipelines with NetApp StorageGRID/E-Series and Versity S3 Gateway 2026-06-27 00:00 7 minute read It all already works with OSS. I just put it together to work better with StorageGRID and E-Series Single-volume sequential GET test with Versity S3 on EF600 2026-06-25 00:00 3...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kompromise - control plane for S3 data pipelines with NetApp StorageGRID/E-Series and Versity S3 Gateway 2026-06-27 00:00 8 minute read It all already works with OSS - I just put it together to work better with StorageGRID and E-Series Single-volume sequential GET test with Versity S3 on EF600 2026-06-25 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
