@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#kompromise">Kompromise</a></li><li><a href="#kompromise-enabled-s3-pipelines">Kompromise-enabled S3 pipelines</a><ul><li><a href="#high-performance-s3-cache">High-performance S3 cache</a></li><li><a href="#vector-embeddings">Vector embeddings</a></li></ul></li><li><a href="#storage-services">Storage services</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-demo">Appendix A: Demo</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#kompromise">Kompromise</a></li><li><a href="#kompromise-enabled-s3-pipelines">Kompromise-enabled S3 pipelines</a><ul><li><a href="#high-performance-s3-cache">High-performance S3 cache</a></li><li><a href="#vector-embeddings">Vector embeddings</a></li></ul></li><li><a href="#storage-services">Storage services</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-demo">Appendix A: Demo</a></li><li><a href="#appendix-b-storagegrid-workflow">Appendix B: StorageGRID workflow</a></li></ul>
             </nav>
           </aside>
         
@@ -493,6 +493,86 @@ demo.tar	 89.47MiB	 		 	 		 0	 <span class="o">[</span>ETag: LastModified:2026-0
   <li><a href="https://rumble.com/v7bzfli-kompromise-self-service-s3-pipeline-demo-for-storagegrid-and-vgw.html">Kompromise with S3 caching pipeline</a> - 4m58s</li>
 </ul>
 
+<h2 id="appendix-b-storagegrid-workflow">Appendix B: StorageGRID workflow</h2>
+
+<p>Since the demo was created in a simpler environment without StorageGRID, here's how it went to StorageGRID 12.0.</p>
+
+<p>I configured Tenant Platform Service to send notifications to <code class="language-plaintext highlighter-rouge">http://WEBHOOK-ENDPOINT/events/sg-bucketshop/bucketshop</code> because <code class="language-plaintext highlighter-rouge">sg-bucketshop</code> is my namespace in Kubernetes and <code class="language-plaintext highlighter-rouge">bucketshop</code> my bucket name, but this could (should?) be more generic if you plan to use various namespaces or bucket names. The <code class="language-plaintext highlighter-rouge">urn:site1:webhook:26296085394235545212::bucketshop</code> URN was used based on StorageGRID site name (Site1), Tenant ID, and Bucket Name. Again, maybe I should have chosen something else for this, too.</p>
+
+<p><img src="/assets/images/kompromise-pipeline-02-sg-platform-service-step.png" alt="StorageGRID Platform Services Configuration" /></p>
+
+<p>Then in the bucket (<code class="language-plaintext highlighter-rouge">bucketshop</code>), I used the sme URN:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;NotificationConfiguration&gt;</span>
+    <span class="nt">&lt;TopicConfiguration&gt;</span>
+        <span class="nt">&lt;Id&gt;</span>stuff-uploaded<span class="nt">&lt;/Id&gt;</span>
+        <span class="nt">&lt;Topic&gt;</span>urn:site1:webhook:26296085394235545212::bucketshop<span class="nt">&lt;/Topic&gt;</span>
+        <span class="nt">&lt;Event&gt;</span>s3:ObjectCreated:*<span class="nt">&lt;/Event&gt;</span>
+    <span class="nt">&lt;/TopicConfiguration&gt;</span>
+<span class="nt">&lt;/NotificationConfiguration&gt;</span>
+</code></pre></div></div>
+
+<p><img src="/assets/images/kompromise-pipeline-03-sg-bucket-configuration-step.png" alt="StorageGRID Bucket Configuration" /></p>
+
+<p>On Kubernetes, I used the <code class="language-plaintext highlighter-rouge">sg-bucketshop</code> namespace and my Kompromise pipeline for the bucket was configured like so:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">labs.scaleoutsean.labs/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">BucketPipeline</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">bucketpipeline-storagegrid-sample</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">sg-bucketshop</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">bucket</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bucketshop"</span>
+  <span class="na">endpoint</span><span class="pi">:</span> <span class="s2">"</span><span class="s">https://192.168.1.211:10443"</span>
+  <span class="na">credentialsSecret</span><span class="pi">:</span> <span class="s2">"</span><span class="s">sg-coke-creds"</span>
+  <span class="na">cacheProfile</span><span class="pi">:</span> <span class="s2">"</span><span class="s">gold"</span>
+  <span class="na">embeddingProfile</span><span class="pi">:</span> <span class="s2">"</span><span class="s">none"</span>
+  <span class="na">versioningValidation</span><span class="pi">:</span> <span class="kc">true</span>
+</code></pre></div></div>
+
+<p>The worker and bucket:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectget pods <span class="nt">-n</span> sg-bucketshop
+NAME                                                       READY   STATUS    RESTARTS   AGE
+bucketpipeline-storagegrid-sample-worker-c5cb9d968-zwhgf   1/1     Running   0          51m
+
+<span class="nv">$ </span>ais show bucket ais://bucketshop
+PROPERTY				 VALUE
+access					 GET,HEAD-OBJECT,PUT,APPEND,DELETE-OBJECT,MOVE-OBJECT,PROMOTE,UPDATE-OBJECT,HEAD-BUCKET,LIST-OBJECTS,PATCH,SET-BUCKET-ACL,LIST-BUCKETS,SHOW-CLUSTER,CREATE-BUCKET,DESTROY-BUCKET,MOVE-BUCKET,ADMIN
+backend_bck.name			 bucketshop
+backend_bck.provider			 aws
+checksum.enable_read_range		 <span class="nb">false</span>
+...
+</code></pre></div></div>
+
+<p>At this point I was ready to upload junk to <code class="language-plaintext highlighter-rouge">bucketshop</code>:</p>
+
+<p><img src="/assets/images/kompromise-pipeline-04-sg-bucket-upload.png" alt="StorageGRID Upload Data" /></p>
+
+<p>And the worker delivered.</p>
+
+<p><img src="/assets/images/kompromise-pipeline-05-sg-kompromise-worker.png" alt="Kompromise worker prefetches StorageGRID Data" /></p>
+
+<p>Prefetch for the marked object:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ais show job L9hRIJVmFC
+prefetch-objects[L9hRIJVmFC] <span class="o">(</span>ctl: 
+  t[RXcFqlZv]: cfg<span class="o">(</span>list:[documents/entire.csv]<span class="o">)</span> job:[cold:<span class="o">(</span>1,1.00KiB<span class="o">)]</span> lifetime:[cold:<span class="o">(</span>8,35.52KiB avg-lat:25ms<span class="o">)]</span>
+  parallelism: w[1]
+<span class="o">)</span> 
+NODE		 ID		 KIND			 BUCKET			 OBJECTS	 BYTES		 START		 END		 STATE
+RXcFqlZv	 L9hRIJVmFC	 prefetch-listrange	 ais://bucketshop	 1		 1.00KiB	 08:56:40	 08:56:40	 Finished
+
+<span class="nv">$ </span><span class="nb">time </span>ais object get  ais://bucketshop/documents/entire.csv
+GET documents/entire.csv from ais://bucketshop as entire.csv <span class="o">(</span>1.00KiB<span class="o">)</span>
+
+real	0m0.105s
+user	0m0.014s
+sys	0m0.097s
+
+</code></pre></div></div>
+
+<p>I need to improve naming conventions because it seems confusing, but it works.</p>
 
         
       </section>
