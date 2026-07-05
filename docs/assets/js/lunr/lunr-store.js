@@ -2537,6 +2537,12 @@ var store = [{
         "url": "/2026/06/27/kompromise-pipeline-netapp-storagegrid-eseries-vgw.html",
         "teaser": null
       },{
+        "title": "Eke - CLI utility for smarter data management with BeeGFS on NetApp E-Series",
+        "excerpt":"Introduction BeeGFS has several good data management features. NetApp has had the BeeGFS solution with E-Series for over half a decade now, so current users have at least the following available: Since BeeGFS v7 - Storage Pools. I think even the earliest BeeGFS shipped had the storage pools feature because...","categories": ["storage","analytics","eseries","netapp"],
+        "tags": ["beegfs","s3","storagegrid","pipeline"],
+        "url": "/2026/07/05/eke-smarter-workflows-for-beegfs-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2550,7 +2556,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kompromise - control plane for S3 data pipelines with NetApp StorageGRID/E-Series and Versity S3 Gateway 2026-06-27 00:00 10 minute read It all already works with OSS - I just put it together to work better with StorageGRID and E-Series Single-volume sequential GET test with Versity S3 on EF600 2026-06-25 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Eke - CLI utility for smarter data management with BeeGFS on NetApp E-Series 2026-07-05 00:00 12 minute read Eke is my take on a subset BeeGFS CLI features and some extra goodies Kompromise - control plane for S3 data pipelines with NetApp StorageGRID/E-Series and Versity S3 Gateway 2026-06-27 00:00 10...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
