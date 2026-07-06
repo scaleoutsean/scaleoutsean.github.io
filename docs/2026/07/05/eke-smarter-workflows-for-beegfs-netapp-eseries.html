@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -246,9 +246,9 @@
 
 <h2 id="are-these-features-useful">Are these features useful?</h2>
 
-<p>While I don't know of anyone who uses them, I still recommend them. Especially now, with SSDs priced at 10x of NL-SAS, even 3:1 efficiency won't help you avoid the cost. But Storage Pools can, and it's simple and easy.</p>
+<p>While I don't know of anyone who uses them, I still recommend them. Especially now, with SSDs priced at 10x of NL-SAS, even 3:1 efficiency won't help you avoid the cost of SSDs. But Storage Pools can, and they're simple and easy to use.</p>
 
-<p>It's also very easy to build hybrid (NVMe/NL-SAS) BeeGFS clusters, so if you put 10 or 20 percent on SSD, 80 or 90% is still much cheaper than on any all-flash storage even after huge efficiency savings advertised by some all-flash vendors.</p>
+<p>It's also very easy to build hybrid (NVMe/NL-SAS) BeeGFS clusters, so if you put 10 or 20 percent on SSD, 80 or 90% is still much cheaper than on any all-flash storage even after the huge efficiency savings advertised by some all-flash vendors.</p>
 
 <p>The only part that I wish was better was the interface. There's no UI, which is "common" (for free features), while the CLI is not that easy to use. So this weekend I've built Eke, a CLI for these features that works the way I want.</p>
 
@@ -618,7 +618,7 @@ Mismatches:
 error: verify failed: <span class="nv">mismatched</span><span class="o">=</span>3 <span class="nv">missing</span><span class="o">=</span>0 <span class="nv">errors</span><span class="o">=</span>0
 </code></pre></div></div>
 
-<p>Here it's telling me I may have screwed up. (I actually didn't, I'd tiered these files down with <code class="language-plaintext highlighter-rouge">migrate-smart</code> and that worked, but after that I ran a small <code class="language-plaintext highlighter-rouge">migrate-up</code> to migrate some of the files back to default and emulate a problem).</p>
+<p>Here it's telling me I may have screwed up. (I actually didn't, I'd tiered these files down with <code class="language-plaintext highlighter-rouge">migrate-smart</code> and that worked, but after that I ran a small <code class="language-plaintext highlighter-rouge">migrate-up</code> to migrate some of the files back to default pool and emulate a problem) as if not all files from the list made it to archive tier.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -626,7 +626,9 @@ error: verify failed: <span class="nv">mismatched</span><span class="o">=</span>
 
 <p>This is currently <strong>the only</strong> deterministic way to migrate named files and directories between tiers on NetApp block storage (and between NetApp block storage and StorageGRID, if BeeGFS Remote Storage Targets are also considered).</p>
 
-<p>Eke v0.1 lacks the sub-commands for integration with Remote Storage Targets, but I think the key for this is having BeeGFS filesystem details in datalake tables  on S3 and Eke already does that. From a Parquet file to <code class="language-plaintext highlighter-rouge">beegfs remote [push|pull] &lt;file&gt;</code> is just one step away. Maybe I'll add related sub-commands to Eke if I find BeeGFS-on-E-Series opportunities that involve StorageGRID remote targets.</p>
+<p>With a small hot tier, it is important to monitor the capacity of each constituent pool because, while the filesystem may have plenty of free space, any individual pool can get full, preventing writes to the filesystem. Eke helps prevent that - you can schedule <code class="language-plaintext highlighter-rouge">migrate</code> sub-commands to run periodically and - because they are meant to tier only "down" - at 80-90% hard limit the free archive pool space almost equals free filesystem space and the output of the <code class="language-plaintext highlighter-rouge">df</code> command becomes representative enough.</p>
+
+<p>Eke v0.1 lacks the sub-commands for integration with Remote Storage Targets, but I think the key for this is having BeeGFS filesystem details in datalake tables on S3 and Eke already does that. From a Parquet file to <code class="language-plaintext highlighter-rouge">beegfs remote [push|pull] &lt;file&gt;</code>, it is just one step. Maybe I'll add related sub-commands to Eke if I find BeeGFS-on-E-Series opportunities that involve StorageGRID remote targets.</p>
 
 <p>The Eke v0.1 binary for BeeGFS 8.3 (x64) has been posted to the <a href="https://github.com/scaleoutsean/eke">repo</a> (without the source code, for the reason explained above).</p>
 
