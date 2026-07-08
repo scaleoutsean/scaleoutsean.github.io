@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          8 minute read
         
       </span>
     
@@ -235,7 +235,7 @@
 
 <p>As I continue exploratory work with NetApp StorageGRID and E-Series while I have that VM-based StorageGRID cluster running, one of the existing solutions that few know about is ObjectiveFS.</p>
 
-<p>Years ago, my colleague Phil created a nice blog post about getting started on netapp.io, but the site was taken down and none of the content preserved.</p>
+<p>Years ago, my colleague Phil created a nice blog post about getting started with ObjectiveFS. The post was on netapp.io, but the site was taken down and none of the content preserved, and bringing a version of that back is one of the things I've wanted to do.</p>
 
 <p>So, what is ObjectiveFS? Let's hear it from the vendor:</p>
 
@@ -246,8 +246,8 @@
 <p>I recommend visiting <a href="https://objectivefs.com/">their Web site</a> and RTFM, but my summary would be:</p>
 
 <ul>
-  <li>ObjectiveFS is an S3-backed shared filesystem</li>
-  <li>One or more ObjectiveFS clients can read-write to shared filesystem which is checkpointed to a bucket</li>
+  <li>ObjectiveFS is a shared S3-backed filesystem</li>
+  <li>One or more (or many) ObjectiveFS clients can read-write to shared ObjectiveFS filesystem which is check-pointed to a bucket</li>
 </ul>
 
 <p>What does that mean for StorageGRID users?</p>
@@ -375,17 +375,18 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
   <li><code class="language-plaintext highlighter-rouge">PATHSTYLE=1</code>- if you use path style (most people do)</li>
   <li><code class="language-plaintext highlighter-rouge">SIGNATURE="v4"</code> - don't let it slip to a lower version</li>
   <li><code class="language-plaintext highlighter-rouge">TLS</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_CERT</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_NAME</code> - you won't need to use these if your don't use snake oil certificates. If TLS is used, <code class="language-plaintext highlighter-rouge">ENDPOINT</code> can't use IP addresses (or maybe it could if the TLS cert had IP SANs, I haven't checked; I had to add the StorageGRID endpoint to <code class="language-plaintext highlighter-rouge">/etc/hosts</code> since I didn't have it in DNS)</li>
-  <li><code class="language-plaintext highlighter-rouge">OBJECTIVEFS_LICENSE</code> and <code class="language-plaintext highlighter-rouge">OBJECTIVEFS_PASSPHRASE</code> - the first is necessary to run, the second to access (and there's no way to recover data if you lose it). Have a backup in a secure location!</li>
-  <li><code class="language-plaintext highlighter-rouge">DISKCACHE_SIZE</code> and <code class="language-plaintext highlighter-rouge">DISKCACHE_PATH</code> for E-Series on-disk cache</li>
+  <li><code class="language-plaintext highlighter-rouge">TLS_NORESUME</code> - that's a weird one. StorageGRID gateways in 12.0 do not support TLS session resumption, so this should be <code class="language-plaintext highlighter-rouge">0</code> unless you have a version where that works</li>
+  <li><code class="language-plaintext highlighter-rouge">OBJECTIVEFS_LICENSE</code> and <code class="language-plaintext highlighter-rouge">OBJECTIVEFS_PASSPHRASE</code> - both are necessary. There's no way to recover data if you lose the pass phrase. Store a backup of it in a secure location!</li>
+  <li><code class="language-plaintext highlighter-rouge">DISKCACHE_SIZE</code> and <code class="language-plaintext highlighter-rouge">DISKCACHE_PATH</code> for E-Series on-disk cache. Default location is <code class="language-plaintext highlighter-rouge">/var/cache/objectivefs</code>, but I'd suggest to use something more visible such as <code class="language-plaintext highlighter-rouge">/obj_cache</code></li>
 </ul>
 
-<p>Mount options: <code class="language-plaintext highlighter-rouge">-o noatime,nodiratime</code> should be used by most, but there's also <code class="language-plaintext highlighter-rouge">-o hpc</code> ("HPC mode") with chunkier writes and <code class="language-plaintext highlighter-rouge">-o cputhreads=N,iothreads=M</code> if your StorageGRID can take more workload than "defaults" can generate.</p>
+<p>Mount options: <code class="language-plaintext highlighter-rouge">-o noatime,nodiratime,mkdir</code> should be used by most, but there's also <code class="language-plaintext highlighter-rouge">-o hpc</code> ("HPC mode") with chunkier writes and <code class="language-plaintext highlighter-rouge">-o cputhreads=N,iothreads=M</code> if your StorageGRID can take more workload than "defaults" can generate.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
 <p>I hope this will help StorageGRID users who need ObjectiveFS, but aren't yet aware of it.</p>
 
-<p>S3-centric customers can use ObjectiveFS to decrease dependency on other storage protocols.</p>
+<p>S3-centric customers can use ObjectiveFS to decrease dependency on other storage protocols. It's not for general home directories, so mind your use case.</p>
 
 <p>For those who want to spill-over their S3 cache to local disk, E-Series can do a great job whether it's on NL-SAS, NVMe or a mix of both, without adding burden to server administrators. With Ansible or <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform</a>, we can provision that disk to 32 ObjectiveFS nodes in seconds and, from time to time, replace a failed disk without data loss, downtime or needing any recovery procedures on ObjectiveFS clients. Importantly, because ObjectiveFS must be encrypted and consistency is maintained on S3 back-end, there's no reason or need to back up, restore or replicate disk cache on E-Series.</p>
 
