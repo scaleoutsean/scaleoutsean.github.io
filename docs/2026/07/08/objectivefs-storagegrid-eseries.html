@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -375,11 +375,11 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
 <p>Here, I'll just mention some of the more interesting environment variables. If you don't put these in a file, <code class="language-plaintext highlighter-rouge">export</code> them before working with ObjectiveFS CLI.</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">LISTOBJECTS="v2"</code> - don't let it slip to a lower version</li>
-  <li><code class="language-plaintext highlighter-rouge">PATHSTYLE=1</code>- if you use path style (most people do)</li>
-  <li><code class="language-plaintext highlighter-rouge">SIGNATURE="v4"</code> - don't let it slip to a lower version</li>
+  <li><code class="language-plaintext highlighter-rouge">LISTOBJECTS="v2"</code> - don't let it slip to a lower version.</li>
+  <li><code class="language-plaintext highlighter-rouge">PATHSTYLE=1</code>- if you use path style (most people do).</li>
+  <li><code class="language-plaintext highlighter-rouge">SIGNATURE="v4"</code> - don't let it slip to a lower version.</li>
   <li><code class="language-plaintext highlighter-rouge">TLS</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_CERT</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_NAME</code> - you won't need to use these if your don't use snake oil certificates. If TLS is used, <code class="language-plaintext highlighter-rouge">ENDPOINT</code> can't use an IP addresses (or maybe it could if the TLS cert had IP SANs, or if <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_NAME</code> was applied; I haven't checked. I added the StorageGRID endpoint to <code class="language-plaintext highlighter-rouge">/etc/hosts</code> since I didn't have it in DNS and that did it). Alternatively, <code class="language-plaintext highlighter-rouge">SSL_CERT_DIR</code> and <code class="language-plaintext highlighter-rouge">SSL_CERT_FILE</code> can be used as well.</li>
-  <li><code class="language-plaintext highlighter-rouge">TLS_NORESUME</code> - that's a weird one. StorageGRID gateways in 12.0 do not support TLS session resumption, so this should be <code class="language-plaintext highlighter-rouge">0</code> unless you have a version where that works</li>
+  <li><code class="language-plaintext highlighter-rouge">TLS_NORESUME</code> - you may set this to <code class="language-plaintext highlighter-rouge">1</code> but StorageGRID gateway in 12.0 does not support TLS session resumption, so ObjectiveFS shouldn't attempt to use it anyway.</li>
   <li><code class="language-plaintext highlighter-rouge">OBJECTIVEFS_LICENSE</code> and <code class="language-plaintext highlighter-rouge">OBJECTIVEFS_PASSPHRASE</code> - both are necessary. There's no way to recover data if you lose the pass phrase. Store a backup of it in a secure location!</li>
   <li><code class="language-plaintext highlighter-rouge">DISKCACHE_SIZE</code> and <code class="language-plaintext highlighter-rouge">DISKCACHE_PATH</code> for E-Series on-disk cache. Default location is <code class="language-plaintext highlighter-rouge">/var/cache/objectivefs</code>, but I'd suggest to use something more visible such as <code class="language-plaintext highlighter-rouge">/obj_cache</code></li>
 </ul>
@@ -388,17 +388,17 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
 
 <p>Mount options: <code class="language-plaintext highlighter-rouge">-o noatime,nodiratime,mkdir</code> should be used by most, but there's also <code class="language-plaintext highlighter-rouge">-o hpc</code> ("HPC mode") with chunkier writes and <code class="language-plaintext highlighter-rouge">-o cputhreads=N,iothreads=M</code> (and several similar options) if your StorageGRID can take more workload than "defaults" can generate.</p>
 
-<p>Check the ObjectiveFS User Guide for more.</p>
+<p>Check the ObjectiveFS User Guide for more. The documentation is good.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
 <p>I hope this will help StorageGRID users who need ObjectiveFS, but aren't yet aware of it.</p>
 
-<p>S3-centric customers can use ObjectiveFS to decrease dependency on other storage protocols. It's not for general home directories, so mind your use case.</p>
+<p>S3-centric customers can use ObjectiveFS to decrease dependency on other storage protocols. It's not for general home directories, so mind your use case. No CI/CD on S3 buckets, please.</p>
 
-<p>For those who want to spill-over their S3 cache to local disk, E-Series can do a great job whether it's on NL-SAS, NVMe or a mix of both, without adding burden to server administrators. With Ansible or <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform</a>, we can provision that disk to 32 ObjectiveFS nodes in seconds and, from time to time, replace a failed disk without data loss, downtime or needing any recovery procedures on ObjectiveFS clients.</p>
+<p>For those who want to spill-over their S3 cache to local disk, E-Series can do a great job whether it's on NL-SAS, NVMe or a mix of both, without adding burden to server administrators. With Ansible or <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform</a>, we can provision a cache volume to each of many ObjectiveFS nodes in seconds and, from time to time, replace any failed physical without cache loss, downtime or needing any recovery procedures on ObjectiveFS clients.</p>
 
-<p>Because ObjectiveFS must be encrypted and consistency is maintained on S3 back-end, there's no reason or need to back up, restore or replicate disk cache on E-Series. Although ObjectiveFS cache <em>can</em> be backed up and there's value in having a copy in case you lose cache and have to rehydrate TBs of it, having it on protected external storage like E-Series makes the risk of cache loss tiny.</p>
+<p>Because ObjectiveFS must be encrypted and consistency is maintained on S3 back-end, there's no reason or need to back up, restore or replicate disk cache on protected volumes on E-Series. Although ObjectiveFS cache <em>can</em> be backed up and there's value in having a copy in case you lose cache and have to rehydrate TBs of it, having it on protected external storage like E-Series makes the risk of cache loss tiny and with multiple hosts, copying a good cache volume and presenting it to the host that lost its volume due to corruption or operator error should be the fastest way to do it.</p>
 
         
       </section>
@@ -478,7 +478,7 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
       <a href="/2026/07/05/eke-smarter-workflows-for-beegfs-netapp-eseries.html" class="pagination--pager" title="Eke - CLI utility for smarter data management with BeeGFS on NetApp E-Series">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/07/13/storagegrid-version-monitoring-pruning.html" class="pagination--pager" title="Monitor and prune object versions on NetApp StorageGRID S3">Next</a>
     
   </nav>
 
@@ -495,6 +495,54 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/07/13/storagegrid-version-monitoring-pruning.html" rel="permalink">Monitor and prune object versions on NetApp StorageGRID S3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-07-13T00:00:00+08:00">2026-07-13 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">No, you don't need a new "feature" for that
+</p>
+  </article>
+</div>
+
     
       
       
@@ -635,54 +683,6 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
 
 
     <p class="archive__item-excerpt" itemprop="description">Worst-case sequential GET on all-flash EF600 with Versity Gateway 1.5.0
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/06/21/nats-server-on-netapp-eseries.html" rel="permalink">NATS server with NetApp E-Series
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-06-21T00:00:00+08:00">2026-06-21 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          22 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Thoughts on how to configure E-Series for NATS server in single- and multi-rack deployments
 </p>
   </article>
 </div>

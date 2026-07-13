@@ -990,7 +990,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Prometheus exporter for NetApp E-Series SANtricity OS",
-        "excerpt":"NetApp E-Series Prometheus Exporter Recently I forked E-Series Performance Analyzer (“EPA”) so that it can work without SANtricity Web Services Proxy. As mentioned in that post, EPA pushes data to the aged InfluxDB v1, so in recent days I’ve been thinking how to modernize that part of EPA’s Collector. That’s...","categories": ["storage"],
+        "excerpt":"UPDATE (2026): Since 3.5.3 (enable by option) and 4.0.0 (Prometheus only), E-Series Performance Analyzer export metrics in the Prometheus format. NetApp Harvest also exports SANtricity metrics in the Prometheus format. NetApp E-Series Prometheus Exporter Recently I forked E-Series Performance Analyzer (“EPA”) so that it can work without SANtricity Web Services...","categories": ["storage"],
         "tags": ["e-series","eseries","monitoring","netapp","prometheus","santricity","visualize"],
         "url": "/2022/12/12/monitoring-netapp-eseries-with-prometheus.html",
         "teaser": null
@@ -2549,6 +2549,12 @@ var store = [{
         "url": "/2026/07/08/objectivefs-storagegrid-eseries.html",
         "teaser": null
       },{
+        "title": "Monitor and prune object versions on NetApp StorageGRID S3",
+        "excerpt":"Introduction Delete old object versions on NetApp StorageGRID talks about ILM-based deletion of old object versions (“non-current” versions, as they call them). It’s curious how people use (or even don’t use!) this feature, and when certain applications make a lot more versions than expected and don’t clean up after themselves,...","categories": ["storage","s3","ai","analytics","automation"],
+        "tags": ["s3","storagegrid","versioning"],
+        "url": "/2026/07/13/storagegrid-version-monitoring-pruning.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2562,7 +2568,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"ObjectiveFS with NetApp StorageGRID and E-Series 2026-07-08 00:00 8 minute read Use cases, scenarios and solutions with ObjectiveFS and NetApp StorageGRID Eke - CLI utility for smarter data management with BeeGFS on NetApp E-Series 2026-07-05 00:00 13 minute read Eke is my take on a subset of BeeGFS CLI features...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Monitor and prune object versions on NetApp StorageGRID S3 2026-07-13 00:00 1 minute read No, you don’t need a new “feature” for that ObjectiveFS with NetApp StorageGRID and E-Series 2026-07-08 00:00 9 minute read Use cases, scenarios and solutions with ObjectiveFS and NetApp StorageGRID Eke - CLI utility for smarter...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
