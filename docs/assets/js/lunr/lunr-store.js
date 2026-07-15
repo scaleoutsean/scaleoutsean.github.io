@@ -2550,7 +2550,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Monitor and prune object versions on NetApp StorageGRID S3",
-        "excerpt":"Introduction Delete old object versions on NetApp StorageGRID talks about ILM-based deletion of old object versions (“non-current” versions, as they call them). It’s curious how people use (or even don’t use!) this feature, and when certain applications make a lot more versions than expected and don’t clean up after themselves,...","categories": ["storage","s3","ai","analytics","automation"],
+        "excerpt":"Introduction Delete old object versions on NetApp StorageGRID talks about ILM-based deletion of old object versions (“non-current” versions, as they call them). But, while we may want to keep certain versions up to the time limit set in ILM, may may not want a whole bunch of them. In other...","categories": ["storage","s3","ai","analytics","automation"],
         "tags": ["s3","storagegrid","versioning"],
         "url": "/2026/07/13/storagegrid-version-monitoring-pruning.html",
         "teaser": null
