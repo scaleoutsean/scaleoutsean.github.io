@@ -2232,7 +2232,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Proxmox PVE with NetApp E-Series-backed NFS/RDMA",
-        "excerpt":"Introduction Recently, I’ve blogged about: PVE with E-Series arrays, with emphasis on NVMe/RoCE, but I also covered other protocols (iSCSI, mostly) Proxmox Backup Server backed by E-Series block with emphasis on NL-SAS disks The first, PVE-related post, commented on CephFS as a file-based alternative, but I thought to spend some...","categories": ["storage","e-series","virtualization"],
+        "excerpt":"Introduction I’ve blogged about: PVE with E-Series arrays, with emphasis on NVMe/RoCE, but I also covered other protocols (iSCSI, mostly) Proxmox Backup Server backed by E-Series block with emphasis on NL-SAS disks Linked PVE clones from VM templates with NFS The first, PVE-related post, commented on CephFS as a file-based...","categories": ["storage","e-series","virtualization"],
         "tags": ["e-series","backup","pbs","netapp","nfs","roce","rdma","pve","proxmox"],
         "url": "/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html",
         "teaser": null
@@ -2555,9 +2555,9 @@ var store = [{
         "url": "/2026/07/13/storagegrid-version-monitoring-pruning.html",
         "teaser": null
       },{
-        "title": "Use Proxmox 9 VM Templates with NetApp E-Series",
+        "title": "Linked clones from VM Templates with Proxmox 9 and NetApp E-Series",
         "excerpt":"Introduction Compared to the usual “mega-posts”, this one is initially going to be brief. Proxmox VM Templates and Clones work only with datastores such as local, NFS, ZFS. How does it actually work? What does that mean for E-Series? The how for VM templates on E-Series Well, simply deploy a...","categories": ["virtualization","automation"],
-        "tags": ["proxmox","pve","nfs","template","provisioning"],
+        "tags": ["proxmox","pve","nfs","template","provisioning","linked-clone"],
         "url": "/2026/07/17/proxmox-pve-vm-templates-eseries-nfs.html",
         "teaser": null
       },{
@@ -2574,7 +2574,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Use Proxmox 9 VM Templates with NetApp E-Series 2026-07-17 00:00 4 minute read Rapid provisioning of VMs on the cheap with PVE, E-Series and Linux NFS VMs Monitor and prune object versions on NetApp StorageGRID S3 2026-07-13 00:00 3 minute read No, you don’t need a new “feature” for that...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Linked clones from VM Templates with Proxmox 9 and NetApp E-Series 2026-07-17 00:00 4 minute read Rapid provisioning of VMs on the cheap with PVE, E-Series and Linux NFS VMs Monitor and prune object versions on NetApp StorageGRID S3 2026-07-13 00:00 3 minute read No, you don’t need a new...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4195,6 +4195,9 @@ var store = [{
   },{
     "title": "template",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/template/"
+  },{
+    "title": "linked-clone",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/linked-clone/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
