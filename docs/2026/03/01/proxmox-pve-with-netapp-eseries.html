@@ -466,11 +466,11 @@
   </li>
   <li><strong>Recommended: single host storage</strong>: these use internal disks or E-Series volumes mapped to, and mounted by, individual PVE hosts. Because there's no HA here, you maybe don't need HA (say, you use Kubernetes with stateless containers for front-end services)
     <ul>
-      <li>If you do need HA, use LVM. If you have very many workloads and can't put everything on LVM volumes, then move these workloads to Kubernetes either Ceph (see below), or "native" (<a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">check out HA CSI drivers for E-Series, as you'd need HA CSI</a>) or use PVE's inter-cluster (host-to-host) replication (since these workloads are often small and don't need VM/LXD backup, replication might be inexpensive)</li>
+      <li>If you do need HA, use LVM. If you have very many workloads and can't put everything on LVM volumes, then move these workloads to Kubernetes either Ceph (see below), or "native" (<a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">check out HA CSI drivers for E-Series, as you'd need HA CSI</a>) or use PVE's inter-cluster (host-to-host) replication (since these workloads are often small and don't need VM/LXC backup, replication might be inexpensive)</li>
       <li>ZFS is popular, "directory" is good, Btrfs is "technology preview". <strong>ZFS (local)</strong> can be installed on single-host E-Series LUNs, especially in DAS environments; since there's no HA without in-cluster replication, set it up in PVE. See <a href="https://pve.proxmox.com/wiki/Storage:_ZFS">the Proxmox Wiki page</a> for more on ZFS. The same goes for other types, but among single-host options <strong>ZFS has file sharing and compression</strong> and Btrfs have compression** and Btrfs is less mature</li>
     </ul>
   </li>
-  <li><strong>Ceph</strong>: Proxmox has own Ceph packages. I haven't used those, but you could use "single host storage" (map one LUN to each individual PVE host) and configure Ceph on it. You can use RAID 0 if you plan to use Erasure Coding on Ceph, or no replication if you use DDP volumes. Recommended for larger clusters with &gt; 1,000 VMs and/or LXD containers. See <a href="/2025/12/28/ceph-with-netapp-eseries.html">here</a> for more.
+  <li><strong>Ceph</strong>: Proxmox has own Ceph packages. I haven't used those, but you could use "single host storage" (map one LUN to each individual PVE host) and configure Ceph on it. You can use RAID 0 if you plan to use Erasure Coding on Ceph, or no replication if you use DDP volumes. Recommended for larger clusters with &gt; 1,000 VMs and/or LXC containers. See <a href="/2025/12/28/ceph-with-netapp-eseries.html">here</a> for more.
     <ul>
       <li>Note that Ceph appears twice - as file server with NFS gateways and as RADOS block storage. The only reason I don't recommend it is complexity; LVM and single host storage should be easier to manage for up to 1,000 VMs/CTs</li>
     </ul>
@@ -505,7 +505,7 @@
 
 <p><img src="/assets/images/pve_shared_storage_03_datacenter_resource_create.png" alt="Create Datacenter-level shared LVM resource" /></p>
 
-<p>Now you may create a VM or LXD Container on this LVM. Or add more LVM devices of the same kind.</p>
+<p>Now you may create a VM or LXC Container on this LVM. Or add more LVM devices of the same kind.</p>
 
 <p>Make sure you pick the right storage (LVM you created) and among the non-default options, <code class="language-plaintext highlighter-rouge">Discard</code> is <strong>strongly</strong> recommended. You can include (or not) the disk in <code class="language-plaintext highlighter-rouge">Backup</code> plan for the VM. I did not include it because it is the first disk for OS and configuration files which I "push" from automation tools, so system volume backup is not required.</p>
 
@@ -513,7 +513,7 @@
 
 <p><img src="/assets/images/pve_shared_storage_04_vm_on_lvm.png" alt="Create LVM on host" /></p>
 
-<p>Don't miss the "Bandwidth" tab - the storage-limiting options are there. You can't guarantee "minimum" SLA, but you can limit VM from squeezing out other VMs or LXD containers.</p>
+<p>Don't miss the "Bandwidth" tab - the storage-limiting options are there. You can't guarantee "minimum" SLA, but you can limit VM from squeezing out other VMs or LXC containers.</p>
 
 <p><img src="/assets/images/pve_shared_storage_05_vm_qos.png" alt="Set QoS on VM" /></p>
 
@@ -525,15 +525,15 @@
   <li>Monitor E-Series performance and fine-tune</li>
 </ul>
 
-<p>LXD containers are no different, but the <code class="language-plaintext highlighter-rouge">discard</code> option is in a different place. It is <strong>strongly</strong> recommended.</p>
+<p>LXC containers are no different, but the <code class="language-plaintext highlighter-rouge">discard</code> option is in a different place. It is <strong>strongly</strong> recommended.</p>
 
-<p><img src="/assets/images/pve_shared_storage_06_lxd_on_lvm.png" alt="Create LXD container on LVM" /></p>
+<p><img src="/assets/images/pve_shared_storage_06_lxd_on_lvm.png" alt="Create LXC container on LVM" /></p>
 
 <p>This way you can have a bunch of VMs on one shared LVM volume.</p>
 
-<p><img src="/assets/images/pve_shared_storage_07_vm_lxd_resources_on_lvm.png" alt="Create LXD container on LVM" /></p>
+<p><img src="/assets/images/pve_shared_storage_07_vm_lxd_resources_on_lvm.png" alt="Create LXC container on LVM" /></p>
 
-<p><strong>NOTE:</strong> The reason you see just an LXD container and not an LXD container <em>and</em> a VM is that KVM shipped with Proxmox 9.1.1 had a bug which has been fixed since, but as a free-loading PVE user I can't get it. In 9.1.1 VMs can't be created on shared LVM storage without that fix.</p>
+<p><strong>NOTE:</strong> The reason you see just an LXC container and not an LXC container <em>and</em> a VM is that the KVM shipped with Proxmox 9.1.1 had a bug which has been fixed since, but as a free-loading PVE user I can't get it. In 9.1.1 VMs can't be created on shared LVM storage without that fix.</p>
 
 <h4 id="lvm-with-proxmox-cli">LVM with Proxmox CLI</h4>
 
