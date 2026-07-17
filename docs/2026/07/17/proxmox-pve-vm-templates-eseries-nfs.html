@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#the-how-for-vm-templates-on-e-series">The how for VM templates on E-Series</a></li><li><a href="#create-pve-vm-template">Create PVE VM template</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#the-how-for-vm-templates-on-e-series">The how for VM templates on E-Series</a></li><li><a href="#create-pve-vm-template">Create PVE VM template</a></li><li><a href="#automation">Automation</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -256,7 +256,7 @@
 
 <p>Another alternative is format these with ZFS, and setup replication (server A-&gt;server B, server B-&gt;server A), so that you can get to your data on the replica. Cost: you now need 100GiB instead of 50GiB. Again, this is for generic templates where you wouldn't have much OS-based data.</p>
 
-<p>Additional alternative: just use LXC, where things just work and <strong>without any VM templates</strong>. These work on shared LVM data stores, as you can see <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html#lvm-with-snapshots">here</a>.</p>
+<p>Additional alternative: just use LXC, where things just work and <strong>without any VM templates</strong>. LXC images <strong>are</strong> templates. These work on shared LVM data stores, as you can see <a href="/2026/03/01/proxmox-pve-with-netapp-eseries.html#lvm-with-snapshots">here</a>.</p>
 
 <h2 id="create-pve-vm-template">Create PVE VM template</h2>
 
@@ -285,9 +285,47 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt <span class="nb">install </span>libguestfs-tools <span class="nt">-y</span>
 </code></pre></div></div>
 
-<h2 id="conclusion">Conclusion</h2>
+<h2 id="automation">Automation</h2>
 
 <p>I haven't heard of anyone who needs help with this, but it seems easy to automate. <a href="https://github.com/trfore/proxmox-template-scripts">This</a> seems workable and apparently automates VM template updates, too.</p>
+
+<p>I used that repo and - due to the relatively many changes - chose to <a href="https://github.com/scaleoutsean/proxmox-template-scripts">fork it</a> rather than submit a pull request.</p>
+
+<p>There are three scripts in it:</p>
+<ul>
+  <li>Download popular OS images</li>
+  <li>Create VM Template</li>
+  <li>Deploy VM from template</li>
+</ul>
+
+<p>In this last step, let's say you want to attach an extra volume from shared LVM datastore on EF80, to serve as user's home directory or maybe for application data.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openssl passwd <span class="nt">-6</span>
+
+<span class="nv">$ </span>clone-and-provision <span class="se">\</span>
+  <span class="nt">--template-id</span> 9000 <span class="nt">--id</span> 9101 <span class="nt">--name</span> db-vm01 <span class="se">\</span>
+  <span class="nt">--datastore</span> nvme-lvm-12 <span class="nt">--size</span> 16G <span class="se">\</span>
+  <span class="nt">--mountpoint</span> /home/jack <span class="nt">--fstype</span> xfs <span class="se">\</span>
+  <span class="nt">--ci-user</span> jack <span class="nt">--ssh-pubkey-file</span> /root/.ssh/id_ed25519.pub <span class="se">\</span>
+  <span class="nt">--ci-password-hash</span> <span class="s1">'$6$8x....4N'</span>
+</code></pre></div></div>
+
+<p>Here's a result of a run with similar parameters:</p>
+
+<ul>
+  <li>About 10s to create a VM template</li>
+  <li>About 10s to create a thin/linked VM clone with a user and extra disk</li>
+</ul>
+
+<p><img src="/assets/images/proxmox-pve-vm-template-01-provision-user-data-disk.png" alt="Clone and provision" /></p>
+
+<p>As you can see below, linked clone VM relies on base disk from the VM Template OS disk. The added "data" (or "home") disk is of <code class="language-plaintext highlighter-rouge">virtio1</code> type and, although it's on the same datastore, <code class="language-plaintext highlighter-rouge">--datastore</code> can be used to place it on a shared LVM backed by SANtricity.</p>
+
+<p><img src="/assets/images/proxmox-pve-vm-template-02-linked-clone-disks.png" alt="Linked Clone disk" /></p>
+
+<p>That way you need less than 60 seconds to recreate a VM and can get back to your data even if a server fails.</p>
+
+<h2 id="conclusion">Conclusion</h2>
 
 <p>Using an NFS VM backed by shared LVM is the easiest way, especially for cloned VMs with more significant modifications because more capacity and performance could be needed compared to think VM clones with minimum personalization.</p>
 
@@ -297,7 +335,7 @@
 
 <p>But, from what I've seen with VMware, people are lazy to do that, or it's too organizationally complex ("don't touch my VM!"). In that case - if all you need is a way to spin up a "VM-like" container, I'd recommend switching to LXC.</p>
 
-<p>If you do recreate VM clones in a workflow or use LXC, I would also assume you would keep any "data disks" separate and located on shared LVM data stores on E-Series, which would make it easy to recover (just create a new VM and re-attach to existing disk) from any sustained failures of individual PVE servers.</p>
+<p>Separate "data disks" located on shared LVM data stores on E-Series make it easy to recover from PVE server failures: just create a new linked clone VM and attach it to existing disk on shared LVM.</p>
 
 <p>It's also easy to <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">backup your data to Proxmox Backup Server</a> including with an <a href="/2026/05/10/proxmox-backup-server-versity-s3-netapp-eseries.html">S3 backend</a>.</p>
 
@@ -315,6 +353,8 @@
   <p class="page__taxonomy">
     <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
     <span itemprop="keywords">
+    
+      <a href="/tags/nfs" class="page__taxonomy-item p-category" rel="tag">nfs</a><span class="sep">, </span>
     
       <a href="/tags/provisioning" class="page__taxonomy-item p-category" rel="tag">provisioning</a><span class="sep">, </span>
     
