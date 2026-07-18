@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          11 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#objectivefs-with-storagegrid-and-e-series">ObjectiveFS with StorageGRID and E-Series</a></li><li><a href="#deploy-and-use">Deploy and use</a></li><li><a href="#how-to-install-with-storagegrid">How to install with StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#objectivefs-with-storagegrid-and-e-series">ObjectiveFS with StorageGRID and E-Series</a></li><li><a href="#deploy-and-use">Deploy and use</a></li><li><a href="#how-to-install-with-storagegrid">How to install with StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-selected-test-runs">Appendix A: Selected test runs</a></li></ul>
             </nav>
           </aside>
         
@@ -380,13 +380,15 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
   <li><code class="language-plaintext highlighter-rouge">SIGNATURE="v4"</code> - don't let it slip to a lower version.</li>
   <li><code class="language-plaintext highlighter-rouge">TLS</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_CERT</code>, <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_NAME</code> - you won't need to use these if your don't use snake oil certificates. If TLS is used, <code class="language-plaintext highlighter-rouge">ENDPOINT</code> can't use an IP addresses (or maybe it could if the TLS cert had IP SANs, or if <code class="language-plaintext highlighter-rouge">TLS_NOVERIFY_NAME</code> was applied; I haven't checked. I added the StorageGRID endpoint to <code class="language-plaintext highlighter-rouge">/etc/hosts</code> since I didn't have it in DNS and that did it). Alternatively, <code class="language-plaintext highlighter-rouge">SSL_CERT_DIR</code> and <code class="language-plaintext highlighter-rouge">SSL_CERT_FILE</code> can be used as well.</li>
   <li><code class="language-plaintext highlighter-rouge">TLS_NORESUME</code> - you may set this to <code class="language-plaintext highlighter-rouge">1</code> but StorageGRID gateway in 12.0 does not support TLS session resumption, so ObjectiveFS shouldn't attempt to use it anyway.</li>
-  <li><code class="language-plaintext highlighter-rouge">OBJECTIVEFS_LICENSE</code> and <code class="language-plaintext highlighter-rouge">OBJECTIVEFS_PASSPHRASE</code> - both are necessary. There's no way to recover data if you lose the pass phrase. Store a backup of it in a secure location!</li>
+  <li><code class="language-plaintext highlighter-rouge">OBJECTIVEFS_LICENSE</code> and <code class="language-plaintext highlighter-rouge">OBJECTIVEFS_PASSPHRASE</code> - both are necessary. There's no way to recover data if you lose the pass phrase. Store a copy of it in a secure location!</li>
   <li><code class="language-plaintext highlighter-rouge">DISKCACHE_SIZE</code> and <code class="language-plaintext highlighter-rouge">DISKCACHE_PATH</code> for E-Series on-disk cache. Default location is <code class="language-plaintext highlighter-rouge">/var/cache/objectivefs</code>, but I'd suggest to use something more visible such as <code class="language-plaintext highlighter-rouge">/obj_cache</code></li>
 </ul>
 
 <p>Snapshot schedule: it is enabled by default, so if you're planning write-heavy testing, consider changing or disabling (<code class="language-plaintext highlighter-rouge">mount.objectivefs snapshot -s "" &lt;filesystem&gt;</code>) snapshot schedule on test filesystem to save bucket space.</p>
 
 <p>Mount options: <code class="language-plaintext highlighter-rouge">-o noatime,nodiratime,mkdir</code> should be used by most, but there's also <code class="language-plaintext highlighter-rouge">-o hpc</code> ("HPC mode") with chunkier writes and <code class="language-plaintext highlighter-rouge">-o cputhreads=N,iothreads=M</code> (and several similar options) if your StorageGRID can take more workload than "defaults" can generate.</p>
+
+<p>Compaction ("defrag"): just like with ONTAP's Fabric Pool and other solutions, both due to the nature of how S3 clients and object stores work, capacity utilization on S3 is can be considerably higher than the "logical" amount of data stored. ObjectiveFS has advanced settings to tune that behavior, but regardless - when you start using ObjectiveFS, you need to understand what 1 logical TB translates into on S3 for particular workload. Workloads with more churn will use more S3 capacity.</p>
 
 <p>Check the ObjectiveFS User Guide for more. The documentation is good.</p>
 
@@ -399,6 +401,38 @@ All clients: <span class="o">(</span><span class="nv">groupid</span><span class=
 <p>For those who want to spill-over their S3 cache to local disk, E-Series can do a great job whether it's on NL-SAS, NVMe or a mix of both, without adding burden to server administrators. With Ansible or <a href="/2026/01/16/eseries-santricity-terraform-provider.html">Terraform</a>, we can provision a cache volume to each of many ObjectiveFS nodes in seconds and, from time to time, replace any failed physical without cache loss, downtime or needing any recovery procedures on ObjectiveFS clients.</p>
 
 <p>Because ObjectiveFS must be encrypted and consistency is maintained on S3 back-end, there's no reason or need to back up, restore or replicate disk cache on protected volumes on E-Series. Although ObjectiveFS cache <em>can</em> be backed up and there's value in having a copy in case you lose cache and have to rehydrate TBs of it, having it on protected external storage like E-Series makes the risk of cache loss tiny and with multiple hosts, copying a good cache volume and presenting it to the host that lost its volume due to corruption or operator error should be the fastest way to do it.</p>
+
+<h2 id="appendix-a-selected-test-runs">Appendix A: Selected test runs</h2>
+
+<p>Whether you use RAM and/or disk to cache S3 data, if reads repeat the effect of caching will be visible.</p>
+
+<p>This shows read/write activity on E-Series volume assigned to ObjectiveFS disk cache. As workload starts, all activity on disk cache volumes is writes because cache is empty. Later, however, reads (blue) emerge and if your workload runs again while reading the same data (as it eventually would, in workloads such as video streaming or ML runs with different parameters), cache hit rate may become significant.</p>
+
+<p><img src="/assets/images/objective_fs_storagegrid_eseries_04_mixed-read-write-disk-cache.png" alt="Effect of disk cache" /></p>
+
+<p>Each client has own disk cache. In this chart we can see that, although workload runs on both clients, only one is highly active on storage.</p>
+
+<p><img src="/assets/images/objective_fs_storagegrid_eseries_05_disk-cache-per-client.png" alt="Disk cache per client" /></p>
+
+<p>The client using <code class="language-plaintext highlighter-rouge">ofs_cache2</code> was active.</p>
+
+<p>Related to that: as the ObjectiveFS documentation states (and I've mentioned that above), if you want to pre-cache a ton of data at a high-latency location, it may (depending on data set size and so on) make sense to read the data from one OFS client, then clone the cache volume and make copies of cache for other OFS clients that share the same workload.</p>
+
+<p>How much throughput should each cache disk support? It's hard to tell based on my limited testing, but 300-400 MB/s seems reasonable. I've seen individual clients use 400 MB/s. I assume 16 clients could consume up to 5 GiB/s in reads from disk cache volumes.</p>
+
+<p><img src="/assets/images/objective_fs_storagegrid_eseries_06_disk-cache-latency.png" alt="Disk cache latency" /></p>
+
+<p>If your object store is fast enough, cache population can use a lot of write bandwidth. For truly ephemeral cache, this is where internal unproteted storage may work well. If you need to keep cache and can't afford to copy it around or rebuild, using external protected storage makes sense.</p>
+
+<p><img src="/assets/images/objective_fs_storagegrid_eseries_07_disk-cache-population.png" alt="Disk cache population" /></p>
+
+<p>I used the Versity S3 Gateway v1.7.0 available over 1GigE connection in this testing, so non-cached reads weren't fast, but once disk cache warmed up as per above charts, cache hits resulted in lower bandwidth utilization from S3.</p>
+
+<p><img src="/assets/images/objective_fs_storagegrid_eseries_08_s3-read-offload.png" alt="S3 read offload due to OFS cache" /></p>
+
+<p>Due to limited hardware resources and many variables involved - from S3 performance to the nature of OFS workload - it's hard to say how one would go about sizing. If warming up cache before running workloads helps, that can make a huge difference even if S3 object store is slow. Until cache warms up and you start hitting it, you'll be limited by object store performance and that is logical.</p>
+
+<p>Performance isn't the only reason why ObjectiveFS makes sense. It also helps you avoid unnecessary data copying. You may have POSIX clients that upload data to S3 on premises, and other, remote POSIX clients that can view and use that data right away, at whatever speed is available. That convenience alone can be worth the effort of deploying ObjectiveFS.</p>
 
         
       </section>
