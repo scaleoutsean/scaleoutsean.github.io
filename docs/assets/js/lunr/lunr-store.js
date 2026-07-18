@@ -2562,7 +2562,7 @@ var store = [{
         "teaser": null
       },{
         "title": "BeeGFS 8.4",
-        "excerpt":"BeeGFS 8.4 BeeGFS 8.4 came out in recent days. Release highlight from ThinkParq: BeeGFS 8.4 introduces the ability to automatically sync file changes and restore stubbed files in BeeGFS using Remote Storage Targets, experimental support for NFSv4-style ACLs and experimental (opt-in) long-term client-side metadata caching. There’s support for Linux kernel...","categories": ["hpc","e-series","s3"],
+        "excerpt":"BeeGFS version 8.4 BeeGFS 8.4 came out in recent days. Release highlight from ThinkParq: BeeGFS 8.4 introduces the ability to automatically sync file changes and restore stubbed files in BeeGFS using Remote Storage Targets, experimental support for NFSv4-style ACLs and experimental (opt-in) long-term client-side metadata caching. There’s support for Linux...","categories": ["hpc","e-series","s3"],
         "tags": ["beegfs","thinkparq","beeond","ssot","storagegrid"],
         "url": "/2026/07/18/beegfs-84.html",
         "teaser": null
