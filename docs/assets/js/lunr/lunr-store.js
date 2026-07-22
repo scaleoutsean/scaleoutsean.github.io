@@ -2484,7 +2484,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Does OpenSharing have anything for NetApp E-Series?",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction Some of your applications gather or create TBs of data that needs to be shared with AI...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction Some of your applications...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta","opensharing","delta-lake"],
         "url": "/2026/06/14/netapp-eseries-opensharing-deltasharing.html",
         "teaser": null
@@ -2496,13 +2496,13 @@ var store = [{
         "teaser": null
       },{
         "title": "IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction This post wraps up my initial exploration of OpenSharing with Versity S3 Gateway and NetApp E-Series for...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction This post wraps up...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta-lake","compaction","opensharing","iot","versity"],
         "url": "/2026/06/16/netapp-eseries-iot-compaction-opensharing.html",
         "teaser": null
       },{
         "title": "NetApp volume content sharing with OpenSharing and Versity S3 Gateway",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway Introduction The other day I blogged about OpenSharing and E-Series and mentioned how Tables are where almost all...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction The other day I...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","opensharing","volumes","versity","file-sharing"],
         "url": "/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html",
         "teaser": null
@@ -2561,10 +2561,16 @@ var store = [{
         "url": "/2026/07/17/proxmox-pve-vm-templates-eseries-nfs.html",
         "teaser": null
       },{
-        "title": "BeeGFS 8.4",
+        "title": "What's new in BeeGFS 8.4",
         "excerpt":"BeeGFS version 8.4 BeeGFS 8.4 came out in recent days. Release highlight from ThinkParq: BeeGFS 8.4 introduces the ability to automatically sync file changes and restore stubbed files in BeeGFS using Remote Storage Targets, experimental support for NFSv4-style ACLs and experimental (opt-in) long-term client-side metadata caching. There’s support for Linux...","categories": ["hpc","e-series","s3"],
         "tags": ["beegfs","thinkparq","beeond","ssot","storagegrid"],
         "url": "/2026/07/18/beegfs-84.html",
+        "teaser": null
+      },{
+        "title": "OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway",
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway In the previous three...","categories": ["netapp","storage","analytics"],
+        "tags": ["analytics","e-series","opensharing","volumes","versity","file-sharing"],
+        "url": "/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2580,7 +2586,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"BeeGFS 8.4 2026-07-18 00:00 8 minute read What’s new in BeeGFS 8.4 Linked clones from VM Templates with Proxmox 9 and NetApp E-Series 2026-07-17 00:00 4 minute read Rapid provisioning of VMs on the cheap with PVE, E-Series and Linux NFS VMs Monitor and prune object versions on NetApp StorageGRID...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway 2026-07-22 00:00 4 minute read OpenSharing server for StorageGRID and E-Series with VGW done in Go What’s new in BeeGFS 8.4 2026-07-18 00:00 8 minute read What’s new in BeeGFS 8.4 - facts, opinions, and possibly fiction Linked clones...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
