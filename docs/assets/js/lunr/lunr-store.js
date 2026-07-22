@@ -2568,8 +2568,8 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway In the previous three...","categories": ["netapp","storage","analytics"],
-        "tags": ["analytics","e-series","opensharing","volumes","versity","file-sharing"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway In the previous three...","categories": ["netapp","storage","analytics","projects"],
+        "tags": ["analytics","e-series","opensharing","storagegrid","volumes","tables","versity","file-sharing"],
         "url": "/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html",
         "teaser": null
       },{
@@ -4213,6 +4213,9 @@ var store = [{
   },{
     "title": "ssot",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssot/"
+  },{
+    "title": "tables",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tables/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
