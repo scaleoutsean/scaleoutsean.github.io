@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          7 minute read
         
       </span>
     
@@ -323,6 +323,28 @@ image  regular    102.39 MB  0 B                            0 B                 
 </ul>
 
 <p>I will expand and improve this section later if I manage to gain additional insights.</p>
+
+<p>One of the several things I'm interested is WEKA and StorageGRID stretched across DCs.</p>
+
+<p><img src="/assets/images/weka-storagegrid-01-stretched-clusters.png" alt="WEKA+StorageGRID stretched cluster" /></p>
+
+<p>I don't know whether this is possible, but it should be (assuming your network between DCs is fast and redundant enough).</p>
+
+<p>From the StorageGRID perspective, this is not a new pattern. Splunk SmartStore with StorageGRID, for example, relies on the same layout and features. In order for WEKA in DC1 to retain access to StorageGRID, it would have to be able to automatically switch to the SG1200 pair in DC2:</p>
+<ul>
+  <li>Normally, there's a global load balancer (for more on that, see the StorageGRID solutions) sitting between S3 clients (WEKA) and local S3 load balancers (such as SG1200)</li>
+  <li>Poor man's switchover to another site: change DNS entries for your DNS solution, but make sure TLS certificates, routes, MTUs and more work</li>
+  <li>You can also assume an entire site is a failure domain, in which case you wouldn't need to switch to the other DC, but considering the cost of GPUs, you'd probably want to be able to keep those GPUs and WEKA running if at all possible</li>
+</ul>
+
+<p>I don't know if anyone uses stretched WEKA-StorageGRID clusters, but that is not complex or new. I'd certainly investigate this if requirements justified it.</p>
+
+<p>The ILM rule in the image says "1 copy per site", but:</p>
+<ul>
+  <li>it doesn't have to be configured that way, and</li>
+  <li>that doesn't mean the copy isn't erasure-coded, and</li>
+  <li>either way, the objective is to have a DR copy if you need it. Asymmetric ILM could be created as well (1 Copy per DC; EC 4+1 in DC1, 1 Copy in DC2)</li>
+</ul>
 
 <h2 id="compatibility">Compatibility</h2>
 
