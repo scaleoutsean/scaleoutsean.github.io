@@ -254,7 +254,7 @@
 <ul>
   <li>Get features and benefits of WEKA on front-end</li>
   <li>Transparently tier warm or cold objects to StorageGRID and retrieve them automatically and on-demand</li>
-  <li>Get features and benefits of StorageGRID for whatever other S3 workloads (including Snap-to-Object and more)</li>
+  <li>Get features and benefits of StorageGRID for whatever other S3 workloads (including WEKA's Snap-to-Object and other applications)</li>
 </ul>
 
 <h2 id="how-does-it-work">How does it work?</h2>
@@ -265,25 +265,27 @@
 
 <ul>
   <li>WEKA metadata always stays on WEKA</li>
-  <li>Writes land on WEKA</li>
-  <li>Metadata reads are on WEKA since that's where metadata always is, while data comes from wherever it is located (WEKA SSD or Object Store back-end)</li>
+  <li>Writes always land on WEKA</li>
+  <li>Metadata reads are on WEKA since that's where metadata always is, while data comes from wherever it is located (WEKA SSDs or Object Store back-end "proxied" by WEKA)</li>
 </ul>
 
 <p>Borrowed from the WEKA documentation:</p>
 
 <p><img src="/assets/images/weka-storagegrid-01-tiering-state.png" alt="Weka-StorageGRID Data Lifecycle Flow" /></p>
 
-<p>Tiered objects have CAPACITY IN OBJECT STORAGE &gt; 0:</p>
+<p>Tiered objects have <code class="language-plaintext highlighter-rouge">CAPACITY IN OBJECT STORAGE</code> &gt; 0:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>weka fs tier location image
 PATH   FILE TYPE  FILE SIZE  CAPACITY IN SSD <span class="o">(</span>WRITE-CACHE<span class="o">)</span>  CAPACITY IN SSD <span class="o">(</span>READ-CACHE<span class="o">)</span>  CAPACITY IN OBJECT STORAGE  CAPACITY IN REMOTE STORAGE
 image  regular    102.39 MB  0 B                            0 B                           102.39 MB                   0 B
 </code></pre></div></div>
 
-<p><a href="https://docs.weka.io/4.3/weka-filesystems-and-object-stores/tiering/pre-fetching-from-object-store">An example</a> of  on-demand fetching objects from object store:</p>
+<p><a href="https://docs.weka.io/4.3/weka-filesystems-and-object-stores/tiering/pre-fetching-from-object-store">An example</a> of on-demand <strong>pre-</strong>fetching tiered objects from object store:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>find <span class="nt">-L</span> /mnt/archive/project_53 <span class="nt">-type</span> f | xargs <span class="nt">-r</span> <span class="nt">-n512</span> <span class="nt">-P64</span> weka fs tier fetch <span class="nt">-v</span>
 </code></pre></div></div>
+
+<p>You may want to do this before running large compute jobs on tiered data, when you know you'll need to access most or all of the objects that <code class="language-plaintext highlighter-rouge">find</code> command will find. "Smarter" patterns and filtering based on file names, dates, etc. is of course possible as well. The WEKA fetch command will prefetch whatever file list is generated.</p>
 
 <p>Some WEKA documentation pages (WEKA NeuralMesh v4.3) to get you started:</p>
 
@@ -310,7 +312,7 @@ image  regular    102.39 MB  0 B                            0 B                 
   <li>There's usually no reason to enable encryption or compression on StorageGRID for this kind of workload</li>
   <li>You may use Day 1+ ILM policies (say, Day 0 uses 6+3, Day 1 uses 4+1), but I wouldn't. What's the point?</li>
   <li>Bucket(s) used by WEKA must not be configured for cloud tiering to slower/external object stores. This isn't supported for any vendor's tiering to StorageGRID simply because fetch requests from front-end could take many seconds, or minutes, to complete leading to I/O timeouts and poor user experience</li>
-  <li>Performance-wise, even a small four- (storage) node StorageGRID cluster may be enough because even at 2 GB/s that is 70 TB/h. But four nodes won't let you configure Erasure Coding 4+1 until you get to six storage nodes (+1 for HA), so with four nodes you'd have to use EC 2+1 and maybe change to EC 4+1 later, as your StorageGRID grows.</li>
+  <li>Performance-wise, even a small four- (storage) node StorageGRID cluster may be enough because even at 2 GB/s that is 70 TB/h. But four nodes won't let you configure Erasure Coding 4+1 until you get to six storage nodes (+1 for HA), so with four nodes you'd have to use EC 2+1 and maybe "re-stripe" that to EC 4+1 later, as your StorageGRID grows.</li>
   <li>Network Load Balancer for StorageGRID could be the smaller <a href="https://docs.netapp.com/us-en/storagegrid-appliances/installconfig/hardware-description-sg120-and-1200.html">SG1</a> (S3 API gateway and load-balancer) appliance. The larger one is obviously faster and has 100G NICs, but it also costs more. Furthermore, one can deploy multiple gateway appliances in a cluster, so for half a dozen storage nodes (say, six as in our recommended "starter kit") two of the smaller load balancer appliances would be enough (N+1 for HA). Even if this cluster grows later, you could add another pair of the smaller appliances for other users. One situation where one should start with the larger appliances is when you know from the beginning you'll need more than one pair of smaller appliances and would rather use two bigger than four smaller. Only rarely would one want two pairs of smaller appliances; one example is if these need to serve clients from different networks, or vastly different workloads (performance, governance, security, and so on).</li>
 </ul>
 
