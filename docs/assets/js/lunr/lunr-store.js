@@ -2573,6 +2573,12 @@ var store = [{
         "url": "/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html",
         "teaser": null
       },{
+        "title": "Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store",
+        "excerpt":"Introduction Just in case anyone wondered: yes, you can use WEKA NeuralMesh with NetApp StorageGRID. To be exact, “to use with” means this: As WEKA explains: Users seeking to balance performance and cost must consider a tiered data management system, with the assurance that the WEKA system features control the...","categories": ["storage","ai","s3"],
+        "tags": ["tiering","storagegrid","weka"],
+        "url": "/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2586,7 +2592,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway 2026-07-22 00:00 4 minute read OpenSharing server for StorageGRID and E-Series with VGW done in Go What’s new in BeeGFS 8.4 2026-07-18 00:00 8 minute read What’s new in BeeGFS 8.4 - facts, opinions, and possibly fiction Linked clones...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store 2026-07-25 00:00 4 minute read Introduction OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway 2026-07-22 00:00 4 minute read OpenSharing server for StorageGRID and E-Series with VGW done in Go What’s new in BeeGFS 8.4 2026-07-18 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
