@@ -269,13 +269,15 @@
   <li>Metadata reads are on WEKA since that's where metadata always is, while data comes from wherever it is located (WEKA SSDs or Object Store back-end "proxied" by WEKA)</li>
 </ul>
 
-<p>To the client, this is fully transparent - it uses just one protocol to connect to WEKA. There's no external redirection or similar.</p>
+<p>To the client, this is fully transparent - clients use the usual protocol to connect to WEKA. There's no external redirection or similar.</p>
 
-<p>Borrowed from the WEKA documentation:</p>
+<p>Inside of WEKA and between WEKA and StorageGRID, it works like this (borrowed from the WEKA documentation):</p>
 
 <p><img src="/assets/images/weka-storagegrid-01-tiering-state.png" alt="Weka-StorageGRID Data Lifecycle Flow" /></p>
 
-<p>Tiered objects have <code class="language-plaintext highlighter-rouge">CAPACITY IN OBJECT STORAGE</code> &gt; 0:</p>
+<p>If a file has been evacuated to StorageGRID and isn't already cached, WEKA gets it for you from S3. All writes land on WEKA SSD.</p>
+
+<p>Tiered objects have <code class="language-plaintext highlighter-rouge">CAPACITY IN OBJECT STORAGE</code> greater than zero:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>weka fs tier location image
 PATH   FILE TYPE  FILE SIZE  CAPACITY IN SSD <span class="o">(</span>WRITE-CACHE<span class="o">)</span>  CAPACITY IN SSD <span class="o">(</span>READ-CACHE<span class="o">)</span>  CAPACITY IN OBJECT STORAGE  CAPACITY IN REMOTE STORAGE
@@ -288,6 +290,8 @@ image  regular    102.39 MB  0 B                            0 B                 
 </code></pre></div></div>
 
 <p>You may want to do this before running large compute jobs on tiered data, when you know you'll need to quickly access most or all of the files that the <code class="language-plaintext highlighter-rouge">find</code> command comes up with. "Smarter" patterns and filtering based on file names, dates, etc. are possible and often used; the WEKA <code class="language-plaintext highlighter-rouge">fetch</code> command will try to prefetch whatever file list is generated for it.</p>
+
+<p>Objects tiered to StorageGRID get tagged by WEKA, but I don't have any real-life examples and can't say if they can be used in some way (for example, to create charts that help you better understand how WEKA uses object store data). StorageGRID does have a ton of stats and WEKA does too, but still - if you need to know more and can derive useful information from those tags, that would be interesting.</p>
 
 <p>Some WEKA documentation pages (WEKA NeuralMesh v4.3) to get you started:</p>
 
