@@ -2574,8 +2574,8 @@ var store = [{
         "teaser": null
       },{
         "title": "What's new in NetApp StorageGRID 12.1 and `sg-cosi` 0.5.4",
-        "excerpt":"StorageGRID 12.1 NetApp StorageGRID 12.1 was announced last month, but the packages were made available two days ago. Yesterday I upgraded my cluster and used some of the new features. I won’t comment on all of them and if you just want to see what’s new, click here to see...","categories": ["netapp","storage","kubernetes"],
-        "tags": ["analytics","snapshot","storagegrid","cosi","bucket-branch"],
+        "excerpt":"StorageGRID 12.1 NetApp StorageGRID 12.1 was announced last month, but the packages were made available for download just two days ago. Yesterday I upgraded my StorageGRID cluster and used some of the new features. I won’t comment on all of them and if you just want to see what’s new,...","categories": ["netapp","storage","kubernetes","s3"],
+        "tags": ["analytics","snapshot","storagegrid","cosi","projects","bucket-branch"],
         "url": "/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html",
         "teaser": null
       },{
@@ -2598,7 +2598,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store 2026-07-25 00:00 7 minute read Get the benefits of both WEKA and StorageGRID by using storage tiering on WEKA What’s new in NetApp StorageGRID 12.1 and sg-cosi 0.5.4 2026-07-25 00:00 4 minute read StorageGRID 12.1 OpenSharing server for NetApp StorageGRID...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store 2026-07-25 00:00 7 minute read Get the benefits of both WEKA and StorageGRID by using storage tiering on WEKA What’s new in NetApp StorageGRID 12.1 and sg-cosi 0.5.4 2026-07-25 00:00 4 minute read Highlights of interesting features from the new...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
