@@ -269,17 +269,26 @@
   </ul>
 </blockquote>
 
-<p>That sounds familiar! From my post on Qdrant from three months ago,, related to <a href="https://scaleoutsean.github.io/2026/04/30/singleton-qdrant-vector-db-netapp-eseries-santricity-csi.html#deploy-and-use">backup/restore</a> of Qdrant vector database:</p>
+<p>At first I thought this would make it possible to take "fake" snapshots with <a href="https://docs.kasten.io/latest/kanister/reference/action-names#logical-blueprints">Logical Blueprints</a>, but later I found this:</p>
 
 <blockquote>
-  <p>Bottom line: you don't need storage snapshots or CSI snapshots here, either to backup or restore.</p>
+  <p>As a guideline, logical blueprints remain practical for databases up to approximately 50 GiB.</p>
 </blockquote>
 
-<p>That was also stated elsewhere (<a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html#conclusion">"We don't really need snapshots"</a> for Kubernetes workloads we want to run on E-Series).</p>
+<p>And that is <code class="language-plaintext highlighter-rouge">backup</code>, not <code class="language-plaintext highlighter-rouge">backupPrehook</code>.</p>
 
-<p>The workhorse database of Kubernetes, analytics and data lakehouses, PostgreSQL, is less and less often backed up by creating CSI snapshots on Kubernetes. You <em>can</em> do it (with IBM Block CSI with SANtricity patches, where CSI snapshots work), but that's a <a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#backup-and-restore">legacy approach</a>.</p>
+<p>Still, the same page also has this:</p>
 
-<p>Seeing this stated by Kasten validates those posts and my overall approach to CSI snapshots in SANtricity CSI, where I've been delaying implementation of CSI snapshots, seeing there's very little need for them when it comes to workloads that run on Kubernetes with E-Series.</p>
+<blockquote>
+  <p>Use logical blueprints only when PVC snapshots are not viable, such as managed databases or vendor operator backup APIs.</p>
+</blockquote>
+
+<p>That is exactly what I had in mind: run custom backup action (such as dump to S3 bucket or ephemeral PVC), and backup data from that dump volume. No CSI snapshot is required.</p>
+
+<p>The same page has several other downsides for logical blueprints, but none of them are disqualifying. Some databases have only one backup - dump to disk/S3 - so all of these shortcomings are "built-in" and not "extra" downsides that one has to accept if using <code class="language-plaintext highlighter-rouge">backup</code> hooks.</p>
+
+<p>I intend to explore this next time I use Kasten.</p>
+
 
         
       </section>
