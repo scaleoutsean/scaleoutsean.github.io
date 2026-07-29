@@ -2585,6 +2585,12 @@ var store = [{
         "url": "/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html",
         "teaser": null
       },{
+        "title": "What's new in Kasten K10 9.0",
+        "excerpt":"You may see full release notes for version 9 right here. What’s interesting: VBR Metadata Support: New policies support the export of both Kubernetes application metadata and volume snapshot data to supported Veeam Backup &amp; Replication repositories At the related link: Both Filesystem and Block persistent volume modes are supported,...","categories": ["kubernetes","storage","s3"],
+        "tags": ["veeam","kasten","backup"],
+        "url": "/2026/07/29/kasten-k10-90.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2598,7 +2604,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store 2026-07-25 00:00 7 minute read Get the benefits of both WEKA and StorageGRID by using storage tiering on WEKA What’s new in NetApp StorageGRID 12.1 and sg-cosi 0.5.4 2026-07-25 00:00 4 minute read Highlights of interesting features from the new...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"What’s new in Kasten K10 9.0 2026-07-29 00:00 1 minute read What’s new in Kasten K10 9.0 Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store 2026-07-25 00:00 7 minute read Get the benefits of both WEKA and StorageGRID by using storage tiering on WEKA What’s new in NetApp...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
