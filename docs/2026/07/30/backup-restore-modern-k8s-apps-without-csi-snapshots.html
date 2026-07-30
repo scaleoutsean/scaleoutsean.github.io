@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          5 minute read
         
       </span>
     
@@ -268,7 +268,7 @@
 
 <p>Or, you could take application "snapshots" (full or incremental asynchronous dumps) to NL-SAS-backed S3 object store and use Kasten to backup those. At current prices, 20TB of S3 capacity may be cheaper than 3TB of SSD capacity, so even full data dumps to S3 wouldn't be more expensive.</p>
 
-<p>Kasten does make a point regarding application support, where they note some applications don't even support CSI snapshots. I would say most of what we'd run on E-Series (databases, message brokers, etc.) workloads <strong>do not support CSI snapshots</strong>, so the right <strong>order</strong> is to look at that first.</p>
+<p>Kasten does make a point regarding application support, where they note some applications don't even support CSI snapshots. I would say most of what we'd run on E-Series (databases, message brokers, etc.) <strong>does not support CSI snapshots</strong> at all or not well enough to be preferred over S3, so the right <strong>order</strong> is to look at whether S3 makes sense and not the backup size.</p>
 
 <h3 id="how-to-do-it">How to do it</h3>
 
@@ -355,16 +355,19 @@
 
 <p>If you try this at home (or office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series <a href="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">here</a>). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.</p>
 
+<p>NetApp StorageGRID 12 is known to work with both Elasticsearch 8 and 9 snapshots to S3. I blogged about StorageGRID with Elasticsearch ILM <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">here</a>, by the way.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
-<p>On-premises S3 object stores give you practically unlimited capacity, unlimited sequential performance and work nicely across physical locations. That's why everyone uses them for backup data, including Kasten. So, why not avoid CSI snapshots and use S3 when that is clearly better?</p>
+<p>On-premises S3 object stores give you practically unlimited capacity, unlimited sequential performance and work nicely across physical locations. That's why everyone uses them for backup data stores, including Kasten. So, why not avoid CSI snapshots and use S3 when that is clearly better?</p>
 
 <p>And it's not even a matter choice.</p>
 
 <p>Most applications we'd want to run on E-Series-backed Kubernetes do not even support CSI snapshots. Feel free to check <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html#qdrant-backups">Qdrant</a>, Milvus, <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk</a> and what-have-you.</p>
 
-<p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store. <a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe for modern application backups CSI snapshots are done. You want to replicate to a fully redundant replica and from there, backup to S3 (see failover and failback in the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean). And how goes Postgres, so goes the rest of analytics stacks.</p>
+<p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store (that is to say, not to a MinIO pod running in Elasticsearch namespace, like home enthusiasts do).</p>
 
+<p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe for modern application backups CSI snapshots are done. You want to replicate to a fully redundant replica and from there, backup to S3 (see failover and failback in the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean). And how goes Postgres, so goes the rest of analytics stacks.</p>
 
         
       </section>
