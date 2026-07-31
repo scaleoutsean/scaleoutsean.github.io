@@ -254,25 +254,25 @@
 
 <h3 id="backups-vs-diy-copies">Backups vs. DIY copies</h3>
 
-<p>Automated data dumps to an external disk, NAS or S3 are also "backup copies", but often of <em>ad hoc</em> nature and not centrally managed. We can create such backups by simply <a href="/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html">uploading snapshotted SolidFire volumes to S3</a>. Even with NoSQL, you can put a bunch of volumes in a SolidFire Consistency Group and have SolidFire upload those to a bucket. We could do that on E-Series, too. But that's not easy to manage and has many limitations when it's used at scale.</p>
+<p>Automated data dumps to an external disk, NAS or S3 are also "backup copies", but often of <em>ad hoc</em> nature and not centrally managed. We can create such backups by simply <a href="/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html">uploading snapshotted SolidFire volumes to S3</a>. Even with NoSQL, you can put a bunch of volumes in a SolidFire Consistency Group and have SolidFire upload those to a bucket. We could do that on E-Series from a backup worker with some SANtricity API automation, too. But that's not easy to manage and has many limitations when it's used at scale.</p>
 
 <p>This post focuses on centrally managed data protection on Kubernetes.</p>
 
 <h3 id="csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</h3>
 
-<p>That subtitle is a fake dilemma. It doesn't matter what advantages CSI snapshots have if your application does not support backup and restore from filesystem backups. End of story.</p>
+<p>This subtitle above is a fake dilemma. It doesn't matter what advantages CSI snapshots have if your application does not support backup and restore from filesystem backups. End of story.</p>
 
-<p>But let's engage in a fake argument specific to the hideously un-recommended use case: NoSQL database running on 10 Kubernetes worker nodes with approximately 1TB per PVC. This is hopefully not recommended enough by Kasten.</p>
+<p>But let's engage in a fake argument specific to a hideously un-recommended use case: NoSQL database running on 10 Kubernetes worker nodes with approximately 1TB per PVC. This scenario is grossly outside of the 50GB limit recommended by Kasten.</p>
 
 <p>Let's see:</p>
 <ul>
-  <li>Point 1: Application creates over 200 GB of changed data per node every day, so your snapshot reservation has to be at least 1 TB (30% or 40% of 10TB would be even better; 1TB assumes a quick backup to S3 followed by immediate deletion of snapshots)</li>
-  <li>Point 2: Your on-premises S3 can read/write at 5 GB/s</li>
+  <li>Your application creates over 200 GB of changed data <em>per node</em> every day, so your snapshot reservation should be at least 1-2 TB (30% or 40% of 10TB would be even better; 1TB assumes two backups per day done quickly and followed by immediate deletion of snapshots while for daily frequency you'd need well over 2 TB in snapshot reservation capacity)</li>
+  <li>Your on-premises S3 can read/write (GET/PUT) at 5 GB/s</li>
 </ul>
 
-<p>You probably won't backup faster with CSI, and you'll probably have 2TB of flash capacity reserved for backup of that one application.</p>
+<p>You probably won't backup faster with CSI backups because they need to be throttled, and you'll probably have 2TB of flash capacity reserved for backup of that one application.</p>
 
-<p>Or, you could take application "snapshots" (full or incremental asynchronous dumps) to NL-SAS-backed S3 object store and use Kasten to backup those. At current prices, 20TB of S3 capacity may be cheaper than 3TB of SSD capacity, so even full data dumps to S3 wouldn't be more expensive.</p>
+<p>Or, you could take application "snapshots" (full or incremental asynchronous dumps) to NL-SAS-backed S3 object store and use Kasten blueprints to backup that data. At current prices, 20TB of S3 capacity may be cheaper than 3TB of SSD capacity, so even full data dumps to S3 wouldn't be more expensive.</p>
 
 <p>Kasten does make a point regarding application support, where they note some applications don't even support CSI snapshots. I would say most of what we'd run on E-Series (databases, message brokers, etc.) <strong>does not support CSI snapshots</strong> at all or not well enough to be preferred over S3, so the right <strong>order</strong> is to look at whether S3 makes sense and not the backup size.</p>
 
