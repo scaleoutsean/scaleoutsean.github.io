@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          3 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              
+              <ul class="toc__menu"><li><a href="#appendix-a-deploy-kasten-902-with-solidfire-csi-102">Appendix A: deploy Kasten 9.0.2 with SolidFire CSI 1.0.2</a></li></ul>
             </nav>
           </aside>
         
@@ -291,6 +291,64 @@
 
 <p>I intend to explore logical backups to S3 next time I use Kasten.</p>
 
+<h2 id="appendix-a-deploy-kasten-902-with-solidfire-csi-102">Appendix A: deploy Kasten 9.0.2 with SolidFire CSI 1.0.2</h2>
+
+<p>Back in April, I complained about lagging Kubernetes version support in Kasten 8. Well, 9.0.2 still <a href="https://docs.kasten.io/9.0.2/operating/support#supported-kubernetes-versions">does not support Kubernetes 1.35</a>.</p>
+
+<p>I installed Kasten 9.0.2 on Kubernetes 1.35.1, then SolidFire CSI 1.0.2, and finally CRDs for External Snapshotter 8.6. A SolidFire storage class was made the default. I used the volume snapshot class from the SolidFire CSI repository.</p>
+
+<p>There's an option to define a backup-only storage class, which is something I've <a href="/2020/11/28/powershell-set-sfqosexception.html">suggested since 2020</a>, but I did not make use of that.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   36d   v1.35.1
+
+<span class="nv">$ </span>kubectl get sc
+NAME                         PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+solidfire-bronze <span class="o">(</span>default<span class="o">)</span>   csi.solidfire.com          Delete          Immediate           <span class="nb">true                   </span>27m
+standard                     k8s.io/minikube-hostpath   Delete          Immediate           <span class="nb">false                  </span>36d
+
+<span class="nv">$ </span>kubectl get volumesnapshotclass
+NAME                  DRIVER              DELETIONPOLICY   AGE
+solidfire-snapclass   csi.solidfire.com   Delete           6m32s
+
+<span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> kasten-io
+NAME                                     READY   STATUS    RESTARTS      AGE
+aggregatedapis-svc-76cbf9cc8b-cgr4w      1/1     Running   0             15h
+auth-svc-5fd6874b4b-wm24l                1/1     Running   1 <span class="o">(</span>15h ago<span class="o">)</span>   15h
+catalog-svc-58f7565956-qk8pw             2/2     Running   0             15h
+controllermanager-svc-57859f79fc-zt6n9   1/1     Running   1 <span class="o">(</span>15h ago<span class="o">)</span>   15h
+crypto-svc-8474d6f87-v5wl6               4/4     Running   0             15h
+dashboardbff-svc-5898d598f7-bfpcm        2/2     Running   0             15h
+executor-svc-5f897cbc8f-85ldr            1/1     Running   0             15h
+executor-svc-5f897cbc8f-q27gj            1/1     Running   0             15h
+executor-svc-5f897cbc8f-tlgqv            1/1     Running   0             15h
+frontend-svc-f44b55df-ljwqs              1/1     Running   0             15h
+gateway-5644bc858d-xrqpn                 1/1     Running   1 <span class="o">(</span>15h ago<span class="o">)</span>   15h
+jobs-svc-74c9f58498-rxcwt                1/1     Running   0             15h
+kanister-svc-69ddc44dbb-lm2qw            1/1     Running   0             15h
+logging-svc-5767677f6f-b8qrb             1/1     Running   0             15h
+metering-svc-86b6d4dcbd-qd9gm            1/1     Running   0             15h
+prometheus-server-579c4679d4-z47p4       2/2     Running   0             15h
+state-svc-67d656558d-qdzc6               2/2     Running   0             15h
+
+<span class="nv">$ </span>kubectl annotate volumesnapshotclass solidfire-snapclass k10.kasten.io/is-snapshot-class<span class="o">=</span><span class="s2">"true"</span>
+</code></pre></div></div>
+
+<p>Don't forget to annotate a SolidFire VolumeSnapshotClass.</p>
+
+<p>Run this check and only the Kubernetes version check fails.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-s</span> https://docs.kasten.io/downloads/9.0.2/tools/k10_primer.sh | bash
+</code></pre></div></div>
+
+<p>No errors (for now), despite running an unsupported Kubernetes version.</p>
+
+<p><img src="/assets/images/kasten_9_00.png" alt="Kasten 9 with SolidFire CSI" /></p>
+
+<p>The same workflow is expected to work with SANtricity CSI or IBM Block CSI with SANtricity patch, except that you can't take advantage of backup-only Storage Class which requires QoS features on storage array.</p>
+
+<p>Logical blueprints for snapshotless backup will be examined in another post.</p>
 
         
       </section>
