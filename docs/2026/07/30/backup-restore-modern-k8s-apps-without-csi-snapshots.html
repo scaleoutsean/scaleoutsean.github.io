@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          6 minute read
+          12 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#snapshotless-csi-backups">Snapshotless CSI backups</a><ul><li><a href="#backups-vs-diy-copies">Backups vs. DIY copies</a></li><li><a href="#csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</a></li><li><a href="#how-to-do-it">How to do it</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#snapshotless-csi-backups">Snapshotless CSI backups</a><ul><li><a href="#backups-vs-diy-copies">Backups vs. DIY copies</a></li><li><a href="#csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</a></li><li><a href="#how-to-do-it">How to do it</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-logical-kasten-blueprint-for-snapshotless-backup-and-restore-elasticsearch-8">Appendix A: logical Kasten blueprint for snapshotless backup and restore (Elasticsearch 8)</a></li></ul>
             </nav>
           </aside>
         
@@ -384,6 +384,188 @@
 <p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store (that is to say, not to a MinIO pod running in Elasticsearch namespace, like home enthusiasts do).</p>
 
 <p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe that, for modern application, backups CSI snapshots are done. It's over. You want to replicate to a fully redundant replica and from there, backup to S3 (see the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean - how seamlessly failover and failback work). As goes Postgres, so goes the rest of analytics stacks and <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">data lakehouses on Kubernetes</a>.</p>
+
+<h2 id="appendix-a-logical-kasten-blueprint-for-snapshotless-backup-and-restore-elasticsearch-8">Appendix A: logical Kasten blueprint for snapshotless backup and restore (Elasticsearch 8)</h2>
+
+<p>Not having any concrete requirement that would lead me to use some other application, I continued with Elasticsearch.</p>
+
+<p>To make this proof-of-concept less disruptive, I stuck with the same version the Kanister blueprint (8.4.1) was tested with. It's an old version, but we're interested in general applicability of the pattern and not even which application is used.</p>
+
+<p>I wanted to use Kasten 9 (installed while writing <a href="/2026/07/29/kasten-k10-90.html#appendix-a-deploy-kasten-902-with-solidfire-csi-102">the previous post</a>) and add that blueprint to Kasten, but I did not have enough resources for all those things (and Elasticsearch Operator).</p>
+
+<p>I ended up using Kanister 0.119.0 and a stand-alone instance of Elasticsearch based on recipe forked from <a href="https://github.com/bon10/simple-k8s-elasticsearch/">here</a>, but set to v8.4.1 and fixed to run on my Kubernetes.</p>
+
+<p>Here we see <code class="language-plaintext highlighter-rouge">kasten-io</code>, as Kasten was installed, but I was using blueprints from the <code class="language-plaintext highlighter-rouge">kanister</code> namespace (not built-in Kanister blueprints).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   37d   v1.35.1
+
+<span class="nv">$ </span>kubectl get namespaces
+NAME                              STATUS   AGE
+ais                               Active   31d
+container-object-storage-system   Active   37d
+default                           Active   37d
+elasticsearch                     Active   3h59m
+kanister                          Active   3h10m
+kasten-io                         Active   27h
+kompromise-system                 Active   35d
+kube-node-lease                   Active   37d
+kube-public                       Active   37d
+kube-system                       Active   37d
+operator-system                   Active   24d
+sg-bucketshop                     Active   31d
+sg-cosi-coke                      Active   6d5h
+solidfire-csi                     Active   12h
+</code></pre></div></div>
+
+<p>About that CSI snapshot point - I used SolidFire CSI for this. CSI snapshots were available, but I did not use them.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pvc <span class="nt">-n</span>   elasticsearch
+NAME                      STATUS   VOLUME             CAPACITY   ACCESS MODES   STORAGECLASS       VOLUMEATTRIBUTESCLASS   AGE
+es-data-elasticsearch-0   Bound    elasticsearch-pv   2Gi        RWO            solidfire-bronze   &lt;<span class="nb">unset</span><span class="o">&gt;</span>                 4h26m
+
+<span class="nv">$ </span>kubectl get volumesnapshotclass
+NAME                  DRIVER              DELETIONPOLICY   AGE
+solidfire-snapclass   csi.solidfire.com   Delete           13h
+</code></pre></div></div>
+
+<p>Using Kanister's CLI, as I didn't use Kasten, I created a profile for StorageGRID bucket called <code class="language-plaintext highlighter-rouge">snapshotless</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kanctl create profile s3compliant <span class="nt">--access-key</span> k....e....y <span class="se">\</span>
+        <span class="nt">--secret-key</span> abc....123 <span class="se">\</span>
+        <span class="nt">--bucket</span> snapshotless <span class="nt">--region</span> us-east-1 <span class="se">\</span>
+        <span class="nt">--endpoint</span> http://192.168.1.211:10080 <span class="se">\</span>
+        <span class="nt">--skip-SSL-verification</span> <span class="se">\</span>
+        <span class="nt">--namespace</span> elasticsearch
+</code></pre></div></div>
+
+<p>There's some corner-cutting going on, like no TLS validation, and using HTTP, which we wouldn't do in production.</p>
+
+<p>That command created a profile and secret in my application's namespace:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>secret <span class="s1">'s3-secret-64gbq9'</span> created
+profile <span class="s1">'s3-profile-cbpmt'</span> created
+</code></pre></div></div>
+
+<p>Then I installed a modified blueprint that doesn't rely on Elasticsearch operator, which I wasn't running. But the rest is the same.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> blueprint-standalone/elasticsearch-standalone-incremental-blueprint.yaml <span class="nt">-n</span> kanister
+</code></pre></div></div>
+
+<p>Elasticsearch and Kanister pods:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods  <span class="nt">-n</span> elasticsearch
+NAME                      READY   STATUS    RESTARTS        AGE
+elasticsearch-0           1/1     Running   0               3h28m
+kibana-674fc6b6c7-t4j8h   1/1     Running   1 <span class="o">(</span>3h41m ago<span class="o">)</span>   3h50m
+
+<span class="nv">$ </span>kubectl get pods  <span class="nt">-n</span> kanister
+NAME                                         READY   STATUS    RESTARTS   AGE
+kanister-kanister-operator-d66f876dd-9trq6   1/1     Running   0          3h11m
+
+</code></pre></div></div>
+
+<p>With that we could test create-backup-delete-restore.</p>
+
+<p>Elasticsearch "snapshot-to-S3" worked fine with StorageGRID 12.1. Nothing unexpected.</p>
+
+<p><img src="/assets/images/snapshotless_csi_backups_to_s3_00_elasticsearch.png" alt="Elasticsearch backup on SG 12.1" /></p>
+
+<p>Here's a log of Kanister's delete-restore action:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>2026-07-31T12:06:22,933][INFO <span class="o">][</span>o.e.c.m.MetadataDeleteIndexService] <span class="o">[</span>elasticsearch-0] <span class="o">[</span>.geoip_databases/kgsYlD5XTlGUA156VL4nGA] deleting index
+<span class="o">[</span>2026-07-31T12:06:22,964][INFO <span class="o">][</span>o.e.c.s.ClusterSettings  <span class="o">]</span> <span class="o">[</span>elasticsearch-0] updating <span class="o">[</span>action.destructive_requires_name] from <span class="o">[</span><span class="nb">false</span><span class="o">]</span> to <span class="o">[</span><span class="nb">true</span><span class="o">]</span>
+<span class="o">[</span>2026-07-31T12:06:23,041][INFO <span class="o">][</span>o.e.s.RestoreService     <span class="o">]</span> <span class="o">[</span>elasticsearch-0] started restore of snapshot <span class="o">[</span>k10_repo:snap_2026-07-31t12:04:32z07:00/Tri_EN1OSq6-xEKJG9AfvQ] <span class="k">for </span>indices <span class="o">[</span>my-index-000002, .kibana_8.4.1_001, .kibana_task_manager_8.4.1_001, .apm-custom-link, my-index-000001, .geoip_databases, test01, .apm-agent-configuration, .ds-ilm-history-5-2026.07.31-000001, .ds-.logs-deprecation.elasticsearch-default-2026.07.31-000001, .kibana-event-log-8.4.1-000001, demo-snap]
+<span class="o">[</span>2026-07-31T12:06:23,158][ERROR][o.e.i.g.GeoIpDownloader  <span class="o">]</span> <span class="o">[</span>elasticsearch-0] exception during geoip databases update
+org.elasticsearch.ElasticsearchException: not all primary shards of <span class="o">[</span>.geoip_databases] index are active
+<span class="o">[</span>2026-07-31T12:06:24,646][WARN <span class="o">][</span>r.suppressed             <span class="o">]</span> <span class="o">[</span>elasticsearch-0] path: /.kibana_8.4.1/_doc/telemetry%3Atelemetry, params: <span class="o">{</span><span class="nv">index</span><span class="o">=</span>.kibana_8.4.1, <span class="nb">id</span><span class="o">=</span>telemetry:telemetry<span class="o">}</span>
+org.elasticsearch.action.NoShardAvailableActionException: No shard available <span class="k">for</span> <span class="o">[</span>get <span class="o">[</span>.kibana_8.4.1][telemetry:telemetry]: routing <span class="o">[</span>null]]
+Caused by: org.elasticsearch.transport.RemoteTransportException: <span class="o">[</span>elasticsearch-0][10.244.1.5:9300][indices:data/read/get[s]]
+Caused by: org.elasticsearch.index.shard.IllegalIndexShardStateException: CurrentState[RECOVERING] operations only allowed when shard state is one of <span class="o">[</span>POST_RECOVERY, STARTED]
+<span class="o">[</span>2026-07-31T12:06:28,037][INFO <span class="o">][</span>o.e.s.RestoreService     <span class="o">]</span> <span class="o">[</span>elasticsearch-0] completed restore of snapshot <span class="o">[</span>k10_repo:snap_2026-07-31t12:04:32z07:00/Tri_EN1OSq6-xEKJG9AfvQ]
+</code></pre></div></div>
+
+<p>There's some noise in the middle as Elasticsearch is <strong>not shutdown</strong> while index is being restored.</p>
+
+<p>Complete view:</p>
+
+<p><img src="/assets/images/snapshotless_csi_backups_to_s3_01_restore_noise.png" alt="Noise during restore" /></p>
+
+<p>That is completely normal, as index data is coming online.</p>
+
+<p>It's like recovering a SQL Server instance - restore, then attach. Other "instances" (indexes) are all online while we're restoring a failed index.</p>
+
+<p>Kanister action log shows completed restore actions.</p>
+
+<p><img src="/assets/images/snapshotless_csi_backups_to_s3_02_restore_complete.png" alt="Restore action log" /></p>
+
+<p>Compared to restoring from CSI snapshots where <em>all</em> pods would have to be restarted, notice that my Elasticsearch pod wasn't restarted even once on the node where the index lived.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> elasticsearch
+NAME                      READY   STATUS    RESTARTS        AGE
+elasticsearch-0           1/1     Running   0               4h9m
+kibana-674fc6b6c7-t4j8h   1/1     Running   1 <span class="o">(</span>4h23m ago<span class="o">)</span>   4h31m
+
+<span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> kanister
+NAME                                         READY   STATUS    RESTARTS   AGE
+kanister-kanister-operator-d66f876dd-9trq6   1/1     Running   0          3h53m
+</code></pre></div></div>
+
+<p>I conclude that having a Kasten or Velero or other wrapper around application-native APIs isn't a bad idea when you need centralized control and data protection management.</p>
+
+<p>There is one "it depends" answer, to the question of whether we should use logical backups to PUT/POST data directly to the backup application (Kasten, Veeam, etc.) bucket, or first dump to an intermediate/ephemeral bucket. I don't think there is one answer to this because:</p>
+
+<ul>
+  <li>In some cases (compliance, security and other concerns), only backup application itself can have access to its S3 repository. So you can't upload directly</li>
+  <li>In other cases, it is physically impossible to dump a backup to one "ephemeral" bucket and use wrapper to copy or "move" it to another (Kasten's). You may have 8 PB of data, or backup data created by the application may be very complex (see that screenshot above, or even better see this example below). Some applications have very simple snapshot archives and those can probably be nicely managed. Elasticsearch isn't one of them.</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/snapshotless
+<span class="o">[</span>2026-07-31 19:35:27 CST] 4.6KiB STANDARD index-1
+<span class="o">[</span>2026-07-31 19:35:27 CST]     8B STANDARD index.latest
+<span class="o">[</span>2026-07-31 19:35:21 CST]  25KiB STANDARD meta-4W-t93r1TrKmXwzJ-uy9IQ.dat
+<span class="o">[</span>2026-07-31 19:35:27 CST]  25KiB STANDARD meta-VzeLXHEnSPiR5jJ_VqpLXg.dat
+<span class="o">[</span>2026-07-31 19:35:22 CST]   640B STANDARD snap-4W-t93r1TrKmXwzJ-uy9IQ.dat
+<span class="o">[</span>2026-07-31 19:35:27 CST]   644B STANDARD snap-VzeLXHEnSPiR5jJ_VqpLXg.dat
+<span class="o">[</span>2026-07-31 22:30:43 CST]     0B indices/
+<span class="o">[</span>2026-07-31 22:30:43 CST]     0B k10/
+
+<span class="nv">$ </span>mc <span class="nb">ls </span>cosi/snapshotless/indices
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B 1OWrlZTgQ9O0RcH-wrwjHA/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B ExBHBuTXRaSYYWTwPPF7Rw/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B MWJwos33TieLYgwOoOfplw/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B Mk8h7BXeSVCXu_V5iFPz-w/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B MtdUhIToSr6FU-MfKsrt_Q/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B _MiuWCUBS72DgX8cX4oPDw/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B eBLUtctDQs2MxedktsxWMA/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B ezYxelonRRy6x214D_x43Q/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B ghfpuIoUR06KuNZsjX0SQA/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B qYdmvgzlR1mwbGYzBs8AOg/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B qzomnfvDQp2nG79xcYdacA/
+<span class="o">[</span>2026-07-31 22:30:51 CST]     0B t5oGP3PFQomGka5fiBvUjg/
+
+<span class="nv">$ </span>mc <span class="nb">ls </span>cosi/snapshotless/indices/t5oGP3PFQomGka5fiBvUjg/0/
+<span class="o">[</span>2026-07-31 19:35:24 CST]   456B STANDARD index-kMZMF51ZRwq99Vvsg0LZsQ
+<span class="o">[</span>2026-07-31 19:35:10 CST]   460B STANDARD snap-4W-t93r1TrKmXwzJ-uy9IQ.dat
+<span class="o">[</span>2026-07-31 19:35:24 CST]   457B STANDARD snap-VzeLXHEnSPiR5jJ_VqpLXg.dat
+</code></pre></div></div>
+
+<p>Monkeying around with these would be complicated and error-prone. Not worth the trouble!</p>
+
+<p>That's why I think there's no one best way. A decent way might be:</p>
+
+<ul>
+  <li>Create a path within the Kasten S3 repo-bucket for each of these applications with direct access</li>
+  <li>Since these represent non-Kasten applications (Kanister), create separate ACLs for this path to prevent access to the rest of data in the bucket. If you use Kasten blueprints, you'd just use blueprints to backup directly to Kasten S3 repository - that would be simpler</li>
+  <li>Have versioning and ObjectLock enabled</li>
+  <li>Collect, <a href="https://github.com/scaleoutsean/storagegrid-audit-analysis">analyze</a> and retain StorageGRID audit log</li>
+</ul>
+
+<p>For applications where snapshot-to-S3 is easier to work with, I still prefer the two-hop approach, but that is not workable in all cases.</p>
+
+<p>We should prefer the approach that uses Elasticsearch operator and try it with a multi-node cluster, but as far as the question of CSI snapshot-less Kubernetes backups is concerned, it seems obvious to me these - whenever possible - are vastly superior to CSI snapshots, especially in Cloud-Native deployments.</p>
+
 
         
       </section>
