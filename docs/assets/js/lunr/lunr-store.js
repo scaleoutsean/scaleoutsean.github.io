@@ -2586,13 +2586,13 @@ var store = [{
         "teaser": null
       },{
         "title": "What's new in Kasten K10 9.0",
-        "excerpt":"You may see full release notes for version 9 right here. What’s interesting: VBR Metadata Support: New policies support the export of both Kubernetes application metadata and volume snapshot data to supported Veeam Backup &amp; Replication repositories At the related link: Both Filesystem and Block persistent volume modes are supported,...","categories": ["kubernetes","storage","s3"],
+        "excerpt":"What’s new in Kasten 9.0 You may see full release notes for version 9 right here. What’s interesting to me is the following parts. VBR Metadata Support: New policies support the export of both Kubernetes application metadata and volume snapshot data to supported Veeam Backup &amp; Replication repositories At the...","categories": ["kubernetes","storage","s3"],
         "tags": ["veeam","kasten","backup"],
         "url": "/2026/07/29/kasten-k10-90.html",
         "teaser": null
       },{
         "title": "Backup and restore modern Kubernetes applications without CSI snapshots",
-        "excerpt":"Introduction After writing the previous post on Kasten 9.0, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier. I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. “Logical” backups can do that, but they’re...","categories": ["kubernetes","storage","s3"],
+        "excerpt":"Introduction After writing the previous post on Kasten 9.0, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier even as they improved pre-backup hooks. I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. “Logical”...","categories": ["kubernetes","storage","s3"],
         "tags": ["veeam","kasten","backup","restore","csi","snapshots"],
         "url": "/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html",
         "teaser": null
@@ -2610,7 +2610,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Backup and restore modern Kubernetes applications without CSI snapshots 2026-07-30 00:00 5 minute read IBM Block CSI with SANtricity patch has CSI snapshots but I’ve been advocating against CSI snapshots because you probably can do better with backup to S3 What’s new in Kasten K10 9.0 2026-07-29 00:00 3 minute...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Backup and restore modern Kubernetes applications without CSI snapshots 2026-07-30 00:00 6 minute read IBM Block CSI with SANtricity patch has CSI snapshots but I’ve been advocating against CSI snapshots because you probably can do better with backup to S3 What’s new in Kasten K10 9.0 2026-07-29 00:00 3 minute...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

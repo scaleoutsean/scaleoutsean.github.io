@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -227,13 +227,13 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#snapshotless-csi-backups">Snapshotless CSI backups</a><ul><li><a href="#csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</a></li><li><a href="#how-to-do-it">How to do it</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#snapshotless-csi-backups">Snapshotless CSI backups</a><ul><li><a href="#backups-vs-diy-copies">Backups vs. DIY copies</a></li><li><a href="#csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</a></li><li><a href="#how-to-do-it">How to do it</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
         <h2 id="introduction">Introduction</h2>
 
-<p>After writing the previous <a href="/2026/07/29/kasten-k10-90.html">post on Kasten 9.0</a>, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier.</p>
+<p>After writing the previous <a href="/2026/07/29/kasten-k10-90.html">post on Kasten 9.0</a>, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier even as they improved pre-backup hooks.</p>
 
 <p>I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. "Logical" backups can do that, but they're not recommended by Kasten except in trivial cases:</p>
 
@@ -248,9 +248,15 @@
   <li>Logical backups aren't recommended</li>
 </ul>
 
-<p>I don't have time to work on a practical demonstration of what I had in mind, but there are two other reasons why this follow up post is immediate.</p>
+<p>I don't have time to work on a practical demonstration of what I had in mind, but there are two other reasons why this follow up post is so immediate.</p>
 
 <h2 id="snapshotless-csi-backups">Snapshotless CSI backups</h2>
+
+<h3 id="backups-vs-diy-copies">Backups vs. DIY copies</h3>
+
+<p>Automated data dumps to an external disk, NAS or S3 are also "backup copies", but often of <em>ad hoc</em> nature and not centrally managed. We can create such backups by simply <a href="/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html">uploading snapshotted SolidFire volumes to S3</a>. Even with NoSQL, you can put a bunch of volumes in a SolidFire Consistency Group and have SolidFire upload those to a bucket. We could do that on E-Series, too. But that's not easy to manage and has many limitations when it's used at scale.</p>
+
+<p>This post focuses on centrally managed data protection on Kubernetes.</p>
 
 <h3 id="csi-snapshot-assisted-vs-snapshotless-backup-to-s3">CSI snapshot-assisted vs. snapshotless backup to S3</h3>
 
@@ -373,11 +379,11 @@
 
 <p>And it's not even a matter choice.</p>
 
-<p>Most applications we'd want to run on E-Series-backed Kubernetes do not even support CSI snapshots. Feel free to check <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html#qdrant-backups">Qdrant</a>, Milvus, <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk</a> and what-have-you.</p>
+<p>Most applications we'd want to run on E-Series-backed Kubernetes do not even support CSI snapshots. Feel free to check <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html#qdrant-backups">Qdrant</a>, Milvus (let me save you time, <a href="https://milvus.io/docs/milvus_backup_overview.md">CSI backup is not supported</a>), <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk</a> and what-have-you.</p>
 
 <p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store (that is to say, not to a MinIO pod running in Elasticsearch namespace, like home enthusiasts do).</p>
 
-<p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe for modern application backups CSI snapshots are done. You want to replicate to a fully redundant replica and from there, backup to S3 (see failover and failback in the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean). And how goes Postgres, so goes the rest of analytics stacks.</p>
+<p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe for modern application backups CSI snapshots are done. You want to replicate to a fully redundant replica and from there, backup to S3 (see failover and failback in the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean). As goes Postgres, so goes the rest of analytics stacks and <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">data lakehouses on Kubernetes</a>.</p>
 
         
       </section>

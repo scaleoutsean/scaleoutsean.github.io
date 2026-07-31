@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -279,17 +279,19 @@ realtime <span class="o">=</span>none                   <span class="nv">extsz</
 
 <p>The answer is obviously not documented because it's not particularly relevant and StorageGRID may change it as required.</p>
 
-<p>A more pertinent question is how does it matter?</p>
+<p>Also, the slowness with small objects does not come from filesystem block size, so the question is likely wrong on the most fundamental level.</p>
+
+<p>A more pertinent question is does it even matter?</p>
 
 <p>StorageGRID by default saves two copies of every object (default ILM policy).</p>
 
 <p>If you stored billions of 1 byte files, you'd waste 8 KB per each (due to there being two copies).</p>
 
-<p>But you probably <em>shouldn't</em> store billions of 1 byte files in S3. You should probably store such files in a database.</p>
+<p>But you probably <em>shouldn't</em> store billions of 1 byte files in S3. You should probably store such files in a database file (such as Parquet) on S3.</p>
 
 <p>If you need to do store billions of tiny files on S3, then don't use object storage, or maybe use ONTAP S3 which has something called <a href="https://docs.netapp.com/us-en/ontap/volumes/deduplication-data-compression-efficiency-concept.html">data compaction</a> - if file data is smaller than filesystem block size, multiple files can be packed into a single 4 kiB block.</p>
 
-<p>In conclusion, StorageGRID will do fine with small files (4kB or more). If you have a ridiculous amount of even smaller files that you want to store as objects, consider ONTAP S3.</p>
+<p>In conclusion, StorageGRID will do fine with small files (4kB or more) as far as filesystem-level behavior is concerned. If you have a ridiculous amount of even smaller files that you want to store as objects, consider ONTAP S3.</p>
 
 <p>For larger objects (&gt;1 MB, for example), you can use StorageGRID ILM to save them with Erasure Coding (2+1, 4+1, 6+3, etc.).</p>
 
@@ -303,7 +305,22 @@ realtime <span class="o">=</span>none                   <span class="nv">extsz</
 
 <p>Most enterprises have a mix of workloads and object sizes, and StorageGRID - especially appliances with flash storage - will work fine with small file workloads.</p>
 
-<p>ONTAP S3 performs very well with small and very tiny files, whether they're on NFS or S3.</p>
+<p>ONTAP S3 performs very well with small and tiny files, whether they're on NFS or S3. For S3, due to the more significant protocol overheads, sub-32KB objects accessed over S3 will be a lot slower compared to NFS.</p>
+
+<h2 id="where-the-slowness-is-coming-from">Where the slowness is coming from</h2>
+
+<p>It's nothing to do with filesystem block size for object contents. With NL-SAS appliances, of course those are expected to perform poorly with tiny IO because to get to non-cached data on NL-SAS storage, disk has to spin, and NL-SAS doesn't even spin fast.</p>
+
+<p>But that's not where the slowness is coming from:</p>
+
+<ul>
+  <li>There's a replicated metadata database that needs to make at least two copies</li>
+  <li>There are HTTPS protocol overheads plus TLS if your connection is encrypted (most are)</li>
+  <li>There's network-level back-and-forth for everything</li>
+</ul>
+
+<p>Both of these slow down writes and reads with tiny objects even if you use an SSD appliance. Filesystem block size rarely matters in StorageGRID performance.</p>
+
 
         
       </section>
@@ -430,7 +447,7 @@ realtime <span class="o">=</span>none                   <span class="nv">extsz</
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -478,7 +495,7 @@ realtime <span class="o">=</span>none                   <span class="nv">extsz</
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
