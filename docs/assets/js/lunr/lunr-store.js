@@ -2579,7 +2579,7 @@ var store = [{
         "url": "/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html",
         "teaser": null
       },{
-        "title": "Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store",
+        "title": "Tier WEKA NeuralMesh to NetApp StorageGRID S3 Object Store",
         "excerpt":"Introduction Just in case anyone wondered: yes, you can use WEKA NeuralMesh with NetApp StorageGRID. To be exact, “to use with” means this: As WEKA explains: Users seeking to balance performance and cost must consider a tiered data management system, with the assurance that the WEKA system features control the...","categories": ["storage","ai","s3"],
         "tags": ["tiering","storagegrid","weka"],
         "url": "/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html",
@@ -2593,7 +2593,7 @@ var store = [{
       },{
         "title": "Backup and restore modern Kubernetes applications without CSI snapshots",
         "excerpt":"Introduction After writing the previous post on Kasten 9.0, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier even as they improved pre-backup hooks. I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. “Logical”...","categories": ["kubernetes","storage","s3"],
-        "tags": ["veeam","kasten","backup","restore","csi","snapshots"],
+        "tags": ["veeam","kasten","backup","restore","csi","snapshots","elasticsearch"],
         "url": "/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html",
         "teaser": null
       },{

@@ -235,7 +235,7 @@
 
 <p>After writing the previous <a href="/2026/07/29/kasten-k10-90.html">post on Kasten 9.0</a>, I was puzzled that backup workflows without CSI snapshots are still neglected and not made easier even as they improved pre-backup hooks.</p>
 
-<p>I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. "Logical" backups can do that, but they're not recommended by Kasten except in trivial cases:</p>
+<p>I thought the expanded Blueprint Hooks were meant to ease backup without CSI snapshots, but that was wrong. "Logical" backups can do that, but Kasten doesn't recommended them except in trivial cases:</p>
 
 <blockquote>
   <p>As a guideline, logical blueprints remain practical for databases up to approximately 50 GiB.</p>
@@ -274,7 +274,7 @@
 
 <p>Or, you could take application "snapshots" (full or incremental asynchronous dumps) to NL-SAS-backed S3 object store and use Kasten blueprints to backup that data. At current prices, 20TB of S3 capacity may be cheaper than 3TB of SSD capacity, so even full data dumps to S3 wouldn't be more expensive.</p>
 
-<p>Kasten does make a point regarding application support, where they note some applications don't even support CSI snapshots. I would say most of what we'd run on E-Series (databases, message brokers, etc.) <strong>does not support CSI snapshots</strong> at all or not well enough to be preferred over S3, so the right <strong>order</strong> is to look at whether S3 makes sense and not the backup size.</p>
+<p>Kasten does make a point regarding application support, where they note some applications don't even support CSI snapshots. I would say most of what we'd run on E-Series (databases, message brokers, etc.) <strong>does not support CSI snapshots</strong> at all or not well enough to be preferred over S3, so the right <strong>order</strong> is to look at whether snapshotless backup S3 makes more sense and not the backup size.</p>
 
 <h3 id="how-to-do-it">How to do it</h3>
 
@@ -377,13 +377,28 @@
 
 <p>On-premises S3 object stores give you practically unlimited capacity, unlimited sequential performance and work nicely across physical locations. That's why everyone uses them for backup data stores, including Kasten. So, why not avoid CSI snapshots and use S3 in situations where that is clearly better?</p>
 
-<p>And it's not even a matter choice.</p>
+<p>And it's not even a matter of choice.</p>
 
 <p>Most applications we'd want to run on E-Series-backed Kubernetes do not even support CSI snapshots. Feel free to check <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html#qdrant-backups">Qdrant</a>, Milvus (let me save you time, <a href="https://milvus.io/docs/milvus_backup_overview.md">CSI backup is not supported</a>), <a href="/2026/04/21/splunk-kubernetes-operator-netapp-eseries-santricity.html">Splunk</a> and what-have-you.</p>
 
-<p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store (that is to say, not to a MinIO pod running in Elasticsearch namespace, like home enthusiasts do).</p>
+<p>Even when an application supports CSI snapshot-assisted backup and S3 buckets, you're likely to be better off backing them up to an external on-premises Object Store (that is to say, not to a MinIO pod running in Elasticsearch namespace, like "home enthusiasts" do).</p>
 
-<p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe that, for modern application, backups CSI snapshots are done. It's over. You want to replicate to a fully redundant replica and from there, backup to S3 (see the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean - how seamlessly failover and failback work). As goes Postgres, so goes the rest of analytics stacks and <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">data lakehouses on Kubernetes</a>.</p>
+<p><a href="/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html#e-series-csi-and-barman-cloud-cnpg-i-backup">PostgreSQL</a> is a good example. As I described in that article, rotating short-lived snapshots for the sake of having a snapshot may be a good idea, but I believe that, for modern applications on Kubernetes, backups that use CSI snapshots must have entered irreversible decline.</p>
+
+<p>There are interesting, but fundamentally flawed arguments in favor of CSI snapshots:</p>
+
+<ul>
+  <li>Backup volumes are incremental and therefore backup is always manageable, regardless of size</li>
+  <li>Data restore can be done in seconds, which one can never achieve with backup-to-S3</li>
+</ul>
+
+<p>These used to be almost valid 10 years ago, but both of them fall apart these days.</p>
+
+<p>With everything interconnected, data loss in one place may require a lot of recovery actions elsewhere. Convenience can't justify data loss but, unless you replicate or take snapshot once every second, non-insignificant data loss is inevitable.</p>
+
+<p>We want to replicate application data to a fully redundant replica and from there <em>continuously</em> backup to S3 using application-native API (see the <a href="/2026/05/01/cloud-native-postgres-kuberntes-netapp-eseries-csi.html#fail-over-and-fail-back">first CNPG post</a> to see what I mean, how seamlessly failover and failback work in that setup). Not only do we have close to zero data loss, but switch-over to replica is also faster than recovery from a snapshot. And even if we need to use a backup, that can be any Point-in-Time, not just the times when snapshots were taken.</p>
+
+<p>And, as goes Postgres, so goes the rest of analytics and <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">data lakehouses on Kubernetes</a> stacks.</p>
 
 <h2 id="appendix-a-logical-blueprint-for-snapshotless-elasticsearch-br">Appendix A: logical blueprint for snapshotless Elasticsearch B&amp;R</h2>
 
@@ -586,6 +601,8 @@ kanister-kanister-operator-d66f876dd-9trq6   1/1     Running   0          3h53m
     
       <a href="/tags/csi" class="page__taxonomy-item p-category" rel="tag">csi</a><span class="sep">, </span>
     
+      <a href="/tags/elasticsearch" class="page__taxonomy-item p-category" rel="tag">elasticsearch</a><span class="sep">, </span>
+    
       <a href="/tags/kasten" class="page__taxonomy-item p-category" rel="tag">kasten</a><span class="sep">, </span>
     
       <a href="/tags/restore" class="page__taxonomy-item p-category" rel="tag">restore</a><span class="sep">, </span>
@@ -721,7 +738,7 @@ kanister-kanister-operator-d66f876dd-9trq6   1/1     Running   0          3h53m
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
-        <a href="/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html" rel="permalink">Tier WEKA NeuralMesh data to NetApp StorageGRID S3 Object Store
+        <a href="/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html" rel="permalink">Tier WEKA NeuralMesh to NetApp StorageGRID S3 Object Store
 </a>
       
     </h2>
