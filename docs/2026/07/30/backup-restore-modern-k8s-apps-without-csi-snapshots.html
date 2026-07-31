@@ -286,9 +286,11 @@
 
 <p>Incremental Elasticsearch backup is a logical backup blueprint that doesn't require CSI snapshots. It dumps data to a landing zone on S3, after which it's "exported" to Kasten backup repository. That is exactly what I wanted.</p>
 
-<p>Funny thing is: Kasten's Web site provides a Kanister blueprint for Elasticsearch, but not the one that uses S3 (that one isn't listed).</p>
+<p>There's another variant of this where you backup directly to Kasten S3 bucket, which is more efficient because it avoids an extra GET and PUT for backup data, but I don't like that idea. Moving several extra TB per day is trivial in on-premises S3 environments and having applications direct access Kasten S3 repository has its risks.</p>
 
-<p>I found <a href="https://github.com/kanisterio/blueprints/tree/main/elasticsearch-incremental">the blueprint</a> in Kanister's blueprints on Github. This is the backup task:</p>
+<p>Kasten's Web site provides a Kanister blueprint for Elasticsearch, but not the one that uses S3 (that one isn't listed).</p>
+
+<p>I found <a href="https://github.com/kanisterio/blueprints/tree/main/elasticsearch-incremental">the S3-based blueprint</a> in Kanister's blueprints on Github. This is the backup task (see the entire blueprint on Github):</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">func</span><span class="pi">:</span> <span class="s">KubeTask</span>
     <span class="s">name</span><span class="err">:</span> <span class="s">snapshotElastic</span>     
@@ -353,13 +355,13 @@
         <span class="s">fi</span>
 </code></pre></div></div>
 
-<p>If you try this at home (or office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series <a href="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">here</a>). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.</p>
+<p>If you try this at home (or in office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series <a href="https://scaleoutsean.github.io/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html">here</a>). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.</p>
 
 <p>NetApp StorageGRID 12 is known to work with both Elasticsearch 8 and 9 snapshots to S3. I blogged about StorageGRID with Elasticsearch ILM <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">here</a>, by the way.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>As a side note, I have two CSI drivers with snapshot support - one for E-Series and another for SolidFire.</p>
+<p>As a side note, I have two CSI drivers with CSI snapshot support - one for E-Series and another for SolidFire.</p>
 <ul>
   <li>IBM Block CSI with SANtricity Patch</li>
   <li>SolidFire CSI</li>
@@ -367,7 +369,7 @@
 
 <p>But that's not a sufficient reason to use them if there's a better way.</p>
 
-<p>On-premises S3 object stores give you practically unlimited capacity, unlimited sequential performance and work nicely across physical locations. That's why everyone uses them for backup data stores, including Kasten. So, why not avoid CSI snapshots and use S3 when that is clearly better?</p>
+<p>On-premises S3 object stores give you practically unlimited capacity, unlimited sequential performance and work nicely across physical locations. That's why everyone uses them for backup data stores, including Kasten. So, why not avoid CSI snapshots and use S3 in situations where that is clearly better?</p>
 
 <p>And it's not even a matter choice.</p>
 

@@ -330,10 +330,10 @@ image  regular    102.39 MB  0 B                            0 B                 
 
 <p>I don't know whether this is possible, but it should be (assuming your network between DCs is fast and redundant enough).</p>
 
-<p>From the StorageGRID perspective, this is not a new pattern. Splunk SmartStore with StorageGRID, for example, relies on the same layout and features. In order for WEKA in DC1 to retain access to StorageGRID, it would have to be able to automatically switch to the SG1200 pair in DC2:</p>
+<p>From a StorageGRID perspective, this is not a new pattern. Splunk SmartStore with StorageGRID, for example, relies on the same grid layout and features. In order for WEKA in DC1 to retain access to StorageGRID, it would have to be able to automatically switch to the SG1200 pair in DC2:</p>
 <ul>
   <li>Normally, there's a global load balancer (for more on that, see the StorageGRID solutions) sitting between S3 clients (WEKA) and local S3 load balancers (such as SG1200). This approach is fully automated.</li>
-  <li>Poor man's object store switchover to the other site: without global load balancers, you can change DNS for Object Store FQDN that WEKA uses to "local" load balancer pair on the other site. Make sure the TLS certificates, routes, MTUs and more all work as expected. There's just one StorageGRID cluster so S3 access will remain unaffected and S3 keys don't need to change. The way this works is WEKA uses one back-end, say sg.example.org.com, but each site needs to get "local" SG1200 IP addresses from its DNS servers and because TLS terminates on those SG1 boxes, TLS certificates need to be valid across. If StorageGRID in DC1 fails, DC1's DNS records need to be redirected to SG1 nodes in DC2, and that change has to be reversed on fail-back. WEKA would need to be able to use different DNS settings in each site</li>
+  <li>Poor man's object store switchover to the other site: without global load balancers, you can change DNS for Object Store FQDN that WEKA uses to "local" load balancer pair on the other site. Make sure the TLS certificates, routes, MTUs and more all work as expected. There's just one StorageGRID cluster so S3 access will remain unaffected and S3 keys don't need to change. The way this works is WEKA uses one back-end, say sg.example.org.com, but each site needs to get "local" SG1200 IP addresses from its DNS servers and because TLS terminates on those SG1 boxes, TLS certificates need to be valid across. If StorageGRID in DC1 fails, DC1's DNS records need to be redirected to SG1 nodes in DC2, and that change has to be reversed on fail-back. WEKA would need to be able to use different DNS settings in each site. Stretched StorageGRID <a href="https://docs.netapp.com/us-en/storagegrid-121/maintain/modifying-dns-configuration-for-single-grid-node.html">supports</a> different DNS server at different sites</li>
   <li>You can also assume an entire site (DC) is a failure domain, in which case you wouldn't need to make WEKA from one DC be able to switch to StorageGRID load balancers in the other DC, but considering the cost of GPUs, you'd probably want to be able to keep those GPUs and WEKA running in all DCs if at all possible</li>
 </ul>
 
@@ -342,7 +342,7 @@ image  regular    102.39 MB  0 B                            0 B                 
 <p>The ILM rule in the image says "1 copy per site", but:</p>
 <ul>
   <li>it doesn't have to be configured that way, and</li>
-  <li>that doesn't mean the copy isn't erasure-coded, and</li>
+  <li>that doesn't mean each copy is or isn't erasure-coded, and</li>
   <li>either way, the objective is to have a DR copy if you need it. Asymmetric ILM could be created as well (1 Copy per DC; EC 4+1 in DC1, 1 Copy in DC2)</li>
 </ul>
 
