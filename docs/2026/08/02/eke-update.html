@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#eke-v02">Eke v0.2</a></li><li><a href="#the-rst-stuff">The RST stuff</a></li><li><a href="#using-beegfs-rst-with-netapp-storagegrid-121">Using BeeGFS RST with NetApp StorageGRID 12.1</a></li><li><a href="#benefits-of-rsts">Benefits of RSTs</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#eke-v02">Eke v0.2</a></li><li><a href="#the-rst-stuff">The RST stuff</a></li><li><a href="#using-beegfs-rst-with-netapp-storagegrid-121">Using BeeGFS RST with NetApp StorageGRID 12.1</a></li><li><a href="#benefits-of-using-rsts">Benefits of using RSTs</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -320,7 +320,19 @@ sqlite&gt; <span class="k">select</span> <span class="k">*</span> from <span cla
 
 <p><img src="/assets/images/eke-04-beegfs-rst-pull-hydrate.png" alt="Stub rehydrated from RST" /></p>
 
-<h2 id="benefits-of-rsts">Benefits of RSTs</h2>
+<p>On StorageGRID, there isn't much one has to do.</p>
+
+<p>Create a bucket, give the BeeGFS administrator credentials to it. Maybe create a 2-Copy ILM rule for objects smaller than 1MiB. In this case, the <code class="language-plaintext highlighter-rouge">beegfs</code> bucket corresponds to my filesystem name, and <code class="language-plaintext highlighter-rouge">tiered-stuff</code> is where the files are coming from (<code class="language-plaintext highlighter-rouge">/mnt/beegfs/tiered-stuff/</code>).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>aws s3 <span class="nt">--profile</span> sg <span class="nb">ls </span>s3://beegfs/tiered-stuff/
+2026-08-01 11:19:49   15077496 old.file
+2026-08-01 14:28:29   15077506 stub.file
+2026-08-01 13:20:23       7254 test.py
+</code></pre></div></div>
+
+<h2 id="benefits-of-using-rsts">Benefits of using RSTs</h2>
+
+<p>RSTs give you full control over data movement, although they also require more work and monitoring, as highlighted in the BeeGFS 8.4.0 post.</p>
 
 <p>At scale, you'll probably want a dedicated "mover" node or pair of such nodes for RST.</p>
 
@@ -329,6 +341,10 @@ sqlite&gt; <span class="k">select</span> <span class="k">*</span> from <span cla
 <p>With just 2 "mover" nodes, large files and several StorageGRID appliances you may be able to get more than 10 GB/s in tiering performance, which is very cost effective compared to keeping files on all-flash BeeGFS storage because it can offloads data to lower-cost NL-SAS.</p>
 
 <p>Compared to in-filesystem tiering with pools, the main difference is NL-SAS wouldn't be part of your BeeGFS cluster, so your BeeGFS cluster could be just large enough for Hot Tier plus some buffer for RST work-in-progress. You could have both, of course: in-filesystem tiering with pools for Tiers 1 (NVMe) and 2 (NL-SAS), and RST (StorageGRID) as Tier 3.</p>
+
+<p>If you want to minimize administrator workload, in-filesystem tiering seems better.</p>
+
+<p>For more control in predictable environments, RSTs may be better because the ROI in extra effort should be good.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
