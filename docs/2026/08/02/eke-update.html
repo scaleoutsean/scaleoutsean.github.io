@@ -1,0 +1,703 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target | Acting Technologist</title>
+<meta name="description" content="Eke v0.2 - upstream is breaking, downstream is fixing, and RST stuff with NetApp StorageGRID">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/08/02/eke-update.html">
+
+
+  <meta property="og:description" content="Eke v0.2 - upstream is breaking, downstream is fixing, and RST stuff with NetApp StorageGRID">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target">
+  <meta name="twitter:description" content="Eke v0.2 - upstream is breaking, downstream is fixing, and RST stuff with NetApp StorageGRID">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/02/eke-update.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-08-02T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/08/02/eke-update.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target">
+    <meta itemprop="description" content="Eke v0.2 - upstream is breaking, downstream is fixing, and RST stuff with NetApp StorageGRID">
+    <meta itemprop="datePublished" content="2026-08-02T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/08/02/eke-update.html" itemprop="url">Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-02T00:00:00+08:00">2026-08-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#eke-v02">Eke v0.2</a></li><li><a href="#the-rst-stuff">The RST stuff</a></li><li><a href="#using-beegfs-rst-with-netapp-storagegrid-121">Using BeeGFS RST with NetApp StorageGRID 12.1</a></li><li><a href="#benefits-of-rsts">Benefits of RSTs</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="eke-v02">Eke v0.2</h2>
+
+<p>Recently <a href="/2026/07/18/beegfs-84.html">BeeGFS 8.4.0 came out</a> and made incompatible changes to its Hive Index barely a week after I built <a href="/2026/07/05/eke-smarter-workflows-for-beegfs-netapp-eseries.html">Eke</a>.</p>
+
+<p>I'm not sure if I'll update Eke again if they continue breaking stuff in minor updates, but let's assume this was an isolated incident in which ThinkParQ ruined my Saturday afternoon.</p>
+
+<p>Changes in Eke v0.2:</p>
+
+<ul>
+  <li>Fixed what ThinkParQ broke for users in 8.4.0</li>
+  <li>Renamed <code class="language-plaintext highlighter-rouge">hive-import</code> to <code class="language-plaintext highlighter-rouge">index-import</code> as they renamed their index feature (!)</li>
+</ul>
+
+<h2 id="the-rst-stuff">The RST stuff</h2>
+
+<p>As I mentioned in the Eke post lined at the top, Eke won't touch Remote Storage Targets. The way they make breaking changes to CLI adds another reason to that list.</p>
+
+<p>Where RST <em>is</em> related is the new BeeGFS Index has RST info included.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># sqlite3 /mnt/index/beegfs/tiered-stuff/db.db </span>
+SQLite version 3.45.1 2024-01-30 16:01:20
+Enter <span class="s2">".help"</span> <span class="k">for </span>usage hints.
+sqlite&gt; <span class="k">select</span> <span class="k">*</span> from <span class="s1">'beegfs_entries'</span> where name <span class="o">==</span> <span class="s1">'test.py'</span><span class="p">;</span>
+1|test.py|f|1320290470808312066|1|0-6A6DD429-1|6-6A6DFD96-1|2|1|1|524288|4|4|1|1|0|0-6A6DD429-1|0|1|0|300|0|1
+sqlite&gt; <span class="k">select</span> <span class="k">*</span> from <span class="s1">'beegfs_entries'</span> where name <span class="o">==</span> <span class="s1">'stub.file'</span><span class="p">;</span>
+2|stub.file|f|12811668050040796357|1|0-6A6DD429-1|0-6A6DD5D0-1|2|1|1|524288|4|4|1|1|0|0-6A6DD429-1|0|0|0|0|0|0
+</code></pre></div></div>
+
+<p>As you can see, the end of <code class="language-plaintext highlighter-rouge">test.py</code> query looks different from <code class="language-plaintext highlighter-rouge">stub.file</code>. In the case of <code class="language-plaintext highlighter-rouge">test.py</code>, that <code class="language-plaintext highlighter-rouge">300</code> is  seconds before cool-down and the last <code class="language-plaintext highlighter-rouge">1</code> is the first RST (I have only one, StorageGRID).</p>
+
+<p>This is the entries table now in 8.4.0:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sqlite&gt; PRAGMA table_info<span class="o">(</span>beegfs_entries<span class="o">)</span><span class="p">;</span>
+0|id|INTEGER|0||1
+1|name|TEXT|1||0
+2|type|TEXT|1||0
+3|inode|TEXT|1||0
+4|owner_id|INTEGER|0||0
+5|parent_entry_id|TEXT|0||0
+6|entry_id|TEXT|0||0
+7|entry_type|INTEGER|0||0
+8|feature_flags|INTEGER|0||0
+9|stripe_pattern_type|INTEGER|0||0
+10|stripe_chunk_size|INTEGER|0||0
+11|stripe_num_targets|INTEGER|0||0
+12|stripe_default_num_targets|INTEGER|0||0
+13|storage_pool_id|INTEGER|0||0
+14|path_info_flags|INTEGER|0||0
+15|orig_parent_uid|INTEGER|0||0
+16|orig_parent_entry_id|TEXT|0||0
+17|file_data_state|INTEGER|0||0
+18|rst_major_version|INTEGER|0||0
+19|rst_minor_version|INTEGER|0||0
+20|rst_cool_down_period|INTEGER|0||0
+21|rst_file_policies|INTEGER|0||0
+22|num_rst_ids|INTEGER|0||0
+</code></pre></div></div>
+
+<h2 id="using-beegfs-rst-with-netapp-storagegrid-121">Using BeeGFS RST with NetApp StorageGRID 12.1</h2>
+
+<p>The main two actions are push and pull, which work as one might imagine. There's more, though, and some of these details can be complicated. See for yourself in <a href="https://doc.beegfs.io/8.4/advanced_topics/remote_storage_targets.html">TFM</a>.</p>
+
+<p>Related to Eke, what matters is that an object can be be just a stub: tiered off to StorageGRID, with on-disk size of just several bytes. To be precise, <code class="language-plaintext highlighter-rouge">31</code> bytes (see (7) in screenshot below) in this case.</p>
+
+<p><img src="/assets/images/eke-03-beegfs-rst-stub.png" alt="RST stub" /></p>
+
+<p>I mention this because if you're aiming to move this file to another storage pool with Eke, that could be a waste of IO because there's barely anything on disk.</p>
+
+<p>On the other hand, if you do pull (rehydrate) this file from RST, then you may want to have the file rehydrated to a lower-cost pool. Or maybe not. Because in some cases you'll just want to rehydrate, and in other cases you'll want to move to a different pool.</p>
+
+<p>As a consequence:</p>
+
+<ul>
+  <li>In Eke queries, consider this and maybe add extra to your SQL queries to include or exclude files based on RST field values</li>
+  <li>Sometimes, using RST to push and "stub" a file may be more desirable than tiering it to a slower pool</li>
+  <li>Push+stub followed by Eke pool relocation may be cheaper than moving it to a lower cost pool and then pushing to an RST to create a stub and effectively remove TBs of data right after copying them for migration</li>
+</ul>
+
+<p>That's why RST information in BeeGFS index is relevant to Eke. Eke still ignores those entries, but you don't have to ignore them.</p>
+
+<p>Some non-Eke comments:</p>
+
+<ul>
+  <li>If you want to rehydrate, it's easy. Although there are several commands, it's basically just one to get the file back. Wildcards work, too</li>
+  <li>The docs don't say if cross-cluster push/pull is possible, but if it is, then RST becomes convenient for hybrid cloud workloads. Push from on-premises, pull in the cloud, compute, push results to RST, then pull them from on-premises</li>
+</ul>
+
+<p><img src="/assets/images/eke-04-beegfs-rst-pull-hydrate.png" alt="Stub rehydrated from RST" /></p>
+
+<h2 id="benefits-of-rsts">Benefits of RSTs</h2>
+
+<p>At scale, you'll probably want a dedicated "mover" node or pair of such nodes for RST.</p>
+
+<p>If you use IB in your BeeGFS cluster, those nodes would need Ethernet adapters to connect to StorageGRID.</p>
+
+<p>With just 2 "mover" nodes, large files and several StorageGRID appliances you may be able to get more than 10 GB/s in tiering performance, which is very cost effective compared to keeping files on all-flash BeeGFS storage because it can offloads data to lower-cost NL-SAS.</p>
+
+<p>Compared to in-filesystem tiering with pools, the main difference is NL-SAS wouldn't be part of your BeeGFS cluster, so your BeeGFS cluster could be just large enough for Hot Tier plus some buffer for RST push/pull work-in-progress. You could have both, of course: in-filesystem tiering with pools for Tiers 1 (NVMe) and 2 (NL-SAS), and RST (StorageGRID) as Tier 3.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Eke v0.2 may be marginally more useful with the RST information in BeeGFS index.</p>
+
+<p>Some "tiering" solutions offload without stubs and work based on "set-and-forget" approach. A downside is less control.</p>
+
+<p>RST gives administrator full control. If you know what you're doing, you may be better off with it.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/pipeline" class="page__taxonomy-item p-category" rel="tag">pipeline</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/eseries" class="page__taxonomy-item p-category" rel="tag">eseries</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-08-02T00:00:00+08:00">2026-08-02 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Eke+v0.2+and+NetApp+StorageGRID+as+BeeGFS+Remote+Storage+Target%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F02%2Feke-update.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/08/02/eke-update.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html" class="pagination--pager" title="Backup and restore modern Kubernetes applications without CSI snapshots">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html" rel="permalink">Backup and restore modern Kubernetes applications without CSI snapshots
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-07-30T00:00:00+08:00">2026-07-30 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">IBM Block CSI with SANtricity patch has CSI snapshots but I've been advocating against CSI snapshots because you probably can do better with backup to S3
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/07/29/kasten-k10-90.html" rel="permalink">What's new in Kasten K10 9.0
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-07-29T00:00:00+08:00">2026-07-29 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">What's new in Kasten K10 9.0
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html" rel="permalink">Tier WEKA NeuralMesh to NetApp StorageGRID S3 Object Store
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-07-25T00:00:00+08:00">2026-07-25 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Get the benefits of both WEKA and StorageGRID by using storage tiering on WEKA
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html" rel="permalink">What's new in NetApp StorageGRID 12.1 and <code class="language-plaintext highlighter-rouge">sg-cosi</code> 0.5.4
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-07-25T00:00:00+08:00">2026-07-25 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Highlights of interesting features from the new StorageGRID 12.1 and sg-cosi 0.5.4
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

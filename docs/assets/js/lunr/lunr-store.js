@@ -2597,6 +2597,12 @@ var store = [{
         "url": "/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html",
         "teaser": null
       },{
+        "title": "Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target",
+        "excerpt":"Eke v0.2 Recently BeeGFS 8.4.0 came out and made incompatible changes to its Hive Index barely a week after I built Eke. I’m not sure if I’ll update Eke again if they continue breaking stuff in minor updates, but let’s assume this was an isolated incident in which ThinkParQ ruined...","categories": ["storage","analytics","eseries","netapp"],
+        "tags": ["beegfs","s3","storagegrid","pipeline"],
+        "url": "/2026/08/02/eke-update.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2610,7 +2616,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Backup and restore modern Kubernetes applications without CSI snapshots 2026-07-30 00:00 12 minute read IBM Block CSI with SANtricity patch has CSI snapshots but I’ve been advocating against CSI snapshots because you probably can do better with backup to S3 What’s new in Kasten K10 9.0 2026-07-29 00:00 3 minute...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 3 minute read Eke v0.2 - upstream is breaking, downstream is fixing, and RST stuff with NetApp StorageGRID Backup and restore modern Kubernetes applications without CSI snapshots 2026-07-30 00:00 12 minute read IBM Block CSI with SANtricity patch...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
