@@ -2599,7 +2599,7 @@ var store = [{
       },{
         "title": "Object stores solved the problem of data sharing in hybrid cloud years ago",
         "excerpt":"Introduction For over a decade now, I’ve been hearing about “challenges” of data sharing in hybrid cloud environments. Yes, it used to be difficult, but that’s no longer the case. Why are we still hearing about that? That problem has been mostly solved. In the 2010s, file sharing was a...","categories": ["storage","analytics","ai","netapp"],
-        "tags": ["onelake","storagegrid","s3","sharing","opensharing"],
+        "tags": ["onelake","storagegrid","s3","sharing","opensharing","deltasharing","shortcut"],
         "url": "/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html",
         "teaser": null
       },{
@@ -4258,6 +4258,12 @@ var store = [{
   },{
     "title": "sharing",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/sharing/"
+  },{
+    "title": "deltasharing",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/deltasharing/"
+  },{
+    "title": "shortcut",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/shortcut/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
