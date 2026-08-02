@@ -2597,6 +2597,12 @@ var store = [{
         "url": "/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html",
         "teaser": null
       },{
+        "title": "Object stores solved the problem of data sharing in hybrid cloud years ago",
+        "excerpt":"Introduction For over a decade now, I’ve been hearing about “challenges” of data sharing in hybrid cloud environments. Yes, it used to be difficult, but that’s no longer the case. Why are we still hearing about that? That problem has been mostly solved. In the 2010s, file sharing was a...","categories": ["storage","analytics","ai","netapp"],
+        "tags": ["onelake","storagegrid","s3","sharing","opensharing"],
+        "url": "/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html",
+        "teaser": null
+      },{
         "title": "Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target",
         "excerpt":"Eke v0.2 Recently BeeGFS 8.4.0 came out and made incompatible changes to its Hive Index barely a week after I built Eke. I’m not sure if I’ll update Eke again if they continue breaking stuff in minor updates, but let’s assume this was an isolated incident in which ThinkParQ ruined...","categories": ["storage","analytics","eseries","netapp"],
         "tags": ["beegfs","s3","storagegrid","pipeline"],
@@ -2616,7 +2622,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 4 minute read Eke v0.2 - upstream is breaking, downstream is fixing. Also about RST stuff with NetApp StorageGRID Backup and restore modern Kubernetes applications without CSI snapshots 2026-07-30 00:00 12 minute read IBM Block CSI with SANtricity...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 4 minute read Eke v0.2 - upstream is breaking, downstream is fixing. Also about the RST stuff with NetApp StorageGRID Object stores solved the problem of data sharing in hybrid cloud years ago 2026-08-02 00:00 5 minute read...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4247,6 +4253,12 @@ var store = [{
     "title": "tables",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/tables/"
   },{
+    "title": "onelake",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/onelake/"
+  },{
+    "title": "sharing",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sharing/"
+  },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
   },{
@@ -4507,4 +4519,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page62/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page63/"
   }]
