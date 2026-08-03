@@ -2622,7 +2622,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 4 minute read Eke v0.2 - upstream is breaking, downstream is fixing. Also about the RST stuff with NetApp StorageGRID Object stores solved the problem of data sharing in hybrid cloud years ago 2026-08-02 00:00 6 minute read...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 4 minute read Eke v0.2 - upstream is breaking, downstream is fixing. Also about the RST stuff with NetApp StorageGRID Object stores solved the problem of data sharing in hybrid cloud years ago 2026-08-02 00:00 7 minute read...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
