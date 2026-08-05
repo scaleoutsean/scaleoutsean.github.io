@@ -2615,6 +2615,12 @@ var store = [{
         "url": "/2026/08/05/automq-with-storagegrid.html",
         "teaser": null
       },{
+        "title": "Kafka 4 with NetApp E-Series",
+        "excerpt":"Introduction I already blogged about storage layout, capacity and performance sizing for Kafka from an E-Series perspective, and there haven’t been many fundamental changes in Kafka as far as storage is concerned. There are proprietary implementations of “diskless” Kafka (see post on AutoMQ, which isn’t just a new storage engine,...","categories": ["netapp","storage","analytics"],
+        "tags": ["analytics","e-series","message","nats","kafka"],
+        "url": "/2026/08/05/kafka-on-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2628,7 +2634,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Containerized AutoMQ with NetApp StorageGRID 2026-08-05 00:00 2 minute read How to run Containerized AutoMQ with StorageGRID 12 Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00 4 minute read Eke v0.2 - upstream is breaking, downstream is fixing. Also about the RST stuff with NetApp StorageGRID...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kafka 4 with NetApp E-Series 2026-08-05 00:00 8 minute read Tips and thoughts about using NetApp E-Series with Kafka 4 Containerized AutoMQ with NetApp StorageGRID 2026-08-05 00:00 2 minute read How to run Containerized AutoMQ with StorageGRID 12 Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
