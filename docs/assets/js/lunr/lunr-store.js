@@ -2634,7 +2634,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kafka 4 with NetApp E-Series 2026-08-05 00:00 11 minute read Tips and thoughts about using NetApp E-Series with Kafka 4 Containerized AutoMQ with NetApp StorageGRID 2026-08-05 00:00 2 minute read How to run Containerized AutoMQ with StorageGRID 12 Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kafka 4 with NetApp E-Series 2026-08-05 00:00 12 minute read Tips and thoughts about using NetApp E-Series with Kafka 4 Containerized AutoMQ with NetApp StorageGRID 2026-08-05 00:00 2 minute read How to run Containerized AutoMQ with StorageGRID 12 Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target 2026-08-02 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

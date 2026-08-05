@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -508,7 +508,9 @@
 
 <p><img src="/assets/images/kafka-4-eseries-04-os-flushing.png" alt="Storage view of OS flushing" /></p>
 
-<p>One producer sending 1KiB messages to one broker shows steady flow on producer side, but as we can see from the above image, while Kafka service traffic seems steady, that's not at all how disk IO behaves. Latency seen here is service latency, not disk latency.</p>
+<p>Where there's no compression, writes are constant enough to cause constant IO flushing, but in tests with compression enabled, data written to disk become a fraction, so OS takes longer to flush and does it in small chunks.</p>
+
+<p><strong>One producer sending 1KiB messages to one broker</strong> shows steady flow on producer side, but as we can see from the above image, while Kafka service traffic seems steady, that's not at all how disk IO behaves. Latency seen here is Kafka service latency, not I/O latency.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">${</span><span class="nv">KAFKA_BIN</span><span class="k">}</span>/kafka-producer-perf-test.sh <span class="se">\</span>
   <span class="nt">--topic</span> perf-test <span class="se">\</span>
@@ -525,21 +527,38 @@
     compression.type<span class="o">=</span>lz4
 </code></pre></div></div>
 
+<p>Maximum service latency is well below 1ms, which is expected for NVMe arrays with a light workload.</p>
+
 <p><img src="/assets/images/kafka-4-eseries-05-1p-1b.png" alt="1 producer vs 1 broker" /></p>
 
-<p>One consumer fetching messages from one broker. This is a much easier workload (100% mostly sequential read) and effect from OS cache was clear.</p>
+<p>We could get more action by using larger messages, for example, but I used larger (~8KiB) messages in compression tests, so I wanted to examine smaller message sizes as well rather than chase higher I/O numbers.</p>
+
+<p><strong>One consumer fetching messages from one broke:</strong> this is a much easier workload (100% mostly sequential read) and the effect of OS cache was clear as not much I/O was seen in array's performance monitor. I would need a lot more data to remove the effect of cache and wasn't going to spend more hours on this than is required to get basic insights.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="k">${</span><span class="nv">KAFKA_BIN</span><span class="k">}</span>/kafka-consumer-perf-test.sh <span class="se">\</span>
   <span class="nt">--bootstrap-server</span> localhost:9092 <span class="se">\</span>
   <span class="nt">--topic</span> perf-test <span class="se">\</span>
   <span class="nt">--num-records</span> 5000000 <span class="se">\</span>
   <span class="nt">--fetch-size</span> 1048576 <span class="se">\</span>
-  <span class="nt">--command-config</span> consumer-perf.properties <span class="se">\</span>
+  <span class="nt">--command-config</span> consumer.properties <span class="se">\</span>
   <span class="nt">--show-detailed-stats</span> <span class="se">\</span>
   <span class="nt">--reporting-interval</span> 1000
 </code></pre></div></div>
 
-<p><img src="/assets/kafka-4-eseries-06-1c-1b.png" alt="1 consumer vs 1 broker" /></p>
+<p>consumer.properties:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fetch.min.bytes<span class="o">=</span>65536
+fetch.max.wait.ms<span class="o">=</span>500
+max.partition.fetch.bytes<span class="o">=</span>1048576
+fetch.max.bytes<span class="o">=</span>52428800
+max.poll.records<span class="o">=</span>500
+receive.buffer.bytes<span class="o">=</span>1048576
+max.poll.interval.ms<span class="o">=</span>300000
+</code></pre></div></div>
+
+<p>We can see read I/O is steady and close 0.5 GB/s.</p>
+
+<p><img src="/assets/images/kafka-4-eseries-06-1c-1b.png" alt="1 consumer vs 1 broker" /></p>
 
 <p>It doesn't take long to realize we can't conclude much about storage with this configuration. Not only is storage barely used, but even in this case there are several key options which can be tuned to skew the results in any direction we want.</p>
 
