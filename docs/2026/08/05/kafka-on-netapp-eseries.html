@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -412,6 +412,53 @@
 <p>We should check topic-message payload for each major topic and evaluate clients' performance as well. This is very generic, but since we're focused on storage savings, in this experiment zstd saved most, yay!</p>
 
 <p><img src="/assets/images/kafka-4-eseries-01-compression-comparison.png" alt="Compressing efficiency comparison" /></p>
+
+<h2 id="performance-sizing">Performance sizing</h2>
+
+<p>In the tests above, each run consisted of 20,000 JSON messages (less than 8KiB each).</p>
+
+<p>Uncompressed Kafka log size was 150 MiB (20,000 x 7.9KiB).</p>
+
+<p>With one producer and one broker (RF1), uncompressed writes took about 7 seconds. Let's make it simple and say 160 MiB / 8 seconds = 20 MiB/s for 2,500 of 8KiB messages. If my workload is 100K messages per second, that's 40x so 20 x 40 = 800 MB/s.</p>
+
+<p>The smallest array you can get, EF300, can deliver up to <a href="https://www.netapp.com/pdf.html?item=/media/21363-tr-4877.pdf">7 GB/s</a> write. That's with large request sizes (probably 2 MiB). It's faster with reads, so let's say we can count on 5 GB/s with a single controller and 60% read.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Workload</th>
+      <th style="text-align: right">Requirement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">Producers</td>
+      <td style="text-align: right">800 MiB/s</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Add RF2</td>
+      <td style="text-align: right">800 MiB/s</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Consumers</td>
+      <td style="text-align: right">2,400 MiB/s</td>
+    </tr>
+    <tr>
+      <td style="text-align: center"><strong>TOTAL</strong></td>
+      <td style="text-align: right">4,000 MiB/s</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Read ratio is 60% (2,400/4,000), in this case.</p>
+
+<p>This is simplistic, but it shows you could get away with a single EF300 even if one of two controllers fails.</p>
+
+<p>If you wanted extra buffer, but not the fastest box: EF50 or EF600.</p>
+
+<p>If you used 3 x EF300, you would have plenty of buffer. Just note that you always need enough disks to drive performance. For 5 GiB/s on a single array, you will likely need more than just 2 disks in RAID 1, for example.</p>
+
+<p>I may run a few tests later to better characterize this with real Kafka workloads.</p>
 
 <h2 id="storage-provisioning">Storage provisioning</h2>
 
