@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          11 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-workload-examples">Appendix A: workload examples</a></li></ul>
             </nav>
           </aside>
         
@@ -276,7 +276,7 @@
     </tr>
     <tr>
       <td style="text-align: left">Backup and restore</td>
-      <td>No, addressed by replication, tiering, <a href="https://github.com/kanisterio/blueprints/tree/main/kafka-adobe-s3-connector">app backup</a></td>
+      <td>No, Kafka has replication, tiering, <a href="https://github.com/kanisterio/blueprints/tree/main/kafka-adobe-s3-connector">app backup</a></td>
     </tr>
     <tr>
       <td style="text-align: left">Active-Active</td>
@@ -288,27 +288,24 @@
     </tr>
     <tr>
       <td style="text-align: left">Storage protection</td>
-      <td>Maybe, if you don't like managing physical disks</td>
+      <td>Maybe, if you don't like managing physical disks*</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Performance</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Price</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Availability</td>
+      <td>Yes, protected storage with no SPoF*</td>
     </tr>
   </tbody>
 </table>
 
-<table>
-  <tbody>
-    <tr>
-      <td>Performance</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>Price</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>Availability</td>
-      <td>Yes, no SPoF, protected storage</td>
-    </tr>
-  </tbody>
-</table>
+<p>The assumption, as I've mentioned, is one prefers to less their unplanned maintenance workload.</p>
 
 <h2 id="performance">Performance</h2>
 
@@ -458,7 +455,7 @@
 
 <p>If you used 3 x EF300, you would have plenty of buffer. Just note that you always need enough disks to drive performance. For 5 GiB/s on a single array, you will likely need more than just 2 disks in RAID 1, for example.</p>
 
-<p>I may run a few tests later to better characterize this with real Kafka workloads.</p>
+<p>I have some examples in Appendix A.</p>
 
 <h2 id="storage-provisioning">Storage provisioning</h2>
 
@@ -492,6 +489,63 @@
   <li>RAID 6 and RAID 5</li>
   <li>Single-array, single-rack deployments in environments where many, or important, services depend on Kafka</li>
 </ul>
+
+<h2 id="appendix-a-workload-examples">Appendix A: workload examples</h2>
+
+<ul>
+  <li>Server: Confluent Kafka 8.2.2 (one instance in Docker container) on 2-way Xeon Silver</li>
+  <li>Client: Kafka 4.3.1 on Ubuntu 24.04 (bare metal over loopback)</li>
+  <li>OS caching clearly impacted these results</li>
+</ul>
+
+<p>There are many reasons why it's complicated even in the simple scenario, which is single client, single broker, single topic.</p>
+
+<p>Kafka relies on JVM cache and also OS cache. A producer may be sending messages at whatever rate the network and CPU (both producer's and brokers) allow, but that doesn't mean we'll see any disk IO. Normally we need to wait for OS to flush dirty cache to disk. So with one producer, we can't really see much.</p>
+
+<p><img src="/assets/images/kafka-4-eseries-03-os-caching.png" alt="OS caching" /></p>
+
+<p>On storage, we will likely see spikes as well, unless we have a bunch of producers making this flushing to disk constant.</p>
+
+<p><img src="/assets/images/kafka-4-eseries-04-os-flushing.png" alt="Storage view of OS flushing" /></p>
+
+<p>One producer sending 1KiB messages to one broker shows steady flow on producer side, but as we can see from the above image, while Kafka service traffic seems steady, that's not at all how disk IO behaves. Latency seen here is service latency, not disk latency.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">${</span><span class="nv">KAFKA_BIN</span><span class="k">}</span>/kafka-producer-perf-test.sh <span class="se">\</span>
+  <span class="nt">--topic</span> perf-test <span class="se">\</span>
+  <span class="nt">--num-records</span> 30000000 <span class="se">\</span>
+  <span class="nt">--record-size</span> 1024 <span class="se">\</span>
+  <span class="nt">--throughput</span> <span class="nt">-1</span> <span class="se">\</span>
+  <span class="nt">--print-metrics</span> <span class="se">\</span>
+  <span class="nt">--warmup-records</span> 1000000 <span class="se">\</span>
+  <span class="nt">--producer-props</span> <span class="se">\</span>
+    bootstrap.servers<span class="o">=</span>localhost:9092 <span class="se">\</span>
+    <span class="nv">acks</span><span class="o">=</span>all <span class="se">\</span>
+    batch.size<span class="o">=</span>16384 <span class="se">\</span>
+    linger.ms<span class="o">=</span>5 <span class="se">\</span>
+    compression.type<span class="o">=</span>lz4
+</code></pre></div></div>
+
+<p><img src="/assets/images/kafka-4-eseries-05-1p-1b.png" alt="1 producer vs 1 broker" /></p>
+
+<p>One consumer fetching messages from one broker. This is a much easier workload (100% mostly sequential read) and effect from OS cache was clear.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="k">${</span><span class="nv">KAFKA_BIN</span><span class="k">}</span>/kafka-consumer-perf-test.sh <span class="se">\</span>
+  <span class="nt">--bootstrap-server</span> localhost:9092 <span class="se">\</span>
+  <span class="nt">--topic</span> perf-test <span class="se">\</span>
+  <span class="nt">--num-records</span> 5000000 <span class="se">\</span>
+  <span class="nt">--fetch-size</span> 1048576 <span class="se">\</span>
+  <span class="nt">--command-config</span> consumer-perf.properties <span class="se">\</span>
+  <span class="nt">--show-detailed-stats</span> <span class="se">\</span>
+  <span class="nt">--reporting-interval</span> 1000
+</code></pre></div></div>
+
+<p><img src="/assets/kafka-4-eseries-06-1c-1b.png" alt="1 consumer vs 1 broker" /></p>
+
+<p>It doesn't take long to realize we can't conclude much about storage with this configuration. Not only is storage barely used, but even in this case there are several key options which can be tuned to skew the results in any direction we want.</p>
+
+<p>Knowing that producer's I/O request size was close to 1 MB, we could size based on this I/O pattern, but it would apply only to this particular topic. The same applies to for consumers, although controller and OS cache would offload some I/O from storage, so we should account for that to avoid over-sizing.</p>
+
+<p>We'd need a bunch of clients and topics and a lot more testing to be able to make precise estimates.</p>
 
         
       </section>
