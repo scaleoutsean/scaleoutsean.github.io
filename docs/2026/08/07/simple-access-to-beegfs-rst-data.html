@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -327,13 +327,29 @@
 
 <p>I issued S3 keys to <code class="language-plaintext highlighter-rouge">BeeGFS-Ah</code> and used that to access the BeeGFS bucket.</p>
 
+<p>Now, this is my current /mnt/beegfs/tiered-stuff. I want <code class="language-plaintext highlighter-rouge">stub.file</code>, but you can see it's been tiered out - only 31 bytes!</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-lat</span> /mnt/beegfs/tiered-stuff
+total 14818
+<span class="nt">-rw-r--r--</span> 1 sean sean       32 Aug  7 12:57 seans.file
+drwxr-xr-x 2 root root        5 Aug  7 09:09 <span class="nb">.</span>
+<span class="nt">-rw-r--r--</span> 1 root root      566 Aug  6 04:24 steps.txt
+<span class="nt">-rw-r--r--</span> 1 root root       31 Aug  6 04:20 stub.file
+drwxrwxrwx 6 root root    84750 Aug  6 04:17 ..
+<span class="nt">-rwxr-xr-x</span> 1 root root     7353 Aug  1 14:50 test.py
+<span class="nt">-rwxr-xr-x</span> 1 sean sean 15077496 Aug  1 11:19 old.file
+
+</code></pre></div></div>
+
+<p>Not everything has been tiered, but the file I need is on S3. Since <code class="language-plaintext highlighter-rouge">BeeGFS-Ah</code> has access to the bucket, he should be able to get to that file. (By the way, notice old.file is both on BeeGFS, and on S3 - it was `push'-ed, but not stubbed-out.)</p>
+
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/beegfs/tiered-stuff/
 <span class="o">[</span>2026-08-01 19:19:49 CST]  14MiB STANDARD old.file
 <span class="o">[</span>2026-08-01 22:28:29 CST]  14MiB STANDARD stub.file
 <span class="o">[</span>2026-08-01 21:20:23 CST] 7.1KiB STANDARD test.py
 </code></pre></div></div>
 
-<p>Good, let's delete an object.</p>
+<p>Good, let's see if we can delete an object to cause some damage.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">rm </span>s3/beegfs/tiered-stuff/test.py 
 mc: &lt;ERROR&gt; Failed to remove <span class="sb">`</span>cosib/beegfs/tiered-stuff/test.py<span class="sb">`</span><span class="nb">.</span> Access Denied
