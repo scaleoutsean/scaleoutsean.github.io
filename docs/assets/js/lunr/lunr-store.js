@@ -2629,7 +2629,7 @@ var store = [{
       },{
         "title": "Directly access BeeGFS RST data on NetApp StorageGRID",
         "excerpt":"Introduction You know there are NAS or filesystem gateways that can transparently tier to back-end S3, right? When you want to read a file that’s fully or partially parked on S3, you still do the same thing as always - read it over NFS or SMB or from filesystem (like...","categories": ["storage","storagegrid","netapp"],
-        "tags": ["beegfs","s3","rst","tiering"],
+        "tags": ["beegfs","s3","rst","tiering","opensharing","hybrid-cloud"],
         "url": "/2026/08/07/simple-access-to-beegfs-rst-data.html",
         "teaser": null
       },{
@@ -4303,6 +4303,9 @@ var store = [{
   },{
     "title": "rst",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/rst/"
+  },{
+    "title": "hybrid-cloud",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid-cloud/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
