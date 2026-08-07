@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-workload-examples">Appendix A: workload examples</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-pool-vs-three-raid-10-groups-in-same-array">One DDP pool vs three RAID 10 groups in same array</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-workload-examples">Appendix A: Workload examples</a></li></ul>
             </nav>
           </aside>
         
@@ -345,8 +345,8 @@
 <p>So, while I don't know for sure either, I'd say that is likely a nonsense blanket statement that comes from observing a low end server RAID (I made the same comment about similar nonsense in the Elasticsearch documentation before). Why?</p>
 
 <ul>
-  <li>You can set <a href="/2024/10/10/eseries-volume-copy.html#priority">rebuild priority</a> on operations such as rebuilding, reconstruction and disk copy. If you think the impact is high, simply lower the slider to a lower priority</li>
-  <li>Several NetApp Technical Reports (such as the one cited <a href="/2025/12/28/ceph-with-netapp-eseries.html">here</a>, but also the one on Hadoop, etc.) demonstrated that reconstruction impact on performance with E-Series was significantly lower than with JBODs</li>
+  <li>You can set <a href="/2024/10/10/eseries-volume-copy.html#priority">rebuild priority</a> on operations such as rebuilding, reconstruction and disk copy on DDP-based RAID 1 and RAID 6 volumes. If you think reconstruction impact is high, simply lower the slider to a lower priority</li>
+  <li>Several NetApp Technical Reports (such as the one cited <a href="/2025/12/28/ceph-with-netapp-eseries.html">here</a>, but also the one on Hadoop, etc.) demonstrated that reconstruction and rebuild impact on performance with E-Series was significantly lower than with JBODs</li>
 </ul>
 
 <p>Now, why are we suddenly talking about DDP? DDP <a href="/2023/10/08/raid1-in-netapp-eseries-ddp.html">supports striped RAID 1 volumes</a>, so yes, there's nothing wrong with that in single rack configurations if you prefer to consolidate. But beware:</p>
@@ -357,24 +357,31 @@
 
 <p>For three racks with DDP, you won't be able to use DDP in each rack unless you have at least 8 or more disks per each, but if that's the case, then you'd have the same resilience you get from RAID 10 with 8 or more disks (1 disk can fail at a time), but you'd be able to tolerate multiple non-concurrent disks (as long as there's leftover unused capacity beyond the sum of all LUN capacities) <em>and</em> reconstruct much faster.</p>
 
-<p>With three racks with RAID 10, setting rebuild priority to Low or Lowest is fine. That increases recovery time, but since you have RF2 at least (or maybe RF3), the impact of rebuilding won't be felt.</p>
+<p>With three racks with RAID 10 on DDP, setting rebuild priority to Low or Lowest is fine. That increases recovery time, but since you have RF2 at least (or maybe RF3), the impact of rebuilding won't be felt at all.</p>
 
-<h3 id="one-ddp-vs-three-raid-10-in-same-array">One DDP vs three RAID 10 in same array?</h3>
+<h3 id="one-ddp-pool-vs-three-raid-10-groups-in-same-array">One DDP pool vs three RAID 10 groups in same array</h3>
 
 <p>Say you have a single array and need 24 disks. What's better?</p>
 
 <ul>
-  <li>One DDP across 20 disks</li>
+  <li>One DDP pool across 20 disks</li>
   <li>Three 6-disk RAID 10 disk groups (+ 1 hot spare)</li>
 </ul>
 
-<p>One DDP exposes you to double concurrent disk failure. I don't know if those things happen - I haven't heard of it - but DDP can reconstruct from a failed disk within 60 minutes and can repeat that multiple times over a long weekend without data loss. RAID 10 can't. But you can lose 3 disks at the same time with RAID 10 (assuming each group loses one) and DDP can't save you from that.</p>
+<p>One DDP exposes you to double concurrent disk failure.</p>
 
-<p>If you need HA, DDP in a single rack is fine.</p>
+<p>I don't know if those things really happen - I haven't heard of it - but DDP can reconstruct from a failed disk within 60 minutes and can repeat that multiple times over a long weekend without data loss. RAID 10 can't. But you can lose 3 disks at the same time with RAID 10 (assuming each group loses one) and DDP can't save you from that.</p>
 
-<p>You can use DDP and create RAID 6-style volumes on it; those will tolerate two concurrent disk failures. But that's as lousy "solution". The Kafka documentation doesn't recommend even RAID 5, let alone RAID 6, and you still have guaranteed downtime if the rack fails.</p>
+<p>If you need just controller HA and not resilience to rack failures, DDP in a single rack is fine.</p>
 
-<p>So like I said above, get three smaller boxes each with 6 disks, and put them in different racks.</p>
+<p>You can use DDP and create RAID 6-style volumes on it; those will tolerate two concurrent disk failures. But that's a lousy "solution" to double disk failure problem. The Kafka documentation doesn't recommend even RAID 5, let alone RAID 6, and you still have guaranteed downtime if the rack fails.</p>
+
+<p>To survive concurrent double disk failures on one array:</p>
+<ul>
+  <li>use multiple R10 or R0 disk groups, or</li>
+  <li>use two DDP pools with RAID 10 volumes and RF2 (one copy on each DDP), or</li>
+  <li>use one DDP pool with RAID 6 volumes - worst alternative, but may be okay for small Kafka clusters</li>
+</ul>
 
 <h2 id="storage-efficiency">Storage efficiency</h2>
 
@@ -459,15 +466,15 @@
 
 <h2 id="storage-provisioning">Storage provisioning</h2>
 
-<p>Choose any, they all work.</p>
+<p>Choose any of these approaches, they all work.</p>
 
 <ul>
   <li>Physical (bare metal) servers</li>
   <li>VMs in a supported hypervisor (anti-affinity settings)</li>
   <li>Docker in VMs or on bare metal servers</li>
-  <li>Kubernetes with TopoLVM CSI or static PVCs provisioned with Terraform SANtricity Provider
+  <li>Kubernetes with TopoLVM CSI or static PVCs provisioned with <a href="https://github.com/scaleoutsean/santricity-go/">Terraform SANtricity Provider</a>
     <ul>
-      <li>There are also HA CSI drivers with dynamic provisioning, see <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">this</a>, although generally we don't want broker "pod failover", we want to solve this Kafka-side, with replicas.</li>
+      <li>There are also HA CSI drivers with dynamic provisioning, see <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">here</a>, although generally we don't want broker "pod failover", we want to solve this Kafka-side, with Kafka replicas.</li>
     </ul>
   </li>
 </ul>
@@ -480,22 +487,24 @@
 
 <p>It's affordable enough to be provisioned across multiple racks, has RAID 10 and RAID 0 (both are preferred options in the Kafka documentation) and you can get RAID 10 on DDP or in classic RAID 10 groups.</p>
 
-<p>Furthermore, E-Series has excellent single volume performance.</p>
+<p>Furthermore, E-Series has excellent single volume performance - that's great for brokers, but also for Kafka Streams and other Kafka-related applications.</p>
 
 <p>Three entry level models should be enough for medium sized Kafka clusters, but you can scale out using the building-block approach or use the 2026 models to keep the disk array count low.</p>
 
-<p>Things to avoid:</p>
+<p>In my opinion, these are top things to avoid on external storage:</p>
 <ul>
   <li>RAID 6 and RAID 5</li>
   <li>Single-array, single-rack deployments in environments where many, or important, services depend on Kafka</li>
 </ul>
 
-<h2 id="appendix-a-workload-examples">Appendix A: workload examples</h2>
+<p>If you're interested in Kafka and FSWA on RAID 6, also check out the <a href="/2026/08/07/santricity-fswa.html">next post</a>.</p>
+
+<h2 id="appendix-a-workload-examples">Appendix A: Workload examples</h2>
 
 <ul>
   <li>Server: Confluent Kafka 8.2.2 (one instance in Docker container) on 2-way Xeon Silver</li>
-  <li>Client: Kafka 4.3.1 on Ubuntu 24.04 (bare metal over loopback)</li>
-  <li>OS caching clearly impacted these results</li>
+  <li>Client: Kafka 4.3.1 on Ubuntu 24.04 (bare metal accessing containerized broker over loopback)</li>
+  <li>OS caching clearly impacted (helped) these results but wasn't suppressed because the workload was low anyway</li>
 </ul>
 
 <p>There are many reasons why it's complicated even in the simple scenario, which is single client, single broker, single topic.</p>
@@ -642,7 +651,7 @@ max.poll.interval.ms<span class="o">=</span>300000
       <a href="/2026/08/05/automq-with-storagegrid.html" class="pagination--pager" title="Containerized AutoMQ with NetApp StorageGRID">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/08/07/santricity-fswa.html" class="pagination--pager" title="Achieving Full Stripe Width Acceleration (FSWA) on SANtricity">Next</a>
     
   </nav>
 
@@ -659,6 +668,54 @@ max.poll.interval.ms<span class="o">=</span>300000
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/07/santricity-fswa.html" rel="permalink">Achieving Full Stripe Width Acceleration (FSWA) on SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-07T00:00:00+08:00">2026-08-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to write to a LUN and make sure FSWA is working on NVMe/RoCE
+</p>
+  </article>
+</div>
+
     
       
       
@@ -799,54 +856,6 @@ max.poll.interval.ms<span class="o">=</span>300000
 
 
     <p class="archive__item-excerpt" itemprop="description">The myth of data sharing challenges persists. Object stores solved data sharing in hybrid years ago. And OneLake can use NetApp StorageGRID now.
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html" rel="permalink">Backup and restore modern Kubernetes applications without CSI snapshots
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-07-30T00:00:00+08:00">2026-07-30 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          13 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">IBM Block CSI with SANtricity patch has CSI snapshots but I've been advocating against CSI snapshots because you probably can do better with backup to S3
 </p>
   </article>
 </div>
