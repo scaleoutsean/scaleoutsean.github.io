@@ -1,0 +1,721 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Directly access BeeGFS RST data on NetApp StorageGRID | Acting Technologist</title>
+<meta name="description" content="How to enable secure access to BeeGFS RST-tiered data on StorageGRID from anywhere you need">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Directly access BeeGFS RST data on NetApp StorageGRID">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/08/07/simple-access-to-beegfs-rst-data.html">
+
+
+  <meta property="og:description" content="How to enable secure access to BeeGFS RST-tiered data on StorageGRID from anywhere you need">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Directly access BeeGFS RST data on NetApp StorageGRID">
+  <meta name="twitter:description" content="How to enable secure access to BeeGFS RST-tiered data on StorageGRID from anywhere you need">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/07/simple-access-to-beegfs-rst-data.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-08-07T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/08/07/simple-access-to-beegfs-rst-data.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Directly access BeeGFS RST data on NetApp StorageGRID">
+    <meta itemprop="description" content="How to enable secure access to BeeGFS RST-tiered data on StorageGRID from anywhere you need">
+    <meta itemprop="datePublished" content="2026-08-07T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/08/07/simple-access-to-beegfs-rst-data.html" itemprop="url">Directly access BeeGFS RST data on NetApp StorageGRID
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-07T00:00:00+08:00">2026-08-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#direct-access-to-s3-data-on-storagegrid">Direct access to S3 data on StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>You know there are NAS or filesystem gateways that can transparently tier to back-end S3, right?</p>
+
+<p><img src="/assets/images/beegfs-rst-access-03-traditional-tiering.png" alt="NAS gateway with transparent S3 tiering" /></p>
+
+<p>When you want to read a file that's fully or partially parked on S3, you still do the same thing as always - read it over NFS or SMB or from filesystem (like with your Documents folder tiered to Azure by OneDrive).</p>
+
+<p>Good!</p>
+
+<p>This isn't that.</p>
+
+<p>I blogged about the BeeGFS RST feature <a href="/2026/07/18/beegfs-84.html">here</a>. Basically, we use <code class="language-plaintext highlighter-rouge">push</code> and <code class="language-plaintext highlighter-rouge">pull</code> commands to "manually" copy a directory or file to S3.</p>
+
+<p><img src="/assets/images/beegfs-rst-access-04-beegfs-rst-tiering-storagegrid.png" alt="BeeGFS RST with push and pull to S3" /></p>
+
+<p>RST is a new feature in BeeGFS 8 (current version is 8.4) so it's not very mature. For example, currently it's not accessible to users. It's operated by the BeeGFS administrator.</p>
+
+<p>At some point it will become more transparent to users, but until then - and possibly after - we can get creative and make it work better.</p>
+
+<p>One way to do that is direct access to BeeGFS data on S3:</p>
+
+<ul>
+  <li>Your file has been copied or tiered (pushed with a stub) off to S3 and it's not set for automated restore. You need it now. What to do? You could copy it to another path on BeeGFS, but if only you could get to it</li>
+  <li>You want to work on files on S3, without having to copy them to BeeGFS</li>
+  <li>You want to quickly download BeeGFS-tiered data to <a href="/2026/06/05/above-and-beeond-beeond.html">BeeOND</a> for batch processing using <code class="language-plaintext highlighter-rouge">rclone</code></li>
+  <li>Maybe your BeeGFS is connected to an on-premises E-Series, and you tiered your files to AWS S3. Accessing them via S3 is much cheaper</li>
+</ul>
+
+<p>It's very simple. I'll skip the last example because BeeGFS tiered files to NetApp StorageGRID.</p>
+
+<h2 id="direct-access-to-s3-data-on-storagegrid">Direct access to S3 data on StorageGRID</h2>
+
+<p>Files (objects) are there in our bucket, ready to be accessed. There's nothing to do, why not just access them?</p>
+
+<p>Because we shouldn't use the same S3 keys that can delete everything.</p>
+
+<p>We should create a separate set of keys, or even separate groups. For example:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Path</th>
+      <th>Bucket</th>
+      <th>StorageGRID Tenant Group</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/mnt/beegfs/project1</td>
+      <td>beegfs</td>
+      <td>Group1</td>
+    </tr>
+    <tr>
+      <td>/mnt/beegfs/tiered-stuff</td>
+      <td>beegfs</td>
+      <td>BeeGFS Users</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Inside of a bucket, "paths" reflect BeeGFS filesystem layout. Very simple!</p>
+
+<p>With this, assuming a well organized BeeGFS tree, we can easily create bucket ACLs to access paths more securely.</p>
+
+<p>Create a tenant group. You can make it very limited, because it needs very limited access.</p>
+
+<p><img src="/assets/images/beegfs-rst-access-00-create-group.png" alt="Create a group" /></p>
+
+<p>Create a limited access policy. You could go with Custom, to make it granular.</p>
+
+<p><img src="/assets/images/beegfs-rst-access-01-create-limited-access-policy.png" alt="Create access policy" /></p>
+
+<p>My tenant ID is 26296085394235545212 and the group is "BeeGFS Users" as per that table above. I could limit these to only objects below that one "path":</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"Effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"Principal"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"SGWS"</span><span class="p">:[</span><span class="w"> 
+      </span><span class="s2">"urn:sgws:identity::26296085394235545212:group/BeeGFS Users"</span><span class="p">]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"Action"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"s3:GetObject"</span><span class="p">,</span><span class="w"> </span><span class="s2">"s3:ListBucket"</span><span class="p">,</span><span class="w"> </span><span class="s2">"s3:ListBucketVersions"</span><span class="p">,</span><span class="w"> </span><span class="s2">"s3:GetObjectVersion"</span><span class="p">,</span><span class="w"> </span><span class="s2">"s3:GetObjectTagging"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"Resource"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"urn:sgws:s3:::beegfs/tiered-stuff/*"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"urn:sgws:s3:::beegfs/tiered-stuff"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Create users and add them to the group, if you want to create keys for each. It might be a good idea for StorageGRID with federated authentication where you automate ADS or LDAP groups so that access can be kept uniform across BeeGFS and StorageGRID RST location.</p>
+
+<p><img src="/assets/images/beegfs-rst-access-02-create-users.png" alt="Create additional users and add to group" /></p>
+
+<p>I issued S3 keys to <code class="language-plaintext highlighter-rouge">BeeGFS-Ah</code> and used that to access the BeeGFS bucket.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/beegfs/tiered-stuff/
+<span class="o">[</span>2026-08-01 19:19:49 CST]  14MiB STANDARD old.file
+<span class="o">[</span>2026-08-01 22:28:29 CST]  14MiB STANDARD stub.file
+<span class="o">[</span>2026-08-01 21:20:23 CST] 7.1KiB STANDARD test.py
+</code></pre></div></div>
+
+<p>Good, let's delete an object.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">rm </span>s3/beegfs/tiered-stuff/test.py 
+mc: &lt;ERROR&gt; Failed to remove <span class="sb">`</span>cosib/beegfs/tiered-stuff/test.py<span class="sb">`</span><span class="nb">.</span> Access Denied
+</code></pre></div></div>
+
+<p>It doesn't work. Good. Let's read one.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">head </span>s3/beegfs/tiered-stuff/test.py 
+<span class="c">#!/usr/bin/env python3</span>
+
+import argparse
+import os
+</code></pre></div></div>
+
+<p>Also good!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Direct access to BeeGFS RST-tiered data is great. It gives us more flexibility and has no disadvantages.</p>
+
+<p>You can read RST data on StorageGRID from anywhere.</p>
+
+<p>If you need to work on it <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">from the public cloud</a>, you don't even need to copy it to the cloud - it's enough to have it tiered and it's already accessible directly from OneLake (see that link) or via OpenSharing if you prefer your own stack.</p>
+
+<p>If you enable ACLs on BeeGFS and use LDAP integration, I assume you could even sync permissions across BeeGFS and StorageGRID (access policy JSON), but for most users that won't be necessary. Most BeeGFS clusters with RST will have just a few users who need this and it could greatly improve their RST experience.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/rst" class="page__taxonomy-item p-category" rel="tag">rst</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/tiering" class="page__taxonomy-item p-category" rel="tag">tiering</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a><span class="sep">, </span>
+    
+      <a href="/categories/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-08-07T00:00:00+08:00">2026-08-07 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Directly+access+BeeGFS+RST+data+on+NetApp+StorageGRID%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F07%2Fsimple-access-to-beegfs-rst-data.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/08/07/simple-access-to-beegfs-rst-data.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/08/07/santricity-fswa.html" class="pagination--pager" title="Achieving Full Stripe Width Acceleration (FSWA) on SANtricity">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/07/santricity-fswa.html" rel="permalink">Achieving Full Stripe Width Acceleration (FSWA) on SANtricity
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-07T00:00:00+08:00">2026-08-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to write to a LUN and make sure FSWA is working on NVMe/RoCE
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/05/kafka-on-netapp-eseries.html" rel="permalink">Kafka 4 with NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-05T00:00:00+08:00">2026-08-05 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          14 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Tips and thoughts about using NetApp E-Series with Kafka 4
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/05/automq-with-storagegrid.html" rel="permalink">Containerized AutoMQ with NetApp StorageGRID
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-05T00:00:00+08:00">2026-08-05 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to run Containerized AutoMQ with StorageGRID 12
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/02/eke-update.html" rel="permalink">Eke v0.2 and NetApp StorageGRID as BeeGFS Remote Storage Target
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-02T00:00:00+08:00">2026-08-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Eke v0.2 - upstream is breaking, downstream is fixing. Also about the RST stuff with NetApp StorageGRID
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
