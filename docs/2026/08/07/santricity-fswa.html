@@ -453,14 +453,14 @@ fio-3.41
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">fullStripeWritesBytesPercent</code> is 89% and I've seen it reach 91% while FIO was running.</p>
+<p><code class="language-plaintext highlighter-rouge">fullStripeWritesBytesPercent</code> is 89% and I've seen it reach 91% while FIO was running. Notice it's non-0 only on Controller B, which is where our <code class="language-plaintext highlighter-rouge">fswa</code> LUN is.</p>
 
 <p>I had some small amount of I/O going on elsewhere (Kafka from <a href="/2026/08/05/kafka-on-netapp-eseries.html">yesterday's post</a>), so either that or something else shaved off around 10%, but 90% is good enough for me.</p>
 
 <p>Where you may <em>not</em> find anything useful:</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">GET /analysed-volume-statistics</code> - sometimes gives ridiculous result even after 3 minutes of running: <code class="language-plaintext highlighter-rouge">"fullStripeWritesBytesPercent": -1</code>. It's puzzling that I've seen <code class="language-plaintext highlighter-rouge">-1</code>, <code class="language-plaintext highlighter-rouge">0</code> and what looked like valid valus in this output while running different tests.</li>
+  <li><code class="language-plaintext highlighter-rouge">GET /analysed-volume-statistics</code> - sometimes gives ridiculous result even after 3 minutes of running: <code class="language-plaintext highlighter-rouge">"fullStripeWritesBytesPercent": -1</code>. It's puzzling that I've seen <code class="language-plaintext highlighter-rouge">-1</code>, <code class="language-plaintext highlighter-rouge">0</code> and what looked like valid values in this output while running different tests.</li>
 </ul>
 
 <p>There may be several other API responses where you may see ridiculous figures (<code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">-1</code>) for a volume that's actually working correctly. "Contact your NetApp representative".</p>
@@ -475,7 +475,7 @@ fio-3.41
 
 <p><img src="/assets/images/santricity-fswa-02-volume-resegment.png" alt="Change disk group segment size to 64" /></p>
 
-<p>This is done online but can take forever on a NL-SAS group made of giant disks, of course. It took minutes here.</p>
+<p>This is done online but can take forever on a NL-SAS group made of giant disks, of course. It took minutes here with small NVMe SSDs.</p>
 
 <p>Then I re-ran the same producer test to generate 45 million records, and let OS flush IO as it did yesterday.</p>
 
@@ -553,7 +553,7 @@ fio-3.41
   </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">fullStripeWriteBytes</code> went from close to zero to 5139615744 at one point, which was close to 5 GiB.</p>
+<p><code class="language-plaintext highlighter-rouge">fullStripeWriteBytes</code> went from close to zero to 5139615744 at one point, which was close to 5 GiB. We could check that controller FSWA percentage value to check the percentage figure, but I had some other I/O on the array so I did not try to find out the exact percentage.</p>
 
 <p>In the case you wonder how RAID 6 performed compared to RAID 10, you can't really see that from Kafka as writes to disk are asynchronous. Also, producer workload isn't the only one that matters - there are reads (from consumers), there may be log compaction, tiering, and more.</p>
 
