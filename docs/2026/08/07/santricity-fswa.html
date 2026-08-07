@@ -471,9 +471,9 @@ fio-3.41
 
 <p>In yesterday's post, Kafka was running on a R10 disk group. Since I was already doing this, I thought to check it out on RAID 6, which I said I didn't recommend (and I still don't) for Kafka.</p>
 
-<p>First, as I knew from yesterday's testing that in my setup with just one producer, I/O's are periodic and when they happen, they're usually below 1 MiB (I've seen 800-900 KiB), I first re-segmented this RAID 6 disk group.</p>
+<p>First, as I knew from yesterday's testing that in my setup with just one producer, I/O's are periodic and when they happen, they're usually below 1 MiB (I've seen 800-900 KiB), I first re-segmented this RAID 6 disk group to use 64 KiB rather than the default (128 KiB) RAID segment size.</p>
 
-<p><img src="/assets/images/santricity-fswa-02-volume-resegment.png" alt="Change disk group segment size to 64" /></p>
+<p><img src="/assets/images/santricity-fswa-02-volume-resegment.png" alt="Change disk group segment size to 64KiB" /></p>
 
 <p>This is done online but can take forever on a NL-SAS group made of giant disks, of course. It took minutes here with small NVMe SSDs.</p>
 
@@ -555,9 +555,9 @@ fio-3.41
 
 <p><code class="language-plaintext highlighter-rouge">fullStripeWriteBytes</code> went from close to zero to 5139615744 at one point, which was close to 5 GiB. We could check that controller FSWA percentage value to check the percentage figure, but I had some other I/O on the array so I did not try to find out the exact percentage.</p>
 
-<p>In the case you wonder how RAID 6 performed compared to RAID 10, you can't really see that from Kafka as writes to disk are asynchronous. Also, producer workload isn't the only one that matters - there are reads (from consumers), there may be log compaction, tiering, and more.</p>
+<p>In the case you wonder how RAID 6 performed compared to RAID 10, you can't really see that from Kafka as writes to disk are asynchronous. We'd have to saturate the array to know. Also, producer workload isn't the only one that matters - there are reads (from consumers), there may be log compaction, tiering, and more.</p>
 
-<p>Regarding RAID 6 and FSWA, we lowered segment size to 64 KiB to get FSWA. But, at what cost? If we had any large sequential workloads on this RAID 6 group, they would run slower.</p>
+<p>Regarding RAID 6 and FSWA, we lowered segment size to 64 KiB to get FSWA here. But, at what cost? If we had any other large sequential workloads on this RAID 6 group, they would run slower.</p>
 
 <p>So, despite FSWA working for &gt; 512 KiB writes here, it has downsides and RAID 6 itself isn't the right choice for most Kafka clusters when other (non-producer) workloads are considered.</p>
 
@@ -567,7 +567,7 @@ fio-3.41
 
 <p>Write requests that are larger that what FSWA requires should still translate into multiple FSWA write requests.</p>
 
-<p>128 KiB (the default) is the right choice in most cases. Lowering it to "chase" FSWA isn't a good idea if you have multiple sequential workloads, but it does help if your requests are in 512-1024 KiB range.</p>
+<p>128 KiB (the default) is the right choice in most cases. Lowering it to "chase" FSWA isn't a good idea if you have multiple sequential workloads, but it does help if your requests are in the 512-1024 KiB range.</p>
 
 <p>FSWA is important for HPC use cases and multi-client write-heavy workloads (perhaps video surveillance, for example). If you're not looking to squeeze out the last 10-20% of performance, FSWA probably shouldn't be your top priority when it comes to workload or configuration optimization.</p>
 
