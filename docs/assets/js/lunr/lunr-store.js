@@ -2622,7 +2622,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Achieving Full Stripe Width Acceleration (FSWA) on SANtricity",
-        "excerpt":"Introduction FSWA writes an entire stripe to storage, avoiding RAID 6 penalty. If your workload is FSWA-ish enough, you can get a lot more out of E-Series write performance-wise. On SANtricity, FSWA seems to be available on RAID 6 volume groups (not RAID 5, but I haven’t tried to make...","categories": ["storage","eseries","netapp","monitoring"],
+        "excerpt":"Introduction FSWA writes an entire stripe to storage, avoiding RAID 6 stripe re-write penalty. If your workload is FSWA-ish enough, you can get more out of E-Series write performance-wise. On SANtricity, FSWA seems to be available on RAID 6 volume groups (not RAID 5, but I haven’t tried to make...","categories": ["storage","eseries","netapp","monitoring"],
         "tags": ["fswa","performance","nvme"],
         "url": "/2026/08/07/santricity-fswa.html",
         "teaser": null
@@ -2640,7 +2640,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Achieving Full Stripe Width Acceleration (FSWA) on SANtricity 2026-08-07 00:00 6 minute read How to write to a LUN and make sure FSWA is working on NVMe/RoCE Kafka 4 with NetApp E-Series 2026-08-05 00:00 13 minute read Tips and thoughts about using NetApp E-Series with Kafka 4 Containerized AutoMQ with...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Achieving Full Stripe Width Acceleration (FSWA) on SANtricity 2026-08-07 00:00 7 minute read How to write to a LUN and make sure FSWA is working on NVMe/RoCE Kafka 4 with NetApp E-Series 2026-08-05 00:00 13 minute read Tips and thoughts about using NetApp E-Series with Kafka 4 Containerized AutoMQ with...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
