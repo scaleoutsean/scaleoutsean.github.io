@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#use-cases">Use cases</a></li><li><a href="#making-use-of-vgw-s3rdma-with-e-series">Making use of VGW S3/RDMA with E-Series</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-vgw-s3rdma-backed-by-e-series-nvmeroce">Appendix A: VGW S3/RDMA backed by E-Series (NVMe/RoCE)</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#use-cases">Use cases</a></li><li><a href="#making-use-of-vgw-s3rdma-with-e-series">Making use of VGW S3/RDMA with E-Series</a></li><li><a href="#where-does-netapp-storagegrid-fit">Where does NetApp StorageGRID fit</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-vgw-s3rdma-backed-by-e-series-nvmeroce">Appendix A: VGW S3/RDMA backed by E-Series (NVMe/RoCE)</a></li></ul>
             </nav>
           </aside>
         
@@ -295,13 +295,25 @@
 
 <p>BeeGFS clients use RDMA, so one could in theory run VGW S3/RDMA on BeeGFS clients and still get end-to-end RDMA, but this is more complex so we'll have to see if this is as simple as single host filesystems.</p>
 
+<h2 id="where-does-netapp-storagegrid-fit">Where does NetApp StorageGRID fit</h2>
+
+<p>StorageGRID 12.1 does not support S3/RDMA, so currently it's like having two NAS boxes, one with NFS v3 and another with NFS v3 and v4 support. We can access both at the same time, if we want. Or, we can copy/move data from one to another and compute using that protocol.</p>
+
+<p><img src="/assets/images/versity-s3-rdma-03-vgwrdma-beegfs-eseries-storagegrid.png" alt="Integrating StorageGRID" /></p>
+
+<p>It's the same logic as in using just BeeGFS for batch processing data copied from (BeeGFS without Versity S3 Gateway): sometimes it can be less costly to copy to another tier and compute faster after that, than to compute in place.</p>
+
+<p>Ideally, copying should be avoided. But consider that StorageGRID provides data security, durability and protection that's significantly different to BeeGFS. Mixing both in the same cluster usually results in higher costs of capacity across the board.</p>
+
+<p>But even in this diagram, it's not <em>mandatory</em> to copy anything. You may have existing inferencing or other workflows in place and simply add S3/RDMA as a KV cache destination, if you plan on using S3 for KV cache. Zero copying.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Versity S3 Gateway with RDMA is currently the only way to get S3/RDMA on any NetApp storage system. It not only enables E-Series to provide crazy-fast access to data without traditional file sharing services (you can run it even <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html">on Kubernetes</a>!), but also makes it possible to supplement StorageGRID with S3 on E-Series to let applications do the heavy lifting on E-Series and output results to StorageGRID.</p>
+<p>Versity S3 Gateway with RDMA is currently the only way to get S3/RDMA on any NetApp storage system at this level of price/performance. It not only enables E-Series to provide crazy-fast access to data without traditional file sharing services (you can run it even <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html">on Kubernetes</a>!), but also makes it possible to supplement StorageGRID with S3 on E-Series to let applications do the heavy lifting on E-Series and output the results to StorageGRID.</p>
 
 <p>In some cases we'll need the fastest GET over S3/RDMA possible in order to fetch or analyze large files or file sets (backup-to-disk, or perhaps analytics queries) and in other cases there may be several instances of VGW S3/RDMA deployed on a BeeGFS cluster used for rapid processing of terabytes of data.</p>
 
-<p>It is simple and cost effective because Versity (and ThinkParQ) did the work for us and made the software available for free. I'm interested in a variety of use cases related to S3/RDMA and E-Series, including backup/restore to/from S3, analytics and more, so if I make this work despite hardware availability challenges, look forward to several more posts on this topic.</p>
+<p>It is simple and cost effective because Versity (and ThinkParQ) did the work for us and made the software available for free. I'm interested in a variety of use cases related to S3/RDMA and E-Series, so look forward to more on this topic.</p>
 
 <h2 id="appendix-a-vgw-s3rdma-backed-by-e-series-nvmeroce">Appendix A: VGW S3/RDMA backed by E-Series (NVMe/RoCE)</h2>
 
@@ -310,7 +322,7 @@
 <p>I built it as per their user guide, but:</p>
 <ul>
   <li>I did not have CUDA hardware, i.e. slow host memory was used instead of CUDA and GPU</li>
-  <li>I could not use objects larger than 8 MiB, which is too small to see benefits from RDMA hand-off</li>
+  <li>I could not use objects larger than 8 MiB, which is too small to see benefits from RDMA hand-off even if I had GPU hardware</li>
 </ul>
 
 <p>As a result, it doesn't work faster than regular Versity Gateway (backed by E-Series NVMe storage), but this is a huge step forward.</p>
