@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          6 minute read
         
       </span>
     
@@ -262,15 +262,13 @@
   <li>Maybe your BeeGFS is on-premises with E-Series and you tier files to AWS S3. Accessing them over S3 from EC2 (maybe a BeeOND cluster, even) is much cheaper if you don't need to repatriate</li>
 </ul>
 
-<p>It's very simple. I'll skip the last example because BeeGFS tiered files to NetApp StorageGRID.</p>
-
 <h2 id="direct-access-to-s3-data-on-storagegrid">Direct access to S3 data on StorageGRID</h2>
 
-<p>Files (objects) are there in our bucket, ready to be accessed. There's nothing to do, why not just access them?</p>
+<p>Files (objects) are there in our bucket, ready to be accessed. There's nothing we need to do as we already have an S3 key, why not just access them?</p>
 
-<p>Because we shouldn't use the same S3 keys that can delete everything.</p>
+<p>Because the S3 key was issued to the BeeGFS administrator. And we shouldn't use the same S3 keys that can delete everything.</p>
 
-<p>We should create a separate set of keys, or even separate groups. For example:</p>
+<p>We should create a separate set of keys, or even separate tenant groups. For example:</p>
 
 <table>
   <thead>
@@ -294,9 +292,9 @@
   </tbody>
 </table>
 
-<p>Inside of a bucket, "paths" reflect BeeGFS filesystem layout. Very simple!</p>
+<p>Inside of a bucket used by RST, "paths" reflect BeeGFS filesystem layout. It's very simple to find your way around.</p>
 
-<p>With this, assuming a well organized BeeGFS tree, we can easily create bucket ACLs to access paths more securely.</p>
+<p>With this, assuming a well organized BeeGFS tree, we can easily create bucket ACLs to allow different users to access bucket paths more securely, without everyone seeing or downloading other people's data.</p>
 
 <p>Create a tenant group. You can make it very limited, because it needs very limited access.</p>
 
@@ -306,7 +304,7 @@
 
 <p><img src="/assets/images/beegfs-rst-access-01-create-limited-access-policy.png" alt="Create access policy" /></p>
 
-<p>My tenant ID is 26296085394235545212 and the group is "BeeGFS Users" as per that table above. I could limit these to only objects below that one "path":</p>
+<p>My tenant ID is 26296085394235545212 and the group is "BeeGFS Users" as per that table above. I could limit this group to only objects below that "path" that belongs to them:</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
     </span><span class="nl">"Effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow"</span><span class="p">,</span><span class="w">
@@ -347,9 +345,11 @@ drwxrwxrwx 6 root root    84750 Aug  6 04:17 ..
 rst://1:tiered-stuff/stub.file
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">1</code> in that link is an RST ID, defined by a target (endpoint, in this case my StorageGRID cluster) and bucket (<code class="language-plaintext highlighter-rouge">beegfs</code>) bucket on it.</p>
+<p><code class="language-plaintext highlighter-rouge">1</code> in that link is an RST ID, defined by a target (endpoint, in this case my StorageGRID cluster) and bucket (<code class="language-plaintext highlighter-rouge">beegfs</code>).</p>
 
-<p>Not everything has been tiered, but the file I need is on S3. Since <code class="language-plaintext highlighter-rouge">BeeGFS-Ah</code> has access to the bucket, he should be able to get to that file. (By the way, notice old.file is both on BeeGFS, and on S3 - it was <code class="language-plaintext highlighter-rouge">push</code>-ed, but not stubbed-out, so it exists in both places.)</p>
+<p>Not everything from that BeeGFS path has been tiered or pushed to S3, but the file I need <em>is</em> on S3.</p>
+
+<p>Since <code class="language-plaintext highlighter-rouge">BeeGFS-Ah</code> has access to the bucket, he should be able to get to that file. (By the way, notice that <code class="language-plaintext highlighter-rouge">old.file</code> is both on BeeGFS, and on S3 - it was <code class="language-plaintext highlighter-rouge">push</code>-ed, but not stubbed, so it exists in both places.)</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/beegfs/tiered-stuff/
 <span class="o">[</span>2026-08-01 19:19:49 CST]  14MiB STANDARD old.file
@@ -357,7 +357,7 @@ rst://1:tiered-stuff/stub.file
 <span class="o">[</span>2026-08-01 21:20:23 CST] 7.1KiB STANDARD test.py
 </code></pre></div></div>
 
-<p>Good, let's see if we can delete an object to cause some damage.</p>
+<p>Good. Let's see if we can delete an object to cause some damage.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">rm </span>s3/beegfs/tiered-stuff/test.py 
 mc: &lt;ERROR&gt; Failed to remove <span class="sb">`</span>cosib/beegfs/tiered-stuff/test.py<span class="sb">`</span><span class="nb">.</span> Access Denied
@@ -378,9 +378,9 @@ import os
 
 <p>How is this different from "simply" pushing and pulling files with <code class="language-plaintext highlighter-rouge">rclone</code>?</p>
 
-<p>It's different because RST is integrated with BeeGFS (including stubs, optimal parallel push/pull, auto-recall <a href="/2026/08/02/eke-update.html">and more</a>), while <code class="language-plaintext highlighter-rouge">rclone</code> has to be manually operated and you need to keep track of what's what.</p>
+<p>It's different because RST is integrated with BeeGFS (including stubs, optimal parallel push/pull, auto-recall <a href="/2026/08/02/eke-update.html">and more</a>), while <code class="language-plaintext highlighter-rouge">rclone</code> has to be manually operated and the users (the administrator and/or end usrs) need to keep track of what's what. As you can imagine, that's not fun for PBs of data.</p>
 
-<p>Both can be used, for repetitive and stable use at scale, <code class="language-plaintext highlighter-rouge">rclone</code> requires a lot more effort to operate.</p>
+<p>Both can be used in the same cluster and <code class="language-plaintext highlighter-rouge">rclone</code> can be used by end users, but for repetitive and stable use at scale, <code class="language-plaintext highlighter-rouge">rclone</code> requires a lot more effort to operate.</p>
 
 <p>RST is somewhere between <code class="language-plaintext highlighter-rouge">rclone</code> and commercial offerings and it's focused on BeeGFS.</p>
 
@@ -405,7 +405,7 @@ import os
   <li>BeeGFS RST tiering doesn't even have to be manual. It can be automated today, it's just that automation is not yet complete. Automation based on BeeGFS filesystem notifications is done as explained and demonstrated <a href="/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html">here</a> and in the BeeGFS documentation (including in the RST-related documentation from BeeGFS 8.4.0, as automated RST file recall already relies on notifications)</li>
 </ul>
 
-<p>If you look at that OneLake post (the roadmap section), within months it will be possible to generate or process data on BeeGFS, <code class="language-plaintext highlighter-rouge">push</code> to StorageGRID and have OneLake "convert" those objects to (datalake) tables in OneLake, for example.</p>
+<p>If you look at that OneLake post (the OneLake roadmap screenshot), within months, it will be possible to generate or process data on BeeGFS, <code class="language-plaintext highlighter-rouge">push</code> to StorageGRID and have OneLake "convert" those objects to (datalake) tables in OneLake, for example.</p>
 
         
       </section>
