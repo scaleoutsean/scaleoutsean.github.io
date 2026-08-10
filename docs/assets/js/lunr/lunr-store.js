@@ -2640,7 +2640,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing Server with S3/RDMA-based Versity S3 Gateway",
-        "excerpt":"In yesterday’s post we saw how the Versity S3 Gateway with S3/RDMA support works with a single-host (XFS) and parallel file system (BeeGFS): I also have this OpenSharing Server implementation that supports NetApp StorageGRID and Versity S3 Gateway, so why not enable it for S3/RDMA when VGW is setup for...","categories": ["storage","eseries","netapp","s3"],
+        "excerpt":"Introduction In yesterday’s post we saw how the Versity S3 Gateway with S3/RDMA support works with a single-host (XFS) and parallel file system (BeeGFS): I also have an OpenSharing Server implementation that supports NetApp StorageGRID and Versity S3 Gateway, so why not enable it for S3/RDMA when VGW is setup...","categories": ["storage","eseries","netapp","s3"],
         "tags": ["versity","s3","rdma","vgw","opensharing"],
         "url": "/2026/08/10/opensharing-with-versity-s3-rdma-and-netapp-eseries.html",
         "teaser": null

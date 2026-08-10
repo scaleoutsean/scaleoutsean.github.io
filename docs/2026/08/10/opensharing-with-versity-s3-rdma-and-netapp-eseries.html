@@ -227,15 +227,19 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#summary">Summary</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#opensharing-with-s3rdma-backend">OpenSharing with S3/RDMA backend</a><ul><li><a href="#application-integration-challenge">Application integration challenge</a></li><li><a href="#is-it-worth-it">Is it worth it?</a></li></ul></li><li><a href="#summary">Summary</a></li></ul>
             </nav>
           </aside>
         
-        <p>In yesterday's post we saw how the Versity S3 Gateway with S3/RDMA support works with a single-host (XFS) and parallel file system (BeeGFS):</p>
+        <h2 id="introduction">Introduction</h2>
+
+<p>In yesterday's post we saw how the Versity S3 Gateway with S3/RDMA support works with a single-host (XFS) and parallel file system (BeeGFS):</p>
 
 <p><img src="/assets/images/versity-s3-rdma-03-vgwrdma-beegfs-eseries-storagegrid.png" alt="VGW RDMA with BeeGFS or XFS" /></p>
 
-<p>I also have this <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing Server implementation</a> that supports NetApp StorageGRID and Versity S3 Gateway, so why not enable it for S3/RDMA when VGW is setup for RDMA?</p>
+<p>I also have an <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing Server implementation</a> that supports NetApp StorageGRID and Versity S3 Gateway, so why not enable it for S3/RDMA when VGW is setup for RDMA?</p>
+
+<h2 id="opensharing-with-s3rdma-backend">OpenSharing with S3/RDMA backend</h2>
 
 <p>S3/RDMA uses RDMA URLs to GET and PUT (although in case of OpenSharing, it's all read-only, so just GET), so we need to be able to return those links.</p>
 
@@ -251,6 +255,8 @@
 
 <p>They both work.</p>
 
+<h3 id="application-integration-challenge">Application integration challenge</h3>
+
 <p>I am not aware of other OpenSharing server implementations with S3/RDMA support. There probably are some, but I haven't heard of them.</p>
 
 <p>Existing OpenSharing servers need small modifications to work with S3/RDMA, but clients need more work because it's not a matter of "downloading" a file/object using RDMA, but using it in an application, and for that an RDMA-capable S3 client needs to be part of the the application to avoid copying.</p>
@@ -258,6 +264,17 @@
 <p>As you can see in the screenshots, I had "a" client, but as I mentioned before, I have no plans to open the source code for either the server or S3/RDMA client because it's simply easier for me that way - I have much less maintenance work to do and I don't miss any community contributions because I don't get any anyway. It is enough for functional and performance evaluation as-is.</p>
 
 <p>Until some popular open source S3 client library implements S3/RDMA and applications start including it by default, everyone has to build their own or get it from a vendor (I think some S3 vendors forked PyTorch and other popular frameworks for GPU computing and enabled them for their S3/RDMA).</p>
+
+<p>So, the client challenge is:</p>
+
+<ul>
+  <li>being able to "download", which is what's demonstrated above, shows the server responds correctly, but</li>
+  <li>If you "download" to disk, you lose most benefits from RDMA. For meaningful use, you need S3/RDMA client that works with your CUDA-enabled application</li>
+</ul>
+
+<p>There are ongoing efforts to make this seamless rather than an exercise for each individual user, so check with your S3 vendor…</p>
+
+<h3 id="is-it-worth-it">Is it worth it?</h3>
 
 <p>Creating your own modified S3 client library makes sense if you deal with large amounts of data every day, especially if it's time-sensitive, too.</p>
 
