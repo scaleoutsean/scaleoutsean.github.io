@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          10 minute read
+          11 minute read
         
       </span>
     
@@ -227,7 +227,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#use-cases">Use cases</a></li><li><a href="#making-use-of-vgw-s3rdma-with-e-series">Making use of VGW S3/RDMA with E-Series</a></li><li><a href="#where-does-netapp-storagegrid-fit">Where does NetApp StorageGRID fit</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-vgw-s3rdma-backed-by-e-series-nvmeroce">Appendix A: VGW S3/RDMA backed by E-Series (NVMe/RoCE)</a></li><li><a href="#appendix-b-demo-with-beeond">Appendix B: Demo with BeeOND</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#use-cases">Use cases</a></li><li><a href="#making-use-of-vgw-s3rdma-with-e-series">Making use of VGW S3/RDMA with E-Series</a></li><li><a href="#where-does-netapp-storagegrid-fit">Where does NetApp StorageGRID fit</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-vgw-s3rdma-backed-by-e-series-nvmeroce">Appendix A: VGW S3/RDMA backed by E-Series (NVMe/RoCE)</a></li><li><a href="#appendix-b-demo-with-beeond">Appendix B: Demo with BeeOND</a></li><li><a href="#appendix-c-additional-fiddling">Appendix C: Additional fiddling</a></li></ul>
             </nav>
           </aside>
         
@@ -698,6 +698,80 @@ hca_id: mlx5_0
 <ul>
   <li><a href="https://rumble.com/v7dx4oc-versity-s3-gateway-serving-s3rdma-on-beegfs-beeond.html">Versity S3 Gateway (S3/RDMA) with BeeGFS 8.4.0 and EF600 (NVMe/RoCE)</a> - 3m0s</li>
 </ul>
+
+<h2 id="appendix-c-additional-fiddling">Appendix C: Additional fiddling</h2>
+
+<p>Because I can't reliably get objects larger than 5 MiB to work consistently, I tried several other things. One of them was to add concurrency to <code class="language-plaintext highlighter-rouge">cuobjtest</code>.</p>
+
+<p>That helped a lot, even though I'm using the crippled non-GPU RDMA client. Some findings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Object size (MiB)</th>
+      <th>Concurrency</th>
+      <th>S3/RDMA</th>
+      <th>Throughput (MiB/s)</th>
+      <th>CPU % (Host)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>5</td>
+      <td>1</td>
+      <td>No</td>
+      <td>80</td>
+      <td>&gt;1%</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>1</td>
+      <td>Yes</td>
+      <td>112</td>
+      <td>1%</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>4</td>
+      <td>No</td>
+      <td>314</td>
+      <td>10%</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>4</td>
+      <td>Yes</td>
+      <td>337</td>
+      <td>%</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>It's still not great (and I haven't tried higher concurrency counts), but it's much better. The real solution is proper CUDA hardware and larger object sizes, but I can't do that now.</p>
+
+<p>With increased concurrency, I was able to get CPU utilization on the server to almost 10% combined when standard S3 is used (HTTP, so no TLS):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">-system-</span> <span class="nt">----total-usage----</span> <span class="nt">-dsk</span>/total- <span class="nt">-net</span>/total- <span class="nt">---paging--</span> <span class="nt">---system--</span>
+ <span class="nb">times</span>  |usr sys idl wai stl| <span class="nb">read  </span>writ| recv  send|  <span class="k">in   </span>out | int   csw
+07:31:20|  6   3  90   0   0|   0   307M| 150M  162M|   0     0 |  47k   31k
+07:31:21|  6   2  91   0   0|   0   152k| 152M  142M|   0     0 |  41k   27k
+07:31:22|  6   3  90   0   0|   0    68k| 153M  160M|   0     0 |  47k   30k
+</code></pre></div></div>
+
+<p>That's <code class="language-plaintext highlighter-rouge">dstat</code> output, so it shows everything. Just FYI.</p>
+
+<p>The same test with S3/RDMA shows S3/RDMA saves me close to 50% - 4 percent compared to 6 percent without S3/RDMA.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">-system-</span> <span class="nt">----total-usage----</span> <span class="nt">-dsk</span>/total- <span class="nt">-net</span>/total- <span class="nt">---paging--</span> <span class="nt">---system--</span>
+ <span class="nb">times</span>  |usr sys idl wai stl| <span class="nb">read  </span>writ| recv  send|  <span class="k">in   </span>out | int   csw
+07:31:45|                   |           |           |           |
+07:31:46|  4   2  92   0   0|   0   545k| 103k   78k|   0     0 |  42k   26k
+07:31:47|  4   2  93   0   0|   0  1741k|  96k   68k|   0     0 |  40k   25k
+</code></pre></div></div>
+
+<p>And then of course going from 112 to 337 MiB/s with higher concurrency in <code class="language-plaintext highlighter-rouge">cuobjtest</code> is phenomenal. Let's hope Versity adds the concurrency argument to <code class="language-plaintext highlighter-rouge">cuobjtest</code>.</p>
+
+<p>The potential is there even without CUDA - improved performance with much less resources.</p>
 
         
       </section>
