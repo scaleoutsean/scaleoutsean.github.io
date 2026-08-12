@@ -212,7 +212,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -701,6 +701,8 @@ hca_id: mlx5_0
 
 <h2 id="appendix-c-additional-fiddling">Appendix C: Additional fiddling</h2>
 
+<p>This is still with host-based memory (no CUDA).</p>
+
 <p>Because I can't reliably get objects larger than 5 MiB to work consistently, I tried several other things. One of them was to add concurrency to <code class="language-plaintext highlighter-rouge">cuobjtest</code>.</p>
 
 <p>That helped a lot, even though I'm using the crippled non-GPU RDMA client. Some findings:</p>
@@ -742,7 +744,7 @@ hca_id: mlx5_0
       <td>4</td>
       <td>Yes</td>
       <td>337</td>
-      <td>%</td>
+      <td>&lt;7%</td>
     </tr>
   </tbody>
 </table>
@@ -771,7 +773,70 @@ hca_id: mlx5_0
 
 <p>And then of course going from 112 to 337 MiB/s with higher concurrency in <code class="language-plaintext highlighter-rouge">cuobjtest</code> is phenomenal. Let's hope Versity adds the concurrency argument to <code class="language-plaintext highlighter-rouge">cuobjtest</code>.</p>
 
-<p>The potential is there even without CUDA - improved performance with much less resources.</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">time</span> ./cuobjtest <span class="nt">-access</span> admin <span class="nt">-bucket</span> rdma <span class="nt">-endpoint</span> http://192.168.1.11:7070 <span class="nt">-n</span> 1000 <span class="nt">-secret</span> secret <span class="nt">-size</span> 5MiB <span class="nt">-c</span> 4 <span class="nt">-get-only</span>
+
+<span class="nt">----------------------------------------------------------------------</span>
+OVERALL <span class="nv">elapsed</span><span class="o">=</span>11.73 s  GET <span class="nv">agg</span><span class="o">=</span>0.447 GB/s <span class="o">(</span>1000 ops, 85.22 ops/s<span class="o">)</span>
+GET  <span class="nv">avg</span><span class="o">=</span>22.41 ms    <span class="nv">min</span><span class="o">=</span>15.07 ms    <span class="nv">max</span><span class="o">=</span>58.77 ms    avg 0.234 GB/s
+
+GET-only run complete.
+
+real    0m11.781s
+user    0m13.255s
+sys     0m15.726s
+</code></pre></div></div>
+
+<p>With <code class="language-plaintext highlighter-rouge">-get-only</code> on 2-CPU (Intel(R) Xeon(R) Silver 4110 CPU @ 2.10GHz) client:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Object size (MiB)</th>
+      <th>Concurrency</th>
+      <th>Access</th>
+      <th>S3/RDMA</th>
+      <th>Throughput (MiB/s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>5</td>
+      <td>4</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>447</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>8</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>840</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>32</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>1,367</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>64</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>1,826</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>At 64 concurrency, CPU utilization on client is 26% and GET latency goes over 100ms, but both client and server have old CPUs. Server-side view:</p>
+
+<p><img src="/assets/images/versity-s3-rdma-08-vgwrdma-beegfs-concurrency-get-only.png" alt="vgwrdma with BeeGFS DIrectIO multi-concurrency, GET-only" /></p>
+
+<p>I couldn't get <code class="language-plaintext highlighter-rouge">-get-only</code> to work with <code class="language-plaintext highlighter-rouge">-std-s3</code> to compare with S3/RDMA.</p>
+
+<p>The potential is there, even without CUDA - improved performance with less CPU resources.</p>
 
         
       </section>
@@ -998,7 +1063,7 @@ hca_id: mlx5_0
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          9 minute read
         
       </span>
     
