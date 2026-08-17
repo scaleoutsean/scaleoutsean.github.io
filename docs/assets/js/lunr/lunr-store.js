@@ -2484,7 +2484,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Does OpenSharing have anything for NetApp E-Series?",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction Some of your applications...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway PART FIVE: OpenSharing Server with...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta","opensharing","delta-lake"],
         "url": "/2026/06/14/netapp-eseries-opensharing-deltasharing.html",
         "teaser": null
@@ -2496,13 +2496,13 @@ var store = [{
         "teaser": null
       },{
         "title": "IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction This post wraps up...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway PART FIVE: OpenSharing Server with...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","iceberg","delta-lake","compaction","opensharing","iot","versity"],
         "url": "/2026/06/16/netapp-eseries-iot-compaction-opensharing.html",
         "teaser": null
       },{
         "title": "NetApp volume content sharing with OpenSharing and Versity S3 Gateway",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway Introduction The other day I...","categories": ["netapp","storage","analytics"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway PART FIVE: OpenSharing Server with...","categories": ["netapp","storage","analytics"],
         "tags": ["analytics","e-series","opensharing","volumes","versity","file-sharing"],
         "url": "/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html",
         "teaser": null
@@ -2568,7 +2568,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway",
-        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway In the previous three...","categories": ["netapp","storage","analytics","projects"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway PART FIVE: OpenSharing Server...","categories": ["netapp","storage","analytics","projects"],
         "tags": ["analytics","e-series","opensharing","storagegrid","volumes","tables","versity","file-sharing"],
         "url": "/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html",
         "teaser": null
@@ -2579,7 +2579,7 @@ var store = [{
         "url": "/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html",
         "teaser": null
       },{
-        "title": "Tier WEKA NeuralMesh to NetApp StorageGRID S3 Object Store",
+        "title": "Tier WEKA NeuralMesh to NetApp StorageGRID S3",
         "excerpt":"Introduction Just in case anyone wondered: yes, you can use WEKA NeuralMesh with NetApp StorageGRID. To be exact, “to use with” means this: As WEKA explains: Users seeking to balance performance and cost must consider a tiered data management system, with the assurance that the WEKA system features control the...","categories": ["storage","ai","s3"],
         "tags": ["tiering","storagegrid","weka"],
         "url": "/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html",
@@ -2640,9 +2640,15 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing Server with S3/RDMA-based Versity S3 Gateway",
-        "excerpt":"Introduction In yesterday’s post we saw how the Versity S3 Gateway with S3/RDMA support works with a single-host (XFS) and parallel file system (BeeGFS): I also have an OpenSharing Server implementation that supports NetApp StorageGRID and Versity S3 Gateway, so why not enable it for S3/RDMA when VGW is setup...","categories": ["storage","eseries","netapp","s3"],
+        "excerpt":"PART ONE: Does OpenSharing have anything for NetApp E-Series? PART TWO: IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series PART THREE: NetApp volume content sharing with OpenSharing and Versity S3 Gateway PART FOUR: OpenSharing demo server for NetApp StorageGRID and E-Series with Versity S3 Gateway PART FIVE: OpenSharing Server...","categories": ["storage","eseries","netapp","s3"],
         "tags": ["versity","s3","rdma","vgw","opensharing"],
         "url": "/2026/08/10/opensharing-with-versity-s3-rdma-and-netapp-eseries.html",
+        "teaser": null
+      },{
+        "title": "Auditing StorageGRID Cloud Storage Pools with SGAC",
+        "excerpt":"Introduction StorageGRID Audit-log Converter aka SGAC is one of the more frequently downloaded utilities I maintain on Github. I don’t recommend it for version 12, but people still download it. I suppose there are still some use cases for it: People who can’t or won’t do the right thing and...","categories": ["projects","storage","netapp"],
+        "tags": ["audit","log","s3","storagegrid","sgac","compliance"],
+        "url": "/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2658,7 +2664,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"OpenSharing Server with S3/RDMA-based Versity S3 Gateway 2026-08-10 00:00 2 minute read Since Versity supports S3/RDMA, OpenSharing should support it, too. Let’s see… S3/RDMA with Versity S3 Gateway and NetApp E-Series 2026-08-08 00:00 12 minute read Getting S3/RDMA with Versity S3 Gateway and NetApp SANtricity as well as BeeGFS (BeeOND)...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Auditing StorageGRID Cloud Storage Pools with SGAC 2026-08-16 00:00 12 minute read The post walks us through audit log and extracting CSP-related data from it OpenSharing Server with S3/RDMA-based Versity S3 Gateway 2026-08-10 00:00 3 minute read Since Versity supports S3/RDMA, OpenSharing should support it, too. Let’s see… S3/RDMA with...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4588,4 +4594,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://scaleoutsean.github.io/page63/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://scaleoutsean.github.io/page64/"
   }]
