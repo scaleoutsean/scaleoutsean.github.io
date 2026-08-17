@@ -2651,6 +2651,12 @@ var store = [{
         "url": "/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html",
         "teaser": null
       },{
+        "title": "Single-volume sequential PUT test with Versity S3 on BeeGFS",
+        "excerpt":"Introduction Two months ago I did a “sequential” GET test with Versity S3 Gateway on EF600. That post is here. I had better control over hardware, but not much of it, so the test was single-client-single-server-single-volume. This time I had a chance to run a similar PUT test in another...","categories": ["storage","s3"],
+        "tags": ["versity","s3","versitygw","beegfs","nixl","gds"],
+        "url": "/2026/08/17/versity-sequential-s3-put-test.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2664,7 +2670,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Auditing StorageGRID Cloud Storage Pools with SGAC 2026-08-16 00:00 13 minute read The post walks us through audit log and extracting CSP-related data from it OpenSharing Server with S3/RDMA-based Versity S3 Gateway 2026-08-10 00:00 3 minute read Since Versity supports S3/RDMA, OpenSharing should support it, too. Let’s see… S3/RDMA with...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Single-volume sequential PUT test with Versity S3 on BeeGFS 2026-08-17 00:00 3 minute read I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS Auditing StorageGRID Cloud Storage Pools with SGAC 2026-08-16 00:00 13 minute read The post walks us through audit log...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4327,6 +4333,12 @@ var store = [{
   },{
     "title": "vgw",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/vgw/"
+  },{
+    "title": "nixl",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nixl/"
+  },{
+    "title": "gds",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/gds/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"

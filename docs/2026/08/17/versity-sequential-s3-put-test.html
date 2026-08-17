@@ -1,0 +1,673 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Single-volume sequential PUT test with Versity S3 on BeeGFS | Acting Technologist</title>
+<meta name="description" content="I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS">
+
+
+  <meta name="author" content="scaleoutSean">
+  
+  <meta property="article:author" content="scaleoutSean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Single-volume sequential PUT test with Versity S3 on BeeGFS">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/08/17/versity-sequential-s3-put-test.html">
+
+
+  <meta property="og:description" content="I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS">
+
+
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Single-volume sequential PUT test with Versity S3 on BeeGFS">
+  <meta name="twitter:description" content="I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/17/versity-sequential-s3-put-test.html">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-08-17T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/08/17/versity-sequential-s3-put-test.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Single-volume sequential PUT test with Versity S3 on BeeGFS">
+    <meta itemprop="description" content="I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS">
+    <meta itemprop="datePublished" content="2026-08-17T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/08/17/versity-sequential-s3-put-test.html" itemprop="url">Single-volume sequential PUT test with Versity S3 on BeeGFS
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-17T00:00:00+08:00">2026-08-17 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#put">PUT</a></li><li><a href="#get">GET</a></li><li><a href="#bonus-tests">Bonus tests</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>Two months ago I did a "sequential" GET test with Versity S3 Gateway on EF600. That post is <a href="/2026/06/25/versity-sequential-s3-get-test.html">here</a>.</p>
+
+<p>I had better control over hardware, but not much of it, so the test was single-client-single-server-single-volume.</p>
+
+<p>This time I had a chance to run a similar PUT test in another environment.</p>
+
+<ul>
+  <li>Versity S3 Gateway server v1.7.0 on BeeGFS 8.4.0 client (serving data from <code class="language-plaintext highlighter-rouge">/mnt/beegfs/</code>)</li>
+  <li>S3 client: Ubuntu 24.04 with MinIO Warp</li>
+  <li>NVMe/RoCE network with wire throughput 16 GB/s (tested) between server and client</li>
+</ul>
+
+<p>I wanted to see if results in this environment align with what I saw in the previous test.</p>
+
+<h2 id="put">PUT</h2>
+
+<p>In order to GET, I had to PUT first, so I ran a PUT test (3 minutes).</p>
+
+<p>This test went fine. I observed over 3 GiB/s with a single VGW client (standard S3).</p>
+
+<p><img src="/assets/images/vgw-beegfs-00-put.png" alt="VGW on BeeGFS" /></p>
+
+<p>I also tried S3/RDMA, but result was consistent with the <a href="/2026/08/08/versity-s3-rdma-with-netapp-eseries.html#appendix-c-additional-fiddling">observations in the S3/RDMA post</a> - barely 1 GiB second as S3/RDMA backed by DRAM runs slowly due to the various overheads.</p>
+
+<p>I know the S3 server (which is a BeeGFS client) can write to BeeGFS faster than 3 GiB/s, but this is a very nice result because it's just one instance of Versity S3 Gateway. We can run multiple if we need to, because any BeeGFS client can see the same BeeGFS data.</p>
+
+<h2 id="get">GET</h2>
+
+<p>I hit a "hardware problem" here - both S3 client and S3 server had 1TiB of RAM…</p>
+
+<p>The read performance was ridiculous.</p>
+
+<p><img src="/assets/images/vgw-beegfs-01-put-and-get.png" alt="VGW on BeeGFS" /></p>
+
+<p>Another attempt after dropping OS cache on both S3 server and S3 client followed by an S3 service restart:</p>
+
+<p><img src="/assets/images/vgw-beegfs-02-get.png" alt="VGW on BeeGFS" /></p>
+
+<p>I think it was BeeGFS <em>server</em> that had data in cache and I couldn't restart this shared hardware.</p>
+
+<p>Well, at least we know that, serving S3 from cache is close to wire speed, and this is without any tuning.</p>
+
+<p>I even tried with a 4.5 TB data set and still couldn't get less. The most I got was 15.05 GiB/s.</p>
+
+<p>I think all data came from some cache between EF80 and BeeGFS client because storage showed barely any disk read IO after write tests. There's just one tiny blip after the two large PUT tests.</p>
+
+<p><img src="/assets/images/vgw-beegfs-03-storage.png" alt="GET on in SANtricity UI" /></p>
+
+<p>I've no idea why I failed to see disk reads on storage even with a 4 TB data set, but I couldn't reboot servers or restart BeeGFS to investigate further.</p>
+
+<h2 id="bonus-tests">Bonus tests</h2>
+
+<p>I tried GDS (from the S3 client system to <code class="language-plaintext highlighter-rouge">/mnt/beegfs</code> it was mounting).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># /usr/local/cuda-13.2/gds/tools/gdsio -D /mnt/beegfs/sean/fio/ -w 8 -d 1 -I 1 -x 1 -s 16G -i 1M</span>
+IoType: WRITE XferType: CPUONLY Threads: 8 DataSetSize: 129411072/134217728<span class="o">(</span>KiB<span class="o">)</span> IOSize: 1024<span class="o">(</span>KiB<span class="o">)</span> Throughput: 9.677219 GiB/sec, Avg_Latency: 804.543220 usecs ops: 126378 total_time 12.753252 secs
+
+<span class="c"># /usr/local/cuda-13.2/gds/tools/gdsio -D /mnt/beegfs/sean/fio/ -w 8 -d 1 -I 0 -x 1 -s 16G -i 1M</span>
+IoType: READ XferType: CPUONLY Threads: 8 DataSetSize: 131591168/134217728<span class="o">(</span>KiB<span class="o">)</span> IOSize: 1024<span class="o">(</span>KiB<span class="o">)</span> Throughput: 10.642912 GiB/sec, Avg_Latency: 734.074935 usecs ops: 128507 total_time 11.791427 secs
+</code></pre></div></div>
+
+<p>I also tried the NIXL benchmark. I got about 2 GiB/s with 4 MiB requests. The reason was I was using DRAM, not VRAM (TLDR; the NIC wasn't directly reachable from GPUs - the same problem that affected my S3/RDMA tests with this system and the one from the S3/RDMA post).</p>
+
+<p>The same benchmark is outdated and didn't work for S3/RDMA using CuObject because it requires vendor-specific code which doesn't yet exist for Versity's S3/RDMA server. Only standard S3 worked.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In the previous throughput test conducted in a different environment I got close to 5 GB/s in read throughput from a single client accessing Versity S3 Gateway sharing data from one XFS-formatted LUN. PUT test on that storage was affected due to a failed cache battery.</p>
+
+<p>With faster hardware and no hardware issues, I was able to get 3 GiB/s PUT from a similar configuration and - knowing I could get around 6 GiB/s with <code class="language-plaintext highlighter-rouge">fio</code> (single process, multi-threaded) read tests, I think I would have gotten over 5 GiB/s GET here as well if it wasn't for the caching effect.</p>
+
+<p>In any case, results seem consistent: the Versity S3 Gateway seems capable of 5 GiB/s GET and at least 3 GiB/s PUT throughput using MinIO Warp with the default 20 threads and an 8 MiB object size.</p>
+
+<p>If your workload can benefit from OS cache, you may be able to get a lot better read performance, as I've observed 12-15 GiB/s GET performance in this environment where wire speed was 16 GiB/s.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/gds" class="page__taxonomy-item p-category" rel="tag">gds</a><span class="sep">, </span>
+    
+      <a href="/tags/nixl" class="page__taxonomy-item p-category" rel="tag">nixl</a><span class="sep">, </span>
+    
+      <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/tags/versity" class="page__taxonomy-item p-category" rel="tag">versity</a><span class="sep">, </span>
+    
+      <a href="/tags/versitygw" class="page__taxonomy-item p-category" rel="tag">versitygw</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-08-17T00:00:00+08:00">2026-08-17 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Single-volume+sequential+PUT+test+with+Versity+S3+on+BeeGFS%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F17%2Fversity-sequential-s3-put-test.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/08/17/versity-sequential-s3-put-test.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html" class="pagination--pager" title="Auditing StorageGRID Cloud Storage Pools with SGAC">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html" rel="permalink">Auditing StorageGRID Cloud Storage Pools with SGAC
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-16T00:00:00+08:00">2026-08-16 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          13 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The post walks us through audit log and extracting CSP-related data from it
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/10/opensharing-with-versity-s3-rdma-and-netapp-eseries.html" rel="permalink">OpenSharing Server with S3/RDMA-based Versity S3 Gateway
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-10T00:00:00+08:00">2026-08-10 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Since Versity supports S3/RDMA, OpenSharing should support it, too. Let's see…
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/08/versity-s3-rdma-with-netapp-eseries.html" rel="permalink">S3/RDMA with Versity S3 Gateway and NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-08T00:00:00+08:00">2026-08-08 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Getting S3/RDMA with Versity S3 Gateway and NetApp SANtricity as well as BeeGFS (BeeOND)
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/07/simple-access-to-beegfs-rst-data.html" rel="permalink">Directly access BeeGFS RST data on NetApp StorageGRID
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-07T00:00:00+08:00">2026-08-07 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">How to enable secure access to BeeGFS RST-tiered data on StorageGRID from anywhere you need
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
