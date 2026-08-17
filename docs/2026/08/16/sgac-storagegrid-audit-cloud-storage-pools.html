@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -375,7 +375,11 @@
 
 <p>So, to get to CSP I use <code class="language-plaintext highlighter-rouge">csp_bucket</code> + <code class="language-plaintext highlighter-rouge">/</code> + <code class="language-plaintext highlighter-rouge">sg_bucket</code>+ <code class="language-plaintext highlighter-rouge">.</code> + <code class="language-plaintext highlighter-rouge">CPTH</code> + <code class="language-plaintext highlighter-rouge">.</code> + <code class="language-plaintext highlighter-rouge">LTIM</code> (the last two values are from the metadata lookup JSON above) identify the S3 key for this object.</p>
 
-<p><code class="language-plaintext highlighter-rouge">CPTH</code> is the same as <code class="language-plaintext highlighter-rouge">sg_bucket</code> + <code class="language-plaintext highlighter-rouge">UUID</code> from audit log. <code class="language-plaintext highlighter-rouge">LTIM</code> is a problem because that isn't in the audit log lines above. But it is in audit log: tiering action (copy-object-to-CSP) is a separate action from tiering and it uses a private API (<code class="language-plaintext highlighter-rouge">/api/v4/private/object-metadata</code>), which isn't guaranteed to remain stable or even available in future versions of StorageGRID, so I won't attempt to rely on it. Since <code class="language-plaintext highlighter-rouge">LTIM</code> is just a suffix (<code class="language-plaintext highlighter-rouge">.LTIM</code> is added to the end of S3 key), it makes the "mapping" between objects in the source and CSP destination bucket harder, but still possible with SQL <code class="language-plaintext highlighter-rouge">LIKE</code> queries or regular expressions.</p>
+<p><code class="language-plaintext highlighter-rouge">CPTH</code> is the same as <code class="language-plaintext highlighter-rouge">sg_bucket</code> + <code class="language-plaintext highlighter-rouge">UUID</code> from audit log.</p>
+
+<p><code class="language-plaintext highlighter-rouge">LTIM</code> is a problem because that isn't in the audit log lines above. But it <em>is</em> logged in audit log: there's a tiering "metadata action" (copy-object-to-CSP) triggered to rewrite StorageGRID metadata and it uses a private API (<code class="language-plaintext highlighter-rouge">/api/v4/private/object-metadata</code>), which isn't guaranteed to remain stable or even available in future versions of StorageGRID, so I won't attempt to rely on it. Yes, we can get <code class="language-plaintext highlighter-rouge">LTIM</code> today, but if they change the API 12.2, audit log will change as well and our scripts would stop working.</p>
+
+<p>Since <code class="language-plaintext highlighter-rouge">LTIM</code> is just a suffix (<code class="language-plaintext highlighter-rouge">.LTIM</code> is added to the end of S3 key), it makes the "mapping" between objects in the source and CSP destination bucket harder, but still possible with SQL <code class="language-plaintext highlighter-rouge">LIKE</code> queries or regular expressions.</p>
 
 <p>StorageGRID tenants can't use object metadata lookup API which is available only to StorageGRID administrators. Also, what if a tenant wanted to check dozens or hundreds of objects?</p>
 
@@ -389,9 +393,9 @@
 
 <p>To run a check, we'd need to compare two lists or "tables", the source and CSP.</p>
 
-<p>The next problem is CSP-tiered objects are "tainted". We can't <em>directly</em> get an object's true content from a CSP bucket and compare it against a copy from a Storage Pool. Their sizes and hashes will differ.</p>
+<p>The next problem is CSP-tiered objects are "tainted". We can't <em>directly</em> get an object's true content from a CSP bucket and compare it against a copy from a Storage Pool. Their sizes and hashes will differ. Even names (without <code class="language-plaintext highlighter-rouge">LTIM</code>) and times (because create time and "tier to CSP" time will differ from when an object is written to CSP tier) won't be identical.</p>
 
-<p>So the question is what should these lists contain? I think best we can do is partial or full matches on object names from StorageGRID audit log, as explained above.</p>
+<p>So the question is what should these lists contain? I think best we can do is partial matches on object names from StorageGRID audit log, as explained above. Or, if you want to chase any private API changes, get <code class="language-plaintext highlighter-rouge">LTIM</code> as well and you can perform full matches on object names.</p>
 
 <h2 id="object-versioning-on-csp-buckets">Object versioning on CSP buckets</h2>
 
@@ -405,20 +409,18 @@
 
 <p>But I have it enabled. And object count is 8, while there's only three.</p>
 
-<p><img src="/assets/images/sgac-csp-08-object-lock-csp.png" alt="Object Lock on the source" /></p>
-
-<p>That means at least versions - if not locked versions - exist.</p>
+<p>That means several versions - if not <em>locked</em> versions - must exist.</p>
 
 <p><img src="/assets/images/sgac-csp-09-object-lock-object-count.png" alt="Object count" /></p>
 
-<p>But I see locks are in place.</p>
+<p>I also see locks are in place on source bucket objects.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc retention info pepsi/csp-pepsi/LICENSE
 Name    : pepsi/csp-pepsi/LICENSE
 Mode    : GOVERNANCE, expiring <span class="k">in </span>1 days, 20 hours
 </code></pre></div></div>
 
-<p>And although the source bucket shows fewer objects, the CSP bucket shows 7 (I added one to the source bucket minutes ago and it hasn't been tiered to CSP yet):</p>
+<p>And although the source bucket shows few objects, the CSP bucket shows 7 (I added one to the source bucket minutes ago and it hasn't been tiered to CSP yet):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/csp
 <span class="o">[</span>2026-08-16 01:26:31 CST]  78KiB STANDARD csp-pepsi.0565EC40-9805-11F1-A806-BD38BA164DDB.1786814791877426
@@ -497,7 +499,7 @@ mc: &lt;ERROR&gt; Remote bucket <span class="sb">`</span>s3/csp/csp-pepsi.7C0FA3
 <ul>
   <li>Use SGAC output to verify existence and no tampering for 1% of the CSP-tiered objects (using full or <code class="language-plaintext highlighter-rouge">LIKE</code> matching explained above). This could use SGAC output (or Elasticsearch query output, if you feed StorageGRID audit log to Elastic)</li>
   <li>Use S3 logs from the <em>destination</em> object store to make sure no CSP object was ever overwritten (as that isn't supposed to happen) and that can be easily checked by enabling versioning on the CSP bucket. You may also want to check object deletes - while this is more complicated to check, if the shortest ILM retention rule used on the bucket is 365 days, no deleted object should be aged less than 364 days. You can build scripts that make these checks more targeted based on ILM rules that apply to policies that tier into that CSP destination</li>
-  <li>Retain all audit logs in a read-only bucket (possibly in a 3rd location)</li>
+  <li>Retain all audit logs in a read-only bucket (possibly in a different cloud or StorageGRID region)</li>
 </ul>
 
 <p>Since there are several ways to do this, it doesn't seem like something that should be added to SGAC as a generic feature, and so far I've heard just about people kicking tires on this topic. If I hear some concrete requirements from real customers, maybe I'll improve SGAC to make it easier to get a list of candidates to sample from CSP.</p>
