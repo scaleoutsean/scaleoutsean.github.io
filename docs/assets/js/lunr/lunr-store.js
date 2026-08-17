@@ -2647,7 +2647,7 @@ var store = [{
       },{
         "title": "Auditing StorageGRID Cloud Storage Pools with SGAC",
         "excerpt":"Introduction StorageGRID Audit-log Converter aka SGAC is one of the more frequently downloaded utilities I maintain on Github. I don’t recommend it for version 12, but people still download it. I suppose there are still some use cases for it: People who can’t or won’t do the right thing and...","categories": ["projects","storage","netapp"],
-        "tags": ["audit","log","s3","storagegrid","sgac","compliance"],
+        "tags": ["audit","log","s3","storagegrid","sgac","compliance","replication"],
         "url": "/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html",
         "teaser": null
       },{
