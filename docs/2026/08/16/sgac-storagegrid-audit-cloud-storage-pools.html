@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          13 minute read
+          14 minute read
         
       </span>
     
@@ -453,6 +453,16 @@ mc: &lt;ERROR&gt; Remote bucket <span class="sb">`</span>s3/csp/csp-pepsi.7C0FA3
 </code></pre></div></div>
 
 <p>So, the claim related to object lock and CSP seems wrong. It is true there's no object lock on the destination CSP bucket, but that was never in question and that's not what the documentation claims. Objects with object lock <em>are</em> being tiered to CSP buckets, it's just that they're not <em>locked</em> there.</p>
+
+<p>To test, I made sure Object Lock is enabled on the bucket, with 2 day duration and created a new object, <code class="language-plaintext highlighter-rouge">LICENSE</code> at 2026-08-17 04:40:44 GMT. I checked 24 hours later (Tue Aug 18 05:10:55 AM UTC 2026). The object was supposed to be tiered after 24 hours as per that per-tenant policy tag for the <code class="language-plaintext highlighter-rouge">pepsi</code> tenant.</p>
+
+<p><img src="/assets/images/sgac-csp-10-object-lock-in-csp.png" alt="Locked object in CSP" /></p>
+
+<p>The object was tiered to CSP bucket. Another interesting point is that - perhaps because I checked barely 24 hours later - that the object had <em>three</em> copies in local storage pools. The reason is likely that the first rule makes 2 copies, and the second 1 local and 1 in CSP, so if they briefly overlap (like now), we'd see 3 copies on local storage pools until the 2nd copy from the first rule is deleted.</p>
+
+<p>Below, we see Object Lock has close to 24 hours to expiry, but CSP does have a copy as well.</p>
+
+<p><img src="/assets/images/sgac-csp-11-object-lock-in-csp-and-local-time.png" alt="Locked object in CSP and local time" /></p>
 
 <p>One could probably even enable object lock on CSP buckets, as long as locks expire sooner than shortest StorageGRID ILM rule that's supposed to delete them. I'm not advocating this, I'm just saying the documentation in StorageGRID version 12.1 doesn't seem accurate and fails to elaborate on potentially useful data protection scenarios for CSP copies.</p>
 
