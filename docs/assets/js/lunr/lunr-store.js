@@ -2659,7 +2659,7 @@ var store = [{
       },{
         "title": "Datalake-ish RAG with (only) NetApp StorageGRID S3",
         "excerpt":"Introduction This is going to be yet another post written from an S3-centric perspective. In the recent hybrid cloud post I claimed hybrid cloud is a solved problem thanks to on-premises S3 object stores and I’ve been saying S3 has become the single source of truth because it’s the only...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
-        "tags": ["rag","datalake"],
+        "tags": ["rag","datalake","inferencing"],
         "url": "/2026/08/19/datalake-rag-netapp-storagegrid.html",
         "teaser": null
       },{
@@ -4348,6 +4348,9 @@ var store = [{
   },{
     "title": "datalake",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/datalake/"
+  },{
+    "title": "inferencing",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/inferencing/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
