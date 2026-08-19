@@ -1,0 +1,691 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Datalake-ish RAG with (only) NetApp StorageGRID S3 | Acting Technologist</title>
+<meta name="description" content="AI workloads without persistent file or block, with just StorageGRID S3">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Datalake-ish RAG with (only) NetApp StorageGRID S3">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/08/19/datalake-rag-netapp-storagegrid.html">
+
+
+  <meta property="og:description" content="AI workloads without persistent file or block, with just StorageGRID S3">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/s3-rag-00-diagram.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Datalake-ish RAG with (only) NetApp StorageGRID S3">
+  <meta name="twitter:description" content="AI workloads without persistent file or block, with just StorageGRID S3">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/19/datalake-rag-netapp-storagegrid.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/s3-rag-00-diagram.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-08-19T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/08/19/datalake-rag-netapp-storagegrid.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Datalake-ish RAG with (only) NetApp StorageGRID S3">
+    <meta itemprop="description" content="The post discusses the trend of hosting all AI-related persistent data on S3 object stores">
+    <meta itemprop="datePublished" content="2026-08-19T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/08/19/datalake-rag-netapp-storagegrid.html" itemprop="url">Datalake-ish RAG with (only) NetApp StorageGRID S3
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-19T00:00:00+08:00">2026-08-19 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#was-it-ever-different">Was it ever different?</a></li><li><a href="#s3-only-rag-with-storagegrid">S3-only RAG with StorageGRID</a></li><li><a href="#s3-bucket-details">S3 bucket details</a></li><li><a href="#closing-thoughts">Closing thoughts</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="introduction">Introduction</h2>
+
+<p>This is going to be yet another post written from an S3-centric perspective.</p>
+
+<p>In the recent <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">hybrid cloud post</a> I claimed hybrid cloud is a solved problem thanks to on-premises S3 object stores and I've been saying S3 has become the single source of truth because it's the only storage protocol that works well in hybrid cloud.</p>
+
+<p>In this post, I will provide another example of why that is the case using RAG as an example. The reason I pick that and not some well-established analytics example is that there's already no other way to run analytics but on S3.</p>
+
+<p>So, while this is's <em>not</em> something new, it <em>may be new</em> to those who aren't aware that AI workflows have <em>adopted</em> the well-established patterns from analytics.</p>
+
+<h2 id="was-it-ever-different">Was it ever different?</h2>
+
+<p>You may say: "it was always like that - input data and models could be on S3 and we'd use file and block as usual".</p>
+
+<p>It is true that various inputs (unstructured and structured data), models and artifacts are usually on S3. But without data lake patterns, your workflows, databases and the rest was running the old way, on VMs or containers attached to <em>persistent</em> volumes on block or file storage.</p>
+
+<p>Last year <a href="/2025/07/18/s3-vector-search-01-analysis.html">AWS launched S3 Vectors</a>, which was a major move in serverless vector databases. As you can see in that post, I was skeptical about it, because it seemed very limited. Even AWS recommended using "real" vector-enabled databases (or database <em>services</em> provided by AWS) for non-entry-level use cases.</p>
+
+<p>I saw generic or specialized vector databases as essential and did not think S3 Vector would be widely used. What I did not see last year was that such databases did not have to run on block storage. Data lake vendors realized that right away. They and many others are now pushing in that same direction, making "serverless" vector databases work well on S3 for more than just entry-level cases.</p>
+
+<p>Furthermore, data lake vendors, who already ran S3-backed databases and analytics workflows at the time, probably instantly realized those can be effectively adopted to AI. Among other things, they needed to add embeddings to data lake tables.</p>
+
+<p>That brings enormous value to both entry-level users (those who use S3 Vectors today) but also mid-level where data lakes are "good enough" as far as inferencing performance is concerned. Both of these segments get provide superior, established workflows and security inherited from, and shared with, analytics workloads which many already have.</p>
+
+<h2 id="s3-only-rag-with-storagegrid">S3-only RAG with StorageGRID</h2>
+
+<p>Workflows that use S3 are the norm in analytics: data gets in, prepared, processed and finally served. We <em>may</em> have long-running services that use file or block storage, but it's highly unlikely we won't use object store as the single source of truth. <strong>One protocol - S3 - is for all practical purposes mandatory, while the rest may be optional.</strong></p>
+
+<p><img src="/assets/images/s3-rag-04-workflows.png" alt="Data workflow steps" /></p>
+
+<p>This basic demo with StorageGRID follows that approach for RAG. First, we upload, ingress, scrape or otherwise get raw data in. I used my own blog posts for that.</p>
+
+<p><img src="/assets/images/s3-rag-00-diagram.png" alt="S3-only RAG" /></p>
+
+<p>Then we run the data preparation. I extracted only S3-categorized posts to simulate data preparation and cleaning. I stored this data structured in a data lake table (post title, content, keywords, tags, and chunked text).</p>
+
+<p>Finally, I created embeddings and stored them in an S3 table as well.</p>
+
+<p>Because all these steps are just ephemeral containers or "task workers" that either succeed and update data on S3, or fail and be restarted, we can run them anywhere - on premises or any cloud. They just need to be able to reach StorageGRID. I used on-premises Llama for data prep and embeddings creation for price/performance reasons.</p>
+
+<p>Once we're ready to serve data to users, we can also use on-premises LLMs, but in this case I picked xAI Grok because I wanted a fast chat LLM which my local GPU couldn't deliver.</p>
+
+<p>The chatbot application runs that chat bot, and has a data lake client which can access data in Silver bucket and embeddings in Gold bucket.</p>
+
+<p><img src="/assets/images/s3-rag-01-chat.png" alt="xAI Grok chat" /></p>
+
+<p>In production, this would be a lot more complex (catalogs, workflow orchestration, authentication/authorization, auditing, logging, guardrails, and so on), but that doesn't change the fundamental fact: you can do everything by using only an S3 object store such as StorageGRID.</p>
+
+<p>Also, this fundamental fact is the strongest argument <em>in favor</em> of using data lake and analytics patterns for AI: AI is a lot more complex than just reading S3 Vector data. Not just because it is, but because it happens to be even more government-regulated than most analytics workflows.</p>
+
+<p>I can run these workloads <em>anywhere</em> while my StorageGRID is on-premises (in one or multiple locations). My off-hours spend for cloud-based RAG is $0 because there are no infrastructure services (like Milvus, for example) that I need to run 24x7. I can spin up my chat app in 5 seconds while data processing runs only when there's something to do (example: daily refresh of content, which may take 60 seconds - download latest data, prepare data, create embeddings).</p>
+
+<h2 id="s3-bucket-details">S3 bucket details</h2>
+
+<p>As per that diagram above, I created three buckets on StorageGRID 12.1 for this application: <code class="language-plaintext highlighter-rouge">blog-bronze</code>, <code class="language-plaintext highlighter-rouge">blog-silver</code> and <code class="language-plaintext highlighter-rouge">blog-gold</code>:</p>
+
+<p><img src="/assets/images/s3-rag-02-buckets.png" alt="Three buckets" /></p>
+
+<p>Raw data went to <code class="language-plaintext highlighter-rouge">blog-bronze</code>. Here we can see two posts (the first of them is <a href="/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html">this one</a>).</p>
+
+<p><img src="/assets/images/s3-rag-03-raw-data-bronze.png" alt="Blog Bronze bucket" /></p>
+
+<p>The other two had just Parquet tables in them:</p>
+
+<ul>
+  <li>Silver: structured content with text chunks (segments)</li>
+  <li>Gold: table with vector embeddings</li>
+</ul>
+
+<p>Storing both structured data and vectors in S3-based tables is what makes "serverless" AI possible.</p>
+
+<h2 id="closing-thoughts">Closing thoughts</h2>
+
+<p>S3-only RAG is already suitable for simple and departmental use cases. Users can get the simplicity and economics of S3 Vectors with stable, structured, repeatable and secure workflows of data lakes.</p>
+
+<p>This "serverless RAG" example isn't a lab experiment but a simplified representation of how AI workloads run in data lakes today. That's how <a href="https://docs.databricks.com/aws/en/ai-search/ai-search#option-3-direct-vector-access-index">Databricks</a> does it, so one can perhaps complain it's "slow" or "expensive", but not that it's not a production-grade solution used by hundreds of enterprise AI users. The <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">hybrid cloud post</a> has a detail about "file-to-table" feature that Azure OneLake is is launching soon. That's nothing but S3-based RAG. I think we'll only see a lot more of S3-only AI in coming quarters.</p>
+
+<p>Data lake vendors <em>will</em> make S3-based AI work well for most use cases. If you've read the Databricks link above you would have noticed they have not one, but four patterns catering to these use cases. Classic ways of running vector-enabled database services for analytics and AI workflows will of course remain, but most will be S3-only.</p>
+
+<p>My hybrid cloud post linked here talks about zero copy analytics and the fact that data lakes, the S3 protocol and <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> make the location of object stores often not relevant to applications. It all works, and it works better and better every month.</p>
+
+<p>Transparently using S3 object stores in hybrid cloud environments frees the user from replication, copying and a lot of storage management and now, with all application stacks supporting S3 storage, S3 object stores have become the only logical choice.</p>
+
+<p>If your IT organizations is heavily focused on block and file, I think you will find it increasingly difficult to share data and onboard both AI and analytics applications without an object store with enterprise features because:</p>
+<ul>
+  <li>S3 is increasingly <em>the only</em> choice of protocol for AI workloads, and</li>
+  <li>Non-enterprise S3 won't do (even if you had it) because of compliance requirements (which Forrester Wave 2026 also mentioned as important in their review of on-premises object storage products this year).</li>
+</ul>
+
+<p><img src="/assets/images/s3-rag-05-zero-copy-data-sov-hybrid-cloud.png" alt="Zero-copy data sovereignty in hybrid cloud" /></p>
+
+<p>StorageGRID users are ready for enterprise AI workloads in data lake environments today. They can process their data anywhere, write or export data to their on-premises object stores from anywhere. Any location, any application, any workflow.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/datalake" class="page__taxonomy-item p-category" rel="tag">datalake</a><span class="sep">, </span>
+    
+      <a href="/tags/rag" class="page__taxonomy-item p-category" rel="tag">rag</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a><span class="sep">, </span>
+    
+      <a href="/categories/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-08-19T00:00:00+08:00">2026-08-19 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Datalake-ish+RAG+with+%28only%29+NetApp+StorageGRID+S3%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F19%2Fdatalake-rag-netapp-storagegrid.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/08/19/datalake-rag-netapp-storagegrid.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/08/17/versity-sequential-s3-put-test.html" class="pagination--pager" title="Single-volume sequential PUT test with Versity S3 on BeeGFS">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/17/versity-sequential-s3-put-test.html" rel="permalink">Single-volume sequential PUT test with Versity S3 on BeeGFS
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-17T00:00:00+08:00">2026-08-17 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html" rel="permalink">Auditing StorageGRID Cloud Storage Pools with SGAC
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-16T00:00:00+08:00">2026-08-16 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          13 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The post walks us through audit log and extracting CSP-related data from it
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/10/opensharing-with-versity-s3-rdma-and-netapp-eseries.html" rel="permalink">OpenSharing Server with S3/RDMA-based Versity S3 Gateway
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-10T00:00:00+08:00">2026-08-10 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Since Versity supports S3/RDMA, OpenSharing should support it, too. Let's see…
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/08/versity-s3-rdma-with-netapp-eseries.html" rel="permalink">S3/RDMA with Versity S3 Gateway and NetApp E-Series
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-08T00:00:00+08:00">2026-08-08 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          12 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Getting S3/RDMA with Versity S3 Gateway and NetApp SANtricity as well as BeeGFS (BeeOND)
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

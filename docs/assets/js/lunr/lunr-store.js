@@ -2646,8 +2646,8 @@ var store = [{
         "teaser": null
       },{
         "title": "Auditing StorageGRID Cloud Storage Pools with SGAC",
-        "excerpt":"Introduction StorageGRID Audit-log Converter aka SGAC is one of the more frequently downloaded utilities I maintain on Github. I don’t recommend it for version 12, but people still download it. I suppose there are still some use cases for it: People who can’t or won’t do the right thing and...","categories": ["projects","storage","netapp"],
-        "tags": ["audit","log","s3","storagegrid","sgac","compliance","replication"],
+        "excerpt":"Introduction StorageGRID Audit-log Converter aka SGAC is one of the more frequently downloaded utilities I maintain on Github. I don’t recommend it for version 12, but people still download it. I suppose there are still some use cases for it: People who can’t or won’t do the right thing and...","categories": ["projects","storage","netapp","storagegrid","s3"],
+        "tags": ["audit","log","sgac","compliance","replication"],
         "url": "/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html",
         "teaser": null
       },{
@@ -2655,6 +2655,12 @@ var store = [{
         "excerpt":"Introduction Two months ago I did a “sequential” GET test with Versity S3 Gateway on EF600. That post is here. I had better control over hardware, but not much of it, so the test was single-client-single-server-single-volume. This time I had a chance to run a similar PUT test in another...","categories": ["storage","s3"],
         "tags": ["versity","s3","versitygw","beegfs","nixl","gds"],
         "url": "/2026/08/17/versity-sequential-s3-put-test.html",
+        "teaser": null
+      },{
+        "title": "Datalake-ish RAG with (only) NetApp StorageGRID S3",
+        "excerpt":"Introduction This is going to be yet another post written from an S3-centric perspective. In the recent hybrid cloud post I claimed hybrid cloud is a solved problem thanks to on-premises S3 object stores and I’ve been saying S3 has become the single source of truth because it’s the only...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
+        "tags": ["rag","datalake"],
+        "url": "/2026/08/19/datalake-rag-netapp-storagegrid.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2670,7 +2676,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Single-volume sequential PUT test with Versity S3 on BeeGFS 2026-08-17 00:00 3 minute read I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS Auditing StorageGRID Cloud Storage Pools with SGAC 2026-08-16 00:00 14 minute read The post walks us through audit log...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Datalake-ish RAG with (only) NetApp StorageGRID S3 2026-08-19 00:00 6 minute read The post discusses the trend of hosting all AI-related persistent data on S3 object stores Single-volume sequential PUT test with Versity S3 on BeeGFS 2026-08-17 00:00 3 minute read I ran the same MinIO Warp tests as before...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4339,6 +4345,9 @@ var store = [{
   },{
     "title": "gds",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/gds/"
+  },{
+    "title": "datalake",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/datalake/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
