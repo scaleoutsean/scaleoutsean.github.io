@@ -2663,7 +2663,7 @@ var store = [{
         "url": "/2026/08/19/datalake-rag-netapp-storagegrid.html",
         "teaser": null
       },{
-        "title": "lakeFS for data lake AI/ML management and compliance",
+        "title": "LakeFS for data lake AI/ML management and compliance",
         "excerpt":"Introduction Last week, Datalake-ish RAG with (only) NetApp StorageGRID S3 showed how we can perform RAG and run chat without persistent file and block services. While that was a basic demo that was focused on storage-related aspects of that stack, this post is meant to show how you can use...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
         "tags": ["rag","datalake","inferencing","lakefs"],
         "url": "/2026/08/24/storagegrid-lakefs.html",
@@ -2682,7 +2682,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"lakeFS for data lake AI/ML management and compliance 2026-08-24 00:00 6 minute read lakeFS successfully brings git and file-style management to data lakes Datalake-ish RAG with (only) NetApp StorageGRID S3 2026-08-19 00:00 6 minute read The post discusses the trend of hosting all AI-related persistent data on S3 object stores...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"LakeFS for data lake AI/ML management and compliance 2026-08-24 00:00 7 minute read LakeFS successfully brings git and file-style management to data lakes Datalake-ish RAG with (only) NetApp StorageGRID S3 2026-08-19 00:00 6 minute read The post discusses the trend of hosting all AI-related persistent data on S3 object stores...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
