@@ -2672,7 +2672,7 @@ var store = [{
         "title": "AWS S3 Files, checkpointing with nvCOMP",
         "excerpt":"nvCOMP Cut Checkpoint Costs with About 30 Lines of Python and NVIDIA nvCOMP shows savings that can be obtained by compressing synchronous checkpoints with CUDA. I blogged about checkpointing some time ago and even then asynchronous was possible (early, but possible). Now NVIDIA says async checkpointing is still not easy...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
         "tags": ["s3-files","cucomp","checkpointing","agentic","beegfs","hybrid-cloud"],
-        "url": "/2026/08/26/s3-files-sg-cucomp-checkpoints.html",
+        "url": "/2026/08/26/s3-files-sg-nvcomp-checkpoints.html",
         "teaser": null
       },{
     "title": "About this site",
