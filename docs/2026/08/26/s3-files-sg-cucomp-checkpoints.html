@@ -1,0 +1,668 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>AWS S3 Files, checkpointing with nvCOMP | Acting Technologist</title>
+<meta name="description" content="Short thoughts on nvCOMP and S3 Files">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="AWS S3 Files, checkpointing with nvCOMP">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/08/26/s3-files-sg-cucomp-checkpoints.html">
+
+
+  <meta property="og:description" content="Short thoughts on nvCOMP and S3 Files">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/beegfs-rst-access-04-beegfs-rst-tiering-storagegrid.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="AWS S3 Files, checkpointing with nvCOMP">
+  <meta name="twitter:description" content="Short thoughts on nvCOMP and S3 Files">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/26/s3-files-sg-cucomp-checkpoints.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/beegfs-rst-access-04-beegfs-rst-tiering-storagegrid.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-08-26T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/08/26/s3-files-sg-cucomp-checkpoints.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="AWS S3 Files, checkpointing with nvCOMP">
+    <meta itemprop="description" content="Do they matter and how to integrate with StorageGRID">
+    <meta itemprop="datePublished" content="2026-08-26T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/08/26/s3-files-sg-cucomp-checkpoints.html" itemprop="url">AWS S3 Files, checkpointing with nvCOMP
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-26T00:00:00+08:00">2026-08-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#nvcomp">nvCOMP</a></li><li><a href="#aws-s3-files">AWS S3 Files</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h2 id="nvcomp">nvCOMP</h2>
+
+<p><a href="https://developer.nvidia.com/blog/cut-checkpoint-costs-with-about-30-lines-of-python-and-nvidia-nvcomp/">Cut Checkpoint Costs with About 30 Lines of Python and NVIDIA nvCOMP</a> shows savings that can be obtained by compressing synchronous checkpoints with CUDA.</p>
+
+<p>I blogged about <a href="/2024/01/10/ai-deep-learning-pytorch-checkpointing-eseries.html">checkpointing some time ago</a> and even then asynchronous was possible (early, but possible). Now NVIDIA says async checkpointing is still not easy to use (in the post above). I have no first-hand experience, and if NVIDIA says so…</p>
+
+<p>Some funny parts in TFA:</p>
+
+<blockquote>
+  <p>Write time per checkpoint: 782 GB / 5 GB/s = 156.4 seconds (~2.6 minutes)
+Scale that to a 64-GPU cluster, and the monthly cost jumps to over $17,500.</p>
+</blockquote>
+
+<p>But you're not writing to parallel file system at 5 GB/s. If you have 64 GPUs, that will likely be 8 servers with 8 GPUs each, so you'd have 3 GB/s per each of 8 servers. Even BeeGFS with EF600 could write over 20 GB/s per building block. Today EF80 is much faster.</p>
+
+<p>So rather than 156.4 seconds, that would be close to 20 seconds per GPU.</p>
+
+<blockquote>
+  <p>Your checkpoints are the largest files in your training pipeline. Compress them.</p>
+</blockquote>
+
+<p>In aggregate, yes they are. I tested with a small model, and the savings were <strong>negative</strong>. For "modern" and large models tested on modern GPUs, there are savings to be had. But don't assume they will automatically apply to even the smaller models.</p>
+
+<p>As I suggested <a href="/2026/08/07/simple-access-to-beegfs-rst-data.html">here</a>, I can dump checkpoints to BeeGFS at 20 or 40 GB/s and tier older checkpoints to StorageGRID. Then when I need to load last several checkpoints, I can from BeeGFS. If I need older versions, I can get them directly from StorageGRID or recall the file from S3 (but why, if I can read it directly?).</p>
+
+<p><img src="/assets/images/beegfs-rst-access-04-beegfs-rst-tiering-storagegrid.png" alt="Checkpoints on RST" /></p>
+
+<p>Another enhancement is I don't even need to checkpoint to BeeGFS. I can checkpoint to BeeOND (local on GPU nodes' internal disks) at tens of GB/s, and set up  automated async replication to BeeGFS with NL-SAS storage. That way I can get even faster checkpointing with BeeOND and buy a slower BeeGFS than I otherwise would.</p>
+
+<p>If you get this going very fast, the savings won't matter very much, but it's still nice to have them if you can.</p>
+
+<h2 id="aws-s3-files">AWS S3 Files</h2>
+
+<p><a href="https://aws.amazon.com/s3/features/files/">This</a> S3 feature and add-on service came out in April 2026.</p>
+
+<p>What is it, and how can we use it with StorageGRID?</p>
+
+<p>First, it's a service in AWS EC2 that needs AWS EBS and AWS S3.</p>
+
+<p>Second, although I did not know about S3 Files some weeks ago, I saw the need, and <a href="/2026/07/08/objectivefs-storagegrid-eseries.html">blogged about ObjectiveFS</a> two months ago.</p>
+
+<ul>
+  <li>Unlike S3 Files, which lets you see and use S3 objects as directories and files, ObjectiveFS chunks and encrypts bucket data, so you can't see the same content in the bucket without ObjectiveFS. But that's not necessarily a bad thing. Of course, sometimes you want native S3 on one client and S3 Files for your AI agents. Well, in the case of ObjectiveFS you'd need to install and use ObjectiveFS in both places.</li>
+  <li>Also unlike S3 Files, ObjectiveFS works on-premises. I used E-Series for backing block devices (see the post) and AWS S3 Files uses EBS</li>
+</ul>
+
+<p>Third, if you can't use ObjectiveFS or other approaches then, in order to use S3 Files with StorageGRID, you can use rclone or CloudMirror to create a copy of your data in AWS S3 and use S3 Files there. You may not necessarily need to use S3 Files in the first place, so the firs step is to figure out what the requirements are.</p>
+
+<ul>
+  <li>You can download data sets from on-premises S3 to EC2 node's RAM, compute, and discard. No data at rest!</li>
+  <li>You can run ObjectiveFS in EC2. Similar benefits as with S3 Files, but all clients must be ObjectiveFS. No unencrypted data at rest.</li>
+  <li>You can use rclone to download StorageGRID data and process it. Results can be written directly to StorageGRID on premises.</li>
+  <li>You may be able to perform zero-copy compute with <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> (read-only)</li>
+  <li>You can cache Spark and other data on StorageGRID in EC2 with Alluxio, both reads <em>and writes</em></li>
+  <li>You can mirror data from StorageGRID to AWS S3 using Cloud Mirror and use S3 Files with AWS S3</li>
+  <li>You can consider some poor man's choices such as AWS MountPoint S3</li>
+</ul>
+
+<p>As we all know, <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">there's no shortage of solutions for accessing on-premises S3 data in hybrid cloud environments</a>. Pick S3 first and figure out how to do it later.</p>
+
+<p>S3 Files does provide extra convenience if you copy your StorageGRID data to AWS S3, which you may do for DR purposes in any case.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/agentic" class="page__taxonomy-item p-category" rel="tag">agentic</a><span class="sep">, </span>
+    
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
+    
+      <a href="/tags/checkpointing" class="page__taxonomy-item p-category" rel="tag">checkpointing</a><span class="sep">, </span>
+    
+      <a href="/tags/cucomp" class="page__taxonomy-item p-category" rel="tag">cucomp</a><span class="sep">, </span>
+    
+      <a href="/tags/hybrid-cloud" class="page__taxonomy-item p-category" rel="tag">hybrid-cloud</a><span class="sep">, </span>
+    
+      <a href="/tags/s3-files" class="page__taxonomy-item p-category" rel="tag">s3-files</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a><span class="sep">, </span>
+    
+      <a href="/categories/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-08-26T00:00:00+08:00">2026-08-26 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=AWS+S3+Files%2C+checkpointing+with+nvCOMP%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F26%2Fs3-files-sg-cucomp-checkpoints.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/08/26/s3-files-sg-cucomp-checkpoints.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/08/24/storagegrid-lakefs.html" class="pagination--pager" title="LakeFS for data lake AI/ML management and compliance">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/24/storagegrid-lakefs.html" rel="permalink">LakeFS for data lake AI/ML management and compliance
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-24T00:00:00+08:00">2026-08-24 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">LakeFS successfully brings git and file-style management to data lakes
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/19/datalake-rag-netapp-storagegrid.html" rel="permalink">Datalake-ish RAG with (only) NetApp StorageGRID S3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-19T00:00:00+08:00">2026-08-19 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The post discusses the trend of hosting all AI-related persistent data on S3 object stores
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/17/versity-sequential-s3-put-test.html" rel="permalink">Single-volume sequential PUT test with Versity S3 on BeeGFS
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-17T00:00:00+08:00">2026-08-17 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/16/sgac-storagegrid-audit-cloud-storage-pools.html" rel="permalink">Auditing StorageGRID Cloud Storage Pools with SGAC
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-16T00:00:00+08:00">2026-08-16 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          14 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The post walks us through audit log and extracting CSP-related data from it
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>

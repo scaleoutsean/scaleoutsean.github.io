@@ -2669,6 +2669,12 @@ var store = [{
         "url": "/2026/08/24/storagegrid-lakefs.html",
         "teaser": null
       },{
+        "title": "AWS S3 Files, checkpointing with nvCOMP",
+        "excerpt":"nvCOMP Cut Checkpoint Costs with About 30 Lines of Python and NVIDIA nvCOMP shows savings that can be obtained by compressing synchronous checkpoints with CUDA. I blogged about checkpointing some time ago and even then asynchronous was possible (early, but possible). Now NVIDIA says async checkpointing is still not easy...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
+        "tags": ["s3-files","cucomp","checkpointing","agentic","beegfs","hybrid-cloud"],
+        "url": "/2026/08/26/s3-files-sg-cucomp-checkpoints.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2682,7 +2688,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"LakeFS for data lake AI/ML management and compliance 2026-08-24 00:00 7 minute read LakeFS successfully brings git and file-style management to data lakes Datalake-ish RAG with (only) NetApp StorageGRID S3 2026-08-19 00:00 6 minute read The post discusses the trend of hosting all AI-related persistent data on S3 object stores...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"AWS S3 Files, checkpointing with nvCOMP 2026-08-26 00:00 3 minute read Do they matter and how to integrate with StorageGRID LakeFS for data lake AI/ML management and compliance 2026-08-24 00:00 7 minute read LakeFS successfully brings git and file-style management to data lakes Datalake-ish RAG with (only) NetApp StorageGRID S3...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4360,6 +4366,18 @@ var store = [{
   },{
     "title": "lakefs",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/lakefs/"
+  },{
+    "title": "s3-files",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/s3-files/"
+  },{
+    "title": "cucomp",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cucomp/"
+  },{
+    "title": "checkpointing",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/checkpointing/"
+  },{
+    "title": "agentic",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/agentic/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
