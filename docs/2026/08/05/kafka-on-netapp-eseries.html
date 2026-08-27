@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-pool-vs-three-raid-10-groups-in-same-array">One DDP pool vs three RAID 10 groups in same array</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a><ul><li><a href="#one-disk-vs-multiple-disks-per-node">One disk vs multiple disks per node</a></li></ul></li><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-workload-examples">Appendix A: Workload examples</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#what-kafka-needs-from-protected-storage">What Kafka needs from protected storage</a></li><li><a href="#performance">Performance</a></li><li><a href="#availability">Availability</a><ul><li><a href="#raid-10-or-ddp">RAID 10 or DDP?</a></li><li><a href="#one-ddp-pool-vs-three-raid-10-groups-in-one-array">One DDP pool vs three RAID 10 groups in one array</a></li></ul></li><li><a href="#storage-efficiency">Storage efficiency</a></li><li><a href="#performance-sizing">Performance sizing</a><ul><li><a href="#one-disk-vs-multiple-disks-per-node">One disk vs multiple disks per node</a></li></ul></li><li><a href="#capacity-sizing">Capacity sizing</a></li><li><a href="#storage-provisioning">Storage provisioning</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-workload-examples">Appendix A: Workload examples</a></li></ul>
             </nav>
           </aside>
         
@@ -359,9 +359,9 @@
 
 <p>With three racks with RAID 10 on DDP, setting rebuild priority to Low or Lowest is fine. That increases recovery time, but since you have RF2 at least (or maybe RF3), the impact of rebuilding won't be felt at all.</p>
 
-<h3 id="one-ddp-pool-vs-three-raid-10-groups-in-same-array">One DDP pool vs three RAID 10 groups in same array</h3>
+<h3 id="one-ddp-pool-vs-three-raid-10-groups-in-one-array">One DDP pool vs three RAID 10 groups in one array</h3>
 
-<p>Say you have a single array and need 24 disks. What's better?</p>
+<p>Say you have a single array and need 24 disks for Kafka. What's better?</p>
 
 <ul>
   <li>One DDP pool across 20 disks</li>
@@ -370,9 +370,11 @@
 
 <p>One DDP exposes you to double concurrent disk failure.</p>
 
-<p>I don't know if those things really happen - I haven't heard of it - but DDP can reconstruct from a failed disk within 60 minutes and can repeat that multiple times over a long weekend without data loss. RAID 10 can't. But you can lose 3 disks at the same time with RAID 10 (assuming each group loses one) and DDP can't save you from that.</p>
+<p>I don't know if those things really happen - I haven't heard of double disk failures on DDP with SSDs - but DDP can reconstruct from a failed disk within 60 minutes and can repeat that multiple times over a long weekend without data loss. RAID 10 can't.</p>
 
-<p>If you need just controller HA and not resilience to rack failures, DDP in a single rack is fine.</p>
+<p>But you, can lose 3 disks at the same time with RAID 10 (assuming each group loses one) and DDP can't save you from that.</p>
+
+<p>If you need just controller HA and not resilience to rack failures, one DDP in a single rack is fine.</p>
 
 <p>You can use DDP and create RAID 6-style volumes on it; those will tolerate two concurrent disk failures. But that's a lousy "solution" to double disk failure problem. The Kafka documentation doesn't recommend even RAID 5, let alone RAID 6, and you still have guaranteed downtime if the rack fails.</p>
 
@@ -695,6 +697,54 @@ max.poll.interval.ms<span class="o">=</span>300000
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/08/27/starfish-software-beegfs.html" rel="permalink">Starfish Storage for better StorageGRID and BeeGFS manageability
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-27T00:00:00+08:00">2026-08-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">This post is a simple overview of features and benefits Starfish Storage brings to BeeGFS and StorageGRID users
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2026/08/26/s3-files-sg-nvcomp-checkpoints.html" rel="permalink">AWS S3 Files, checkpointing with nvCOMP
 </a>
       
@@ -720,7 +770,7 @@ max.poll.interval.ms<span class="o">=</span>300000
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -824,54 +874,6 @@ max.poll.interval.ms<span class="o">=</span>300000
 
 
     <p class="archive__item-excerpt" itemprop="description">The post discusses the trend of hosting all AI-related persistent data on S3 object stores
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/08/17/versity-sequential-s3-put-test.html" rel="permalink">Single-volume sequential PUT test with Versity S3 on BeeGFS
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-08-17T00:00:00+08:00">2026-08-17 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          3 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">I ran the same MinIO Warp tests as before but on faster hardware and backed by BeeGFS
 </p>
   </article>
 </div>
