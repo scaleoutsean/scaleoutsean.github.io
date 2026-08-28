@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#agent">Agent</a></li><li><a href="#how-it-looks-like">How it looks like</a></li><li><a href="#what-is-next">What is next</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#agent">Agent</a></li><li><a href="#how-it-looks-like">How it looks like</a></li><li><a href="#further-agentic-ai-exploration-with-storagegrid">Further agentic AI exploration with StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -253,7 +253,7 @@
 <p>So, as far as <strong>object stores</strong> are concerned, this is <em>almost</em> the same as RAG in <em>Part I</em>:</p>
 
 <ul>
-  <li>Agents can have memory. This is perhaps the key difference. Whereas S3 workload in the RAG example was mostly read-focused except when content and indexing had to be done, here agents need to persist data somewhere if they're to have memory and self-reflection</li>
+  <li>Agents can have memory. This is perhaps the key difference. Whereas S3 workload in the classic RAG post was mostly read-focused except when new content was uploaded and indexing and vectorization had to be done, here, agents need to persist data somewhere if they're to have memory, self-reflection and maybe mutual data sharing for multi-step processing</li>
   <li>Agent and chatbot logging is the same - we can send logs to a data lake-backed stream or log gathering service (on-premises or hosted).</li>
   <li>Document uploads for RAG are still done the same way - upload to S3 from the CLI, API or Web UI.</li>
 </ul>
@@ -342,14 +342,18 @@
 
 <p>In this example I use Llama for everything (data prep, embeddings, chat), so this is completely local, including StorageGRID.</p>
 
-<p>Unlike in my previous post, I use just one bucket rather than one-per-step in the previous post. My StorageGRID bucket is: <code class="language-plaintext highlighter-rouge">s3://agentic</code>.</p>
+<p>Unlike in my previous post:</p>
+<ul>
+  <li>I use just one bucket rather than one-per-step in the previous post. My StorageGRID bucket is: <code class="language-plaintext highlighter-rouge">s3://agentic</code>.</li>
+  <li>I skip data prep, and go from raw to gold in one step as I didn't have to remove "sensitive" data or fix it up</li>
+</ul>
 
-<p>The UI lets me chat about documentation, logs and whatever other "tools" my agent can use.</p>
+<p>The UI lets me chat about documentation, uploaded logs and whatever other "tools" my agent has.</p>
 
 <p>To test, I have uploaded:</p>
 <ul>
-  <li>Several of my own posts about Kafka</li>
-  <li>StorageGRID audit log</li>
+  <li>Several of my own posts about Kafka ("docs")</li>
+  <li>StorageGRID audit log ("application logs")</li>
 </ul>
 
 <p>Here we can see <code class="language-plaintext highlighter-rouge">s3://agentic/bronze/sample-docs</code> - the uploaded posts about Kafka.</p>
@@ -372,7 +376,7 @@
 
 <p>The audit logs are shown around the center of the screenshot.</p>
 
-<p>There's no data lake, so I needed to cut corners. <strong>Normally</strong>, we'd want to use one, perhaps managed by <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">Lakekeeper</a> for which I recommend EF-Series (because what you need for that is PostgreSQL and Kafka, so from the NetApp portfolio I recommend E-Series), or something hosted such as Azure OneLake. You can see the Lakekeeper post for some thoughts around that, but that's out of scope for this post.</p>
+<p>There's no data lake, so I needed to cut corners. <strong>Normally</strong>, we'd want to use a data lake, perhaps one managed by <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">Lakekeeper</a> for which I recommend EF-Series (because what you need for that is PostgreSQL and Kafka, so from the NetApp portfolio I recommend E-Series), or something hosted such as Azure OneLake. You can see the Lakekeeper post for some thoughts around that, but that's out of scope for this post.</p>
 
 <p>What I do here is download data when I run the app, and upload when I shut it down (or when I start it and it sees local data is newer).</p>
 
@@ -494,7 +498,7 @@
 
 <p>They did work, and StorageGRID S3 is the only persistent storage I need.</p>
 
-<h2 id="what-is-next">What is next</h2>
+<h2 id="further-agentic-ai-exploration-with-storagegrid">Further agentic AI exploration with StorageGRID</h2>
 
 <p>In a future post, I may explore a full-stack agentic setup with Lakekeeper, or consider some additional agentic use cases. Agentic AI is sophisticated, but as far as storage access patterns are concerned, different agentic patterns do not significantly change how we use StorageGRID.</p>
 
@@ -511,9 +515,11 @@
 
 <p>Both this post and Part I demonstrated the use of embeddings (vectors) on S3 and because major providers do the same thing, I think it's beyond doubt that I don't need <em>persistent</em> block or file for that (at most I could use those for caching). In this post I used DuckDB to store embeddings, as you can see above. And they were generated locally.</p>
 
-<p>One remaining - although not unique - item is graph databases on S3. While the kind of database is different, data lakes store such records the same way - in tables. There are some limitations, but it works - major data lake services store graph data that way. If it doesn't work fast enough, it's like with vector DBs - we an always run those on E-Series just like we do with <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">Qdrant</a> or <a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">pgvector</a>. Prefer those that use ephemeral block just for caching, to keep dependence on block low and eliminate storage management.</p>
+<p>One remaining - although not unique - item is graph databases on S3. While the kind of database is different, data lakes store such records the same way - in data lake tables.</p>
 
-<p>Tools for StorageGRID audit log analysis wasn't the objective of this PoC, but it seems like an interesting topic. Because log-to-JSONLD (and syslog forwarding) both work, you can already get those logs into a data lake and use existing SIEM or other tools to explore them just like you do with any other logs. If we wanted to make our own tools (for Tech Support), that would be a fun exercise, but too niche.</p>
+<p>There are some limitations related to how fast or well it is done, but it works - major data lake services store graph data that way. If it doesn't work fast enough, it's like with vector DBs - we an always run those on E-Series just like we do with <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">Qdrant</a> or <a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">pgvector</a>. Prefer those that use ephemeral block just for caching, to keep dependence on block low and eliminate storage management.</p>
+
+<p>Tools for StorageGRID audit log analysis did not work as they needed modifications to understand the StorageGRID log type, but wasn't the objective of this PoC. It is an an interesting topic for me because of I maintain that StorageGRID audit log parser script (SGAC). But, because log-to-JSONLD (and syslog forwarding) both work, you can already get those logs into a data lake and use existing SIEM or other tools to explore them just like you do with any other logs. If we wanted to make our own tools (for Tech Support), that would be a fun exercise, but too niche. This is inconsequential for StorageGRID and agentic RAG.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
