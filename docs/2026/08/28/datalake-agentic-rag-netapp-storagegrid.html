@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          13 minute read
+          14 minute read
         
       </span>
     
@@ -519,7 +519,7 @@
 
 <p>There are some limitations related to how fast or well it is done, but it works - major data lake services store graph data that way. If it doesn't work fast enough, it's like with vector DBs - we an always run those on E-Series just like we do with <a href="/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html">Qdrant</a> or <a href="/2023/11/28/postgres-pgvector-instacluster-eseries.html">pgvector</a>. Prefer those that use ephemeral block just for caching, to keep dependence on block low and eliminate storage management.</p>
 
-<p>Tools for StorageGRID audit log analysis did not work as they needed modifications to understand the StorageGRID log type, but wasn't the objective of this PoC. It is an an interesting topic for me because of I maintain that StorageGRID audit log parser script (SGAC). But, because log-to-JSONLD (and syslog forwarding) both work, you can already get those logs into a data lake and use existing SIEM or other tools to explore them just like you do with any other logs. If we wanted to make our own tools (for Tech Support), that would be a fun exercise, but too niche. This is inconsequential for StorageGRID and agentic RAG.</p>
+<p>The log tool issue - out of scope here, but interesting - is discussed in Appendix A below.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -530,6 +530,62 @@
 <p>Ephemeral containers, KV cache, <a href="/2026/08/26/s3-files-sg-nvcomp-checkpoints.html">checkpoints</a> and so on can run elsewhere. You can use BeeOND or BeeGFS for cache, and EF-Series with TopoLVM for CSI used by general Kubernetes applications, for example.</p>
 
 <p>Data that matters is all on S3 and the value this gives you is good (see Part I).</p>
+
+<h1 id="appendix-a-agentic-rag-for-storagegrid-audit-log-analysis">Appendix A: Agentic RAG for StorageGRID audit log analysis</h1>
+
+<p>Tools for StorageGRID audit log analysis did not work as they needed modifications to understand the StorageGRID log type, but wasn't the objective of this PoC.</p>
+
+<p>It is an an interesting topic for me because of I maintain that StorageGRID audit log parser script (SGAC). Because log-to-JSONLD (or syslog forwarding if you set it up) both work, you can already get those logs into a data lake and use existing SIEM or other tools to explore them just like you do with any other logs. If we wanted to make our own tools (for Tech Support), that would be a fun exercise, but too niche. This is inconsequential for StorageGRID and agentic RAG.</p>
+
+<p>As an example, this is an audit log event for access (already converted to JSON):</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"Timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-08-27T15:23:30+08:00"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"RSLT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SUCS"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"CNID"</span><span class="p">:</span><span class="w"> </span><span class="mi">1787844205616861</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"TIME"</span><span class="p">:</span><span class="w"> </span><span class="mi">14566</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"SAIP"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.1.131"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"TLIP"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.1.211"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"S3AI"</span><span class="p">:</span><span class="w"> </span><span class="s2">"55295525968323305569"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"SACC"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pepsi"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"S3AK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Y5LT3NLZ0SC39RRDOZCT"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"SUSR"</span><span class="p">:</span><span class="w"> </span><span class="s2">"urn:sgws:identity::55295525968323305569:root"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"SBAI"</span><span class="p">:</span><span class="w"> </span><span class="s2">"55295525968323305569"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"SBAC"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pepsi"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"S3BK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"agentic"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"S3KY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"UUID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"37C33C09-A22B-11F1-A807-3B02AC94F9AA"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"CSIZ"</span><span class="p">:</span><span class="w"> </span><span class="mi">8165</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"MTME"</span><span class="p">:</span><span class="w"> </span><span class="mi">1787844192802611</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"AVER"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ATIM"</span><span class="p">:</span><span class="w"> </span><span class="mi">1787844210789820</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ATYP"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SGET"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ANID"</span><span class="p">:</span><span class="w"> </span><span class="mi">12908970</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"AMID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"S3RQ"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ATID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3730709284183542225"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>As there may be thousands of these for each object, we want a query tool that can handle queries <em>specific to StorageGRID audit log format</em> and focus on specific properties.</p>
+
+<p>That means it needs to "understand" these keys and how a question translates to a key or keys. For more complex questions, a bit of extra information about other operations (tiering and so on) would be required.</p>
+
+<p>We need to specify what to ignore and what to include in results. By default, we look 24 hours back.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/logs Can you check the key bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md <span class="k">in </span>bucket called <span class="s2">"agentic"</span>?
+
+The StorageGRID audit logs show no entries <span class="k">for </span>the key bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md <span class="k">in </span>the agentic bucket within the last 24 hours. 
+
+/logs Can you check any activity on the same S3 key across a larger <span class="nb">time </span>window <span class="o">(</span>48 hours<span class="o">)</span>?
+
+The provided data appears to be a log or event stream containing timestamps, file paths, operation types <span class="o">(</span>like SGET, SHEA, SPUT<span class="o">)</span>, and possibly user/role identifiers <span class="o">(</span>e.g., SHEA, SGET, ORLM<span class="o">)</span><span class="nb">.</span> Here<span class="s1">'s a breakdown and interpretation...
+</span></code></pre></div></div>
+
+<p>So, agentic tools also work as expected.</p>
+
+<p><img src="/assets/images/storagegrid-agentic-rag-04-sgac-log-analysis-question.png" alt="Agentic StorageGRID audit log analysis question" /></p>
+
+<p>If you care about security or auditing, you probably won't need to build a tool for StorageGRID audit logs. You'll have a proper one and run agentic SIEM there. You just need to build this tool there.</p>
 
         
       </section>
