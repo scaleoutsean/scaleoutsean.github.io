@@ -253,11 +253,11 @@
 
 <p>People have been wondering about this for years. Not whether DuckDB can "replace Spark" (it still can't), but whether a lot of Spark cluster instances (on the low-end) are unnecessary because DuckDB can do the task <em>faster, simpler, and more cost-effective</em>.</p>
 
-<p>I just tried <a href="https://github.com/duckdb/duckdb-tpch-power-test">this</a> with <code class="language-plaintext highlighter-rouge">SF=20</code> to create an example.</p>
+<p>I just tried <a href="https://github.com/duckdb/duckdb-tpch-power-test">this TPC-H variant</a> with <code class="language-plaintext highlighter-rouge">SF=20</code> to create an example.</p>
 
 <p><img src="/assets/images/duckdb-tpch-00-run.png" alt="DuckDB TPCH SF=20 in dstat" /></p>
 
-<p>I ran this on and old CPU, so it's not as fast as it would be if you ran it on modern hardware used for analytics, but the point is it can max out 32 CPUs and that you can get a <em>lot</em> of work done by a single DuckDB instance. I forgot to capture RAM utilization metrics, but DuckDB is also efficient in that regard, so:</p>
+<p>I ran this on and old CPU, so it's not as fast as it would be if you ran it on modern hardware used for analytics, but the point is it can max out 32 CPUs and that you can get a <em>lot</em> of work done by a single DuckDB instance. It didn't even <a href="https://duckdb.org/docs/current/guides/performance/oom">use much RAM</a>, so it's a nice showcase for:</p>
 
 <ul>
   <li>Very short startup time</li>
@@ -266,9 +266,9 @@
   <li>Runs serverless (in-process)</li>
 </ul>
 
-<p>For smaller jobs (100-200 MB CSV load to data lake), DuckDB can finish before Spark is done starting up.</p>
+<p>For smaller jobs (load 100-200 MB CSV to data lake), DuckDB can finish before Spark is done starting up.</p>
 
-<p>In other cases DuckDB will run much slower, but if it takes 3 minutes to complete vs 1 minute on a Spark cluster, you spend 90% less and still finish within 5 minutes.</p>
+<p>In other cases (large jobs where CPU or RAM of one system isn't enough) DuckDB will run much slower, but if it takes 3 minutes to complete vs 1 minute on a Spark cluster, you spend 90% less and still finish within 5 minutes.</p>
 
 <p>You can do your own warehouse loading or other tests that match your low-end Spark workload, and realize you don't need to run Spark clusters for those.</p>
 
@@ -355,6 +355,8 @@ tpch_throughput_at_size         <span class="o">=</span> 220715.28
 tpch_qphh_at_size               <span class="o">=</span> 235375.59
 </code></pre></div></div>
 
+<p>It is obvious from the screenshot above (and the Grafana screenshot below) that CPU was the bottleneck and storage wasn't that busy, which tells me dozens of such workloads could run against a single EF-Series array as long as CPUs and RAM were enough.</p>
+
 <p>Log:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>time_offset	cpu_percent	cpu_user	cpu_system	memory_rss	memory_vms	read_bytes	write_bytes
@@ -392,9 +394,10 @@ tpch_qphh_at_size               <span class="o">=</span> 235375.59
 31.23	3079	1730.98	76.5	7572692992	9287061504	4174667776	23572480
 </code></pre></div></div>
 
-<p>This is the same view from Grafana.</p>
+<p>This is the same view from Grafana shows moderate activity on the array (not even 1 GB/s).</p>
 
 <p><img src="/assets/images/duckdb-tpch-01-grafana.png" alt="DuckDB TPCH SF=20 in Grafana" /></p>
+
 
         
       </section>
@@ -441,6 +444,8 @@ tpch_qphh_at_size               <span class="o">=</span> 235375.59
       <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
     
       <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/e-series" class="page__taxonomy-item p-category" rel="tag">e-series</a><span class="sep">, </span>
     
       <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
     

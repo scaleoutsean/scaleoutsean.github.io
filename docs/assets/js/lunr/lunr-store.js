@@ -2688,7 +2688,7 @@ var store = [{
         "teaser": null
       },{
         "title": "AWS buys DuckLabs, and about DuckDB with NetApp storage",
-        "excerpt":"Introduction DuckLabs are getting acquired by AWS. The press release says: Together, we’ll make AWS analytics faster, simpler, and more cost-effective for customers. Why DuckDB I’ve been using DuckDB for a while, and even in the recent blog posts. DuckDB works well with S3, it’s very fast and provides a...","categories": ["storage","netapp","storagegrid","s3","ai","analytics"],
+        "excerpt":"Introduction DuckLabs are getting acquired by AWS. The press release says: Together, we’ll make AWS analytics faster, simpler, and more cost-effective for customers. Why DuckDB I’ve been using DuckDB for a while, and even in the recent blog posts. DuckDB works well with S3, it’s very fast and provides a...","categories": ["storage","netapp","storagegrid","s3","ai","analytics","e-series"],
         "tags": ["duckdb","spark","datalake","delta","iceberg","parquet"],
         "url": "/2026/08/31/duckdb-tpch.html",
         "teaser": null
