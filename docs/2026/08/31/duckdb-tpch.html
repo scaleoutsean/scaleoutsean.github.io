@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -229,17 +229,21 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-duckdb">Why DuckDB</a></li><li><a href="#duckdb-with-netapp-storage">DuckDB with NetApp storage</a></li><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li></ul>
             </nav>
           </aside>
         
-        <p><a href="https://www.aboutamazon.com/news/company-news/aws-ducklabs">DuckLabs are getting acquired by AWS</a>.</p>
+        <h2 id="introduction">Introduction</h2>
+
+<p><a href="https://www.aboutamazon.com/news/company-news/aws-ducklabs">DuckLabs are getting acquired by AWS</a>.</p>
 
 <p>The press release says:</p>
 
 <blockquote>
   <p>Together, we'll make AWS analytics faster, simpler, and more cost-effective for customers.</p>
 </blockquote>
+
+<h2 id="why-duckdb">Why DuckDB</h2>
 
 <p>I've been using DuckDB for a while, and even in the recent blog posts.</p>
 
@@ -268,7 +272,15 @@
 
 <p>You can do your own warehouse loading or other tests that match your low-end Spark workload, and realize you don't need to run Spark clusters for those.</p>
 
+<p>If you have any workloads that look even remotely suitable for DuckDB - not just on Spark, but anywhere - I strongly recommend evaluating DuckDB.</p>
+
 <p>It's always nice to see JVM bloatware removed from places where it adds no value. I'm sure AWS will make good use of DuckDB, and - related to my S3-focused posts - DuckDB is going to play a much larger role going forward.</p>
+
+<h2 id="duckdb-with-netapp-storage">DuckDB with NetApp storage</h2>
+
+<p><strong>StorageGRID</strong> first, because it's where most DuckDB users <em>should</em> store databases or where they'll access <em>data lake</em> tables. Simply use <code class="language-plaintext highlighter-rouge">httpfs</code> (see <a href="https://duckdb.org/docs/current/core_extensions/httpfs/overview">here</a>) to get started. If you have <a href="https://duckdb.org/docs/current/core_extensions/delta">Delta</a> or <a href="https://duckdb.org/docs/current/core_extensions/iceberg/overview">Iceberg</a> tables, there are plugins for those, too (both read and write, although one has to attach to catalog to be able to write).</p>
+
+<p><strong>E-Series</strong> is great for local DuckDB tables if you need to keep data files on protected storage: you can get excellent random and sequential performance even from <a href="/2026/03/21/netapp-ef-series-ef80-ef50.html#appendix-a-ethernet-and-ib-connectivity-for-das-attachment">an entry level EF-Series model</a> which can concurrently serve dozens of DuckDB clients. If you need to automate storage provisioning, you can do it with Ansible or Terraform or leave it to a <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">CSI driver</a> such as TopoLVM.</p>
 
 <h2 id="appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</h2>
 
@@ -277,8 +289,8 @@
 <ul>
   <li>Ubuntu 26.04 LTS</li>
   <li>DuckDB v1.5.5</li>
-  <li>Old Xeon Silver from 2019 with NVMe/RoCE (NeApp EF-Series EF600)</li>
-  <li>duckdb-tpch-power-test (as of August 31, 2026)</li>
+  <li>Old Xeon Silver from 2019 with external disk (NVMe/RoCE; NeApp EF-Series EF600)</li>
+  <li>duckdb-tpch-power-test, SF=20 (as of August 31, 2026)</li>
 </ul>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tpch_load_time                  <span class="o">=</span> 62.6 seconds
