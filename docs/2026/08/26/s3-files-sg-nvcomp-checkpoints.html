@@ -237,7 +237,13 @@
 
 <p><a href="https://developer.nvidia.com/blog/cut-checkpoint-costs-with-about-30-lines-of-python-and-nvidia-nvcomp/">Cut Checkpoint Costs with About 30 Lines of Python and NVIDIA nvCOMP</a> shows savings that can be obtained by compressing synchronous checkpoints with CUDA.</p>
 
-<p>I blogged about <a href="/2024/01/10/ai-deep-learning-pytorch-checkpointing-eseries.html">checkpointing some time ago</a> and even then asynchronous was possible (early, but possible). Now NVIDIA says async checkpointing is still not easy to use (in the post above). I have no first-hand experience, and if NVIDIA says so…</p>
+<p>I blogged about <a href="/2024/01/10/ai-deep-learning-pytorch-checkpointing-eseries.html">checkpointing some time ago</a> and even then asynchronous was possible (early, but possible). Now NVIDIA says async checkpointing is still not easy to use (in the post above). I have no first-hand experience, and if NVIDIA says so… However, AWS says this:</p>
+
+<blockquote>
+  <p>Amazon S3 Connector for PyTorch provides robust support for PyTorch distributed checkpoints.</p>
+</blockquote>
+
+<p>Well, maybe AWS S3 Connector is robust, but PyTorch checkpoints aren't…</p>
 
 <p>Some funny parts in TFA:</p>
 
@@ -276,7 +282,7 @@ Scale that to a 64-GPU cluster, and the monthly cost jumps to over $17,500.</p>
 
 <ul>
   <li>Unlike S3 Files, which lets you see and use S3 objects as directories and files, ObjectiveFS chunks and encrypts bucket data, so you can't see the same content in the bucket without ObjectiveFS. But that's not necessarily a bad thing. Of course, sometimes you want native S3 on one client and S3 Files for your AI agents. Well, in the case of ObjectiveFS you'd need to install and use ObjectiveFS in both places.</li>
-  <li>Also unlike S3 Files, ObjectiveFS works on-premises. I used E-Series for backing block devices (see the post) and AWS S3 Files uses EBS</li>
+  <li>Also unlike S3 Files, ObjectiveFS works on-premises. I used E-Series for backing block devices (see the post) and AWS S3 Files uses EFS</li>
 </ul>
 
 <p>Third, if you can't use ObjectiveFS or other approaches then, in order to use S3 Files with StorageGRID, you can use rclone or CloudMirror to create a copy of your data in AWS S3 and use S3 Files there. You may not necessarily need to use S3 Files in the first place, so the firs step is to figure out what the requirements are.</p>
@@ -293,7 +299,9 @@ Scale that to a 64-GPU cluster, and the monthly cost jumps to over $17,500.</p>
 
 <p>As we all know, <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">there's no shortage of solutions for accessing on-premises S3 data in hybrid cloud environments</a>. Pick S3 first and figure out how to do it later.</p>
 
-<p>S3 Files does provide extra convenience if you copy your StorageGRID data to AWS S3, which you may do for DR purposes in any case.</p>
+<p>One nice detail that I spotted only later is that, although writes to S3 Files land on backing EFS, sequential <em>reads</em> <code class="language-plaintext highlighter-rouge">GET</code> data directly from AWS S3 endpoints - these reads are not proxied by S3 Files service endpoint. Of course, that makes sense for AWS where the same entity runs both services.</p>
+
+<p>S3 Files does provide extra convenience if you copy your StorageGRID data to AWS S3 for final processing.</p>
 
         
       </section>
@@ -396,6 +404,54 @@ Scale that to a 64-GPU cluster, and the monthly cost jumps to over $17,500.</p>
   
   <h2 class="page__related-title">You may also enjoy</h2>
   <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/31/duckdb-tpch.html" rel="permalink">DuckDB and AWS
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-31T00:00:00+08:00">2026-08-31 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Good move for AWS and DuckLabs, bad news for Spark
+</p>
+  </article>
+</div>
+
     
       
       
@@ -536,54 +592,6 @@ Scale that to a 64-GPU cluster, and the monthly cost jumps to over $17,500.</p>
 
 
     <p class="archive__item-excerpt" itemprop="description">LakeFS successfully brings git and file-style management to data lakes
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/08/19/datalake-rag-netapp-storagegrid.html" rel="permalink">Datalake-ish RAG with (only) NetApp StorageGRID S3
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-08-19T00:00:00+08:00">2026-08-19 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          7 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">The post discusses the trend of hosting all AI-related persistent data on S3 object stores
 </p>
   </article>
 </div>
