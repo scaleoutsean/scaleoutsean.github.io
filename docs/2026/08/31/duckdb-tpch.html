@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8">
 
-<!-- begin _includes/seo.html --><title>AWS buys DuckLabs, and about DuckDB with NetApp storage | Acting Technologist</title>
+<!-- begin _includes/seo.html --><title>AWS buys DuckLabs and about DuckDB with NetApp storage | Acting Technologist</title>
 <meta name="description" content="About AWS and DuckLabs, plus some thoughts on using DuckDB with NetApp StorageGRID (object) and E-Series (block)">
 
 
@@ -23,7 +23,7 @@
 <meta property="og:type" content="article">
 <meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="Acting Technologist">
-<meta property="og:title" content="AWS buys DuckLabs, and about DuckDB with NetApp storage">
+<meta property="og:title" content="AWS buys DuckLabs and about DuckDB with NetApp storage">
 <meta property="og:url" content="https://scaleoutsean.github.io/2026/08/31/duckdb-tpch.html">
 
 
@@ -36,7 +36,7 @@
 
 
   <meta name="twitter:site" content="@scaleoutSean">
-  <meta name="twitter:title" content="AWS buys DuckLabs, and about DuckDB with NetApp storage">
+  <meta name="twitter:title" content="AWS buys DuckLabs and about DuckDB with NetApp storage">
   <meta name="twitter:description" content="About AWS and DuckLabs, plus some thoughts on using DuckDB with NetApp StorageGRID (object) and E-Series (block)">
   <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/08/31/duckdb-tpch.html">
 
@@ -181,7 +181,7 @@
 
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
-    <meta itemprop="headline" content="AWS buys DuckLabs, and about DuckDB with NetApp storage">
+    <meta itemprop="headline" content="AWS buys DuckLabs and about DuckDB with NetApp storage">
     <meta itemprop="description" content="Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB">
     <meta itemprop="datePublished" content="2026-08-31T00:00:00+08:00">
     
@@ -190,7 +190,7 @@
       
         <header>
           <h1 id="page-title" class="page__title" itemprop="headline">
-            <a href="https://scaleoutsean.github.io/2026/08/31/duckdb-tpch.html" itemprop="url">AWS buys DuckLabs, and about DuckDB with NetApp storage
+            <a href="https://scaleoutsean.github.io/2026/08/31/duckdb-tpch.html" itemprop="url">AWS buys DuckLabs and about DuckDB with NetApp storage
 </a>
           </h1>
           
@@ -253,11 +253,9 @@
 
 <p>People have been wondering about this for years. Not whether DuckDB can "replace Spark" (it still can't), but whether a lot of Spark cluster instances (on the low-end) are unnecessary because DuckDB can do the task <em>faster, simpler, and more cost-effective</em>.</p>
 
-<p>I just tried <a href="https://github.com/duckdb/duckdb-tpch-power-test">this TPC-H variant</a> with <code class="language-plaintext highlighter-rouge">SF=20</code> to create an example.</p>
+<p>I just tried <a href="https://github.com/duckdb/duckdb-tpch-power-test">this TPC-H variant</a> with <code class="language-plaintext highlighter-rouge">SF=20</code>, to have an example (see Appendix A).</p>
 
-<p><img src="/assets/images/duckdb-tpch-00-run.png" alt="DuckDB TPCH SF=20 in dstat" /></p>
-
-<p>I ran this on and old CPU, so it's not as fast as it would be if you ran it on modern hardware used for analytics, but the point is it can max out 32 CPUs and that you can get a <em>lot</em> of work done by a single DuckDB instance. It didn't even <a href="https://duckdb.org/docs/current/guides/performance/oom">use much RAM</a>, so it's a nice showcase for:</p>
+<p>I ran it on a server with old CPUs, so it was not as fast as it would be if on modern hardware used for analytics today, but the point is you can max out 32 CPUs and get a <em>lot</em> of work done by a single DuckDB instance. It didn't even <a href="https://duckdb.org/docs/current/guides/performance/oom">use much RAM</a>, so it's a nice showcase for:</p>
 
 <ul>
   <li>Very short startup time</li>
@@ -286,7 +284,7 @@
   <li>DuckDB's native database format supports huge database files without any practical restrictions</li>
   <li>Object storage systems have lower limits on file sizes than block-based storage systems. For example, AWS S3 limits the file size to 5 TB.</li>
   <li>Checkpointing a DuckDB database can be slow. For example, checkpointing after adding a few rows to a table in the TPC-H SF1000 database takes approximately 5 seconds.</li>
-  <li>On block-based storage, the file system has a significant effect on performance when working with large files. On Linux, DuckDB performs best with XFS on large files.</li>
+  <li>On block-based storage, the file system has a significant effect on performance when working with large files. On Linux, <strong>DuckDB performs best with XFS on large files</strong>.</li>
 </ul>
 
 <p>Most of these won't bother you with small and mid-sized DBs, and remember that you don't have to use native database format. Datalakes don't put everything in one file, so you won't have the S3 problem.</p>
@@ -398,6 +396,19 @@ tpch_qphh_at_size               <span class="o">=</span> 235375.59
 
 <p><img src="/assets/images/duckdb-tpch-01-grafana.png" alt="DuckDB TPCH SF=20 in Grafana" /></p>
 
+<p>I wanted to capture RAM utilization, so I executed another run on existing data.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tpch_load_time                  <span class="o">=</span> n/a <span class="o">(</span>ran on cached database<span class="o">)</span>
+throughput_measurement_interval <span class="o">=</span> 21.26
+power_total_queries_duration    <span class="o">=</span> 9.50
+tpch_power_at_size              <span class="o">=</span> 236849.19
+tpch_throughput_at_size         <span class="o">=</span> 223518.34
+tpch_qphh_at_size               <span class="o">=</span> 230087.24
+</code></pre></div></div>
+
+<p>DuckDB didn't use a lot of RAM.</p>
+
+<p><img src="/assets/images/duckdb-tpch-00-run.png" alt="DuckDB TPCH SF=20 in dstat" /></p>
 
         
       </section>
@@ -468,7 +479,7 @@ tpch_qphh_at_size               <span class="o">=</span> 235375.59
       <section class="page__share">
   <h4 class="page__share-title">Share on</h4>
 
-  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=AWS+buys+DuckLabs%2C+and+about+DuckDB+with+NetApp+storage%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F31%2Fduckdb-tpch.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=AWS+buys+DuckLabs+and+about+DuckDB+with+NetApp+storage%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F08%2F31%2Fduckdb-tpch.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
     <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
   </a>
 

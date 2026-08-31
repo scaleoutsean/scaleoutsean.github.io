@@ -2687,7 +2687,7 @@ var store = [{
         "url": "/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html",
         "teaser": null
       },{
-        "title": "AWS buys DuckLabs, and about DuckDB with NetApp storage",
+        "title": "AWS buys DuckLabs and about DuckDB with NetApp storage",
         "excerpt":"Introduction DuckLabs are getting acquired by AWS. The press release says: Together, we’ll make AWS analytics faster, simpler, and more cost-effective for customers. Why DuckDB I’ve been using DuckDB for a while, and even in the recent blog posts. DuckDB works well with S3, it’s very fast and provides a...","categories": ["storage","netapp","storagegrid","s3","ai","analytics","e-series"],
         "tags": ["duckdb","spark","datalake","delta","iceberg","parquet"],
         "url": "/2026/08/31/duckdb-tpch.html",
@@ -2706,7 +2706,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"AWS buys DuckLabs, and about DuckDB with NetApp storage 2026-08-31 00:00 7 minute read Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB Local agentic RAG with (only) NetApp StorageGRID S3 2026-08-28 00:00 14 minute read The post discusses the trend...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"AWS buys DuckLabs and about DuckDB with NetApp storage 2026-08-31 00:00 7 minute read Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB Local agentic RAG with (only) NetApp StorageGRID S3 2026-08-28 00:00 14 minute read The post discusses the trend...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
