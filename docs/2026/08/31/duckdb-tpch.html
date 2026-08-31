@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          8 minute read
         
       </span>
     
@@ -289,9 +289,9 @@
 
 <p>Most of these won't bother you with small and mid-sized DBs, and remember that you don't have to use native database format. Datalakes don't put everything in one file, so you won't have the S3 problem.</p>
 
-<p>For native DuckDB, XFS on E-Series will work well. <a href="/2026/06/25/versity-sequential-s3-get-test.html">Here</a> you can see a multi-threaded workload that gets multiple GB/s from a single protected disk (LUN). You won't save much using storage that compresses data because it's <a href="https://duckdb.org/2022/10/28/lightweight-compression">done by the client</a>, but E-Series doesn't even have compression so you're good.</p>
+<p>For native DuckDB, XFS on E-Series will work well. <a href="/2026/06/25/versity-sequential-s3-get-test.html">Here</a> you can see a multi-threaded workload that gets multiple GB/s from a single protected disk (LUN). You won't save much using storage that compresses data because it's <a href="https://duckdb.org/2022/10/28/lightweight-compression">done by the client</a> (DuckDB, that is), but E-Series doesn't have compression so you only gain from built-in compression.</p>
 
-<p>Let's take a look at the documents table from <a href="/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html#how-it-looks-like">my post on agentic RAG</a> where <code class="language-plaintext highlighter-rouge">local.duckdb</code> was used:</p>
+<p>Let's take a look at the documents table from <a href="/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html#how-it-looks-like">my post on agentic RAG</a> where <code class="language-plaintext highlighter-rouge">local.duckdb</code> was used to store documents, chunks, and embeddings:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">local </span>D SELECT <span class="k">*</span> EXCLUDE <span class="o">(</span>column_path, segment_id, start, stats, persistent, block_id, block_offset<span class="o">)</span> 
       FROM pragma_storage_info<span class="o">(</span><span class="s1">'docs'</span><span class="o">)</span> USING SAMPLE 10 ROWS ORDER BY row_group_id<span class="p">;</span>
@@ -408,7 +408,26 @@ tpch_qphh_at_size               <span class="o">=</span> 230087.24
 
 <p>DuckDB didn't use a lot of RAM.</p>
 
-<p><img src="/assets/images/duckdb-tpch-00-run.png" alt="DuckDB TPCH SF=20 in dstat" /></p>
+<p><img src="/assets/images/duckdb-tpch-00-run.png" alt="DuckDB TPCH SF=20 query only in dstat" /></p>
+
+<p>Another run (both load and query) was done to capture more details.</p>
+
+<p>The result is similar, but we can see that the benchmark (<code class="language-plaintext highlighter-rouge">python</code>) writes can load data over 3 GB/s.</p>
+
+<p><img src="/assets/images/duckdb-tpch-02-run-detailed.png" alt="DuckDB TPCH SF=20 in dstat" /></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tpch_load_time                  <span class="o">=</span> 60.2 seconds
+throughput_measurement_interval <span class="o">=</span> 21.79
+power_total_queries_duration    <span class="o">=</span> 8.78
+tpch_power_at_size              <span class="o">=</span> 262211.93
+tpch_throughput_at_size         <span class="o">=</span> 218081.69
+tpch_qphh_at_size               <span class="o">=</span> 239130.97
+</code></pre></div></div>
+
+<p>Another run (query only) shows less than 10GB RAM utilization.</p>
+
+<p><img src="/assets/images/duckdb-tpch-03-run-query-detailed.png" alt="DuckDB TPCH SF=20 query only with dstat details" /></p>
+
 
         
       </section>
