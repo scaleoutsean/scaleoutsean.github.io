@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          11 minute read
         
       </span>
     
@@ -287,7 +287,7 @@
   <li>On block-based storage, the file system has a significant effect on performance when working with large files. On Linux, <strong>DuckDB performs best with XFS on large files</strong>.</li>
 </ul>
 
-<p>Most of these won't bother you with small and mid-sized DBs, and remember that you don't have to use native database format. Datalakes don't put everything in one file, so you won't have the S3 problem.</p>
+<p>Most of these won't bother you with small and mid-sized DBs, and remember that you don't have to use the native database format. Datalakes don't put everything in one file - and you can partition tables in DuckDB before upload - so you won't have that S3 problem.</p>
 
 <p>For native DuckDB, XFS on E-Series will work well. <a href="/2026/06/25/versity-sequential-s3-get-test.html">Here</a> you can see a multi-threaded workload that gets multiple GB/s from a single protected disk (LUN). You won't save much using storage that compresses data because it's <a href="https://duckdb.org/2022/10/28/lightweight-compression">done by the client</a> (DuckDB, that is), but E-Series doesn't have compression so you only gain from built-in compression.</p>
 
@@ -322,7 +322,9 @@
   <li>Dictionary encoding works by extracting common values into a separate dictionary, and then replacing the original values with references to said dictionary</li>
 </ul>
 
-<p>For remote - including hybrid cloud - use cases, simply use StorageGRID because you don't have to deal with storage presentation and management: you get unlimited capacity and end-to-end HTTPS encryption, which beats unencrypted iSCSI and NFS.</p>
+<p>And finally, E-Series is also good for larger-than-RAM workloads if your local disk space is limited because <a href="https://duckdb.org/docs/lts/guides/performance/how_to_tune_workloads">spillover-to-disk</a> can use E-Series. Simply create a RAID 10 or RAID 0 disk group and a LUN for each DuckDB client. If you have 16 servers that run DuckDB workloads and each needs 1TiB of disk cache, take several disks, create a disk group with 16TiB usable capacity, create 16 volumes and assign them to your DuckDB servers. Each server mounts its scratch disk to <code class="language-plaintext highlighter-rouge">/tmp/duckdb</code> and then: <code class="language-plaintext highlighter-rouge">SET temp_directory = '/tmp/duckdb';</code>. Have 4 servers per disk for fast performance, although you can have more if overflows to disk aren't concurrent.</p>
+
+<p>For remote access - including in hybrid cloud - simply use StorageGRID because you don't have to deal with storage presentation and management: you get unlimited capacity and end-to-end HTTPS encryption, which beats unencrypted iSCSI and NFS.</p>
 
 <p>There's a simple <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html">COSI driver</a> to automate that and bucket snapshots, too, so that you can get to a Point-in-Time DuckDB and run read-only reports based on it. The recommended way is to use a datalake, though, so that you don't have to use these "storage tricks".</p>
 
@@ -433,6 +435,81 @@ tpch_qphh_at_size               <span class="o">=</span> 239130.97
 
 <p><img src="/assets/images/duckdb-tpch-03-run-query-detailed.png" alt="DuckDB TPCH SF=20 query only with dstat details" /></p>
 
+<p>Control write and read run with <code class="language-plaintext highlighter-rouge">fio</code> on the same volume using multi-threaded 1MiB read and write requests (async on write, directIO on read):</p>
+
+<p><img src="/assets/images/duckdb-tpch-04-control-run-fio.png" alt="fio write and read tests" /></p>
+
+<p>The read test was slower than normal due to queue depth 1 (set automatically by <code class="language-plaintext highlighter-rouge">fio</code>).</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>fio <span class="nt">--name</span><span class="o">=</span>jobname <span class="nt">--filename</span><span class="o">=</span>/cache/testfile <span class="nt">--size</span><span class="o">=</span>32G <span class="nt">--rw</span><span class="o">=</span>write <span class="nt">--bs</span><span class="o">=</span>1M <span class="nt">--numjobs</span><span class="o">=</span>1 <span class="nt">--thread</span><span class="o">=</span>8 <span class="nt">--iodepth</span><span class="o">=</span>8 <span class="nt">--ioengine</span><span class="o">=</span>libaio
+Tue Sep  1 03:11:37 AM UTC 2026
+jobname: <span class="o">(</span><span class="nv">g</span><span class="o">=</span>0<span class="o">)</span>: <span class="nv">rw</span><span class="o">=</span>write, <span class="nv">bs</span><span class="o">=(</span>R<span class="o">)</span> 1024KiB-1024KiB, <span class="o">(</span>W<span class="o">)</span> 1024KiB-1024KiB, <span class="o">(</span>T<span class="o">)</span> 1024KiB-1024KiB, <span class="nv">ioengine</span><span class="o">=</span>libaio, <span class="nv">iodepth</span><span class="o">=</span>8
+fio-3.41
+Starting 1 thread
+Jobs: 1 <span class="o">(</span><span class="nv">f</span><span class="o">=</span>1<span class="o">)</span>: <span class="o">[</span>W<span class="o">(</span>1<span class="o">)][</span>100.0%][w<span class="o">=</span>2075MiB/s][w<span class="o">=</span>2075 IOPS][eta 00m:00s]
+jobname: <span class="o">(</span><span class="nv">groupid</span><span class="o">=</span>0, <span class="nb">jobs</span><span class="o">=</span>1<span class="o">)</span>: <span class="nv">err</span><span class="o">=</span> 0: <span class="nv">pid</span><span class="o">=</span>1860459: Tue Sep  1 03:11:52 2026
+  write: <span class="nv">IOPS</span><span class="o">=</span>2333, <span class="nv">BW</span><span class="o">=</span>2334MiB/s <span class="o">(</span>2447MB/s<span class="o">)(</span>32.0GiB/14042msec<span class="o">)</span><span class="p">;</span> 0 zone resets
+    slat <span class="o">(</span>usec<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>303, <span class="nv">max</span><span class="o">=</span>1134, <span class="nv">avg</span><span class="o">=</span>420.53, <span class="nv">stdev</span><span class="o">=</span>63.05
+    clat <span class="o">(</span>usec<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>4, <span class="nv">max</span><span class="o">=</span>6016, <span class="nv">avg</span><span class="o">=</span>2969.91, <span class="nv">stdev</span><span class="o">=</span>431.79
+     lat <span class="o">(</span>usec<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>474, <span class="nv">max</span><span class="o">=</span>6855, <span class="nv">avg</span><span class="o">=</span>3390.44, <span class="nv">stdev</span><span class="o">=</span>492.55
+    clat percentiles <span class="o">(</span>usec<span class="o">)</span>:
+     |  1.00th<span class="o">=[</span> 2311],  5.00th<span class="o">=[</span> 2442], 10.00th<span class="o">=[</span> 2474], 20.00th<span class="o">=[</span> 2507],
+     | 30.00th<span class="o">=[</span> 2540], 40.00th<span class="o">=[</span> 2638], 50.00th<span class="o">=[</span> 3261], 60.00th<span class="o">=[</span> 3326],
+     | 70.00th<span class="o">=[</span> 3326], 80.00th<span class="o">=[</span> 3392], 90.00th<span class="o">=[</span> 3425], 95.00th<span class="o">=[</span> 3458],
+     | 99.00th<span class="o">=[</span> 3523], 99.50th<span class="o">=[</span> 3523], 99.90th<span class="o">=[</span> 4015], 99.95th<span class="o">=[</span> 5014],
+     | 99.99th<span class="o">=[</span> 5866]
+   bw <span class="o">(</span>  MiB/s<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span> 2042, <span class="nv">max</span><span class="o">=</span> 2884, <span class="nv">per</span><span class="o">=</span>100.00%, <span class="nv">avg</span><span class="o">=</span>2336.79, <span class="nv">stdev</span><span class="o">=</span>334.47, <span class="nv">samples</span><span class="o">=</span>28
+   iops        : <span class="nv">min</span><span class="o">=</span> 2042, <span class="nv">max</span><span class="o">=</span> 2884, <span class="nv">avg</span><span class="o">=</span>2336.79, <span class="nv">stdev</span><span class="o">=</span>334.47, <span class="nv">samples</span><span class="o">=</span>28
+  lat <span class="o">(</span>usec<span class="o">)</span>   : <span class="nv">10</span><span class="o">=</span>0.01%, <span class="nv">500</span><span class="o">=</span>0.01%, <span class="nv">1000</span><span class="o">=</span>0.01%
+  lat <span class="o">(</span>msec<span class="o">)</span>   : <span class="nv">2</span><span class="o">=</span>0.01%, <span class="nv">4</span><span class="o">=</span>99.88%, <span class="nv">10</span><span class="o">=</span>0.10%
+  cpu          : <span class="nv">usr</span><span class="o">=</span>11.07%, <span class="nv">sys</span><span class="o">=</span>88.85%, <span class="nv">ctx</span><span class="o">=</span>389, <span class="nv">majf</span><span class="o">=</span>0, <span class="nv">minf</span><span class="o">=</span>6181
+  IO depths    : <span class="nv">1</span><span class="o">=</span>0.1%, <span class="nv">2</span><span class="o">=</span>0.1%, <span class="nv">4</span><span class="o">=</span>0.1%, <span class="nv">8</span><span class="o">=</span>100.0%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     submit    : <span class="nv">0</span><span class="o">=</span>0.0%, <span class="nv">4</span><span class="o">=</span>100.0%, <span class="nv">8</span><span class="o">=</span>0.0%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="nv">64</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     <span class="nb">complete</span>  : <span class="nv">0</span><span class="o">=</span>0.0%, <span class="nv">4</span><span class="o">=</span>100.0%, <span class="nv">8</span><span class="o">=</span>0.1%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="nv">64</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     issued rwts: <span class="nv">total</span><span class="o">=</span>0,32768,0,0 <span class="nv">short</span><span class="o">=</span>0,0,0,0 <span class="nv">dropped</span><span class="o">=</span>0,0,0,0
+     latency   : <span class="nv">target</span><span class="o">=</span>0, <span class="nv">window</span><span class="o">=</span>0, <span class="nv">percentile</span><span class="o">=</span>100.00%, <span class="nv">depth</span><span class="o">=</span>8
+
+Run status group 0 <span class="o">(</span>all <span class="nb">jobs</span><span class="o">)</span>:
+  WRITE: <span class="nv">bw</span><span class="o">=</span>2334MiB/s <span class="o">(</span>2447MB/s<span class="o">)</span>, 2334MiB/s-2334MiB/s <span class="o">(</span>2447MB/s-2447MB/s<span class="o">)</span>, <span class="nv">io</span><span class="o">=</span>32.0GiB <span class="o">(</span>34.4GB<span class="o">)</span>, <span class="nv">run</span><span class="o">=</span>14042-14042msec
+
+Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class="o">)</span>:
+  nvme6n1: <span class="nv">ios</span><span class="o">=</span>0/27689, <span class="nv">sectors</span><span class="o">=</span>0/56647704, <span class="nv">merge</span><span class="o">=</span>0/0, <span class="nv">ticks</span><span class="o">=</span>0/167340, <span class="nv">in_queue</span><span class="o">=</span>167340, <span class="nv">util</span><span class="o">=</span>51.94%
+
+<span class="nv">$ </span><span class="nb">sudo </span>fio <span class="nt">--name</span><span class="o">=</span>jobname <span class="nt">--filename</span><span class="o">=</span>/cache/testfile <span class="nt">--size</span><span class="o">=</span>32G <span class="nt">--rw</span><span class="o">=</span><span class="nb">read</span> <span class="nt">--bs</span><span class="o">=</span>1M <span class="nt">--numjobs</span><span class="o">=</span>1 <span class="nt">--thread</span><span class="o">=</span>8 <span class="nt">--iodepth</span><span class="o">=</span>8
+Tue Sep  1 03:09:40 AM UTC 2026
+jobname: <span class="o">(</span><span class="nv">g</span><span class="o">=</span>0<span class="o">)</span>: <span class="nv">rw</span><span class="o">=</span><span class="nb">read</span>, <span class="nv">bs</span><span class="o">=(</span>R<span class="o">)</span> 1024KiB-1024KiB, <span class="o">(</span>W<span class="o">)</span> 1024KiB-1024KiB, <span class="o">(</span>T<span class="o">)</span> 1024KiB-1024KiB, <span class="nv">ioengine</span><span class="o">=</span>psync, <span class="nv">iodepth</span><span class="o">=</span>8
+fio-3.41
+Starting 1 thread
+note: both iodepth <span class="o">&gt;=</span> 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+Jobs: 1 <span class="o">(</span><span class="nv">f</span><span class="o">=</span>1<span class="o">)</span>: <span class="o">[</span>R<span class="o">(</span>1<span class="o">)][</span>100.0%][r<span class="o">=</span>1921MiB/s][r<span class="o">=</span>1921 IOPS][eta 00m:00s]
+jobname: <span class="o">(</span><span class="nv">groupid</span><span class="o">=</span>0, <span class="nb">jobs</span><span class="o">=</span>1<span class="o">)</span>: <span class="nv">err</span><span class="o">=</span> 0: <span class="nv">pid</span><span class="o">=</span>1860330: Tue Sep  1 03:09:57 2026
+  <span class="nb">read</span>: <span class="nv">IOPS</span><span class="o">=</span>2039, <span class="nv">BW</span><span class="o">=</span>2040MiB/s <span class="o">(</span>2139MB/s<span class="o">)(</span>32.0GiB/16065msec<span class="o">)</span>
+    clat <span class="o">(</span>usec<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>120, <span class="nv">max</span><span class="o">=</span>6357, <span class="nv">avg</span><span class="o">=</span>446.46, <span class="nv">stdev</span><span class="o">=</span>765.10
+     lat <span class="o">(</span>usec<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>120, <span class="nv">max</span><span class="o">=</span>6357, <span class="nv">avg</span><span class="o">=</span>446.55, <span class="nv">stdev</span><span class="o">=</span>765.10
+    clat percentiles <span class="o">(</span>usec<span class="o">)</span>:
+     |  1.00th<span class="o">=[</span>  123],  5.00th<span class="o">=[</span>  127], 10.00th<span class="o">=[</span>  131], 20.00th<span class="o">=[</span>  137],
+     | 30.00th<span class="o">=[</span>  147], 40.00th<span class="o">=[</span>  172], 50.00th<span class="o">=[</span>  180], 60.00th<span class="o">=[</span>  186],
+     | 70.00th<span class="o">=[</span>  192], 80.00th<span class="o">=[</span>  202], 90.00th<span class="o">=[</span> 1729], 95.00th<span class="o">=[</span> 2835],
+     | 99.00th<span class="o">=[</span> 2933], 99.50th<span class="o">=[</span> 2966], 99.90th<span class="o">=[</span> 2999], 99.95th<span class="o">=[</span> 3032],
+     | 99.99th<span class="o">=[</span> 3163]
+   bw <span class="o">(</span>  MiB/s<span class="o">)</span>: <span class="nv">min</span><span class="o">=</span>  480, <span class="nv">max</span><span class="o">=</span> 3042, <span class="nv">per</span><span class="o">=</span>100.00%, <span class="nv">avg</span><span class="o">=</span>2179.20, <span class="nv">stdev</span><span class="o">=</span>570.06, <span class="nv">samples</span><span class="o">=</span>30
+   iops        : <span class="nv">min</span><span class="o">=</span>  480, <span class="nv">max</span><span class="o">=</span> 3042, <span class="nv">avg</span><span class="o">=</span>2179.20, <span class="nv">stdev</span><span class="o">=</span>570.06, <span class="nv">samples</span><span class="o">=</span>30
+  lat <span class="o">(</span>usec<span class="o">)</span>   : <span class="nv">250</span><span class="o">=</span>87.34%, <span class="nv">500</span><span class="o">=</span>0.14%, <span class="nv">750</span><span class="o">=</span>0.01%, <span class="nv">1000</span><span class="o">=</span>0.01%
+  lat <span class="o">(</span>msec<span class="o">)</span>   : <span class="nv">2</span><span class="o">=</span>5.03%, <span class="nv">4</span><span class="o">=</span>7.48%, <span class="nv">10</span><span class="o">=</span>0.01%
+  cpu          : <span class="nv">usr</span><span class="o">=</span>0.28%, <span class="nv">sys</span><span class="o">=</span>93.84%, <span class="nv">ctx</span><span class="o">=</span>509, <span class="nv">majf</span><span class="o">=</span>0, <span class="nv">minf</span><span class="o">=</span>1321
+  IO depths    : <span class="nv">1</span><span class="o">=</span>100.0%, <span class="nv">2</span><span class="o">=</span>0.0%, <span class="nv">4</span><span class="o">=</span>0.0%, <span class="nv">8</span><span class="o">=</span>0.0%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     submit    : <span class="nv">0</span><span class="o">=</span>0.0%, <span class="nv">4</span><span class="o">=</span>100.0%, <span class="nv">8</span><span class="o">=</span>0.0%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="nv">64</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     <span class="nb">complete</span>  : <span class="nv">0</span><span class="o">=</span>0.0%, <span class="nv">4</span><span class="o">=</span>100.0%, <span class="nv">8</span><span class="o">=</span>0.0%, <span class="nv">16</span><span class="o">=</span>0.0%, <span class="nv">32</span><span class="o">=</span>0.0%, <span class="nv">64</span><span class="o">=</span>0.0%, <span class="o">&gt;=</span><span class="nv">64</span><span class="o">=</span>0.0%
+     issued rwts: <span class="nv">total</span><span class="o">=</span>32768,0,0,0 <span class="nv">short</span><span class="o">=</span>0,0,0,0 <span class="nv">dropped</span><span class="o">=</span>0,0,0,0
+     latency   : <span class="nv">target</span><span class="o">=</span>0, <span class="nv">window</span><span class="o">=</span>0, <span class="nv">percentile</span><span class="o">=</span>100.00%, <span class="nv">depth</span><span class="o">=</span>8
+
+Run status group 0 <span class="o">(</span>all <span class="nb">jobs</span><span class="o">)</span>:
+   READ: <span class="nv">bw</span><span class="o">=</span>2040MiB/s <span class="o">(</span>2139MB/s<span class="o">)</span>, 2040MiB/s-2040MiB/s <span class="o">(</span>2139MB/s-2139MB/s<span class="o">)</span>, <span class="nv">io</span><span class="o">=</span>32.0GiB <span class="o">(</span>34.4GB<span class="o">)</span>, <span class="nv">run</span><span class="o">=</span>16065-16065msec
+
+Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class="o">)</span>:
+  nvme6n1: <span class="nv">ios</span><span class="o">=</span>32404/3861, <span class="nv">sectors</span><span class="o">=</span>66338816/7905280, <span class="nv">merge</span><span class="o">=</span>0/0, <span class="nv">ticks</span><span class="o">=</span>65654/38478, <span class="nv">in_queue</span><span class="o">=</span>104133, <span class="nv">util</span><span class="o">=</span>68.53%
+
+</code></pre></div></div>
 
         
       </section>
