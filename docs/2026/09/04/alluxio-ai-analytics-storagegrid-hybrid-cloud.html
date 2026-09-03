@@ -268,7 +268,7 @@
 
 <p><img src="/assets/images/alluxio-hybrid-cloud-storagegrid-00-diagram.png" alt="Hybrid Cloud with Alluxio with StorageGRID" /></p>
 
-<p>You don't <em>have</em> to use EF-Series, as shown in the diagram - internal NVMe will do, especially in public cloud where you can't have E-Series in any case. But you may want to use fast, protected external storage because it may cost less, be easier to manage and service. You may also need persistence without replication which at least halves internal disks' performance and capacity…</p>
+<p>You don't <em>have</em> to use EF-Series, as shown in the diagram - internal NVMe will do, especially in public cloud where you can't have E-Series in any case. But you may want to use fast, protected external storage because it may cost less, be easier to manage and service. You may also need persistence without replication which at least halves internal disks' maximum write performance and usable capacity…</p>
 
 <p>Alluxio can run on bare metal, Docker and Kubernetes, so you just need to:</p>
 <ul>
@@ -312,7 +312,7 @@
   <p>buffering PUT requests in local NVMe cache and persisting to UFS asynchronously for millisecond-level write latency</p>
 </blockquote>
 
-<p>We can confidently buffer writes in NVMe cache and wait for write cache to drain to the StorageGRID bucket. This is one of those use cases where you may want to make sure your NVMe cache won't fall apart before that draining is done (protected RAID or DDP on E-Series, including BeeGFS or Lustre with E-Series).</p>
+<p>We can confidently buffer writes in NVMe cache and wait for write cache to drain to the StorageGRID bucket. This is one of those use cases where you may want to make sure your NVMe cache won't fall apart before that draining is done. We can protect it with RAID or DDP on E-Series, including BeeGFS or Lustre with E-Series.</p>
 
 <p>If you write checkpoints or other large output back to S3, dumping it to NVMe cache lets your GPUs keep working and Alluxio cache can drain its pending writes even after GPU clients have been shut down.</p>
 
@@ -353,13 +353,13 @@ alluxio.worker.page.store.sizes<span class="o">=</span>&lt;CACHE_SIZE&gt;
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>A lot has changed since 2021, but the fundamentals are the same.</p>
+<p>A lot has changed since 2021, but the fundamentals are the same and requirements for this approach have increased.</p>
 
 <p>There was no reason to replicate data to the cloud in 2021, and there's even less reason to do it now - it's more secure, faster, cheaper and generally better to do everything you can without making copies of your data that land on persistent storage and need to be managed - even when it's fully on-premises, let alone in public cloud.</p>
 
 <p>For simple purposes (i.e. "mount a StorageGRID bucket to /mnt/s3") there are simple tools. Alluxio AI is not a small "driver" application.</p>
 
-<p>It does a lot of things. Deep learning, AI and analytics stacks aren't trivial either, so expect to put some effort in automation to be able to deploy it quickly and seamlessly on Kubernetes, but potential payoff is significant.</p>
+<p>It does a lot of things. Deep learning, AI and analytics stacks aren't trivial either, so expect having to invest an effort in automating its deployment to be able to deploy it quickly and seamlessly on (preferably) Kubernetes, but potential payoff is significant.</p>
 
 <p>From the StorageGRID side, you don't have to do anything special - just give Alluxio access and the rest of storage-related tasks would be around cache loading, policies, eviction, pinning and such. You should be able to avoid backup, replication and similar overheads and associated costs and risks, while completing your AI and analytics jobs faster and cheaper than ever before.</p>
 
