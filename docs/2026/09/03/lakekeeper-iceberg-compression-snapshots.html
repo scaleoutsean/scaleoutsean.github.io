@@ -1,0 +1,721 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.27.3 by Michael Rose
+  Copyright 2013-2025 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+
+<html lang="en-US" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Lakekeeper with NetApp StorageGRID | Acting Technologist</title>
+<meta name="description" content="Lakekeeper with NetApp StorageGRID">
+
+
+  <meta name="author" content="Sean">
+  
+  <meta property="article:author" content="Sean">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Acting Technologist">
+<meta property="og:title" content="Lakekeeper with NetApp StorageGRID">
+<meta property="og:url" content="https://scaleoutsean.github.io/2026/09/03/lakekeeper-iceberg-compression-snapshots.html">
+
+
+  <meta property="og:description" content="Lakekeeper with NetApp StorageGRID">
+
+
+
+  <meta property="og:image" content="https://scaleoutsean.github.io/assets/images/lakekeeper_07_storagegrid_sts.png">
+
+
+
+  <meta name="twitter:site" content="@scaleoutSean">
+  <meta name="twitter:title" content="Lakekeeper with NetApp StorageGRID">
+  <meta name="twitter:description" content="Lakekeeper with NetApp StorageGRID">
+  <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/09/03/lakekeeper-iceberg-compression-snapshots.html">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://scaleoutsean.github.io/assets/images/lakekeeper_07_storagegrid_sts.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2026-09-03T00:00:00+08:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://scaleoutsean.github.io/2026/09/03/lakekeeper-iceberg-compression-snapshots.html">
+
+
+
+
+
+
+
+  <meta name="google-site-verification" content="F6q7vIwQ2G0j8tk-KL9rAXOMLXMDMMUkEz4fRs1Nnnc" />
+
+
+  <meta name="msvalidate.01" content="7cf5b7d96a77410a8ad035f764dc81b3">
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+  window.enable_copy_code_button = true;
+</script>
+
+<script src="https://cdn.counter.dev/script.js" data-id="83dc700a-b821-4e57-9425-02b8336a9456" data-utcoffset="0"></script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css"></noscript>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
+
+
+  </head>
+
+  <body class="layout--single" dir="ltr">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/scaleoutsean-acting-technologist.png" alt="Acting Technologist"></a>
+        
+        <a class="site-title" href="/">
+          Acting Technologist
+          <span class="site-subtitle">human action through technology</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a
+                href="/about/"
+                
+                
+              >About</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/archive/"
+                
+                
+              >Archive</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/categories/"
+                
+                
+              >Categories</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/tags/"
+                
+                
+              >Tags</a>
+            </li><li class="masthead__menu-item">
+              <a
+                href="/projects.html"
+                
+                
+              >Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+
+<div id="main" role="main">
+  
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Lakekeeper with NetApp StorageGRID">
+    <meta itemprop="description" content="Why Lakekeeper with NetApp StorageGRID">
+    <meta itemprop="datePublished" content="2026-09-03T00:00:00+08:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">
+            <a href="https://scaleoutsean.github.io/2026/09/03/lakekeeper-iceberg-compression-snapshots.html" itemprop="url">Lakekeeper with NetApp StorageGRID
+</a>
+          </h1>
+          
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-09-03T00:00:00+08:00">2026-09-03 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#lakekeeper-with-storagegrid">Lakekeeper with StorageGRID</a></li><li><a href="#trino-with-storagegrid">Trino with StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+            </nav>
+          </aside>
+        
+        <ul>
+  <li><a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">Lakekeeper Iceberg REST Catalog with NetApp E-Series</a></li>
+  <li><strong>Lakekeeper with NetApp StorageGRID</strong> (this post)</li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>In Part I, I blogged about Lakekeeper mostly with the focus on NetApp E-Series, although I had a quick overview of StorageGRID as well.</p>
+
+<p>Long story short, if your data lake storage used for critical non-object services doesn't resemble StorageGRID's, you have a problem. You can't claim object storage should provide rack resilience and yet services which create data (Kafka) or record where it is (PostgreSQL) should not.</p>
+
+<p><img src="/assets/images/lakekeeper_17_architecture.png" alt="Lakekeeper with EF-Series and StorageGRID" /></p>
+
+<p>See Part I on why EF-Series can give you cost-effective protection for critical datalake services, most critically <strong>event streaming</strong> and Lakekeeper backend <strong>database</strong> service.</p>
+
+<p>This post is about the StorageGRID side of the equation. Note that admin and load-balancing API gateway aren't included in this diagram to declutter the diagram.</p>
+
+<h2 id="lakekeeper-with-storagegrid">Lakekeeper with StorageGRID</h2>
+
+<p>StorageGRID would use 2-Copy policy or Erasure Coding (in case of larger clusters - normally 4 or more nodes). We group storage nodes in pools to ensure anti-affinity in copy/chunk placement.</p>
+
+<p>We create a dedicated tenant, a bucket, and a group for STS Assume Role, if we wanted to have Lakekeeper hand out vended credentials.</p>
+
+<p><img src="/assets/images/lakekeeper_07_storagegrid_sts.png" alt="Lakekeeper S3-compatible configuration" /></p>
+
+<p>In this case I use <code class="language-plaintext highlighter-rouge">s3-compat</code> (for non-AWS S3) and STS is configured.</p>
+
+<p><img src="/assets/images/lakekeeper_08_storagegrid_setup.png" alt="STS setup" /></p>
+
+<p>Now that this is done, we create a warehouse, a namespace and look for some data we could use to create a table.</p>
+
+<p>I picked a set of JSON documents produced by StorageGRID Audit Log Converter (SGAC). I loaded those into an Iceberg table and the source JSONLD of 38 KiB became a Parquet file of 6 KiB. <strong>6x</strong>, nice!</p>
+
+<p><img src="/assets/images/lakekeeper_09_storagegrid-audit-log-table.png" alt="Iceberg/Parquet compression" /></p>
+
+<p>To be fair, the original audit log came in the more space-saving syslog format.</p>
+
+<p><img src="/assets/images/lakekeeper_10_storagegrid-audit-log-table-details.png" alt="" /></p>
+
+<p>You can also see the table file size here. So, no, datalake users should not enable compression on StorageGRID. I've never seen a user who should.</p>
+
+<p><img src="/assets/images/lakekeeper_11_storagegrid-audit-log-table-size.png" alt="Parquet table file size" /></p>
+
+<p>The table (Iceberg v2 is currently the default) is stored on StorageGRID. Notice there are "snapshots".</p>
+
+<p><img src="/assets/images/lakekeeper_12_storagegrid-audit-log-table-details-main.png" alt="Iceberg on StorageGRID" /></p>
+
+<p>These are <a href="https://iceberg.apache.org/docs/1.9.0/branching/">Iceberg snapshots</a>. Just in the case you were wondering if these were <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html">bucket snapshots</a> from StorageGRID.</p>
+
+<p><img src="/assets/images/lakekeeper_13_iceberg-snapshots.png" alt="Iceberg table details" /></p>
+
+<p>The table is append-only and I had just one commit - 61 JSON documents - so there's not much to see. But it hopefully conveys the idea <strong>where</strong> datalake snapshots are supposed to be taken. Not on your disk array and not on StoragGRID either.</p>
+
+<p><img src="/assets/images/lakekeeper_14_iceberg-snapshot-details.png" alt="Snapshots of Iceberg table" /></p>
+
+<p>If I added more logs, I would have had additional snapshots. These are space-efficient, but not the same way block storage is. At the same time, the cost of S3 capacity is low compared to block storage.</p>
+
+<p>I can go to Preview to see what's in the table without using other clients. I can see my access logs for the <code class="language-plaintext highlighter-rouge">pepsi</code> tenant. Nice.</p>
+
+<p><img src="/assets/images/lakekeeper_15_iceberg-audit-log-table-preview.png" alt="Snapshot details" /></p>
+
+<p>I can also use LoQE (Local Query Engine) to create ad-hoc queries. Say I wanted to see most recent S3 <code class="language-plaintext highlighter-rouge">GET</code>s:</p>
+
+<p><img src="/assets/images/lakekeeper_16_iceberg-audit-log-table-query.png" alt="Table preview" /></p>
+
+<p>We wouldn't run large queries in a datalake management UI. We'd use clients which would get vended S3 credentials and work directly against StorageGRID S3 API endpoint. Which brings me to…</p>
+
+<h2 id="trino-with-storagegrid">Trino with StorageGRID</h2>
+
+<p>Trino can connect to an Iceberg REST endpoint (among several types) - which here is Lakekeeper - then register this connection in a Trino catalog object and from REST it gets information it needs to query.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Trino</th>
+      <th>Lakekeeper / Iceberg</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>catalog</td>
+      <td>the warehouse (demo)</td>
+    </tr>
+    <tr>
+      <td>schema</td>
+      <td>namespace (demo)</td>
+    </tr>
+    <tr>
+      <td>table</td>
+      <td>table (audit_log)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>A script that does this registration and executes a query that finds the busiest bucket for <code class="language-plaintext highlighter-rouge">GET</code> requests may spit out output like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Created Trino catalog <span class="s1">'lakekeeper'</span> -&gt; warehouse <span class="s1">'demo'</span>
+
+lakekeeper.demo.audit_log: 61 rows
+
+Top buckets by bytes <span class="nb">read</span> <span class="o">(</span>successful SGET<span class="o">)</span>:
+  pepsi/agentic: 44 GETs, 140,505,305 B
+
+Most recent successful GETs:
+  2026-08-27 07:51:33+00:00  pepsi/agentic/gold/local.duckdb  7,352,320 B
+  2026-08-27 07:51:33+00:00  pepsi/agentic/bronze/logs_seed.parquet  16,384 B
+  2026-08-27 07:51:33+00:00  pepsi/agentic/gold/local.duckdb  8,388,608 B
+  2026-08-27 07:51:22+00:00  pepsi/agentic/bronze/sample-docs/2026-08-05-kafka-on-netapp-eseries.md  19,202 B
+  2026-08-27 07:51:21+00:00  pepsi/agentic/bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md  8,165 B
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This post shows how to use Lakekeeper with StorageGRID using STS.</p>
+
+<p>We also gaven an example of the space efficiency of Iceberg tables. It is worth mentioning you can use any file format you like - Lakekeeper doesn't care.</p>
+
+<p>Not only are the tables efficient, but "snapshots" - that are different from StorageGRID's built-in bucket snapshots and the only kind that should be used on lakehouse buckets - are "thin", too.</p>
+
+<p>Finally, we mentioned Trino and how query engines can work with an Iceberg REST catalog as Lakekeeper's.</p>
+
+<p>It is strongly recommended to have event streaming and Lakekeeper backend database replicated as per the diagram at the top; if you use Kafka, it does it natively, you just need multiple arrays. For PostgreSQL, we use CloudNative Postgres which not only performs continuous replication, but also frequent and efficient backups to S3.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/tags/iceberg" class="page__taxonomy-item p-category" rel="tag">iceberg</a><span class="sep">, </span>
+    
+      <a href="/tags/lakekeeper" class="page__taxonomy-item p-category" rel="tag">lakekeeper</a><span class="sep">, </span>
+    
+      <a href="/tags/trino" class="page__taxonomy-item p-category" rel="tag">trino</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
+    
+      <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
+    
+      <a href="/categories/storage" class="page__taxonomy-item p-category" rel="tag">storage</a><span class="sep">, </span>
+    
+      <a href="/categories/storagegrid" class="page__taxonomy-item p-category" rel="tag">storagegrid</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time class="dt-published" datetime="2026-09-03T00:00:00+08:00">2026-09-03 00:00</time></p>
+
+      </footer>
+
+      <section class="page__share">
+  <h4 class="page__share-title">Share on</h4>
+
+  <a href="https://x.com/intent/tweet?via=scaleoutSean&text=Lakekeeper+with+NetApp+StorageGRID%20https%3A%2F%2Fscaleoutsean.github.io%2F2026%2F09%2F03%2Flakekeeper-iceberg-compression-snapshots.html" class="btn btn--x" aria-label="Share on X" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on X">
+    <i class="fab fa-fw fa-x-twitter" aria-hidden="true"></i><span> X</span>
+  </a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://scaleoutsean.github.io/2026/09/03/lakekeeper-iceberg-compression-snapshots.html" class="btn btn--linkedin" aria-label="Share on LinkedIn" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn">
+    <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span>
+  </a>
+
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2026/08/31/duckdb-tpch.html" class="pagination--pager" title="AWS buys DuckLabs and about DuckDB with NetApp storage">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    
+<div class="page__related">
+  
+  <h2 class="page__related-title">You may also enjoy</h2>
+  <div class="grid__wrapper">
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/31/duckdb-tpch.html" rel="permalink">AWS buys DuckLabs and about DuckDB with NetApp storage
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-31T00:00:00+08:00">2026-08-31 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          11 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html" rel="permalink">Local agentic RAG with (only) NetApp StorageGRID S3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-28T00:00:00+08:00">2026-08-28 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          14 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">The post discusses the trend of hosting AI-related persistent data for agentic RAG on S3 object stores
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/27/starfish-software-beegfs.html" rel="permalink">Starfish Storage for better StorageGRID and BeeGFS manageability
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-27T00:00:00+08:00">2026-08-27 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">This post is a simple overview of features and benefits Starfish Storage brings to BeeGFS and StorageGRID users
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/2026/08/26/s3-files-sg-nvcomp-checkpoints.html" rel="permalink">AWS S3 Files, checkpointing with nvCOMP
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-08-26T00:00:00+08:00">2026-08-26 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Do they matter and how to integrate with StorageGRID
+</p>
+  </article>
+</div>
+
+    
+  </div>
+</div>
+
+  
+  
+</div>
+
+      
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        
+
+<div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/scaleoutsean" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+
+<div class="page__footer-copyright">&copy; 2020-2026 scaleoutSean.github.io | <a href="https://scaleoutsean.github.io">Acting Technologist</a> | Terms: <a href="https://creativecommons.org/licenses/by/4.0/deed.en" target="_blank">CC BY 4.0</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
