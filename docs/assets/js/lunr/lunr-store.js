@@ -2699,6 +2699,12 @@ var store = [{
         "url": "/2026/09/03/lakekeeper-iceberg-compression-snapshots.html",
         "teaser": null
       },{
+        "title": "AI and analytics in hybrid cloud with Alluxio and NetApp StorageGRID",
+        "excerpt":"Introduction I first wrote about Alluxio with StorageGRID in 2021, before that was a thing (in terms of official StorageGRID solutions). Alluxio and StorageGRID Hadoop Multi-Tiered Read-Write S3 cache Alluxio and NetApp StorageGRID Quick refresher on Alluxio: Alluxio is a distributed caching layer that sits between your object storage (S3,...","categories": ["netapp","storage","analytics","ai","storagegrid"],
+        "tags": ["alluxio","hadoop","ai","s3"],
+        "url": "/2026/09/04/alluxio-ai-analytics-storagegrid-hybrid-cloud.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2712,7 +2718,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Lakekeeper with NetApp StorageGRID 2026-09-03 00:00 4 minute read Why Lakekeeper with NetApp StorageGRID AWS buys DuckLabs and about DuckDB with NetApp storage 2026-08-31 00:00 11 minute read Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB Local agentic RAG with...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"AI and analytics in hybrid cloud with Alluxio and NetApp StorageGRID 2026-09-04 00:00 6 minute read Solve performance and data management in hybrid cloud use cases Lakekeeper with NetApp StorageGRID 2026-09-03 00:00 4 minute read Why Lakekeeper with NetApp StorageGRID AWS buys DuckLabs and about DuckDB with NetApp storage 2026-08-31...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
