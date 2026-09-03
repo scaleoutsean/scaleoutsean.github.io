@@ -2694,7 +2694,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Lakekeeper with NetApp StorageGRID",
-        "excerpt":"Lakekeeper Iceberg REST Catalog with NetApp E-Series Lakekeeper with NetApp StorageGRID (this post) Introduction In Part I, I blogged about Lakekeeper mostly with the focus on NetApp E-Series, although I had a quick overview of StorageGRID as well. Long story short, if your data lake storage used for critical non-object...","categories": ["netapp","storage","analytics","storagegrid"],
+        "excerpt":"Lakekeeper Iceberg REST Catalog with NetApp E-Series Lakekeeper with NetApp StorageGRID (this post) Introduction In Part I, I blogged about Lakekeeper mostly with the focus on NetApp E-Series, although that post has a quick overview of Lakekeeper with StorageGRID as well. Long story short, the point of that post was...","categories": ["netapp","storage","analytics","storagegrid"],
         "tags": ["analytics","iceberg","lakekeeper","trino"],
         "url": "/2026/09/03/lakekeeper-iceberg-compression-snapshots.html",
         "teaser": null
@@ -2712,7 +2712,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Lakekeeper with NetApp StorageGRID 2026-09-03 00:00 3 minute read Why Lakekeeper with NetApp StorageGRID AWS buys DuckLabs and about DuckDB with NetApp storage 2026-08-31 00:00 11 minute read Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB Local agentic RAG with...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Lakekeeper with NetApp StorageGRID 2026-09-03 00:00 4 minute read Why Lakekeeper with NetApp StorageGRID AWS buys DuckLabs and about DuckDB with NetApp storage 2026-08-31 00:00 11 minute read Good move for AWS, DuckLabs and users, bad news for Spark. Also, why StorageGRID and E-Series for DuckDB Local agentic RAG with...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"

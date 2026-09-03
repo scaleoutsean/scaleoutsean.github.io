@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -240,27 +240,33 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>In Part I, I blogged about Lakekeeper mostly with the focus on NetApp E-Series, although I had a quick overview of StorageGRID as well.</p>
+<p>In Part I, I blogged about Lakekeeper mostly with the focus on NetApp E-Series, although that post has a quick overview of Lakekeeper with StorageGRID as well.</p>
 
-<p>Long story short, if your data lake storage used for critical non-object services doesn't resemble StorageGRID's, you have a problem. You can't claim object storage should provide rack resilience and yet services which create data (Kafka) or record where it is (PostgreSQL) should not.</p>
+<p>Long story short, the point of that post was that if your data lake storage used for critical non-object services doesn't resemble StorageGRID's distributed architecture, you have a problem. You can't claim object storage should provide rack resilience and yet services which create data (Kafka) or records where that data is (PostgreSQL) should not.</p>
 
 <p><img src="/assets/images/lakekeeper_17_architecture.png" alt="Lakekeeper with EF-Series and StorageGRID" /></p>
 
 <p>See Part I on why EF-Series can give you cost-effective protection for critical datalake services, most critically <strong>event streaming</strong> and Lakekeeper backend <strong>database</strong> service.</p>
 
-<p>This post is about the StorageGRID side of the equation. Note that admin and load-balancing API gateway aren't included in this diagram to declutter the diagram.</p>
+<p>This post is about the StorageGRID side of the equation. Note that admin and load-balancing API gateway aren't included to make it easier to understand.</p>
 
 <h2 id="lakekeeper-with-storagegrid">Lakekeeper with StorageGRID</h2>
 
-<p>StorageGRID would use 2-Copy policy or Erasure Coding (in case of larger clusters - normally 4 or more nodes). We group storage nodes in pools to ensure anti-affinity in copy/chunk placement.</p>
+<p>StorageGRID would use 2-Copy or Erasure Coding ILM policy (in case of larger clusters - normally 4 or more nodes). We can group storage nodes in pools to ensure anti-affinity in copy/chunk placement.</p>
 
-<p>We create a dedicated tenant, a bucket, and a group for STS Assume Role, if we wanted to have Lakekeeper hand out vended credentials.</p>
+<p>We create a dedicated tenant, a bucket, and a group for STS Assume Role, if we wanted to have Lakekeeper hand out vended credentials. That's not the only option, so you have a choice including <code class="language-plaintext highlighter-rouge">None</code> (BYOC - bring your own credentials for Lakekeeper clients).</p>
 
 <p><img src="/assets/images/lakekeeper_07_storagegrid_sts.png" alt="Lakekeeper S3-compatible configuration" /></p>
 
-<p>In this case I use <code class="language-plaintext highlighter-rouge">s3-compat</code> (for non-AWS S3) and STS is configured.</p>
+<p>It is recommended to use FQDN and HTTPS to connect to StorageGRID, which wasn't the case in my lab.</p>
+
+<p>In order for various CORS-related features to work, you need to set up CORS for the Lakekeeper bucket. Refer to the Lakekeeper instructions.</p>
+
+<p>We need to use use <code class="language-plaintext highlighter-rouge">s3-compat</code> (for non-AWS S3) and STS is configured for credentials vending.</p>
 
 <p><img src="/assets/images/lakekeeper_08_storagegrid_setup.png" alt="STS setup" /></p>
+
+<p>Note that Lakekeeper still has its own set of "classic" S3 credentials for "direct" (non-STS) access, which is similar how <a href="">OpenSharing</a> server does it. Vended credentials are for services that rely on Lakekeeper for vending.</p>
 
 <p>Now that this is done, we create a warehouse, a namespace and look for some data we could use to create a table.</p>
 
@@ -268,23 +274,21 @@
 
 <p><img src="/assets/images/lakekeeper_09_storagegrid-audit-log-table.png" alt="Iceberg/Parquet compression" /></p>
 
-<p>To be fair, the original audit log came in the more space-saving syslog format.</p>
+<p>To be fair, the original audit log came in the more space-saving syslog format, and the content is highly repetitive.</p>
 
-<p><img src="/assets/images/lakekeeper_10_storagegrid-audit-log-table-details.png" alt="" /></p>
+<p><img src="/assets/images/lakekeeper_10_storagegrid-audit-log-table-details.png" alt="Iceberg table details" /></p>
 
 <p>You can also see the table file size here. So, no, datalake users should not enable compression on StorageGRID. I've never seen a user who should.</p>
 
 <p><img src="/assets/images/lakekeeper_11_storagegrid-audit-log-table-size.png" alt="Parquet table file size" /></p>
 
-<p>The table (Iceberg v2 is currently the default) is stored on StorageGRID. Notice there are "snapshots".</p>
+<p>The table (Iceberg v2 is currently the default) is stored on StorageGRID. Notice the screenshots mention "snapshots".</p>
 
-<p><img src="/assets/images/lakekeeper_12_storagegrid-audit-log-table-details-main.png" alt="Iceberg on StorageGRID" /></p>
-
-<p>These are <a href="https://iceberg.apache.org/docs/1.9.0/branching/">Iceberg snapshots</a>. Just in the case you were wondering if these were <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html">bucket snapshots</a> from StorageGRID.</p>
+<p>Those are <a href="https://iceberg.apache.org/docs/1.9.0/branching/">Iceberg snapshots</a> (just in the case you were wondering if those might be StorageGRID <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html">bucket snapshots</a>).</p>
 
 <p><img src="/assets/images/lakekeeper_13_iceberg-snapshots.png" alt="Iceberg table details" /></p>
 
-<p>The table is append-only and I had just one commit - 61 JSON documents - so there's not much to see. But it hopefully conveys the idea <strong>where</strong> datalake snapshots are supposed to be taken. Not on your disk array and not on StoragGRID either.</p>
+<p>The table is append-only and I had just one commit - 61 JSON documents - so there's not much to see. But it hopefully conveys the idea <strong>where</strong> datalake snapshots are supposed to be taken. Not on your disk array, and not on StoragGRID either.</p>
 
 <p><img src="/assets/images/lakekeeper_14_iceberg-snapshot-details.png" alt="Snapshots of Iceberg table" /></p>
 
@@ -344,17 +348,23 @@ Most recent successful GETs:
   2026-08-27 07:51:21+00:00  pepsi/agentic/bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md  8,165 B
 </code></pre></div></div>
 
+<p>The real strength of Trino is that it can execute massive queries in parallel, while this is a non-distributed Small Data query.</p>
+
+<p>The classic StorageGRID recipe is to <a href="/2023/07/20/storagegrid-and-elaticsearches.html">forward logs to Elasticsearch</a>. Here there's no Kibana and you need to know a bit more, but it's cheap and it works. I'd only recommend that you use Cloud Mirror to copy any audit logs <em>required for compliance</em> to a remote S3 cluster with Object Lock, just in case.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This post shows how to use Lakekeeper with StorageGRID using STS.</p>
+<p>This post shows how to use Lakekeeper with StorageGRID and STS for credentials vending.</p>
 
-<p>We also gaven an example of the space efficiency of Iceberg tables. It is worth mentioning you can use any file format you like - Lakekeeper doesn't care.</p>
+<p><img src="/assets/images/lakekeeper_12_storagegrid-audit-log-table-details-main.png" alt="Lakekeeper with StorageGRID" /></p>
+
+<p>We also gave an example of the space efficiency of Iceberg tables. It is worth mentioning you can use any file format you like - Lakekeeper doesn't care, it supports all.</p>
 
 <p>Not only are the tables efficient, but "snapshots" - that are different from StorageGRID's built-in bucket snapshots and the only kind that should be used on lakehouse buckets - are "thin", too.</p>
 
-<p>Finally, we mentioned Trino and how query engines can work with an Iceberg REST catalog as Lakekeeper's.</p>
+<p>Finally, we mentioned Trino and touched upon how query engines can work with an Iceberg REST catalog as Lakekeeper's and StorageGRID.</p>
 
-<p>It is strongly recommended to have event streaming and Lakekeeper backend database replicated as per the diagram at the top; if you use Kafka, it does it natively, you just need multiple arrays. For PostgreSQL, we use CloudNative Postgres which not only performs continuous replication, but also frequent and efficient backups to S3.</p>
+<p>It is strongly recommended to have event streaming and Lakekeeper backend database replicated as per the diagram at the top; if you use Kafka, it does it natively, you just need multiple arrays. For PostgreSQL, we use CloudNative Postgres which not only performs continuous replication, but can create frequent, efficient backups on StorageGRID.</p>
 
         
       </section>
