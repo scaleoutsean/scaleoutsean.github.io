@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          6 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#lakekeeper-with-storagegrid">Lakekeeper with StorageGRID</a></li><li><a href="#trino-with-storagegrid">Trino with StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#lakekeeper-with-storagegrid">Lakekeeper with StorageGRID</a></li><li><a href="#trino-with-lakekeeper-and-storagegrid">Trino with Lakekeeper and StorageGRID</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -274,11 +274,97 @@
 
 <p><img src="/assets/images/lakekeeper_09_storagegrid-audit-log-table.png" alt="Iceberg/Parquet compression" /></p>
 
-<p>To be fair, the original audit log came in the more space-saving syslog format, and the content is highly repetitive.</p>
+<p>To be fair, the original audit log came in the more space-saving syslog format, and the content is highly repetitive - it contains most of SGET/SPUT fields from StorageGRID audit log:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"schema-id"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"struct"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Timestamp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"timestamptz"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RSLT"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TIME"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"long"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SAIP"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TLIP"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"S3AI"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SACC"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"S3AK"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"S3BK"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"S3KY"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CSIZ"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"long"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ATYP"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AMID"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
 
 <p><img src="/assets/images/lakekeeper_10_storagegrid-audit-log-table-details.png" alt="Iceberg table details" /></p>
 
-<p>You can also see the table file size here. So, no, datalake users should not enable compression on StorageGRID. I've never seen a user who should.</p>
+<p>You can also see the table file size here. So, no, datalake users should <strong>not</strong> enable compression on StorageGRID. I've never seen a user who should.</p>
 
 <p><img src="/assets/images/lakekeeper_11_storagegrid-audit-log-table-size.png" alt="Parquet table file size" /></p>
 
@@ -304,7 +390,7 @@
 
 <p>We wouldn't run large queries in a datalake management UI. We'd use clients which would get vended S3 credentials and work directly against StorageGRID S3 API endpoint. Which brings me to…</p>
 
-<h2 id="trino-with-storagegrid">Trino with StorageGRID</h2>
+<h2 id="trino-with-lakekeeper-and-storagegrid">Trino with Lakekeeper and StorageGRID</h2>
 
 <p>Trino can connect to an Iceberg REST endpoint (among several types) - which here is Lakekeeper - then register this connection in a Trino catalog object and from REST it gets information it needs to query.</p>
 
@@ -331,7 +417,7 @@
   </tbody>
 </table>
 
-<p>A script that does this registration and executes a query that finds the busiest bucket for <code class="language-plaintext highlighter-rouge">GET</code> requests may spit out output like this:</p>
+<p>A script that does this registration and executes a query that finds the busiest bucket for <code class="language-plaintext highlighter-rouge">GET</code> requests like this:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Created Trino catalog <span class="s1">'lakekeeper'</span> -&gt; warehouse <span class="s1">'demo'</span>
 
@@ -348,9 +434,24 @@ Most recent successful GETs:
   2026-08-27 07:51:21+00:00  pepsi/agentic/bronze/sample-docs/2024-02-23-storagegrid-notifications-kafka.md  8,165 B
 </code></pre></div></div>
 
-<p>The real strength of Trino is that it can execute massive queries in parallel, while this is a non-distributed Small Data query.</p>
+<p>We just use standard SQL to query Iceberg tables. Example to get five most recent <code class="language-plaintext highlighter-rouge">SGETs</code> that we executed from LoQE earlier:</p>
 
-<p>The classic StorageGRID recipe is to <a href="/2023/07/20/storagegrid-and-elaticsearches.html">forward logs to Elasticsearch</a>. Here there's no Kibana and you need to know a bit more, but it's cheap and it works. I'd only recommend that you use Cloud Mirror to copy any audit logs <em>required for compliance</em> to a remote S3 cluster with Object Lock, just in case.</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"Timestamp"</span><span class="p">,</span> <span class="nv">"SACC"</span><span class="p">,</span> <span class="nv">"S3BK"</span><span class="p">,</span> <span class="nv">"S3KY"</span><span class="p">,</span> <span class="nv">"CSIZ"</span>
+<span class="k">FROM</span> <span class="n">lakekeeper</span><span class="p">.</span><span class="n">demo</span><span class="p">.</span><span class="n">audit_log</span>
+<span class="k">WHERE</span> <span class="nv">"ATYP"</span> <span class="o">=</span> <span class="s1">'SGET'</span> <span class="k">AND</span> <span class="nv">"RSLT"</span> <span class="o">=</span> <span class="s1">'SUCS'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="nv">"Timestamp"</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">5</span>
+</code></pre></div></div>
+
+<p>The classic StorageGRID recipe for audit logs is to <a href="/2023/07/20/storagegrid-and-elaticsearches.html">forward logs to Elasticsearch</a>. Here there's no Kibana and you need to know a bit of SQL to get what you need, but it's fast, cheap and it works. I'd only recommend that you also forward or stream StorageGRID audit logs <em>required for compliance</em> to a remote S3 object store at least one copy should be stored outside of the audit target (StorageGRID).</p>
+
+<p>The real strength of Trino is that it can execute massive queries on many workers in parallel, while this demo is a non-distributed, "Small Data" query.</p>
+
+<p>With small jobs, the UI doesn't look very exciting, but it's still useful - we can see all queries (and even their various details if we click further).</p>
+
+<p><img src="/assets/images/lakekeeper_18_trino-iceberg-jobs.png" alt="View of finished jobs" /></p>
+
+<p>For very large queries, Trino can use multiple worker nodes and optionally the caching feature <a href="/2026/09/04/alluxio-ai-analytics-storagegrid-hybrid-cloud.html">from Alluxio</a> to avoid repetitive downloads of same data from data lakehouse.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
