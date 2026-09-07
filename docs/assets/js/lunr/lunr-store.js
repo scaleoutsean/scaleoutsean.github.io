@@ -2706,7 +2706,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing Iceberg tables on NetApp StorageGRID and E-Series",
-        "excerpt":"Introduction I’ve blogged about OpenSharing a bunch of times. It is most exciting because it turns E-Series into cost-effective data lakehouse storage for exactly $0 and also provides useful sharing features for StorageGRID (including Volumes, i.e. file tables). Some interesting possibilities that have been on my mind: STS AssumeRole, because...","categories": ["netapp","storage","analytics","storagegrid"],
+        "excerpt":"Introduction I’ve blogged about OpenSharing a bunch of times. It is most exciting because it turns E-Series into a cost-effective data lakehouse store for exactly $0 and also provides sharing features for StorageGRID (including Volumes, i.e. file tables) useful in various hybrid cloud use cases. Some interesting possibilities that have...","categories": ["netapp","storage","analytics","storagegrid"],
         "tags": ["analytics","iceberg","opensharing","trino","versity"],
         "url": "/2026/09/07/opensharing-iceberg-netapp-eseries-storagegrid.html",
         "teaser": null

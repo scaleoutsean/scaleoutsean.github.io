@@ -235,7 +235,9 @@
         
         <h2 id="introduction">Introduction</h2>
 
-<p>I've blogged about <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> a bunch of times. It is most exciting because it turns E-Series into cost-effective data lakehouse storage for exactly $0 and also provides useful sharing features for StorageGRID (including <code class="language-plaintext highlighter-rouge">Volumes</code>, i.e. file tables).</p>
+<p>I've blogged about <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> a bunch of times.</p>
+
+<p>It is most exciting because it turns E-Series into a cost-effective data lakehouse store for exactly $0 and also provides sharing features for StorageGRID (including <code class="language-plaintext highlighter-rouge">Volumes</code>, i.e. file tables) useful in various <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html#conclusion">hybrid cloud</a> use cases.</p>
 
 <p>Some interesting possibilities that have been on my mind:</p>
 
@@ -244,11 +246,11 @@
   <li>Iceberg tables, because OpenSharing has been dismissed because "not invented here" and - "as we all know" - "it's for Delta tables only" (except it's not)</li>
 </ul>
 
-<p>Let's get to the point.</p>
+<p>Let's see about that.</p>
 
 <h2 id="opensharing-for-read-only-access-to-iceberg-tables">OpenSharing for read-only access to Iceberg tables</h2>
 
-<p>I run OpenSharing server using S3 keys that still work the same (can generate static presigned URLs for Delta tables and volumes). That's the <code class="language-plaintext highlighter-rouge">SUSR</code> dude.</p>
+<p>I now run OpenSharing server using the S3 keys that still work the same way - OpenSharing uses the key to generate static presigned URLs for Delta tables and volumes. That's the <code class="language-plaintext highlighter-rouge">SUSR</code> dude.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2026-09-07T11:00:54+08:00 sg-storage-02 Audit: 2026-09-07T11:00:54.880396 <span class="o">[</span>AUDT:
 <span class="o">[</span>RSLT<span class="o">(</span>FC32<span class="o">)</span>:SUCS]
@@ -303,19 +305,19 @@
 
 <p>Annnd, because OpenSharing supports Iceberg tables, the client is now using the identity from <code class="language-plaintext highlighter-rouge">STSN</code> above.</p>
 
-<p>S3 clients can get role credentials and read access to Iceberg tables such as analytics-share-analytics-schema-iceberg_demo_table.</p>
+<p>S3 clients can get role credentials and read access to Iceberg tables such as <code class="language-plaintext highlighter-rouge">analytics-share-analytics-schema-iceberg_demo_table</code>.</p>
 
-<p>In fact, they could write access, or a mix depending on OAuth2 identity, but I just assume one client and universal read-only access to OpenSharing resources.</p>
+<p>In fact, they could have write access or a mix depending on OAuth2 identity and/or per-share configuration, but I just assume one client and universal read-only access to OpenSharing resources, which is sufficient for evaluation and testing.</p>
 
 <p>And just like that, I can view OpenSharing tables (that happen to be Iceberg tables).</p>
 
 <p><img src="/assets/images/opensharing-sts-assumerole-00-table.png" alt="OpenSharing with Iceberg" /></p>
 
-<p>Clients are using STS AssumeRole to dynamically access this sucker…</p>
+<p>The clients are using STS AssumeRole to dynamically access this sucker…</p>
 
 <p><img src="/assets/images/opensharing-sts-assumerole-01-sts-assumerole.png" alt="OpenSharing access with STS AssumeRole" /></p>
 
-<p>… and Trino, demonstrated with the same table in the <a href="/2026/09/03/lakekeeper-iceberg-compression-snapshots.html#trino-with-lakekeeper-and-storagegrid">Iceberg catalog post</a>, here works with OpenSharing Iceberg tables, rather than with Lakekeeper's Iceberg REST, using the same table that's in the same bucket.</p>
+<p>… and Trino, demonstrated with the same table in the previous, <a href="/2026/09/03/lakekeeper-iceberg-compression-snapshots.html#trino-with-lakekeeper-and-storagegrid">Iceberg catalog post</a>, here works with an OpenSharing Iceberg REST API, rather than with Lakekeeper's Iceberg REST, using the same table that's still in the same bucket (which is for convenience in testing, as I don't have to recreate the tables and have everything self-contained; normally, OpenSharing would use the catalog server that's in charge of the datalake).</p>
 
 <p><img src="/assets/images/opensharing-sts-assumerole-02-trino-opensharing-sts-assumerole.png" alt="Trino with OpenSharing" /></p>
 
