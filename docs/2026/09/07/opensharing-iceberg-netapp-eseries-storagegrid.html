@@ -303,13 +303,13 @@
 <span class="o">[</span>ATID<span class="o">(</span>UI64<span class="o">)</span>:2323724246960406894]]
 </code></pre></div></div>
 
-<p>Annnd, because OpenSharing supports Iceberg tables, the client is now using the identity from <code class="language-plaintext highlighter-rouge">STSN</code> above.</p>
+<p>Annnd, because the OpenSharing specification supports Iceberg tables, that's been implemented and the client can now put that assumed identity from <code class="language-plaintext highlighter-rouge">STSN</code> above to productive use.</p>
 
-<p>S3 clients can get role credentials and read access to Iceberg tables such as <code class="language-plaintext highlighter-rouge">analytics-share-analytics-schema-iceberg_demo_table</code>.</p>
+<p>The S3 clients first use JWT auth to access OpenSharing API (not shown here) and the OpenSharing server uses a separate role to give the clients short-lived credentials which let them get read access to Iceberg tables such as <code class="language-plaintext highlighter-rouge">analytics-share-analytics-schema-iceberg_demo_table</code>.</p>
 
-<p>In fact, they could have write access or a mix depending on OAuth2 identity and/or per-share configuration, but I just assume one client and universal read-only access to OpenSharing resources, which is sufficient for evaluation and testing.</p>
+<p>In fact, the clients could get write access or a mix depending on OAuth2 identity and/or per-share configuration, but I just assume one client and universal read-only access to OpenSharing resources, which is sufficient for evaluation and testing.</p>
 
-<p>And just like that, I can view OpenSharing tables (that happen to be Iceberg tables).</p>
+<p>And just like that, I can view OpenSharing shares with Iceberg tables.</p>
 
 <p><img src="/assets/images/opensharing-sts-assumerole-00-table.png" alt="OpenSharing with Iceberg" /></p>
 
@@ -335,9 +335,11 @@
 
 <p>STS AssumeRole - and therefore Iceberg sharing - currently works only with StorageGRID and not yet with Versity (and E-Series) because Versity S3 Gateway (now v1.8.0) doesn't support AssumeRole.</p>
 
-<p>But it won't be long before it can, and we'll be able to read Iceberg tables from VGW and use Lakekeeper to upload them to datalake on StorageGRID. Or use OpenSharing (or Lakekeeper) to read tables from StorageGRID, and copy them to E-Series on edge for local read-only access by analytics, AI or other clients.</p>
+<p>But it won't be long before it can, and we'll be able to read Iceberg tables from VGW and use Lakekeeper to upload them to a datalake on StorageGRID. Or use OpenSharing (or Lakekeeper) to read tables from StorageGRID, and copy them to E-Series on edge for local read-only access by analytics, AI or other clients.</p>
 
-<p>Don't forget that OpenSharing can also share volumes (which I've implemented) and models (not yet), so it's not just some contrived scenario with Iceberg tables.</p>
+<p>Don't forget that OpenSharing can also share Volumes (for unstructured data, i.e. individual files, which I've implemented and doesn't need these "updates") and AI models (not yet implemented), which should be interesting to the thinking person because we know VGW on E-Series can let us load models from E-Series over S3 <a href="/2026/08/17/versity-sequential-s3-put-test.html">at multiple GB/s per file</a>. Or use OpenSharing Volumes to load checkpoint files.</p>
+
+<p>It's not just some contrived scenarios, unless you're determined to work slowly and spend more.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -345,9 +347,9 @@
 
 <p><img src="/assets/images/medallion-architecture-dont-manage-storage.png" alt="OpenSharing in Hybrid Cloud" /></p>
 
-<p>You can use Iceberg and Delta lakehouses on StorageGRID and provide read-only access to any application without copying. If it's structured, you'll probably use OpenSharing or similar, if it's unstructured, you can also use plain old read or read-write cache.</p>
+<p>We can access Iceberg and Delta lakehouses on StorageGRID and provide read-only access to any application without unnecessary copying or "replication". If the data is structured, we'll probably use OpenSharing or similar, and if it's unstructured, we can also use plain old read or read-write cache (S3 reverse proxy or a caching engine such as Varnish AI shown in the diagram).</p>
 
-<p>It's secure, fully auditable and costs next to nothing (including management, since there's no cloud storage to manage).</p>
+<p>It's secure, fully audited, with tight/granular permissions and it costs next to nothing (including storage management, since there's no cloud storage to manage).</p>
 
 <p>I still need to update the docs. It will take me a few days to update the README and post the new binaries on Github.</p>
 
