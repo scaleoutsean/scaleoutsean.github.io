@@ -2706,7 +2706,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing Iceberg tables on NetApp StorageGRID and E-Series",
-        "excerpt":"I’ve blogged about OpenSharing a bunch of times. It is most exciting because it turns E-Series into cost-effective data lakehouse storage for exactly $0 and also provides useful sharing features for StorageGRID (including Volumes, i.e. file tables). Some interesting possibilities that have been on my mind: STS AssumeRole, because that...","categories": ["netapp","storage","analytics","storagegrid"],
+        "excerpt":"Introduction I’ve blogged about OpenSharing a bunch of times. It is most exciting because it turns E-Series into cost-effective data lakehouse storage for exactly $0 and also provides useful sharing features for StorageGRID (including Volumes, i.e. file tables). Some interesting possibilities that have been on my mind: STS AssumeRole, because...","categories": ["netapp","storage","analytics","storagegrid"],
         "tags": ["analytics","iceberg","opensharing","trino","versity"],
         "url": "/2026/09/07/opensharing-iceberg-netapp-eseries-storagegrid.html",
         "teaser": null
@@ -2724,7 +2724,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"OpenSharing Iceberg tables on NetApp StorageGRID and E-Series 2026-09-07 00:00 2 minute read I’ve blogged about OpenSharing a bunch of times. It is most exciting because it turns E-Series into cost-effective data lakehouse storage for exactly $0 and ... AI and analytics in hybrid cloud with Alluxio and NetApp StorageGRID...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"OpenSharing Iceberg tables on NetApp StorageGRID and E-Series 2026-09-07 00:00 3 minute read Introduction AI and analytics in hybrid cloud with Alluxio and NetApp StorageGRID 2026-09-04 00:00 7 minute read Solve performance and data management in hybrid cloud use cases Lakekeeper with NetApp StorageGRID 2026-09-03 00:00 6 minute read Why...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
