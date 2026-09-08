@@ -2712,7 +2712,7 @@ var store = [{
         "teaser": null
       },{
         "title": "The elusive data mobility for tables with OpenSharing, StorageGRID, E-Series",
-        "excerpt":"Introduction As we all know, S3 solved main challenges related to data sharing in hybrid multi-cloud environments years ago. Reverse proxying and caching made sharing for blobs easy in the 2010. Consider “backup to S3”, for example. That was solved 10 years ago and incrementally improved since. What’s left to...","categories": ["netapp","storage","analytics","storagegrid"],
+        "excerpt":"Introduction As we all know, S3 solved main challenges related to data sharing in hybrid multi-cloud environments years ago. Reverse proxying and caching made sharing for blobs easy in the 2010s. Consider “backup to S3”, for example. That was solved 10 years ago (the movement of blobs to/from AWS S3)...","categories": ["netapp","storage","analytics","storagegrid"],
         "tags": ["iceberg","opensharing","versity","cloud"],
         "url": "/2026/09/08/opensharing-data-mobility-netapp-eseries-storagegrid.html",
         "teaser": null
@@ -2730,7 +2730,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"The elusive data mobility for tables with OpenSharing, StorageGRID, E-Series 2026-09-08 00:00 4 minute read As we all know, data sharing in hybrid cloud is a solved problem thanks to S3. Here’s yet another example. OpenSharing Iceberg tables on NetApp StorageGRID and E-Series 2026-09-07 00:00 4 minute read Run OpenSharing...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"The elusive data mobility for tables with OpenSharing, StorageGRID, E-Series 2026-09-08 00:00 5 minute read As we all know, data sharing in hybrid cloud is a solved problem thanks to S3. Here’s yet another example. OpenSharing Iceberg tables on NetApp StorageGRID and E-Series 2026-09-07 00:00 4 minute read Run OpenSharing...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
