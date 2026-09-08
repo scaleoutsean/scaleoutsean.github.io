@@ -253,7 +253,7 @@
 
 <p><img src="/assets/images/opensharing-data-mobility-00-uhm-yeah.png" alt="Uhm, yeah" /></p>
 
-<p>Well, query that table from Trino/Spark and write the result to a table at the location where you need a copy. Even in this case, Alluxio can help make it faster.</p>
+<p>Well, query that table from Trino/Spark and write the result to a table at the location where you need a copy. Even in this case, Alluxio can help make that faster.</p>
 
 <p>Then there is <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> for structured and unstructured sharing, especially good for E-Series (which it turns into a modern data sharing platforms at zero cost) and StorageGRID, which is more likely to have a catalog server attached to it, so perhaps less in need of OpenSharing. It doesn't do caching or proxying - it not prescriptive, it just makes sharing simpler, more standardized and uniform, and more secure.</p>
 
@@ -266,7 +266,7 @@
 <ul>
   <li>Scenario A: we have data on-premises and don't want to cache it, we just want a copy in the cloud</li>
   <li>Scenario B: we need data from Lakehouse Number One attached to StorageGRID in Europe copied to Lakehouse Number Two in the US</li>
-  <li>Scenario C: we need to copy table data to Edge locations where we want to share it using OpenSharing</li>
+  <li>Scenario C: we need to copy table data to Edge locations where we want to read it using OpenSharing API</li>
 </ul>
 
 <p>Lakehouse One has a table with audit logs. That's the one from the recent <a href="/2026/09/03/lakekeeper-iceberg-compression-snapshots.html">Lakekeeper</a> post.</p>
@@ -277,6 +277,11 @@
 
 <p><img src="/assets/images/opensharing-data-mobility-02-lakehouse-two.png" alt="Lakehouse Two" /></p>
 
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s3/example
+<span class="o">[</span>2026-09-09 01:44:31 CST]     0B remote/     <span class="c"># Datalake Two</span>
+<span class="o">[</span>2026-09-09 01:44:31 CST]     0B warehouse/  <span class="c"># Datalake One</span>
+</code></pre></div></div>
+
 <p>How to solve the elusive data mobility problem for my Iceberg table <code class="language-plaintext highlighter-rouge">audit_log</code>?  We simply copy it over.</p>
 
 <p><img src="/assets/images/opensharing-data-mobility-03-lakehouse-table-migration.png" alt="Lakehouse table migration" /></p>
@@ -286,6 +291,8 @@
 <p>After copying, the copied table is registered in Lakehouse Two and available for use.</p>
 
 <p><img src="/assets/images/opensharing-data-mobility-04-lakehouse-table-migration-done.png" alt="Lakehouse Two with table migration complete" /></p>
+
+<p>(<strong>NOTE:</strong> both of these datalakes use the same StorageGRID bucket, <code class="language-plaintext highlighter-rouge">s3://example</code>, but the first uses <code class="language-plaintext highlighter-rouge">s3://example/warehouse</code> and the second uses <code class="language-plaintext highlighter-rouge">s3://example/remote</code>. They <em>are</em> separate. I used the same bucket so that I don't have to deal set up ACLs and the rest of it.)</p>
 
 <p>If Lakehouse Two is persistent (e.g. OneLake or whatever), you won't even need OpenSharing, like in the case above (you can suck it in directly from OneLake using On-premises Data Gateway; I've blogged about that - see see screenshots in the first post linked at the top).</p>
 
