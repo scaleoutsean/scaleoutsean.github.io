@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          11 minute read
+          12 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-duckdb">Why DuckDB</a></li><li><a href="#duckdb-with-netapp-storage">DuckDB with NetApp storage</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-duckdb">Why DuckDB</a></li><li><a href="#duckdb-with-netapp-storage">DuckDB with NetApp storage</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li><li><a href="#appendix-b-duckdb-version-2">Appendix B: DuckDB version 2</a></li></ul>
             </nav>
           </aside>
         
@@ -510,6 +510,54 @@ Disk stats <span class="o">(</span><span class="nb">read</span>/write<span class
   nvme6n1: <span class="nv">ios</span><span class="o">=</span>32404/3861, <span class="nv">sectors</span><span class="o">=</span>66338816/7905280, <span class="nv">merge</span><span class="o">=</span>0/0, <span class="nv">ticks</span><span class="o">=</span>65654/38478, <span class="nv">in_queue</span><span class="o">=</span>104133, <span class="nv">util</span><span class="o">=</span>68.53%
 
 </code></pre></div></div>
+
+<h2 id="appendix-b-duckdb-version-2">Appendix B: DuckDB version 2</h2>
+
+<p>Differences compared to configuration in Appendix A are noted in list items.</p>
+
+<ul>
+  <li>DuckDB v2.1.0-alpha40660 - upgraded from v1</li>
+</ul>
+
+<p>Query only:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Logged to log-sf20-2026-09-08T05-16-41.765830+00-00.tsv
+
+tpch_load_time                  <span class="o">=</span> n/a <span class="o">(</span>ran on cached database<span class="o">)</span>
+throughput_measurement_interval <span class="o">=</span> 20.07
+power_total_queries_duration    <span class="o">=</span> 8.64
+tpch_power_at_size              <span class="o">=</span> 246200.99
+tpch_throughput_at_size         <span class="o">=</span> 236771.30
+tpch_qphh_at_size               <span class="o">=</span> 241440.11
+</code></pre></div></div>
+
+<ul>
+  <li>Add <code class="language-plaintext highlighter-rouge">read_ahead_depth=32</code> and <code class="language-plaintext highlighter-rouge">async_threads=32</code></li>
+</ul>
+
+<p>Full run:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Logged to log-sf20-2026-09-08T05-26-06.164243+00-00.tsv
+
+tpch_load_time                  <span class="o">=</span> 66.6 seconds
+throughput_measurement_interval <span class="o">=</span> 17.42
+power_total_queries_duration    <span class="o">=</span> 7.77
+tpch_power_at_size              <span class="o">=</span> 284180.39
+tpch_throughput_at_size         <span class="o">=</span> 272789.90
+tpch_qphh_at_size               <span class="o">=</span> 278426.90
+</code></pre></div></div>
+
+<p>All right, that is around 20% better than v1 even though the CPUs were a bottleneck even in v1.</p>
+
+<p>As with v1, we can see the volume can deliver more - there is a hint of that at <code class="language-plaintext highlighter-rouge">05:27:14</code>, but CPUs are the main bottleneck.</p>
+
+<p><img src="/assets/images/duckdb-tpch-05-2.1-alpha-sf20-dstat.png" alt="dstat for DuckDB 21 with 32 async threads" /></p>
+
+<p>I didn't try higher values as CPUs were already maxed out.</p>
+
+<p>Grafana samples were less frequent.</p>
+
+<p><img src="/assets/images/duckdb-tpch-06-2.1-alpha-sf20-grafana.png" alt="Grafana for DuckDB 21 with SF20 and 32 async threads" /></p>
 
         
       </section>
