@@ -2723,6 +2723,12 @@ var store = [{
         "url": "/2026/09/14/duckdb-quack-netapp-storage.html",
         "teaser": null
       },{
+        "title": "SGAC v0.2.4",
+        "excerpt":"Last weekend I opened S3 API to the world to see what happens. Unsurprisingly, there are plenty of morons out there who try to gain access. Highlighted in yellow: the idiots get HTTP 40x on everything because I don’t have any buckets or objects with public/anonymous access (plus all data...","categories": ["projects","storage","netapp","storagegrid","s3"],
+        "tags": ["audit","log","sgac","compliance","access"],
+        "url": "/2026/09/14/sgac-storagegrid-audit-v024.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2736,7 +2742,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"DuckDB Quack server with NetApp E-Series 2026-09-14 00:00 6 minute read What changes and what stays the same, plus setup and anecdotal performance tests The elusive data mobility for tables with OpenSharing, StorageGRID, E-Series 2026-09-08 00:00 5 minute read As we all know, data sharing in hybrid cloud is a...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"SGAC v0.2.4 2026-09-14 00:00 1 minute read What was changed and why DuckDB Quack server with NetApp E-Series 2026-09-14 00:00 6 minute read What changes and what stays the same, plus setup and anecdotal performance tests The elusive data mobility for tables with OpenSharing, StorageGRID, E-Series 2026-09-08 00:00 5 minute...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4441,6 +4447,9 @@ var store = [{
   },{
     "title": "quack",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/quack/"
+  },{
+    "title": "access",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/access/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
