@@ -233,22 +233,24 @@
             </nav>
           </aside>
         
-        <p>Last weekend I opened S3 API to the world to see what happens. Unsurprisingly, there are plenty of morons out there who try to gain access.</p>
+        <p>Last weekend I opened the StorageGRID S3 API port to the world to see what happens.</p>
+
+<p>Unsurprisingly, there are plenty of morons out there who try to gain access.</p>
 
 <p><img src="/assets/images/sgac-v024.png" alt="StorageGRID access log" /></p>
 
 <ul>
-  <li>Highlighted in yellow: the idiots get HTTP 40x on everything because I don't have any buckets or objects with public/anonymous access (plus all data is worthless - it's a development grid). The management port isn't forwarded from the Internet, so there's nothing interesting in those logs</li>
-  <li>Highlighted in blue: that is "gateway UUID" from the NGINX. StorageGRID can have multiple gateways (SG1 appliances or VMs), so that ID is included in access logs, so that we can tell which request came via which gateway</li>
+  <li>Highlighted in yellow: the idiots get HTTP 40x on everything because I don't have any buckets or objects with public/anonymous access (plus all data is worthless - it's a development grid). The management port isn't forwarded from the Internet, so the log doesn't contain interesting lines that aren't from LAN</li>
+  <li>Highlighted in blue: that is "gateway UUID" from the NGINX. StorageGRID can have multiple gateways (SG1 appliances or VMs), so that ID is included in access logs, so that we can tell which request came via which gateway. I don't know why the UUID doesn't appear in all lines, but that's also not my immediate concern</li>
 </ul>
 
-<p>Since I was forwarding all logs - not just audit logs - to syslog, I realized unless those are dropped or removed, they'd cause parsing failures in SGAC. That's harmless, since such lines simply get dropped on parsing failure, but they could be skipped.</p>
+<p>Since I was forwarding all logs - not just audit logs - to syslog, I realized that, unless those are dropped or removed, they'd cause parsing failures in SGAC. That's harmless, since such lines simply get dropped on parsing failure, but they could be skipped.</p>
 
 <p>So, <a href="https://github.com/scaleoutsean/storagegrid-audit-analysis">StorageGRID Audit-log Converter aka SGAC</a> v0.2.4 has two minor changes:</p>
 
 <ul>
   <li>v0.2.3 allowed the new audit string in v12, and v0.2.4 ignores lines from S3 API access and and StorageGRID management access, if present in "audit" (well, clearly not just audit) log. This doesn't change anything, it just drops those lines before parser fails trying to understand them</li>
-  <li>Logstash example for parsing access logs was added to the repo for reference</li>
+  <li>A Logstash example for parsing access logs was added to the repo for reference</li>
 </ul>
 
 

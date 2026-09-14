@@ -2724,7 +2724,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SGAC v0.2.4",
-        "excerpt":"Last weekend I opened S3 API to the world to see what happens. Unsurprisingly, there are plenty of morons out there who try to gain access. Highlighted in yellow: the idiots get HTTP 40x on everything because I don’t have any buckets or objects with public/anonymous access (plus all data...","categories": ["projects","storage","netapp","storagegrid","s3"],
+        "excerpt":"Last weekend I opened the StorageGRID S3 API port to the world to see what happens. Unsurprisingly, there are plenty of morons out there who try to gain access. Highlighted in yellow: the idiots get HTTP 40x on everything because I don’t have any buckets or objects with public/anonymous access...","categories": ["projects","storage","netapp","storagegrid","s3"],
         "tags": ["audit","log","sgac","compliance","access"],
         "url": "/2026/09/14/sgac-storagegrid-audit-v024.html",
         "teaser": null
