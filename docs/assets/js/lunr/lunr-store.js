@@ -2718,7 +2718,7 @@ var store = [{
         "teaser": null
       },{
         "title": "DuckDB Quack server with NetApp E-Series",
-        "excerpt":"Introduction In a recent post I wrote about DuckDB with E-Series (and ran some casual performance tests). What I didn’t do is focus more on the new Quack server, how it differs from hosting regular “in-process” DuckDB on block storage, and a NetApp E-Series options You have TBs of DuckDB...","categories": ["storage","netapp","ai","analytics","e-series"],
+        "excerpt":"Introduction In a recent post I wrote about DuckDB with E-Series (and ran some casual performance tests). What I didn’t do is focus more on the new Quack server, how it differs from hosting regular “in-process” DuckDB on block storage, and how remote access affects the performance compared to local...","categories": ["storage","netapp","ai","analytics","e-series"],
         "tags": ["duckdb","quack","datalake","iceberg","parquet"],
         "url": "/2026/09/14/duckdb-quack-netapp-storage.html",
         "teaser": null
