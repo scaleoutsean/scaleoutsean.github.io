@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          6 minute read
+          8 minute read
         
       </span>
     
@@ -315,7 +315,7 @@
 <p>Notice that I pretend I'm connecting to a reverse proxy (<code class="language-plaintext highlighter-rouge">:8443</code>), otherwise you'd go with disabled TLS and directly to the Quack port.</p>
 
 <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ATTACH</span> <span class="s1">'quack:192.168.1.11:8443'</span> <span class="k">AS</span> <span class="n">quack</span> <span class="p">(</span>
-    <span class="n">TOKEN</span> <span class="s1">'random crap i came up with'</span><span class="p">,</span>
+    <span class="n">TOKEN</span> <span class="s1">'copy-from-server-output'</span><span class="p">,</span>
     <span class="n">DISABLE_SSL</span> <span class="k">false</span>
 <span class="p">);</span>
 
@@ -382,6 +382,53 @@
 
 <p>Perhaps that's not so bad news after all - knowing that there's no significant difference for this type of workload - but more details are needed, and better tests, too.</p>
 
+<p>I ran the same test with a fast CPU (64 vCPU on system) and slower storage (E4012 with 10 NL-SAS):</p>
+
+<ul>
+  <li>DuckDB v2.0.0-alpha41533 (Cyanoptera) 10de957379</li>
+  <li>AMD EPYC 9335 32-Core Processor (dual CPU)</li>
+  <li>Storage: FC-connected E-Series E4000 (10 disks in RAID 6; 8 data, 2 parity)</li>
+  <li>We measure <code class="language-plaintext highlighter-rouge">SELECT</code> on lineitem table using DuckDB vs. doing the same on Quack server over loopback (HTTP)</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python3 wirespeed_quack.py
+Scanning SELECT <span class="k">*</span> FROM lineitem, 3 iterations each
+
+<span class="nt">---</span> <span class="nb">local</span>: /mnt/dm-7/duckdb/duckdb-tpch-power-test/gen/sf100/tpch.duckdb <span class="nt">---</span>
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 1: 73.780s  600039419 rows  100019.5 MB  8,132,866 rows/s  1355.7 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 2: 63.369s  600039419 rows  100019.5 MB  9,468,997 rows/s  1578.4 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 3: 64.879s  600039419 rows  100019.5 MB  9,248,617 rows/s  1541.6 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> median: 64.879s  9,248,617 rows/s  1541.6 MB/s
+
+<span class="nt">---</span> quack: quack:localhost <span class="nt">---</span>
+<span class="o">[</span>quack] run 1: 64.315s  600037902 rows  100019.3 MB  9,329,644 rows/s  1555.1 MB/s
+<span class="o">[</span>quack] run 2: 67.765s  600037902 rows  100019.3 MB  8,854,725 rows/s  1476.0 MB/s
+<span class="o">[</span>quack] run 3: 66.751s  600037902 rows  100019.3 MB  8,989,241 rows/s  1498.4 MB/s
+<span class="o">[</span>quack] median: 66.751s  8,989,241 rows/s  1498.4 MB/s
+
+quack is 1.03x the <span class="nb">local </span>scan <span class="nb">time</span>
+</code></pre></div></div>
+
+<p>This is excellent. The same volume (there's just one on this RAID 6 disk group) delivers around 1.7 GB with <code class="language-plaintext highlighter-rouge">fio</code>.</p>
+
+<p>If you run similar queries on very large databases, this is an economical way to do it - value proposition here is similar to running <a href="/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html">OpenSharing</a> and the Versity S3 Gateway on E-Series for the same general purpose of remote analytics (read-only, in case of my OpenSharing server implementation): it's hard to do it more cost effectively on enterprise-grade external storage.</p>
+
+<p>And finally, there are several simple Quack benchmarks in the Quack repo. They are application-focused so they don't exercise storage.</p>
+
+<p>The only mildly interesting for storage-related purposes is this one, which measures client thread scaling with Quack server:</p>
+
+<div class="language-md highlighter-rouge"><div class="highlight"><pre class="highlight"><code>| MODE | THREADS | TPS | 
+|----|---|---|
+|Mode.QUACK |   1  | 261.492 |
+|Mode.QUACK |   2  | 507.121 |
+|Mode.QUACK |   4  | 943.065 |
+|Mode.QUACK |   8  | 1595.06 | 
+|Mode.QUACK |  16  | 1577.717 |
+|Mode.QUACK |  32  | 728.467 |
+|Mode.QUACK |  64  | 246.346 |
+</code></pre></div></div>
+
+<p>Even at 1500 tps, that results in just 14 MB/s in writes to storage, so it's of little consequence to storage selection.</p>
 
         
       </section>
