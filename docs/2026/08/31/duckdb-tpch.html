@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          12 minute read
+          13 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-duckdb">Why DuckDB</a></li><li><a href="#duckdb-with-netapp-storage">DuckDB with NetApp storage</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li><li><a href="#appendix-b-duckdb-version-2">Appendix B: DuckDB version 2</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#why-duckdb">Why DuckDB</a></li><li><a href="#duckdb-with-netapp-storage">DuckDB with NetApp storage</a><ul><li><a href="#backup-and-restore">Backup and restore</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-results-with-scale-factor-20">Appendix A: Results with Scale Factor 20</a></li><li><a href="#appendix-b-duckdb-version-2">Appendix B: DuckDB version 2</a></li></ul>
             </nav>
           </aside>
         
@@ -327,6 +327,31 @@
 <p>For remote access - including in hybrid cloud - simply use StorageGRID because you don't have to deal with storage presentation and management: you get unlimited capacity and end-to-end HTTPS encryption, which beats unencrypted iSCSI and NFS.</p>
 
 <p>There's a simple <a href="/2026/06/13/storagegrid-sg-cosi-branch-snapshots.html">COSI driver</a> to automate that and bucket snapshots, too, so that you can get to a Point-in-Time DuckDB and run read-only reports based on it. The recommended way is to use a datalake, though, so that you don't have to use these "storage tricks".</p>
+
+<h3 id="backup-and-restore">Backup and restore</h3>
+
+<p>Use the correct way unless DB grows to an unmanageable size:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>memory D ATTACH <span class="s1">'/mnt/dm-7/duckdb/duckdb-tpch-power-test/gen/sf100/tpch_template.duckdb'</span> AS db <span class="o">(</span>READ_ONLY<span class="o">)</span><span class="p">;</span>
+memory D ATTACH <span class="s1">'./backup.duckdb'</span> AS backup<span class="p">;</span>
+memory D COPY FROM DATABASE db TO backup<span class="p">;</span>
+</code></pre></div></div>
+
+<p>With both DBs on one RAID 6 (10 disks, 8 data, 2 parity) of E-Series E4000, I get 470 MB/s. It took me some 60 seconds to backup this DB:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">-rw-r--r--</span> 1 sean sean 27G Sep 14 10:53 backup.duckdb
+</code></pre></div></div>
+
+<p>It'd take 36 minutes to backup a TB-sized DuckDB this way.</p>
+
+<p>I know this RAID 6 disk group can deliver well over 1 GB/s, so the bottleneck isn't on storage.</p>
+
+<p>If that doesn't work for you (database is "too large"):</p>
+
+<ul>
+  <li>E-Series has them - do it manually or automate (see <a href="/2026/03/15/santricity-powershell-postgres-snashot-clone.html">an example</a>). In Kubernetes, I can do that with <a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">IBM Block CSI with SANtricity patches</a>. SANtricity CSI not yet, because I'm not a big believer in array snapshots for modern workloads. (If you read this post carefully you'll see restores aren't done from the snapshot - although you could do it directly on array, but from a backup copy - the way it's supposed to be done in Kubernetes.)</li>
+  <li>StorageGRID can take them, too. Do it manually (see <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html">bucket snapshots</a>) or automate. Oh, I can automate that in Kubernetes, too, using <a href="/2026/07/25/storagegrid-12_1-sg-cosi-0_5_4.html">COSI snapshots</a>. You'd also have to create and claim a snapshot (bucket), then copy database or its selected objects from the snapshot bucket to your "production" bucket.</li>
+</ul>
 
 <h2 id="conclusion">Conclusion</h2>
 
