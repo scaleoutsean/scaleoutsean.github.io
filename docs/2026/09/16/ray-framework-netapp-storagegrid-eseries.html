@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          6 minute read
+          7 minute read
         
       </span>
     
@@ -328,6 +328,8 @@
 
 <p>If I already have S3, I wouldn't deploy HDFS or use Ceph for HPC-like workloads. I like the BeeOND a little bit better, but I'd generally try to stick with S3, especially if read-write S3 cache is available.</p>
 
+<p>Finally, note that Ray has its own mechanisms for cluster-wide "object" (not S3 object) caching, with spill-over to disk.</p>
+
 <h2 id="ray-with-s3">Ray with S3</h2>
 
 <p>The StorageGRID sub-section is slim, but it works and the main message is really: you may need several GB/s per second per each worker node.</p>
@@ -342,7 +344,7 @@
 
 <p>Personally, I'm a fan of caching approaches built into various analytics- or AI-focused frameworks and projects (mentioned at the top) and would use hybrid grids only if my applications couldn't be smart about S3. You get application smarts and, with some of them, read-write cache.</p>
 
-<p>I ran Ray with StorageGRID and it was uneventful, because it was a very small StorageGRID.</p>
+<p>I ran Ray with StorageGRID and it was uneventful, because it was a very small StorageGRID good only for compatibility testing.</p>
 
 <p>I then repeated the same test at a larger scale with Versity.</p>
 
@@ -368,11 +370,13 @@
 
 <p>Versity S3 gateway was running on the same host as Ray.</p>
 
-<p>This sample workload reads Parquet files. You may not need to do this in a branch office, but this thing goes through CPUs like hot knife through butter…  It also managed to do over 3 GB/s at peak, although we shouldn't assume this was all to Versity S3 (maybe Ray uses temporary space and both Ray and Versity were on the same filesystem). (See <a href="/2026/06/25/versity-sequential-s3-get-test.html">here</a> for a "maximum" <code class="language-plaintext highlighter-rouge">GET</code> I could get from Versity on a single host filesystem.)</p>
+<p>This sample workload reads Parquet files. You may not need to run massive workloads in a branch office, but this thing goes through CPUs like hot knife through butter…</p>
+
+<p>It managed to do over 3 GB/s of storage I/O at peak, although we shouldn't assume this was all to/from Versity S3 (maybe Ray that was object-to-disk spill-over and both Ray and Versity were on the same filesystem). (See <a href="/2026/06/25/versity-sequential-s3-get-test.html">here</a> for a "maximum" <code class="language-plaintext highlighter-rouge">GET</code> I could get from Versity on a single host filesystem.)</p>
 
 <p><img src="/assets/images/ray-framework-netapp-03-ray-job-dstat.png" alt="Ray job in dstat" /></p>
 
-<p>The point is, Ray can push your hardware to limits. One worker on this system used up all CPU.</p>
+<p>The point is, Ray can push your hardware to limits. Just one Ray worker on this system used up all CPU resources.</p>
 
 <p><img src="/assets/images/ray-framework-netapp-05-ray-job-cpu-node.png" alt="Ray job CPU utilization" /></p>
 
@@ -384,9 +388,15 @@
 
 <p><img src="/assets/images/ray-framework-netapp-07-ray-vgw-s3-get.png" alt="Ray GET from VGW" /></p>
 
-<p>This below is Ray console output. That <code class="language-plaintext highlighter-rouge">/tmp/</code> is what would need to be shared among multiple workers working on same job. For a single host, that would be fine, for two or more, you'd need another approach.</p>
+<p>For analytics workloads, S3 may not be doing a lot of requests. It could be just a handful per second, but they could be Parquet files that are 256 MB each.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-08-ray-vgw-s3-logs.png" alt="Ray with S3 - VGW logs " /></p>
+
+<p>This below is Ray console output. That <code class="language-plaintext highlighter-rouge">/tmp/</code> is what would need to be shared among multiple workers working on the same job.</p>
 
 <p><img src="/assets/images/ray-framework-netapp-06-ray-job-progress.png" alt="Ray job progress" /></p>
+
+<p>If we extrapolate from these anecdotal examples, it's easy to see how just several nodes can max out a shared file system on E-Series E4000 or several StorageGRID all-flash nodes when S3 is used.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
