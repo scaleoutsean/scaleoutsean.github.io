@@ -260,11 +260,13 @@
 
 <p>Some people will tell you that means you should have one big storage cluster stretched across racks. Perhaps. In my opinion that's fine for loosely coupled object stores. Doing that for databases and event streaming looks nice, but it's extra cost and lower availability.</p>
 
-<p>I'd stretch StorageGRID across racks, and use independent E-Series systems per rack. Once you automate storage provisioning (which can be done in <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">Kubernetes, too</a>), the rest is all done in Kubernetes.</p>
+<p>I'd stretch StorageGRID across racks, and use independent E-Series systems per rack. Once you automate storage provisioning (which can be done in <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">Kubernetes, too</a>), the rest is all done in Kubernetes and Ray.</p>
 
 <p><img src="/assets/images/lakekeeper_17_architecture.png" alt="Modern storage stack" /></p>
 
-<p>This is a highly available, high-performance pattern that works the way applications expect. It does not fight applications and it doesn't fight architects and operations. What you see is what you get: in rack 2, you're supposed to see and use EF-Series block devices from rack 2. For S3, you hit a load balancing gateway and multiple units can be provided across racks.</p>
+<p>This is a highly available, high-performance pattern that works the way applications expect.</p>
+
+<p>It does not fight applications and it doesn't fight architects and Operations. What you see is what you get: in rack 2, you're supposed to see and use the EF-Series block devices from that array in rack 2. For S3, you hit a load balancing gateway and multiple units of those can be provided across racks.</p>
 
 <p>When it comes to Ray, <a href="https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/storage.html#best-practices-for-storage-and-dependencies">here</a> we can (currently) find about Ray framework's best practices for storage and storage dependencies. There are 2 major kinds by use and persistence:</p>
 
@@ -309,7 +311,7 @@
 
 <h3 id="can-we-use-e-series-for-local-scratch-space">Can we use E-Series for "local scratch" space</h3>
 
-<p>Yes, although S3 or <a href="/2026/09/04/alluxio-ai-analytics-storagegrid-hybrid-cloud.html">Alluxio</a> should be preferred (more on <a href="https://www.alluxio.io/ray">Ray with Alluxio</a>).</p>
+<p>Yes (see below), although S3 or <a href="/2026/09/04/alluxio-ai-analytics-storagegrid-hybrid-cloud.html">Alluxio</a> should be preferred (more on <a href="https://www.alluxio.io/ray">Ray with Alluxio</a>).</p>
 
 <p>You're not supposed to use single-host filesystems because Ray expects uniform view by multiple worker nodes.</p>
 
@@ -319,9 +321,12 @@
   <li>You can run <a href="/2022/06/22/e-series-hdfs.html">HDFS on E-Series</a></li>
   <li>You can run <a href="/2026/05/22/ceph-kubernetes-eseries.html">Ceph on E-Series</a></li>
   <li>You can run <a href="/2026/06/05/above-and-beeond-beeond.html">BeeOND or BeeGFS</a></li>
+  <li>If you schedule multiple Ray workers on the same Kubernetes worker, they can share a PVC (for example, for model <a href="/2026/08/26/s3-files-sg-nvcomp-checkpoints.html#nvcomp">checkpointing</a>)</li>
 </ul>
 
-<p>But, why? If I already have S3, I wouldn't deploy HDFS or use Ceph for HPC-like workloads. I like the BeeOND a little bit better, but I'd generally try to stick with S3.</p>
+<p>The first thing to consider is: do we realy need to do that?</p>
+
+<p>If I already have S3, I wouldn't deploy HDFS or use Ceph for HPC-like workloads. I like the BeeOND a little bit better, but I'd generally try to stick with S3, especially if read-write S3 cache is available.</p>
 
 <h2 id="ray-with-s3">Ray with S3</h2>
 
