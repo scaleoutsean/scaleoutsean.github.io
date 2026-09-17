@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -414,15 +414,23 @@
 
 <p><img src="/assets/images/ray-framework-netapp-11-ray-object-store-peak.png" alt="Object Memory spill-over performance" /></p>
 
-<p>So, this is something to avoid.</p>
+<p>So, this is <em>usually</em> something to avoid. Maybe you've downloaded 1 TB of data from AWS or remote branch office and want to keep it on protected storage rather than lose it and wait (or pay dearly) until you get another copy.</p>
 
-<p>As far as the other "write" workload - checkpointing - is concerned, consuming storage bandwidth is <em>not</em> bad.</p>
+<p>As far as the other "write" workload - checkpointing - is concerned, consuming storage bandwidth this way is <em>not</em> bad.</p>
 
 <p>I've written about using BeeGFS (dumping checkpoints to a shared filesystem) or local disks (distributed dump to single-host file system on each worker, followed by upload to S3 and deletion from local or shared file system). <strong>No</strong>, there is nothing you need to hoard on local disks or BeeGFS - these are just ephemeral stops on a checkpoint's journey to S3.</p>
 
 <p>We could even dump to BeeGFS and use tiering on BeeGFS, but Ray checkpoints make that seamless and we should take advantage of it.</p>
 
 <p>Ray can also checkpoint <em>directly</em> to S3, but that is likely to be slower than dumping to NVMe devices on EF-Series. Depending on situation, it may or may not be preferred. Sometimes it's faster and cheaper to wait, other times we may want to trade the cost of writing checkpoints twice to save GPU cycles.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-12-ray-framework-storagegrid-eseries.png" alt="Ray framework with NetApp storage" /></p>
+
+<ul>
+  <li>(1) "Paging" is a niche use case.</li>
+  <li>(2) Checkpointing - on BeeGFS (I haven't tested yet) or single-host filesystems - is nice</li>
+  <li>(3) S3 - StorageGRID in DC and Versity S3 Gateway on Edge is ideal</li>
+</ul>
 
 <h2 id="conclusion">Conclusion</h2>
 
