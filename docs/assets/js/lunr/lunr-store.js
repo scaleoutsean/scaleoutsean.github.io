@@ -2735,6 +2735,12 @@ var store = [{
         "url": "/2026/09/16/ray-framework-netapp-storagegrid-eseries.html",
         "teaser": null
       },{
+        "title": "Backup NetApp StorageGRID buckets with sg-cosi",
+        "excerpt":"Introduction Let’s say I manage a StorageGRID tenant account with dozens of technical users. Some want to backup their StorageGRID buckets to another on-premises S3 object store. It must be convenient, easy, affordable. There’s no PII or confidential data involved. Some users’ data on StorageGRID is already encrypted with client-side...","categories": ["netapp","storage","kubernetes","s3"],
+        "tags": ["backup","snapshot","storagegrid","cosi","projects","bucket-branch"],
+        "url": "/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2748,7 +2754,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ray framework with NetApp E-Series and StorageGRID 2026-09-16 00:00 9 minute read Use cases for Ray with StorageGRID and E-Series SGAC v0.2.4 2026-09-14 00:00 1 minute read What was changed and why DuckDB Quack server with NetApp E-Series 2026-09-14 00:00 9 minute read What changes and what stays the same,...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Backup NetApp StorageGRID buckets with sg-cosi 2026-09-18 00:00 6 minute read Use sg-cosi to implement poor man’s S3 bucket backups with the fancy Point-in-Time feature Ray framework with NetApp E-Series and StorageGRID 2026-09-16 00:00 9 minute read Use cases for Ray with StorageGRID and E-Series SGAC v0.2.4 2026-09-14 00:00 1...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
