@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          8 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#what-is-ray">What is Ray</a></li><li><a href="#why-should-netapp-users-care">Why should NetApp users care</a><ul><li><a href="#artifact-storage">Artifact storage</a></li><li><a href="#package-dependencies">Package dependencies</a></li><li><a href="#can-we-use-e-series-for-local-scratch-space">Can we use E-Series for "local scratch" space</a></li></ul></li><li><a href="#ray-with-s3">Ray with S3</a><ul><li><a href="#storagegrid">StorageGRID</a></li><li><a href="#versity-s3-gateway">Versity S3 Gateway</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#what-is-ray">What is Ray</a></li><li><a href="#why-should-netapp-users-care">Why should NetApp users care</a><ul><li><a href="#artifact-storage">Artifact storage</a></li><li><a href="#package-dependencies">Package dependencies</a></li><li><a href="#can-we-use-e-series-for-local-scratch-space">Can we use E-Series for "local scratch" space</a></li></ul></li><li><a href="#ray-with-s3">Ray with S3</a><ul><li><a href="#storagegrid">StorageGRID</a></li><li><a href="#versity-s3-gateway">Versity S3 Gateway</a></li><li><a href="#s3-and-local-or-shared-block-devices">S3 and local or shared block devices</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -328,7 +328,7 @@
 
 <p>If I already have S3, I wouldn't deploy HDFS or use Ceph for HPC-like workloads. I like the BeeOND a little bit better, but I'd generally try to stick with S3, especially if read-write S3 cache is available.</p>
 
-<p>Finally, note that Ray has its own mechanisms for cluster-wide "object" (not S3 object) caching, with spill-over to disk.</p>
+<p>Finally, note that Ray has its own mechanisms for cluster-wide "object" (not S3 object) caching, with spill-over to disk. See an example further below.</p>
 
 <h2 id="ray-with-s3">Ray with S3</h2>
 
@@ -397,6 +397,32 @@
 <p><img src="/assets/images/ray-framework-netapp-06-ray-job-progress.png" alt="Ray job progress" /></p>
 
 <p>If we extrapolate from these anecdotal examples, it's easy to see how just several nodes can max out a shared file system on E-Series E4000 or several StorageGRID all-flash nodes when S3 is used.</p>
+
+<h3 id="s3-and-local-or-shared-block-devices">S3 and local or shared block devices</h3>
+
+<p>About the ability to make use of fast local disk for shared Ray data cache: it's clearly a workaround for the mistake called "incorrectly sized cluster", than a "feature" one should celebrate.</p>
+
+<p>Here's a demo: we have a node with very limited RAM resources.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-09-ray-object-store-size.png" alt="Object Memory" /></p>
+
+<p>Since I have no clue what I'm doing, when I run my workload which can't fit its working set into worker's RAM, it's "swapping".</p>
+
+<p><img src="/assets/images/ray-framework-netapp-10-ray-object-store-fullness.png" alt="Object Memory spill-over" /></p>
+
+<p>While it may seem great that we're using storage bandwidth, this is <em>not</em> a good thing. The worse it gets, the happier we are. Almost 1 GB/s!</p>
+
+<p><img src="/assets/images/ray-framework-netapp-11-ray-object-store-peak.png" alt="Object Memory spill-over performance" /></p>
+
+<p>So, this is something to avoid.</p>
+
+<p>As far as the other "write" workload - checkpointing - is concerned, consuming storage bandwidth is <em>not</em> bad.</p>
+
+<p>I've written about using BeeGFS (dumping checkpoints to a shared filesystem) or local disks (distributed dump to single-host file system on each worker, followed by upload to S3 and deletion from local or shared file system). <strong>No</strong>, there is nothing you need to hoard on local disks or BeeGFS - these are just ephemeral stops on a checkpoint's journey to S3.</p>
+
+<p>We could even dump to BeeGFS and use tiering on BeeGFS, but Ray checkpoints make that seamless and we should take advantage of it.</p>
+
+<p>Ray can also checkpoint <em>directly</em> to S3, but that is likely to be slower than dumping to NVMe devices on EF-Series. Depending on situation, it may or may not be preferred. Sometimes it's faster and cheaper to wait, other times we may want to trade the cost of writing checkpoints twice to save GPU cycles.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
