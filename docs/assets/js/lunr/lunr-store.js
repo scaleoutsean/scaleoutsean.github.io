@@ -2730,8 +2730,8 @@ var store = [{
         "teaser": null
       },{
         "title": "Ray framework with NetApp E-Series and StorageGRID",
-        "excerpt":"What is Ray They say… Ray is an open source unified framework for scaling AI and Python applications. It provides a simple, universal API for building distributed applications that can scale from a laptop to a cluster. Why should NetApp users care Well, they don’t have to care, but if...","categories": ["projects","storage","netapp","storagegrid","s3","ai"],
-        "tags": ["ray","ml","analytics","beegfs"],
+        "excerpt":"Part 1: Ray framework with NetApp E-Series and StorageGRID (this post) Part 2: Ray checkpointing with BeeGFS and StorageGRID What is Ray They say… Ray is an open source unified framework for scaling AI and Python applications. It provides a simple, universal API for building distributed applications that can scale...","categories": ["storage","netapp","storagegrid","s3","ai"],
+        "tags": ["ray","vgw","eseries","versity","ml","analytics","beegfs","checkpoint"],
         "url": "/2026/09/16/ray-framework-netapp-storagegrid-eseries.html",
         "teaser": null
       },{
@@ -2739,6 +2739,12 @@ var store = [{
         "excerpt":"Introduction Let’s say I manage a StorageGRID tenant account with dozens of technical users. Some want to backup their StorageGRID buckets to another on-premises S3 object store. It must be convenient, easy, affordable. There’s no PII or confidential data involved. Some users’ data on StorageGRID is already encrypted with client-side...","categories": ["netapp","storage","kubernetes","s3"],
         "tags": ["backup","snapshot","storagegrid","cosi","projects","bucket-branch"],
         "url": "/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html",
+        "teaser": null
+      },{
+        "title": "Ray checkpointing with BeeGFS and StorageGRID",
+        "excerpt":"Part 1: Ray framework with NetApp E-Series and StorageGRID Part 2: Ray checkpointing to BeeGFS and StorageGRID (this post) Introduction The first post on Ray framework with NetApp E-Series already covers checkpointing to BeeGFS. Since that post got very long, this one will focus on the missing (and optional) second...","categories": ["storage","netapp","storagegrid","s3","ai"],
+        "tags": ["ray","ml","eseries","analytics","beegfs","checkpoint"],
+        "url": "/2026/09/19/ray-framework-beegfs-storagegrid-checkpoint.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2754,7 +2760,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Enable PiT backup of NetApp StorageGRID buckets with sg-cosi 2026-09-18 00:00 6 minute read Use sg-cosi to implement a poor man’s S3 bucket backups with the fancy Point-in-Time feature Ray framework with NetApp E-Series and StorageGRID 2026-09-16 00:00 14 minute read Use cases for Ray with StorageGRID and E-Series SGAC...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Ray checkpointing with BeeGFS and StorageGRID 2026-09-19 00:00 10 minute read We continue from Part 1, where we explored checkpointing to BeeGFS, by moving checkpoints to NetApp StorageGRID Enable PiT backup of NetApp StorageGRID buckets with sg-cosi 2026-09-18 00:00 6 minute read Use sg-cosi to implement a poor man’s S3...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
