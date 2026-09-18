@@ -182,7 +182,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="Enable PiT backup of NetApp StorageGRID buckets with sg-cosi">
-    <meta itemprop="description" content="Use sg-cosi to implement poor man's S3 bucket backups with the fancy Point-in-Time feature">
+    <meta itemprop="description" content="Use sg-cosi to implement a poor man's S3 bucket backups with the fancy Point-in-Time feature">
     <meta itemprop="datePublished" content="2026-09-18T00:00:00+08:00">
     
 
@@ -333,7 +333,10 @@ Events:                     &lt;none&gt;
 
 <p>Get access details:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get secret <span class="s2">"</span><span class="nv">$SECRET</span><span class="s2">"</span> <span class="nt">-n</span> sg-cosi-coke <span class="se">\</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ SECRET</span><span class="o">=</span><span class="si">$(</span>kubectl get snapshotlease bucketshop-backup-source <span class="nt">-n</span> sg-cosi-coke <span class="se">\</span>
+  <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{.status.resources.credentialsSecret}'</span><span class="si">)</span>
+
+<span class="nv">$ </span>kubectl get secret <span class="s2">"</span><span class="nv">$SECRET</span><span class="s2">"</span> <span class="nt">-n</span> sg-cosi-coke <span class="se">\</span>
   <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{.data.BucketInfo}'</span> | <span class="nb">base64</span> <span class="nt">-d</span> | jq
 <span class="o">{</span>
   <span class="s2">"metadata"</span>: <span class="o">{</span>
@@ -358,7 +361,7 @@ Events:                     &lt;none&gt;
 
 </code></pre></div></div>
 
-<p>One of the (very few) nice things about COSI is you get everything you need from the source.</p>
+<p>One of the (very few) nice things about COSI is all the information required to connect is contained in a lease.</p>
 
 <p>Create a bucket on the destination object store.</p>
 
@@ -372,14 +375,14 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
 mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span class="nt">--api</span> S3v4 bucketshop-target https://192.168.1.100:7070 bucketowner bucketpass
 </code></pre></div></div>
 
-<p>Copy/backup however you wish. You could backup to a different destination or rotate 3 destinations, for example. You could also enable versioning and ObjectLock on the destination.</p>
+<p>Copy/backup however you wish. You could backup your bucket to a different destination or rotate 3 destinations, for example. You could also enable versioning and ObjectLock on the destination.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mc mirror <span class="nt">--exclude</span> <span class="s2">"images/"</span> <span class="nt">--older-than</span> 3d <span class="se">\</span>
    bucketshop-source/bucketshop <span class="se">\</span>
    bucketshop-target/bucketshop
 </code></pre></div></div>
 
-<p>I can compare buckets and inspect content to confirm.</p>
+<p>We can compare buckets and inspect content to confirm.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>bucketshop-target/bucketshop/
 <span class="o">[</span>2026-09-18 00:23:51 CST]  37KiB STANDARD log.jsonld
@@ -400,7 +403,7 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
 <span class="o">[</span>2026-09-18 00:26:09 CST]     0B home/
 </code></pre></div></div>
 
-<p>Backup is done! (I don't have versioning enabled on the target, but VGW does support it!)</p>
+<p>Backup is done! (I don't have versioning and ObjectLock enabled on the target, but VGW does support it.)</p>
 
 <p><img src="/assets/images/sg-cosi-snapshot-leaases-02-bucket-destination-done.png" alt="Bucket destination done" /></p>
 
@@ -579,7 +582,7 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          13 minute read
         
       </span>
     

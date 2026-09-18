@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          13 minute read
         
       </span>
     
@@ -229,7 +229,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#what-is-ray">What is Ray</a></li><li><a href="#why-should-netapp-users-care">Why should NetApp users care</a><ul><li><a href="#artifact-storage">Artifact storage</a></li><li><a href="#package-dependencies">Package dependencies</a></li><li><a href="#can-we-use-e-series-for-local-scratch-space">Can we use E-Series for "local scratch" space</a></li></ul></li><li><a href="#ray-with-s3">Ray with S3</a><ul><li><a href="#storagegrid">StorageGRID</a></li><li><a href="#versity-s3-gateway">Versity S3 Gateway</a></li><li><a href="#s3-and-local-or-shared-block-devices">S3 and local or shared block devices</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#what-is-ray">What is Ray</a></li><li><a href="#why-should-netapp-users-care">Why should NetApp users care</a><ul><li><a href="#artifact-storage">Artifact storage</a></li><li><a href="#package-dependencies">Package dependencies</a></li><li><a href="#can-we-use-e-series-for-local-scratch-space">Can we use E-Series for "local scratch" space</a></li></ul></li><li><a href="#ray-with-s3">Ray with S3</a><ul><li><a href="#storagegrid">StorageGRID</a></li><li><a href="#versity-s3-gateway">Versity S3 Gateway</a></li><li><a href="#s3-and-local-or-shared-block-devices">S3 and local or shared block devices</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-ray-with-beegfs-on-e-series">Appendix A: Ray with BeeGFS on E-Series</a></li></ul>
             </nav>
           </aside>
         
@@ -429,7 +429,7 @@
 <p><img src="/assets/images/ray-framework-netapp-12-ray-framework-storagegrid-eseries.png" alt="Ray framework with NetApp storage" /></p>
 
 <ul>
-  <li>(1) "Paging" is a niche use case.</li>
+  <li>(1) "Paging" is a somewhat niche use case, but fully workable</li>
   <li>(2) Checkpointing - on BeeGFS (I haven't tested yet) or single-host filesystems - is nice</li>
   <li>(3) S3 - StorageGRID in DC and Versity S3 Gateway on Edge is ideal</li>
 </ul>
@@ -446,6 +446,186 @@
 
 <p>Finally, these casual tests show that each physical node running Ray can consume multiple GB/s for what is essentially temporary or semi-ephemeral data (checkpoints, for example). For this, I advocate the use of S3 cache - there's a bunch of "batteries included"-style approaches - or low-cost, high-performance ephemeral shared filesystems (<a href="/2026/06/05/above-and-beeond-beeond.html">BeeOND</a>, for example) that can use EF-Series arrays for tens of GB/s.</p>
 
+<h2 id="appendix-a-ray-with-beegfs-on-e-series">Appendix A: Ray with BeeGFS on E-Series</h2>
+
+<p>NetApp doesn't feature this use case for BeeGFS.</p>
+
+<p>As expected (in previous posts I wrote about this), BeeGFS seems to work <em>really well</em> for Ray's checkpoints.</p>
+
+<p>Here, BeeGFS 8.4.0 was running as BeeOND on a host (<code class="language-plaintext highlighter-rouge">h2</code>) different from VGW (<code class="language-plaintext highlighter-rouge">h1</code>):</p>
+
+<ul>
+  <li>One metadata LUN on RAID 0 (just because I can. And this is ephemeral storage, remember?)</li>
+  <li>Four data LUNs (DDP, I had several unused LUNs available there)</li>
+  <li>I used BeeGFS (BeeOND) filesystem defaults (the workload was simple)</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@h2:/mnt/beeond<span class="nv">$ </span><span class="nb">df</span> <span class="nt">-h</span> | <span class="nb">grep </span>bee
+/dev/nvme1n3                       7.1G  271M  6.3G   5% /mnt/beeond_internal_meta_nvme1n3
+/dev/nvme1n6                        10G  510M  9.5G   6% /mnt/beeond_internal_data_nvme1n6
+/dev/nvme1n7                        10G  519M  9.5G   6% /mnt/beeond_internal_data_nvme1n7
+/dev/nvme1n8                        10G  513M  9.5G   6% /mnt/beeond_internal_data_nvme1n8
+/dev/nvme1n9                        10G  511M  9.5G   6% /mnt/beeond_internal_data_nvme1n9
+beegfs_ondemand                     40G  2.1G   38G   6% /mnt/beeond
+
+sean@h2:/mnt/beeond/docker/ray-cluster<span class="nv">$ </span>beegfs entry info /mnt/beeond/docker/ray-cluster/checkpoints
+
+PATH                             ENTRY_ID      TYPE       META_NODE  META_MIRROR   STORAGE_POOL              STRIPE_PATTERN  STORAGE_TARGETS  STORAGE_MIRRORS  REMOTE_TARGETS  COOL_DOWN  ACCESS  STATE
+/docker/ray-cluster/checkpoints  4-6AACBDF6-1  directory  m:1        <span class="o">(</span>unmirrored<span class="o">)</span>  storage_pool_default <span class="o">(</span>1<span class="o">)</span>  RAID0 <span class="o">(</span>4x512K<span class="o">)</span>  <span class="o">(</span>directory<span class="o">)</span>      <span class="o">(</span>directory<span class="o">)</span>      <span class="o">(</span>none<span class="o">)</span>          <span class="o">(</span>n/a<span class="o">)</span>      <span class="o">(</span>n/a<span class="o">)</span>   <span class="o">(</span>n/a<span class="o">)</span>
+</code></pre></div></div>
+
+<p>As I said <a href="/2026/06/05/above-and-beeond-beeond.html">here</a> and elsewhere, RAID 0 should be considered, at least for <em>some</em> BeeOND instances. I don't believe the overheads of protection is always necessary for ephemeral storage.</p>
+
+<p>Note that Ray was running in Docker Compose and BeeOND on "bare metal" server (you can't/shouldn't run it in Kubernetes).</p>
+
+<p>Ray uses remote VGW S3 service (from <code class="language-plaintext highlighter-rouge">h1</code>, used in earlier tests above), which is evident from network traffic under (small) test workload.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-13-ray-vgw-remote-access-throughput.png" alt="Remote Ray access to VGW" /></p>
+
+<p>Since "paging" is a feature of last resort, checkpointing is more interesting.</p>
+
+<p>We have a small 1 vCPU ML model checkpointing to BeeOND (these stats are supposedly "real time" so, as you can see, 0 MiB read and 36 read Ops can both be true at the same time).</p>
+
+<p><img src="/assets/images/ray-framework-netapp-14-ray-checkpointing-santricity.png" alt="Ray model checkpointing on SANtricity" /></p>
+
+<p>This is what drove the test workload.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-15-ray-checkpointing-setup.png" alt="Ray model checkpointing setup" /></p>
+
+<p><code class="language-plaintext highlighter-rouge">dstat</code> gives a better view than SANtricity's monitor. We can see that checkpointing nicely striped across all 4 data LUNs (2). In (1), Ray loads training inputs (artifacts) from Versity S3 Gateway on <code class="language-plaintext highlighter-rouge">h1</code>.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-16-ray-checkpointing-dstat.png" alt="Ray model checkpointing dstat" /></p>
+
+<p>Result:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"elapsed_s"</span><span class="p">:</span><span class="w"> </span><span class="mf">25.936395627912134</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"storage_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/checkpoints/results"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"staging_dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/checkpoints/staging"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"num_workers"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"num_steps"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"checkpoint_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"num_to_keep"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"result_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/checkpoints/results/checkpoint-smoke/DataParallelTrainer_de9e9_00000_0_2026-09-17_22-29-07"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"best_checkpoint_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/checkpoints/results/checkpoint-smoke/DataParallelTrainer_de9e9_00000_0_2026-09-17_22-29-07/checkpoint_000031"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"best_checkpoint_filesystem"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"metrics"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"step"</span><span class="p">:</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"score"</span><span class="p">:</span><span class="w"> </span><span class="mf">31.0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"timestamp"</span><span class="p">:</span><span class="w"> </span><span class="mi">1789709371</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"checkpoint_dir_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"checkpoint_000031"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"should_checkpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"done"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"training_iteration"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"trial_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"de9e9_00000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-17_22-29-32"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"time_this_iter_s"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5073444843292236</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"time_total_s"</span><span class="p">:</span><span class="w"> </span><span class="mf">21.69158387184143</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"pid"</span><span class="p">:</span><span class="w"> </span><span class="mi">38354</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"hostname"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d8d4e8d27aa7"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"node_ip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"172.20.0.2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"train_loop_config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"num_steps"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"checkpoint_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"staging_dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/checkpoints/staging"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"time_since_restore"</span><span class="p">:</span><span class="w"> </span><span class="mf">21.69158387184143</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"iterations_since_restore"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"experiment_tag"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The checkpoints:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ll /mnt/beeond/docker/ray-cluster/checkpoints/staging/
+total 1
+drwxrwxrwx 10 sean sean  8 Sep 18 05:29 ./
+drwxrwxrwx  4 sean sean  2 Sep 18 04:22 ../
+drwxrwxrwx  2 sean sean  0 Sep 18 05:29 rank-0/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-1/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-2/
+...
+</code></pre></div></div>
+
+<p>I ran several jobs with varying settings, they all completed nicely.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-17-ray-checkpointing-runs.png" alt="Ray model checkpointing jobs" /></p>
+
+<p>I ran some with more CPUs and more frequent checkpointing, which resulted in more frequent writes, always balanced nicely.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-18-ray-checkpointing-beeond.png" alt="Ray model checkpointing dstat" /></p>
+
+<p>Taking checkpoints every second is stupid, but I had to try.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-19-ray-checkpointing-frequency.png" alt="Ray model checkpointing frequency" /></p>
+
+<p>As we've mentioned before, these are stored on BeeOND (or single-host file system, when you don't have a cluster file system) and can be shipped off to S3 from there. There's no need to hoard them here, take "snapshots" of BeeGFS disks, copy/replicate to backup storage, and whatnot.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-20-ray-checkpoints-beeond.png" alt="Ray model checkpoints on BeeOND" /></p>
+
+<p>Keep as many as you need for as long as you need, but not more/longer. Copy the ones you want to keep to VGW or StorageGRID (you can always get them directly from there using S3 client - you don't need to "rehydrate") and delete the ageing rest from BeeGFS/local disk.</p>
+
+<p>This is like the one before, but with less ridiculous figures; the point here is IO requests are chunky, which is exactly what we want and maximizes useful throughput for BeeGFS and E-Series.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-21-ray-checkpoints-frequent-santricity-iops.png" alt="Ray model checkpoints in SANtricity monitor" /></p>
+
+<p>The small job with a ridiculous 1 checkpoint per second also worked.</p>
+
+<p><img src="/assets/images/ray-framework-netapp-22-ray-ml-job-success.png" alt="Ray model job success" /></p>
+
+<p>All runs:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sean@h2:/mnt/beeond/docker/ray-cluster<span class="nv">$ </span>ll checkpoints/staging/
+total 1
+drwxrwxrwx 10 sean sean  8 Sep 18 05:29 ./
+drwxrwxrwx  4 sean sean  2 Sep 18 04:22 ../
+drwxrwxrwx  2 sean sean  0 Sep 18 06:30 rank-0/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-1/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-2/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-3/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-4/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-5/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-6/
+drwxr-xr-x  2 sean <span class="nb">users </span>0 Sep 18 05:29 rank-7/
+
+sean@h2:/mnt/beeond/docker/ray-cluster<span class="nv">$ </span>ll checkpoints/results/
+total 2
+drwxrwxrwx 3 sean sean  1 Sep 18 04:22 ./
+drwxrwxrwx 4 sean sean  2 Sep 18 04:22 ../
+drwxrwxrwx 8 sean sean 21 Sep 18 06:29 checkpoint-smoke/
+
+
+sean@h2:/mnt/beeond/docker/ray-cluster<span class="nv">$ </span>ll checkpoints/results/checkpoint-smoke/
+total 161
+drwxrwxrwx 8 sean sean     21 Sep 18 06:29 ./
+drwxrwxrwx 3 sean sean      1 Sep 18 04:22 ../
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6914 Sep 18 05:21 basic-variant-state-2026-09-17_22-21-31.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6914 Sep 18 05:25 basic-variant-state-2026-09-17_22-25-31.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6914 Sep 18 05:29 basic-variant-state-2026-09-17_22-29-07.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6914 Sep 18 06:26 basic-variant-state-2026-09-17_23-26-23.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6914 Sep 18 06:28 basic-variant-state-2026-09-17_23-28-20.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>6915 Sep 18 06:30 basic-variant-state-2026-09-17_23-29-18.json
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 06:28 DataParallelTrainer_2455f_00000_0_2026-09-17_23-28-20/
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 06:30 DataParallelTrainer_46fd6_00000_0_2026-09-17_23-29-18/
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 05:25 DataParallelTrainer_5d96b_00000_0_2026-09-17_22-25-31/
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 05:21 DataParallelTrainer_ce8fb_00000_0_2026-09-17_22-21-31/
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 06:26 DataParallelTrainer_de330_00000_0_2026-09-17_23-26-23/
+drwxr-xr-x 5 sean <span class="nb">users     </span>8 Sep 18 05:29 DataParallelTrainer_de9e9_00000_0_2026-09-17_22-29-07/
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18100 Sep 18 05:21 experiment_state-2026-09-17_22-21-31.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18191 Sep 18 05:25 experiment_state-2026-09-17_22-25-31.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18699 Sep 18 05:29 experiment_state-2026-09-17_22-29-07.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18505 Sep 18 06:26 experiment_state-2026-09-17_23-26-23.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18510 Sep 18 06:28 experiment_state-2026-09-17_23-28-20.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users </span>18513 Sep 18 06:30 experiment_state-2026-09-17_23-29-18.json
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>3183 Sep 18 06:29 trainer.pkl
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users  </span>1314 Sep 18 06:29 tuner.pkl
+<span class="nt">-rw-r--r--</span> 1 sean <span class="nb">users     </span>0 Sep 18 05:21 .validate_storage_marker
+</code></pre></div></div>
+
         
       </section>
 
@@ -461,15 +641,13 @@
     <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
     <span itemprop="keywords">
     
-      <a href="/tags/access" class="page__taxonomy-item p-category" rel="tag">access</a><span class="sep">, </span>
+      <a href="/tags/analytics" class="page__taxonomy-item p-category" rel="tag">analytics</a><span class="sep">, </span>
     
-      <a href="/tags/audit" class="page__taxonomy-item p-category" rel="tag">audit</a><span class="sep">, </span>
+      <a href="/tags/beegfs" class="page__taxonomy-item p-category" rel="tag">beegfs</a><span class="sep">, </span>
     
-      <a href="/tags/compliance" class="page__taxonomy-item p-category" rel="tag">compliance</a><span class="sep">, </span>
+      <a href="/tags/ml" class="page__taxonomy-item p-category" rel="tag">ml</a><span class="sep">, </span>
     
-      <a href="/tags/log" class="page__taxonomy-item p-category" rel="tag">log</a><span class="sep">, </span>
-    
-      <a href="/tags/sgac" class="page__taxonomy-item p-category" rel="tag">sgac</a>
+      <a href="/tags/ray" class="page__taxonomy-item p-category" rel="tag">ray</a>
     
     </span>
   </p>
@@ -485,6 +663,8 @@
   <p class="page__taxonomy">
     <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
     <span itemprop="keywords">
+    
+      <a href="/categories/ai" class="page__taxonomy-item p-category" rel="tag">ai</a><span class="sep">, </span>
     
       <a href="/categories/netapp" class="page__taxonomy-item p-category" rel="tag">netapp</a><span class="sep">, </span>
     
@@ -586,7 +766,7 @@
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">Use sg-cosi to implement poor man's S3 bucket backups with the fancy Point-in-Time feature
+    <p class="archive__item-excerpt" itemprop="description">Use sg-cosi to implement a poor man's S3 bucket backups with the fancy Point-in-Time feature
 </p>
   </article>
 </div>
