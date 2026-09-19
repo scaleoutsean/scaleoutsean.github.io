@@ -255,7 +255,7 @@
 
 <p><img src="/assets/images/duckdb-netapp-storage-01-eseries-kubernetes-options.png" alt="NetApp block storage options with containers on E-Series" /></p>
 
-<p>For Quack, it's recommended to pick <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">an HA driver</a> for data availability reasons.</p>
+<p>For Quack, it's recommended to pick <a href="/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html">an HA CSI driver</a> for data availability reasons.</p>
 
 <h2 id="netapp-object-storage-options-for-duckdb">NetApp object storage options for DuckDB</h2>
 
@@ -300,7 +300,9 @@
   <li>Quack server makes sharing more efficient and (I think) allows easier integration with enterprise applications becaus instead of copying data to your client or accessing via SSH, you can use HTTPS with all the fancy gizmos that API gateways can provide</li>
 </ul>
 
-<p>For those who haven't tried: you need v2 (currently still in alpha for a few more weeks):</p>
+<p>Quack server gives NetApp E-Series owners the possibility of concurrent, shared read-write access to DuckDB. Until now, even read-only shared access was inconvenient (on single host filesystems, all users would be limited by the resources of the server attached to the disk hosting DuckDB data).</p>
+
+<p>For those who haven't tried it: you need v2 (currently still in alpha for a few more weeks):</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://install.duckdb.org | <span class="nv">DUCKDB_VERSION</span><span class="o">=</span>alpha bash
 </code></pre></div></div>
@@ -319,7 +321,7 @@
     <span class="n">DISABLE_SSL</span> <span class="k">false</span>
 <span class="p">);</span>
 
-<span class="c1">-- ATTACH 'quack:192.168.1.11:9494' AS quack (TOKEN 'blah', DISABLE_SSL false); -- proxy bypass</span>
+<span class="c1">-- ATTACH 'quack:192.168.1.11:9494' AS quack (TOKEN 'blah', DISABLE_SSL true); -- proxy bypass</span>
 
 <span class="k">FROM</span> <span class="n">quack</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'SHOW TABLES'</span><span class="p">);</span>
 </code></pre></div></div>
@@ -336,23 +338,27 @@
 
 <p><img src="/assets/images/duckdb-netapp-storage-03-duckdb-quack-server-dstat.png" alt="Quack server" /></p>
 
-<p>I haven't done detailed performance testing of Quack server yet, so this section may be expanded after I get to it and after Quack server benchmarks become available (or I find time to figure out how to run that TPC-H benchmark against remote Quack server; I've tried and that currently doesn't work because <code class="language-plaintext highlighter-rouge">DELETE</code> hasn't been implemented yet).</p>
+<p>I haven't tried running TPC-H benchmark against Quack server - that currently doesn't work because <code class="language-plaintext highlighter-rouge">DELETE</code> hasn't been implemented yet.</p>
 
 <p>I executed a small test with TPC-H data (<code class="language-plaintext highlighter-rouge">SELECT * FROM lineitem</code>) on my workstation over loopback and without any "tuning":</p>
 
-<pre><code class="language-raw">[local] run 1: 2.005s  6007037 rows  1001.3 MB  2,995,589 rows/s  499.3 MB/s
-[local] run 2: 1.209s  6007037 rows  1001.3 MB  4,970,147 rows/s  828.4 MB/s
-[local] run 3: 1.106s  6007037 rows  1001.3 MB  5,433,577 rows/s  905.7 MB/s
-[local] median: 1.209s  4,970,147 rows/s  828.4 MB/s
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 1: 2.005s  6007037 rows  1001.3 MB  2,995,589 rows/s  499.3 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 2: 1.209s  6007037 rows  1001.3 MB  4,970,147 rows/s  828.4 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> run 3: 1.106s  6007037 rows  1001.3 MB  5,433,577 rows/s  905.7 MB/s
+<span class="o">[</span><span class="nb">local</span><span class="o">]</span> median: 1.209s  4,970,147 rows/s  828.4 MB/s
 
---- quack: quack:localhost ---
-[quack] run 1: 1.964s  6007037 rows  1001.3 MB  3,058,204 rows/s  509.7 MB/s
-[quack] run 2: 1.970s  6007037 rows  1001.3 MB  3,049,936 rows/s  508.4 MB/s
-[quack] run 3: 1.993s  6007037 rows  1001.3 MB  3,013,700 rows/s  502.3 MB/s
-[quack] median: 1.970s  3,049,936 rows/s  508.4 MB/s
-</code></pre>
+<span class="nt">---</span> quack: quack:localhost <span class="nt">---</span>
+<span class="o">[</span>quack] run 1: 1.964s  6007037 rows  1001.3 MB  3,058,204 rows/s  509.7 MB/s
+<span class="o">[</span>quack] run 2: 1.970s  6007037 rows  1001.3 MB  3,049,936 rows/s  508.4 MB/s
+<span class="o">[</span>quack] run 3: 1.993s  6007037 rows  1001.3 MB  3,013,700 rows/s  502.3 MB/s
+<span class="o">[</span>quack] median: 1.970s  3,049,936 rows/s  508.4 MB/s
+</code></pre></div></div>
 
-<p>For now, you can get some <em>hints</em> of DuckDB-on-E-Series (not Quack server) performance on this blog, including runs with DuckDB v1 and v2 on NetApp E-Series EF600 <a href="/2026/08/31/duckdb-tpch.html#duckdb-with-netapp-storage">here</a>.</p>
+<p>For now:</p>
+<ul>
+  <li>see more simple tests in Appendix A</li>
+  <li>you can get some <em>hints</em> of DuckDB-on-E-Series (not Quack server) performance on this blog, including runs with DuckDB v1 and v2 on NetApp E-Series EF600 <a href="/2026/08/31/duckdb-tpch.html#duckdb-with-netapp-storage">here</a></li>
+</ul>
 
 <h3 id="containerization">Containerization</h3>
 
@@ -366,11 +372,19 @@
 
 <h2 id="conclusion">Conclusion</h2>
 
+<p>The big news is that Quack server makes E-Series 10 times more viable for DuckDB:</p>
+<ul>
+  <li>Until now, sharing was hard and remote sharing was practically impossible</li>
+  <li>Starting with v2.0, E-Series owners can run Quack server to share DuckDB data at multiple gigabytes per second, while spending less and getting more than with other arrays</li>
+</ul>
+
 <p>For both block and object stores, the usual logic applies: pick the right tool for the job.</p>
 
 <p>For block, you primarily need good performance and reliability, and possibly encryption for data-at-rest. That means E-Series block storage - hundreds of MB/s per table is the starting point. If you need to run it containerized, I recommend TopoLVM (non-HA, static CSI) or SANtricity CSI (dynamic, HA CSI).</p>
 
 <p>For object - and this applies only if Quack can share remote data (likely not) - you may need something lighter for Edge deployments, so consider Versity S3 Gateway (small) or StorageGRID VMs (medium). For DataCenter, get StorageGRID appliances.</p>
+
+<p>Quack server enables E-Series- and StorageGRID-based "ducklakes" <a href="/2026/06/20/lakekeeper-iceberg-rest-catalog-netapp-eseries.html">which means</a> not just possible, but most suitable stack for DuckDB-powered lakehouses.</p>
 
 <h2 id="appendix-a-comparison-duckdb-local-and-quack">Appendix A: Comparison DuckDB (local) and Quack</h2>
 

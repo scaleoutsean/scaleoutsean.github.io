@@ -11,7 +11,7 @@
     <meta charset="utf-8">
 
 <!-- begin _includes/seo.html --><title>Ray checkpointing with BeeGFS and StorageGRID | Acting Technologist</title>
-<meta name="description" content="Use BeeGFS or BeeOND for staging and move checkpoints to StorageGRID">
+<meta name="description" content="Use BeeGFS or BeeOND with NetApp E-Series for staging and move checkpoints to StorageGRID">
 
 
   <meta name="author" content="Sean">
@@ -27,7 +27,7 @@
 <meta property="og:url" content="https://scaleoutsean.github.io/2026/09/19/ray-framework-beegfs-storagegrid-checkpoint.html">
 
 
-  <meta property="og:description" content="Use BeeGFS or BeeOND for staging and move checkpoints to StorageGRID">
+  <meta property="og:description" content="Use BeeGFS or BeeOND with NetApp E-Series for staging and move checkpoints to StorageGRID">
 
 
 
@@ -37,7 +37,7 @@
 
   <meta name="twitter:site" content="@scaleoutSean">
   <meta name="twitter:title" content="Ray checkpointing with BeeGFS and StorageGRID">
-  <meta name="twitter:description" content="Use BeeGFS or BeeOND for staging and move checkpoints to StorageGRID">
+  <meta name="twitter:description" content="Use BeeGFS or BeeOND with NetApp E-Series for staging and move checkpoints to StorageGRID">
   <meta name="twitter:url" content="https://scaleoutsean.github.io/2026/09/19/ray-framework-beegfs-storagegrid-checkpoint.html">
 
   
@@ -235,7 +235,7 @@
         
         <ul>
   <li>Part 1: <a href="/2026/09/16/ray-framework-netapp-storagegrid-eseries.html">Ray framework with NetApp E-Series and StorageGRID </a></li>
-  <li>Part 2: Ray checkpointing to BeeGFS and StorageGRID (this post)</li>
+  <li>Part 2: Ray checkpointing to BeeGFS/E-Series and StorageGRID (this post)</li>
 </ul>
 
 <h2 id="introduction">Introduction</h2>
@@ -337,7 +337,7 @@
 
 <p><img src="/assets/images/ray-framework-netapp-27-ray-checkpoints-to-storagegrid-demo.png" alt="Ray checkpointing demo with NetApp StorageGRID" /></p>
 
-<p>These demos don't include validation, which is the easier workload (<code class="language-plaintext highlighter-rouge">S3 GET</code>).</p>
+<p>Both sync and async were used. These demos don't include validation, which is the easier workload (<code class="language-plaintext highlighter-rouge">S3 GET</code>).</p>
 
 <h3 id="disk-to-s3">Disk-to-S3</h3>
 
@@ -554,7 +554,7 @@
 
 <p>In these particular runs, the checkpoints weren't large, and so S3 was not slow enough. Were the checkpoints larger, we would have created an artificial bottleneck and maybe async would have looked better.</p>
 
-<p>The "lag" of disk I/O behind S3 - synchronous or not - comes from write cache buffering on BeeGFS. Of course, we could disable write cache on BeeGFS, but no one does that in real life. Because of that buffering, S3 PUTs aren't negatively affected by synchronous. Both async and sync checkpoints read from RAM and were mainly limited by S3 PUT performance.</p>
+<p>The "lag" of disk I/O behind S3 - synchronous or not - comes from write cache buffering on BeeGFS. Of course, we could disable write cache on BeeGFS, but no one does that in real life. Because of that buffering, S3 PUTs aren't negatively affected by synchronous. Both async and sync checkpoints read from RAM and were limited by S3 PUT performance - buffered writes weren't causing any delays to sync.</p>
 
 <p>With a different workload or carefully selected parameters, maybe we could create a scenario in which async looks better, but that would be meaningless for real life use. We already know that, under heavy workload, BeeGFS would write to disk before S3 is done uploading and async would save time. But, not all training would be like that.</p>
 

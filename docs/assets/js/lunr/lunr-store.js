@@ -2742,7 +2742,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Ray checkpointing with BeeGFS and StorageGRID",
-        "excerpt":"Part 1: Ray framework with NetApp E-Series and StorageGRID Part 2: Ray checkpointing to BeeGFS and StorageGRID (this post) Introduction The first post on Ray framework with NetApp E-Series already covers checkpointing to BeeGFS. Since that post got very long, this one will focus on the missing (and optional) second...","categories": ["storage","netapp","storagegrid","s3","ai"],
+        "excerpt":"Part 1: Ray framework with NetApp E-Series and StorageGRID Part 2: Ray checkpointing to BeeGFS/E-Series and StorageGRID (this post) Introduction The first post on Ray framework with NetApp E-Series already covers checkpointing to BeeGFS. Since that post got very long, this one will focus on the missing (and optional) second...","categories": ["storage","netapp","storagegrid","s3","ai"],
         "tags": ["ray","ml","eseries","analytics","beegfs","checkpoint"],
         "url": "/2026/09/19/ray-framework-beegfs-storagegrid-checkpoint.html",
         "teaser": null
