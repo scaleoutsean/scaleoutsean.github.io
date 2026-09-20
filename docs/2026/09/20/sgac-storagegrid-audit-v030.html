@@ -214,7 +214,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          3 minute read
+          4 minute read
         
       </span>
     
@@ -251,7 +251,7 @@
 
 <p>The new SGAC creates "non-native" column name in output and drops some fields.</p>
 
-<p>It's no longer "1:1 mapping", so you can't just use v0.3.0 and pass JSOND to someone downstream. It will break their scripts or queries.</p>
+<p>It no longer has a "1:1 mapping" to StorageGRID's audit log fields, so you can't just use v0.3.0 and pass JSONL to pre-existing users downstream. It would break their scripts or queries.</p>
 
 <p>The reasons for this change are:</p>
 <ul>
@@ -261,23 +261,23 @@
   <li>If the StorageGRID documentation gets improved, or if I need some of the fields that are currently dropped, I may need to update the schema</li>
 </ul>
 
-<p>So, while the schema is new, it's for the best. Any schema changes in follow-up will be documented.</p>
+<p>So, while the schema is new, it's for the best. The new schema is documented (although it's also self-documented in Parquet files) and any changes in follow-up releases will be documented.</p>
 
 <h3 id="binaries-only">Binaries only</h3>
 
 <p>I've simplified my life and closed the source.</p>
 
-<p>I may give it in direct engagements, but I'm not going to maintain a public copy.</p>
+<p>I may give the source code in direct engagements, but I'm not going to maintain a public copy.</p>
 
-<p>The binaries remain available, free, and 100% offline without any usage gathering or other nonsense.</p>
+<p>The binaries will remain available, free, and 100% offline-ready without any telemetry gathering or similar nonsense.</p>
 
 <h3 id="parquet-output">Parquet output</h3>
 
 <p>SGAC (Python) had one output, JSON documents.</p>
 
-<p>SGAC (Go) can output JSON or Parquet. It can also split output into multiple files, and upload files to S3.</p>
+<p>SGAC (Go) can output JSON or Parquet. It can also split output into multiple files and upload files to S3.</p>
 
-<p>Since we're talking about <strong>audit</strong> logs here, I do not recommend to upload audit logs to the same StorageGRID that is supposed to be audited, just as I don't recommend using the StorageGRID "upload logs to a bucket" (anti-)feature:</p>
+<p>Since we're talking about <strong>audit</strong> logs here, I do not recommend uploading audit logs to the same StorageGRID that is supposed to be audited, just as I don't recommend using the StorageGRID "upload logs to a bucket" (anti-)feature:</p>
 <ul>
   <li>For buckets smaller than 10TB and with less than 50K Parquet entries in largest "prefix" ("directory level"), I recommend <a href="/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html">Versity S3 Gateway attached to E-Series</a>. It costs nothing and can run it in a small VM. You can also upload data to StorageGRID if you need another copy</li>
   <li>For larger buckets, use another StorageGRID or other S3 object store</li>
@@ -286,27 +286,48 @@
 
 <h2 id="other-stuff">Other stuff</h2>
 
-<p>SGAC (Python) stopped at generating "intermediate" output. If you needed to do something with that output, additional steps where necessary before data could be queried.</p>
+<p>SGAC (Python) stopped at generating "intermediate" output. If you wanted to do something with that output, additional steps where necessary before data could be effectively queried.</p>
 
-<p>Now we can use Parquet, upload to S3 and query without moving data back. SGAC had a similar feature in the 2020/11/03 release, when it stored data in a SQLite database. I abandoned that because some users wanted to put data in Elasticsearch and Opensearch, but the idea was correct and is now back.</p>
+<p>Now we can also output to Parquet, upload those files to S3 and query them without moving data back.</p>
 
-<p>You can still output to JSOND and ingest anywhere. But that is now optional and you'll notice SGAC (Go) README has no Elasticsarch screenshots.</p>
+<p>SGAC had a similar feature in the 2020/11/03 release, when it stored data in a SQLite database. I abandoned that because someone wanted to put audit data in Elasticsearch and Opensearch, but the idea was correct and is now back in a datalake-friendly format.</p>
 
-<p>v0.3.0 has some simple queries for Parquet files to get people started.</p>
+<p>You can still output to JSONL and ingest like you used to. But that is now optional and not a recommended practice, so you'll notice the SGAC (Go) README no longer features Kibana screenshots.</p>
 
-<p>If I publish new releases, analytics-related features will be be where most effort will go.</p>
+<p>v0.3.0 has some simple queries for Parquet files to get people started. This is for "offline" Parquet files, but the SQL is the same:</p>
 
-<p>Audit logs are the only viable way to gain insights into what's happening on a grid, but as I've mentioned above, the documentation and breaking changes make that unreliable because it's hard to know whether you're missing something you shouldn't, or whether something that worked last week no longer works this week after a minor StorageGRID update. That remains outside of my control.</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">client_ip</span> <span class="k">FROM</span> <span class="p">(</span><span class="s1">'long-go.parquet'</span><span class="p">)</span> <span class="k">WHERE</span> <span class="n">atyp</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">'SGET'</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">client_ip</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Result:</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌───────────────┐
+│   client_ip   │
+│    varchar    │
+├───────────────┤
+│ 192.168.1.110 │
+│ 192.168.1.125 │
+│ 192.168.1.140 │
+│ 192.168.1.164 │
+│ 192.168.1.122 │
+│ 192.168.1.119 │
+│ 192.168.2.14  │
+│ 212.140.30.23 │
+└───────────────┘
+</code></pre></div></div>
+
+<p>If I publish new releases, analytics-related features will be be where most of my effort will go.</p>
+
+<p>Audit logs are the only viable way to gain insights into what's happening on a grid but - as I've mentioned above - the documentation and breaking changes make that unreliable because it's hard to know whether you're missing something you shouldn't, or whether something that worked last week no longer works this week after a minor StorageGRID update. That remains outside of my control.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>I've successfully wound down another "0 ROI" open source project that had generated 0 feedback, 0 contributions and 0 bug reports over many years.Admittedly, it's not a complex project, but anyone who's properly maintained anything on Github knows it doesn't require zero effort, either.</p>
+<p>I've successfully wound down another "0 ROI" open source project that had generated 0 feedback, 0 contributions and 0 bug reports over half a decade. Admittedly, it's not a complex project, but anyone who's properly maintained a Github project knows it doesn't require zero effort, either.</p>
 
-<p>In 2026 I've created more (and non-trivial, like the CSI drivers or API client libraries) open source project than closed source on existing, but the ROI on closed source ones (sg-COSI, OpenSharing server, Eke, etc.) has been better - I still waste time to get similar outcome, but I waste less of it. I'll keep the fundamental OSS projects like CSI, drivers, client libraries open because they enable others to build (if they want), but the stuff that works on top of it… there's no reason to bother.</p>
+<p>In 2026 I've created more (and non-trivial, like the CSI drivers or API client libraries) open source project than closed the source on existing, but the ROI on closed source ones (sg-COSI, OpenSharing server, Eke, etc.) has been better - I still waste time to for a familiar zero outcome, but I waste less of it. I'll keep the fundamental OSS projects like CSI drivers and API client libraries open because they enable others to build (if they want), but the stuff that works on top of it… there's no reason to bother.</p>
 
-<p>Anyway, as far as SGAC (Go) is concerned, it's still out there and free.</p>
+<p>Anyway, as far as SGAC (Go) is concerned, it's still out there and free. I'll attempt to address the Github issues and feature requests, if any.</p>
 
-<p>The new version provides a big performance and usability boost and I look forward to enhancing it for actionable insights.</p>
+<p>The new version provides a big performance and usability boost and I look forward to enhancing it for more actionable insights the way I started in 2020.</p>
 
         
       </section>
