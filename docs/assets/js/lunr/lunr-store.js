@@ -2753,6 +2753,12 @@ var store = [{
         "url": "/2026/09/20/sgac-storagegrid-audit-v030.html",
         "teaser": null
       },{
+        "title": "YugabyteDB with NetApp EF-Series storage",
+        "excerpt":"Introduction While reading the YugabyteDB documentation today, I spotted another example that shows why E-Series is the right NetApp tool for the job. When YugabyteDB creates a snapshot, it does not physically copy the data; instead, it creates hard links to all the relevant files. These links reside on the...","categories": ["storage","netapp","analytics","ai"],
+        "tags": ["yugabytedb","eseries","database"],
+        "url": "/2026/09/21/yugabytedb-netapp-storage-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2766,7 +2772,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"SGAC v0.3.0 2026-09-20 00:00 4 minute read Significant changes in v0.3.0 Ray checkpointing with BeeGFS and StorageGRID 2026-09-19 00:00 10 minute read We continue from Part 1, where we explored checkpointing to BeeGFS, by moving checkpoints to NetApp StorageGRID Enable PiT backup of NetApp StorageGRID buckets with sg-cosi 2026-09-18 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"YugabyteDB with NetApp EF-Series storage 2026-09-21 00:00 13 minute read We walk through TFM and look for tips and tricks relevant to EF-Series SGAC v0.3.0 2026-09-20 00:00 4 minute read Significant changes in v0.3.0 Ray checkpointing with BeeGFS and StorageGRID 2026-09-19 00:00 10 minute read We continue from Part 1,...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4480,6 +4486,9 @@ var store = [{
   },{
     "title": "ml",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ml/"
+  },{
+    "title": "yugabytedb",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/yugabytedb/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
