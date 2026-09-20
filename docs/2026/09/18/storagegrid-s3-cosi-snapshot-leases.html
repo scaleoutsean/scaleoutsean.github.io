@@ -384,6 +384,19 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
 
 <p>We can compare buckets and inspect content to confirm.</p>
 
+<p>The source:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>cosi/bucketshop
+<span class="o">[</span>2026-09-07 03:53:10 CST]  37KiB STANDARD log.jsonld
+<span class="o">[</span>2026-09-07 04:17:03 CST] 3.3KiB STANDARD trino-query.py
+<span class="o">[</span>2026-09-20 22:00:19 CST]     0B documents/
+<span class="o">[</span>2026-09-20 22:00:19 CST]     0B images/
+<span class="o">[</span>2026-09-20 22:00:19 CST]     0B videos/
+
+</code></pre></div></div>
+
+<p>The target:</p>
+
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>bucketshop-target/bucketshop/
 <span class="o">[</span>2026-09-18 00:23:51 CST]  37KiB STANDARD log.jsonld
 <span class="o">[</span>2026-09-18 00:24:46 CST] 3.3KiB STANDARD trino-query.py
@@ -407,6 +420,10 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
 
 <p><img src="/assets/images/sg-cosi-snapshot-leaases-02-bucket-destination-done.png" alt="Bucket destination done" /></p>
 
+<p>Once the maximum or set time is up, sg-cosi deletes the snapshot and S3 keys for it.</p>
+
+<p><img src="/assets/images/sg-cosi-snapshot-leaases-03-snapshot-lease-deleted.png" alt="Deleted Snapshot Lease" /></p>
+
 <h2 id="things-to-be-aware-of">Things to be aware of</h2>
 
 <p>Bucket owners need to remember they're in charge of making sure they picked the right options and made copies to their satisfaction.</p>
@@ -424,9 +441,9 @@ mc <span class="nb">alias set</span> <span class="nt">--path</span> auto <span c
   <span class="nt">-p</span> <span class="s1">'{"spec":{"renewUntil":"2026-09-18T12:00:00Z"}}'</span>
 </code></pre></div></div>
 
-<p>Once the maximum or set time is up, sg-cosi deletes the snapshot and S3 keys for it.</p>
+<p>You can create two active leases - there are legitimate use cases for that, such as backup to different destinations - but if an "update" runs before previous backup has completed, you can create a mess at the destination.</p>
 
-<p><img src="/assets/images/sg-cosi-snapshot-leaases-03-snapshot-lease-deleted.png" alt="Deleted Snapshot Lease" /></p>
+<p>Then, remember use the appropriate destination for the job. StorageGRID can have 100 million objects with the same prefix. The Versity S3 Gateway may not work well as a target for backup from such buckets (although you could use something else than rclone, and chunk data into 4GiB tar files, but you'd have to find a way to avoid retransmitting everything every time you backup this way).</p>
 
 <p>Finally, not all StorageGRID buckets are suitable for replication to Versity S3 Gateway. If you have large buckets, or large objects, or many objects, you must carefully evaluate your destination object store options.</p>
 
