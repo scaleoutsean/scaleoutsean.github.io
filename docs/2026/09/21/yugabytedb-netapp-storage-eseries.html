@@ -390,23 +390,23 @@ To mitigate these issues, consider storing backups outside of the cluster, in ch
   create_database_snapshot
 </code></pre></div></div>
 
-<p>Each master not only "might", but <strong>ought to be</strong> attached to a different storage array. If you use RF3 and have three arrays, you simply <strong>should not</strong> have all masters attached to the same disk array. But, if they're attached to different storage arrays, why even use hardware snapshots? That would not serve any useful purpose for production-worthy clusters!</p>
+<p>Each master not only "might", but <strong>ought to be</strong> attached to a different storage array. If you use RF3 and have three arrays, you simply <strong>should not</strong> have all masters attached to the same disk array. But, if they're attached to different storage arrays, why even use hardware snapshots? You <em>cannot</em> consistently snapshot both master 1 on array 1 and master 2 on array two. That would not serve any useful purpose for production-worthy clusters.</p>
 
-<p>You might as well set a random snapshot schedule on each SANtricity array to take a snapshot every 15 minutes and keep 3, just enough to export the oldest incremental to NL-SAS or S3 before we delete it on a scripted schedule. Hardware snapshots wouldn't be useful for actual snapshot restores from SANtricity snapshots because multiple arrays <strong>cannot possibly take - and hence restore - YugabyteDB volumes with micro-second precision</strong>. It'd be like taking snapshots of three live StorageGRID storage nodes on vSphere - "don't try that at home"!</p>
+<p>You might as well set a random snapshot schedule on each SANtricity array to take a snapshot every 15 minutes and keep 3, just enough to export the oldest YDB software snapshot to NL-SAS or S3 before we expire that hardware snapshot. Hardware snapshots wouldn't be useful for actual snapshot restores from SANtricity snapshots because multiple arrays <strong>cannot possibly take - and hence restore - YugabyteDB tables the way YDB requires</strong>. It'd be like taking snapshots of three live StorageGRID storage nodes on vSphere - "don't try that at home"!</p>
 
-<p>The issue isn't that restoring from a hardware snapshot needs high precision time for the YDB snapshot files (not underlying volumes), but that <strong>current</strong> data files need it.</p>
+<p>The issue isn't that restoring from a hardware snapshot needs high time precision for the YDB files (not underlying volumes!), but that <strong>current</strong> YDB data files also need it. A hardware snapshot is <em>not</em> a YDB construct.</p>
 
-<p>So you can't actually guarantee that the DB itself - including any other DBs that may be on the same volume - would be able to recover unless your architecture is wrong (meaning, you amassed all YDB volumes on the same disk group on a single array - more on that below). An alternative use of those snapshot files would be to copy them from a read-only snapshot location into YugabyteDB (presumably the original was mis-dropped or accidentally deleted) and then restore the YDB snapshot.</p>
+<p>So you can't actually guarantee that the DB itself - including any other DBs that may be on the same volume - would be able to recover unless your architecture is wrong (meaning, you piled up all YDB volumes on the same disk group on a single array - more on that below).</p>
+
+<p>An alternative use of those snapshot files would be to copy them from a read-only snapshot location into YugabyteDB (presumably the original was mis-dropped or accidentally deleted) and then restore the YDB snapshot.</p>
 
 <p>Who on Earth wants to do that or multiple nodes (and crash everything if they make a typo) when they can restore from a backup using the Operator?</p>
 
 <p>Note that in a multi-DB scenario, a rollback of a hardware snapshot would lose some data from <strong>all</strong> databases that share same volumes, including those DBs that didn't have any issues to begin with.</p>
 
-<p>The <strong>only</strong> way hardware snapshots can possibly work here is a poor man's YugabyteDB cluster running not just on a <strong>single</strong> storage system or cluster (mentioned as a possibility with E-Series earlier), but also on the <strong>same consistency group</strong>, which is expressly not supported.</p>
+<p>The <strong>only</strong> way hardware snapshots can possibly work here is a poor man's YugabyteDB cluster running not just on a <strong>single</strong> storage system or cluster (mentioned as a possibility with E-Series earlier), but also on the <strong>same consistency group</strong>, which is expressly not supported by YuggabyteDB. Even then, you'd still operate with wrong and unsupported constructs - hardware snapshots rather than YDB database instance snapshots.</p>
 
-<p>On E-Series as an example, we could create a 12-disk (or larger) DDP pool with multiple RAID 10 or RAID 6 volumes on it, and add volumes to the same SANtricity consistency group. That would be possible, but very … funny.</p>
-
-<p>If I was forced to use a single array for all disks, I'd at last use three four- or eight-disk (multiple independent RAID 10 or RAID 0) groups and skip the charade with hardware snapshots.</p>
+<p>On E-Series - as an example - we could create a 12-disk (or larger) DDP pool with multiple RAID 10 or RAID 6 volumes on it and add volumes to a SANtricity consistency group. And then we could snapshot all these volumes at once. That would be possible, but still unsupported. The only valid use case would be clone-the-snap-and-copy-non-current DB files back.</p>
 
 <p>Few more things on the post-snapshot backup/restore in the Operator:</p>
 <ul>
@@ -414,7 +414,7 @@ To mitigate these issues, consider storing backups outside of the cluster, in ch
   <li>Optionally, "incremental" snapshot backup to S3 is possible, but restores require all snapshots between last full export and desired point-in-time</li>
 </ul>
 
-<p>Here we can see a backup to the included (and unmaintained) MinIO:</p>
+<p>Here we can see a backup to the unmaintained MinIO:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: operator.yugabyte.io/v1alpha1
 kind: StorageConfig
@@ -485,7 +485,9 @@ backup.operator.yugabyte.io/minio-backup-demo-1789929232 created
 
 <p>We should mention that hardware snapshots can create "read-only copies" regardless of database file growth, while incremental YDB snapshots occurring every 15 minutes do not necessarily have enough time to be uploaded to S3 so that they can be restored there with the same RPO.</p>
 
-<p>An inability of snapshot exported to scale limitlessly doesn't mean that "hardware snapshots of software snapshots" are somehow a solution to that problem. You still have multiple DB instances sharing same volumes in the hardware snapshot scenario, and you still have all those "single-instance-volumes" on the same disk array (so that they can be put on the same consistency group, or else you can't snapshot them at the same time), which also means all your RF3 "replicas" are in fact fake as they live in the same failure domain.</p>
+<p>An inability of snapshot exported to scale limitlessly doesn't mean that "hardware snapshots of software snapshots" are somehow a solution to that problem.</p>
+
+<p>You still have multiple DB instances sharing same volumes in the hardware snapshot scenario, and you still have all those "single-instance-volumes" on the same disk array (so that they can be put on the same consistency group, or else you can't snapshot them at the same time), which also means all your RF3 "replicas" are in fact fake, as they actually live in the same failure domain. So that is <em>not</em> and can't ever be a solution.</p>
 
 <p>I think the only production-worthy ways for very large database change rate are:</p>
 <ul>
@@ -494,6 +496,8 @@ backup.operator.yugabyte.io/minio-backup-demo-1789929232 created
 </ul>
 
 <p>Most users won't have this problem, but those who do should almost certainly stay away from hardware snapshots and consider one of the supported solutions. They can also stick with the "simple" snapshot &amp; export approach as long as they keep adding severs and EF-Series arrays - with six entry-level arrays and 18 YDB servers, one may be able to handle twice as much as with three and nine, respectively.</p>
+
+<p>Finally, in RF3 only one server needs to push snapshot data out to S3.</p>
 
 <h2 id="recommendations-for-ef-series">Recommendations for EF-Series</h2>
 
@@ -506,7 +510,12 @@ backup.operator.yugabyte.io/minio-backup-demo-1789929232 created
   <li>Use <strong>either RAID 0 (since YugabyteDB recommends that) or RAID 10</strong> - both are fine choices. If using RAID 10, you can pick a RAID segment size, e.g. 32KiB for smaller strips. Let's say you have want 8 disks in RAID 10 (giving you 4 disks worth of "usable") - for this you'd get 9 disks (1 hot spare) and pick a 256KiB stripe size for Yugabyte DB with large IO, 32 KiB when small I/O dominates. You get the same capacity regardless, so try several with a representative workload before deploying</li>
   <li><strong>Direct attach your servers or Kubernetes workers to EF-Series</strong> - just make sure you configure EF-Series boxes with enough host-facing ports</li>
   <li><strong>Use Ansible, Terraform, TopoLV or SANtricity CSI</strong> (pick one that works for you) to manage storage presentation. If you don't use an HA CSI driver, make sure disk re-assignment workflows are exercised and confirmed to work. You can leave 10-20 GB of unallocated space and create 10 2GiB LUNs for this automation testing</li>
-  <li>All EF-Series arrays have NVMe in the controller shelf, but you can <strong>add inexpensive expansion shelves (NL-SAS HDD) for evacuation of snapshot-to-disk</strong> to RAID 6 (NL-SAS)</li>
+  <li>All EF-Series arrays have NVMe in the controller shelf, but you can <strong>add inexpensive expansion shelves (NL-SAS HDD) for export of snapshots</strong> to RAID 6 (NL-SAS) volumes</li>
+</ul>
+
+<p><img src="/assets/images/yugabytedb-netapp-eseries-01-ef-series-hybrid.png" alt="YDB with hybrid EF-Series" /></p>
+
+<ul>
   <li><strong>Capacity sizing: size the way YugabyteDB recommends</strong>. EF-Series doesn't compress or thin-provision</li>
   <li><strong>OS and application disks: use any supported client</strong> - Hyper-V, bare metal, Linux KVM, vSphere. <a href="/2026/07/17/proxmox-pve-vm-templates-eseries-nfs.html">Proxmox</a> also works</li>
 </ul>
