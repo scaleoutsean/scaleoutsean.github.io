@@ -2760,7 +2760,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OpenSharing E-Series data using Assume Role With WebIdentity",
-        "excerpt":"Introduction Databricks saw it first, of course, that’s why they came up with it - but, compared to some “storage experts” I think I’ve done well and realized the potential the day I first saw it. Thanks to OpenSharing, if you know what you’re doing, you can park and securely...","categories": ["netapp","storage","analytics"],
+        "excerpt":"Introduction Databricks saw it first, of course, that’s why they came up with it - but, compared to some “storage experts”, I think I’ve done rather well and realized the potential the day I first learned about OpenSharing. Thanks to OpenSharing, if you know what you’re doing, you can park...","categories": ["netapp","storage","analytics"],
         "tags": ["versity","eseries","vgw","AssumeRoleWithWebIdentity","opensharing"],
         "url": "/2026/09/24/opensharing-assume-web-role-with-identity.html",
         "teaser": null
