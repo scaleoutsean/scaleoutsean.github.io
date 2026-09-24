@@ -2759,6 +2759,12 @@ var store = [{
         "url": "/2026/09/21/yugabytedb-netapp-storage-eseries.html",
         "teaser": null
       },{
+        "title": "OpenSharing E-Series data using Assume Role With WebIdentity",
+        "excerpt":"Introduction Databricks saw it first, of course, that’s why they came up with it - but, compared to some “storage experts” I think I’ve done well and realized the potential the day I first saw it. Thanks to OpenSharing, if you know what you’re doing, you can park and securely...","categories": ["netapp","storage","analytics"],
+        "tags": ["versity","eseries","vgw","AssumeRoleWithWebIdentity","opensharing"],
+        "url": "/2026/09/24/opensharing-assume-web-role-with-identity.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2772,7 +2778,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"YugabyteDB with NetApp EF-Series storage 2026-09-21 00:00 15 minute read We walk through TFM and look for tips and tricks relevant to EF-Series SGAC v0.3.0 2026-09-20 00:00 4 minute read Significant changes in v0.3.0 Ray checkpointing with BeeGFS and StorageGRID 2026-09-19 00:00 10 minute read We continue from Part 1,...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"OpenSharing E-Series data using Assume Role With WebIdentity 2026-09-24 00:00 2 minute read Quick post explores another win for the thinking E-Series user YugabyteDB with NetApp EF-Series storage 2026-09-21 00:00 15 minute read We walk through TFM and look for tips and tricks relevant to EF-Series SGAC v0.3.0 2026-09-20 00:00...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4489,6 +4495,9 @@ var store = [{
   },{
     "title": "yugabytedb",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/yugabytedb/"
+  },{
+    "title": "AssumeRoleWithWebIdentity",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/assumerolewithwebidentity/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
