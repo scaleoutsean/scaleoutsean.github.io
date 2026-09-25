@@ -192,7 +192,7 @@ var store = [{
         "teaser": null
       },{
         "title": "NetApp Trident v21.01.1 on Linux/ARM64 with SolidFire iSCSI storage",
-        "excerpt":"Intro Build \\&amp; Deploy What about s390x, ppc64le and other architectures Next steps Version info Notes on linux/s390x (Feb 25, 2021) Intro NetApp Trident is open source dynamic storage provisioner for CSI-compatible platforms such as Docker and Kubernetes. Currently it supports the x86_64 platform but - as we shall soon...","categories": ["kubernetes","storage"],
+        "excerpt":"Intro Build \\\u0026amp; Deploy What about s390x, ppc64le and other architectures Next steps Version info Notes on linux/s390x (Feb 25, 2021) Intro NetApp Trident is open source dynamic storage provisioner for CSI-compatible platforms such as Docker and Kubernetes. Currently it supports the x86_64 platform but - as we shall soon...","categories": ["kubernetes","storage"],
         "tags": ["arm64","csi","netapp","solidfire","trident"],
         "url": "/2021/02/24/netapp-trident-on-arm64.html",
         "teaser": null
@@ -216,7 +216,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Kubernetes failover and failback with Trident CSI and SolidFire",
-        "excerpt":"UPDATE Summary Introduction Comparison between PV Patching and Trident Volume Import approach Why only Scenario 1 Failover (PROD=&gt;DR) Steps to failover a SolidFire cluster Configure Kubernetes and Trident CSI for the SolidFire cluster PROD Notes about restoring workloads on the remote SolidFire cluster Steps to configure SolidFire volume replication in...","categories": ["kubernetes","automation","storage"],
+        "excerpt":"UPDATE Summary Introduction Comparison between PV Patching and Trident Volume Import approach Why only Scenario 1 Failover (PROD=\u0026gt;DR) Steps to failover a SolidFire cluster Configure Kubernetes and Trident CSI for the SolidFire cluster PROD Notes about restoring workloads on the remote SolidFire cluster Steps to configure SolidFire volume replication in...","categories": ["kubernetes","automation","storage"],
         "tags": ["bc","dr","netapp","solidfire","trident"],
         "url": "/2021/03/20/kubernetes-solidfire-failover-failback.html",
         "teaser": null
@@ -282,7 +282,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SolidBackup for SolidFire Data Protection in Hybrid Cloud",
-        "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. Introduction First attempt Backup and Restore in KVM environments Data Migration Do we really want DIY approaches to protect our data Second attempt Create configuration and keep Src &amp; Dst (Clone) volumes in sync Backup to...","categories": ["automation"],
+        "excerpt":"NOTICE: any and all credentials and tokens on this page are samples, not leaked. Introduction First attempt Backup and Restore in KVM environments Data Migration Do we really want DIY approaches to protect our data Second attempt Create configuration and keep Src \u0026amp; Dst (Clone) volumes in sync Backup to...","categories": ["automation"],
         "tags": [],
         "url": "/2021/05/08/revisiting-solidbackup.html",
         "teaser": null
@@ -354,7 +354,7 @@ var store = [{
         "teaser": null
       },{
         "title": "GA of NetApp Trident v21.07",
-        "excerpt":"Latest &amp; greatest NetApp Trident is out! Version 21.07 says goodbye to OCP 3.11 (and any and all Kubernetes clusters running versions earlier than v1.17). It also removes support for E-Series back-end. Users can still use Trident v21.04 with E-Series, as well as any other (generic) or specialized drivers such...","categories": ["kubernetes"],
+        "excerpt":"Latest \u0026amp; greatest NetApp Trident is out! Version 21.07 says goodbye to OCP 3.11 (and any and all Kubernetes clusters running versions earlier than v1.17). It also removes support for E-Series back-end. Users can still use Trident v21.04 with E-Series, as well as any other (generic) or specialized drivers such...","categories": ["kubernetes"],
         "tags": ["csi","kubernetes","netapp","trident"],
         "url": "/2021/07/31/netapp-trident-v21.07.html",
         "teaser": null
@@ -432,7 +432,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Replicate volume data from Digital Ocean to SolidFire and back",
-        "excerpt":"Digital Ocean is a no-nonsense cloud provider that you’ve probably heard of. SolidFire and Digital Ocean users may sometime want to migrate volume data without using application-level replication. That may involve activities such as Backup &amp; Restore (each action on one side) or offline data synchronization or replication. In this...","categories": ["solidfire","cloud","automation"],
+        "excerpt":"Digital Ocean is a no-nonsense cloud provider that you’ve probably heard of. SolidFire and Digital Ocean users may sometime want to migrate volume data without using application-level replication. That may involve activities such as Backup \u0026amp; Restore (each action on one side) or offline data synchronization or replication. In this...","categories": ["solidfire","cloud","automation"],
         "tags": ["data protection","digital ocean","netapp","replication","solidfire","sync"],
         "url": "/2021/11/30/digital-ocean-volume-to-solidfire-volume-and-back.html",
         "teaser": null
@@ -594,7 +594,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Velero V1.8 with Restic, SolidFire 12.3 and StorageGRID 11.5",
-        "excerpt":"NOTICE: all credentials and tokens on this page are samples, not leaked. Introduction Backup and restore Kubernetes application data and metadata to S3 Is this “good enough” or … Using Velero and Restic to backup regular SolidFire volumes Summary Introduction I wrote about Velero &amp; Trident CSI (also about Velero...","categories": ["kubernetes","storage"],
+        "excerpt":"NOTICE: all credentials and tokens on this page are samples, not leaked. Introduction Backup and restore Kubernetes application data and metadata to S3 Is this “good enough” or … Using Velero and Restic to backup regular SolidFire volumes Summary Introduction I wrote about Velero \u0026amp; Trident CSI (also about Velero...","categories": ["kubernetes","storage"],
         "tags": ["backup","data protection","netapp","restic","s3","solidfire","storagegrid","velero"],
         "url": "/2022/03/15/velero-18-with-restic-and-trident-2201.html",
         "teaser": null
@@ -816,7 +816,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Nomad pack for InfluxDB with BeeGFS filesystem",
-        "excerpt":"Nomad Pack and Nomad BeeGFS Nomad Pack for InfluxDB on Nomad with BeeGFS Backup \\&amp; restore Using influx backup Conclusion Nomad Pack and Nomad Nomad Pack is a little bit like “Helm for Nomad”. It’s very new so not yet as powerful as Helm, but considering how much simpler and...","categories": ["storage","containers"],
+        "excerpt":"Nomad Pack and Nomad BeeGFS Nomad Pack for InfluxDB on Nomad with BeeGFS Backup \\\u0026amp; restore Using influx backup Conclusion Nomad Pack and Nomad Nomad Pack is a little bit like “Helm for Nomad”. It’s very new so not yet as powerful as Helm, but considering how much simpler and...","categories": ["storage","containers"],
         "tags": ["beegfs","e-series","eseries","influxdb","monitoring","visualize"],
         "url": "/2022/08/11/nomad-pack-influxdb-beegfs.html",
         "teaser": null
@@ -1079,7 +1079,7 @@ var store = [{
         "url": "/2023/02/10/backup-epa-data-on-kubernetes.html",
         "teaser": null
       },{
-        "title": "KubeVirt backup, restore with NetApp SolidFire & Kasten K10",
+        "title": "KubeVirt backup, restore with NetApp SolidFire \u0026 Kasten K10",
         "excerpt":"Introduction KubeVirt VMs Snapshot and Backup Restore Demo Summary Update Introduction KubeVirt is still early in its development, but it’s getting better. Some SolidFire users are eager to move their VMs to Kubernetes and since I’ve been playing with Kubernetes to test several other things, I decided to take a...","categories": ["kubernetes","virtualization"],
         "tags": ["backup","csi","data protection","k8s","kasten","kubernetes","kubevirt","netapp","restore","snapshot","solidfire","trident","vm"],
         "url": "/2023/02/12/backup-restore-kubevirt-vms-with-solidfire-kasten-kubernetes.html",
@@ -1536,7 +1536,7 @@ var store = [{
         "teaser": null
       },{
         "title": "NetApp SANtricity PowerShell module for E-Series",
-        "excerpt":"UPDATE: This outdated module for PowerShell 5.1 may not work with with SANtricity 11.90+. But there’s a new community module that supports PowerShell 7, santricity-powershell. See this post, for exmaple. Get NetApp.SANtricity module for PowerShell 5.1 Install and load Use End Appendix A - Known issues \\&amp; workarounds Get NetApp.SANtricity...","categories": ["storage","automation"],
+        "excerpt":"UPDATE: This outdated module for PowerShell 5.1 may not work with with SANtricity 11.90+. But there’s a new community module that supports PowerShell 7, santricity-powershell. See this post, for exmaple. Get NetApp.SANtricity module for PowerShell 5.1 Install and load Use End Appendix A - Known issues \\\u0026amp; workarounds Get NetApp.SANtricity...","categories": ["storage","automation"],
         "tags": ["devops","e-series","eseries","powershell","santricity","windows"],
         "url": "/2024/03/28/netapp-santricity-powershell-module.html",
         "teaser": null
@@ -1800,7 +1800,7 @@ var store = [{
         "teaser": null
       },{
         "title": "OPEA AI with NetApp E-Series",
-        "excerpt":"Introduction What is the OPEA project The stack Docker vs. Kubernetes Where’s the storage? E-Series storage and solution stack for OPEA Multi-tenancy Conclusion Introduction NetApp and OPEA (Open Platform for Enterprise AI) recently announced a joint solution. In this post I’ll describe how an OPEA &amp; E-Series can work together....","categories": ["storage","ai"],
+        "excerpt":"Introduction What is the OPEA project The stack Docker vs. Kubernetes Where’s the storage? E-Series storage and solution stack for OPEA Multi-tenancy Conclusion Introduction NetApp and OPEA (Open Platform for Enterprise AI) recently announced a joint solution. In this post I’ll describe how an OPEA \u0026amp; E-Series can work together....","categories": ["storage","ai"],
         "tags": ["ai","beegfs","e-series","netapp","opea","rag"],
         "url": "/2025/05/21/opean-ai-with-netapp-eseries.html",
         "teaser": null
@@ -1908,7 +1908,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SolidFire Extension for Windows Admin Center 2025",
-        "excerpt":"Introduction Walk-through And now… Conclusion Appendix A: demo Animated GIF (no playback control) Video demo with voice-over Introduction Continuing our “Dumb &amp; Dumber in Tech” series, I’m pleased to report that I can add another episode following that SolidFire WAC Gateway post. I’ve kept cracking and have something to share....","categories": ["automation","solidfire","projects"],
+        "excerpt":"Introduction Walk-through And now… Conclusion Appendix A: demo Animated GIF (no playback control) Video demo with voice-over Introduction Continuing our “Dumb \u0026amp; Dumber in Tech” series, I’m pleased to report that I can add another episode following that SolidFire WAC Gateway post. I’ve kept cracking and have something to share....","categories": ["automation","solidfire","projects"],
         "tags": ["hyper-v","netapp","solidfire","windows","windows admin center"],
         "url": "/2025/07/30/solidfire-windows-admin-center-extension.html",
         "teaser": null
@@ -2111,7 +2111,7 @@ var store = [{
         "url": "/2026/01/16/eseries-santricity-terraform-provider.html",
         "teaser": null
       },{
-        "title": "Big data & analytics patterns for NetApp object & block",
+        "title": "Big data \u0026 analytics patterns for NetApp object \u0026 block",
         "excerpt":"Introduction The post StorageGRID Branch Buckets and Read Cache is a rant about patterns for the NetApp storage products in analytics and big data environments. I didn’t do a good job illustrating those at the time, so this post will add hopefully better depictions along with some comments. Application, rack...","categories": ["netapp","storage"],
         "tags": ["analytics","big data","e-series","netapp","s3","santricity","storagegrid"],
         "url": "/2026/01/16/santricity-eseries-datalake-storage.html",
@@ -2237,8 +2237,8 @@ var store = [{
         "url": "/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html",
         "teaser": null
       },{
-        "title": "Veeam B&R 13.0, Proxmox PVE 9.1, and NetApp E-Series",
-        "excerpt":"Introduction Following the post on Proxmox Backup Server, I thought to try Veeam Backup &amp; Recovery, especially since I’ve never used it with Proxmox. I also wanted to check out the NVMe/RoCE, current state of pre-post backup and snapshot integration - supposedly a complex topic (judging by the lack of...","categories": ["storage","e-series","backup"],
+        "title": "Veeam B\u0026R 13.0, Proxmox PVE 9.1, and NetApp E-Series",
+        "excerpt":"Introduction Following the post on Proxmox Backup Server, I thought to try Veeam Backup \u0026amp; Recovery, especially since I’ve never used it with Proxmox. I also wanted to check out the NVMe/RoCE, current state of pre-post backup and snapshot integration - supposedly a complex topic (judging by the lack of...","categories": ["storage","e-series","backup"],
         "tags": ["e-series","backup","veeam","netapp","nl-sas","roce","rdma","pve","proxmox"],
         "url": "/2026/03/14/veeam-proxmox-netapp-eseries.html",
         "teaser": null
@@ -2250,7 +2250,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Application-consistent PostgreSQL snapshots and clones on NetApp E-Series",
-        "excerpt":"Workflows for PostgreSQL 17 and 18 I this this on Windows Server 2025 as I happened to have it round for the evaluation of Veeam Backup and Recovery 13, Proxmox 9.1 and E-Series (previous post). As you can see, Veeam B&amp;R now uses PostgreSQL 17. You could do this with...","categories": ["storage","e-series","backup"],
+        "excerpt":"Workflows for PostgreSQL 17 and 18 I this this on Windows Server 2025 as I happened to have it round for the evaluation of Veeam Backup and Recovery 13, Proxmox 9.1 and E-Series (previous post). As you can see, Veeam B\u0026amp;R now uses PostgreSQL 17. You could do this with...","categories": ["storage","e-series","backup"],
         "tags": ["netapp","santricity","snapshot","clone","postgres"],
         "url": "/2026/03/15/santricity-powershell-postgres-snashot-clone.html",
         "teaser": null
@@ -2586,7 +2586,7 @@ var store = [{
         "teaser": null
       },{
         "title": "What's new in Kasten K10 9.0",
-        "excerpt":"What’s new in Kasten 9.0 You may see full release notes for version 9 right here. What’s interesting to me is the following parts. VBR Metadata Support: New policies support the export of both Kubernetes application metadata and volume snapshot data to supported Veeam Backup &amp; Replication repositories At the...","categories": ["kubernetes","storage","s3"],
+        "excerpt":"What’s new in Kasten 9.0 You may see full release notes for version 9 right here. What’s interesting to me is the following parts. VBR Metadata Support: New policies support the export of both Kubernetes application metadata and volume snapshot data to supported Veeam Backup \u0026amp; Replication repositories At the...","categories": ["kubernetes","storage","s3"],
         "tags": ["veeam","kasten","backup"],
         "url": "/2026/07/29/kasten-k10-90.html",
         "teaser": null
