@@ -1,0 +1,142 @@
+# Storage efficiency with Kafka 3.2 and NetApp SolidFire 12
+
+Effects of enabling Kafka compression and RF >1 on SolidFire storage efficiency
+
+- [Objective](#objective)
+- [How I tested](#how-i-tested)
+- [Kafka tests and results](#kafka-tests-and-results)
+  - [Random ASCII records](#random-ascii-records)
+  - [StorageGRID audit log](#storagegrid-audit-log)
+- [Protecting Kafka on a single site](#protecting-kafka-on-a-single-site)
+- [Sizing with RF2](#sizing-with-rf2)
+- [Summary and conclusion](#summary-and-conclusion)
+
+## Objective
+
+I wanted to see how much data efficiency is lost on SolidFire with Kafka's RF2 and RF3 as well as due to optional compression.
+
+As I mentioned in the post on [Tiered Kafka with E-Series](/2022/06/28/kafka-eseries-object-storage.html), with protected storage RF2 is enough and RF3 is wasteful. That also applies to SolidFire, but even more so (compared to E-Series) because all unique storage blocks on SolidFire are global and all volumes are protected by RF2 (SolidFire Double Helix) so doing another RF3 outside is either very wasteful (if Kafka-made copies do not get deduplicated on SolidFire) or unnecessary (if copies made by Kafka do get deduplicated, that doesn't give you additional protection).
+
+Should we use even RF2 on Kafka? I think we should: that protects you from filesystem corruption and Kafka broker node loss and potentially improves performance (as data compressed on Kafka and then sent to SolidFire targets consumes less storage bandwidth than uncompressed data sent to SolidFire).
+
+Now the very important question here is how much storage efficiency do we lose due to RF2 on Kafka, especially if data is already compressed on broker. But we'd also like to know if uncompressed RF2 deduplicates as we expect it would.
+
+## How I tested
+
+- Three Kafka 3.2.0 containers, each backed by a 2GiB SolidFire volume 
+- Create a topic with 1 partition and replication factor 3
+- Send data to Kafka. The first batch of tests created random ASCII so I saw no point in batching requests; the JSON file test used batching
+- After reach run, delete topic data, rethin SolidFire volumes host-side, and wait for efficiency and fullness results after next SolidFire garbage collection run
+- Rinse and repeat
+
+Everything was done in two VMs, one for Kafka on Ubuntu, another SolidFire Demo VM providing iSCSI storage.
+
+![Kafka producer running against SolidFire-backed Kafka](/assets/images/kafka-solidfire-00-producer-test.png)
+
+## Kafka tests and results
+
+With this thing the more tests you do the more questions you get (which is one of the reasons I put conclusion at the top of this post).
+
+But these results, however limited, satisfy my initial curiosity. I'd certainly do additional tests before committing to a real-life solution.
+
+### Random ASCII records
+
+This test generated around 1.5 GiB of 1kB records made up of random ASCII characters, generated using Kafka producer tool. 
+
+- Uncompressed random records, RF3:
+
+![Disk fullness after uncompressed ingress](/assets/images/kafka-solidfire-01-random-uncompressed-rf3.png)
+![Account efficiency after uncompressed ingress](/assets/images/kafka-solidfire-02-random-uncompressed-rf3-efficiency.png)
+
+Uncompressed records were nicely deduplicated, which was expected. Still, 2.89x savings from deduplication with RF3 is very good. Compression was low (1.05x), but data was random so I didn't expect compression to be higher than 1.2x.
+
+- gzip-compressed random records, RF3:
+
+![Disk fullness after gzip'd ingress](/assets/images/kafka-solidfire-04-random-gzip-rf3.png)
+![Account efficiency after gzip'd ingress](/assets/images/kafka-solidfire-05-random-gzip-rf3-efficiency.png)
+
+Here we observe space savings from compressing Kafka-side, and deduplication still gets very good results. In terms of broker or producer performance, added resource consumption from compression slows down throughput and increases latency, but in terms of SolidFire performance, 47% / 72% (uncompressed disk fullness, above) represents up to 35% in maximum storage throughput.
+
+- Snappy-compressed random records, RF3:
+
+![Disk fullness after snappy'd ingress](/assets/images/kafka-solidfire-06-random-snappy-rf3.png)
+![Account efficiency after gzip'd ingress](/assets/images/kafka-solidfire-07-random-snappy-rf3-efficiency.png)
+
+Snappy didn't work as well as gzip here, but SolidFire deduplication was effective.
+
+- zstd-compressed random records, RF3:
+
+![Disk fullness after snappy'd ingress](/assets/images/kafka-solidfire-08-random-zstd-rf3.png)
+![Account efficiency after zstd'd ingress](/assets/images/kafka-solidfire-09-random-zstd-rf3-efficiency.png)
+
+zstd was similar to gzip, but to figure out which one is "better" we'd have to look at CPU, RAM and latency effects of one vs. another, which wasn't measured as I was only concerned about the effects on stoarge efficiency.
+
+### StorageGRID audit log
+
+- JSON audit log generated by my StorageGRID audit log converter from NetApp StorageGRID 11.5; 35000 JSON files, total 17 MB size on disk
+- Because of original data size is small (17 MB), disk fullness looks very low compared to the first test. Note that even "empty" Kafka disks have some data in them (few MBs), but even that is significant compared to post-compressed size of 17 MB JSON log file. Because of that volume "fullness" percentages seen in screenshots below can be deceiving
+- Here a 500ms linger and batching was used as I expected Kafka compression could be effective on non-random records like these
+
+The tests:
+
+- Uncompressed JSON log, RF3:
+
+![Disk fullness after uncompressed ingress](/assets/images/kafka-solidfire-10-json-auditlog-uncompressed-rf3.png)
+![Account efficiency after uncompressed ingress](/assets/images/kafka-solidfire-11-json-auditlog-uncompressed-rf3-efficiency.png)
+
+Here all data was ingested uncompressed so SolidFire could do a better job: 1.70x savings from compression, and deduplication was 1.32 (combined efficiency: 2.24x for RF3 - not bad!). We'd probably get different results with different batching and linger settings, but I didn't have that much time (just waiting for Garbage Collection between tests meant I needed 10+ hours to get these results).
+
+- gzip-compressed JSON log, RF3:
+
+![Disk fullness after snappy'd ingress](/assets/images/kafka-solidfire-12-json-auditlog-gzip-rf3.png)
+![Account efficiency after gzip'd ingress](/assets/images/kafka-solidfire-13-json-auditlog-gzip-rf3-efficiency.png)
+
+Kafka's gzip compression impacted SolidFire's, but I'm still surprised that compression was so high (1.58x). Total: 1.58x * 1.08x = 1.70x.
+
+- Snappy-compressed JSON log, RF3:
+
+![Disk fullness after snappy'd ingress](/assets/images/kafka-solidfire-14-json-auditlog-snappy-rf3.png)
+![Account efficiency after snappy'd ingress](/assets/images/kafka-solidfire-15-json-auditlog-snappy-rf3-efficiency.png)
+
+Snappy was slightly more cooperative than gzip, as far as SolidFire is concerned. Total: 1.77x.
+
+- zstd-compressed JSON log, RF3:
+
+![Disk fullness after snappy'd ingress](/assets/images/kafka-solidfire-16-json-auditlog-zstd-rf3.png)
+![Account efficiency after zstd'd ingress](/assets/images/kafka-solidfire-17-json-auditlog-zstd-rf3-efficiency.png)
+
+Total 1.73x - very similar to Snappy.
+
+## Protecting Kafka on a single site
+
+If you have at least 6 SolidFire nodes, you can distribute them evenly across three racks to [protect your Kafka from a single rack failure](/2021/07/06/solidfire-protection-domains-data-path.html).
+
+If you have at least 8 SolidFire nodes, then - 4 nodes being the minimum - you can have RF2 on Kafka with each copy going to a separate SolidFire cluster.
+
+Multi-site protection should be done with Kafka Geo-Replication.
+
+## Sizing with RF2 
+
+Let's say we have 100,000 events per second, 512 bytes per event, and RF2. That's about 50 MB/s, and with 5 Kafka brokers about 10 MB/s per broker.
+
+- Kafka with RF2: 20 MB/s per broker
+- Kafka RF2 with 30% savings from Kafka compression: 14 MB/s per broker
+
+Both of these are easy to achieve with 1ms storage latency. We can get several times as much even on the smallest SolidFire cluster (H610S-1 x 4 nodes). SolidFire is good for hundreds of megabytes per second. If you need gigabytes per second, use E-Series.
+
+Storing Kafka data on SolidFire would probably be prohibitively expensive, so I'd definitively recommend using tiering to S3 (which I wrote about in [Tiered Kafka with E-Series post](/2022/06/28/kafka-eseries-object-storage.html)).
+
+Storage capacity requirements would work similar to this: assuming total 2x savings on SolidFire with Kafka RF2, 2x efficiency on SolidFire would get canceled out by RF2 (Double Helix data protection) **of** SolidFire so we'd effectively need 1TB of raw disk capacity to store 1TB of Kafka data with RF2 and (Kafka-side) efficiency 2X. Some topics could be left uncompressed, others would benefit from compression and actual efficiencies would depend on several factors as indicated in this post.
+
+Note that Kafka with S3 tiering would need very little capacity on Hot Tier (SolidFire) - Kafka data would be evacuated to S3 within minutes or at most days. 
+
+## Summary and conclusion
+
+Surprisingly, it wasn't that bad - SolidFire manages to save space even with Kafka compression enabled. In fact it's much better than I expected. 
+
+With this encouraging result, I would use Kafka RF2 with SolidFire and:
+
+- Enable compression appropriate for my use case (i.e. mind the latency and CPU consumption, as well as total efficiency on SolidFire)
+- Use RF2 on Kafka, and SolidFire will do another RF2 (Double Helix)
+
+When it comes to sizing, Kafka on SolidFire is similar to [Elasticsearch on SolidFire](/2022/03/06/elastic-elk-stack-on-netapp.html) - it's not meant for big clusters, but it should work well with small to medium. (Note, I don't think Elasticsearch efficiencies would translate as well to SolidFire as Kafka's do, but I'll leave this for another blog post).

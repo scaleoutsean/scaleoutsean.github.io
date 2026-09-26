@@ -1,0 +1,600 @@
+# SolidFire CSI, a community CSI driver for NetApp SolidFire
+
+Community driver for NetApp SolidFire storage
+
+## Introduction
+
+SolidFire CSI is, as far as I know, the third working CSI driver for NetApp SolidFire storage systems.
+
+Maybe you are surprised to see this claim, but it is not the second.
+
+- Cinder CSI - the first "semi-official" driver that most NetApp SolidFire users have never heard about. I blogged about it [here](/2022/03/02/openstack-solidfire-part-2.html). I've never heard of anyone who uses it, but I know this post about it had a few hits over the years so I think some people do use it. NetApp no longer certifies SolidFire for anything, so support-wise you're on your own by now as far as commercial OpenStack distributions are concerned. But it in all likelihood it still works if SolidFire Cinder driver works in the same OpenStack environment. And it supports some features Trident CSI doesn't.
+- NetApp Trident CSI - the official driver ('solidfire-san' backend).
+- SolidFire CSI - the first unofficial, community CSI driver.
+
+Trident is the only "officially supported" driver and SolidFire has about two years until End of Support. Do we need another CSI driver, especially of alpha quality, at this time? 
+
+Absolutely!
+
+## Why another driver
+
+Why not?
+
+- I still use SolidFire Demo VMs to test, develop and maintain various projects. What I *want* is a SolidFire CSI driver that works the way I want.
+- Some SolidFire users out there surely want an alternative, even if it's just for testing or development.
+- I've always wanted to do something with John Griffith's SolidFire Go SDK, in part because I was one of the people who encouraged him to create that SDK. Now I have two projects that use it: Terraform Provider SolidFire and SolidFire CSI. Both provide features that official NetApp integrations do not.
+
+As an aside, I first used John's SolidFire Docker driver to run [SolidFire with Docker](https://github.com/j-griffith/solidfire-docker-driver) in 2018. Back then SolidFire could be used from Docker in a way that provided HA for storage volumes with [Flocker](https://github.com/ClusterHQ/flocker). John built a SolidFire plugin for Flocker, SolidFire CSI driver for OpenStack and more.
+
+If someone told me they are building another driver for something that already works today, I'd wonder "How different can it possibly be?" and probably think it's a vanity or "resume-building" project ("A CSI driver for SolidFire, but in Rust"). Let's focus on the more important question: does it bring anything substantially new to the table?
+
+## How different can it be?
+
+If you've never used Cinder CSI driver for SolidFire (or two CSI drivers for some other storage system), it may be hard to imagine why one would want a different driver, so I'll elaborate for that purpose. Let's see what SolidFire CSI does differently.
+
+![SolidFire CSI - use it for good reasons](/assets/images/solidfire-csi-05-use-for-good-reasons.jpeg)
+
+### Smaller, simpler, lighter
+
+It's a CSI driver for Trident-with-SolidFire users who don't always use ONTAP.
+
+Most SolidFire users also have ONTAP, but not all do. 
+
+Many of those who have both perhaps don't use them in the same Kubernetes cluster. Or they'd prefer to use another driver for SolidFire if they liked it better.
+
+While it often makes sense to standardize on one CSI provider, it's not a one-size-fits-all situation.
+
+In my personal case I sometimes use Trident CSI with ONTAP and SolidFire as well, but rarely both from the same Kubernetes cluster.
+
+So, if you need something different, there's plenty of reasons to try a different driver and keep using Trident CSI.
+
+SolidFire CSI Controller pod uses minimal RAM resources when idle. I don't know how much Trident CSI controller uses, but it's unlikely to be less than 4 MiB. It's inexpensive to run it even if you keep Trident CSI.
+
+```sh
+$ kubectl top pod solidfire-csi-controller-65677f4746-bm5j2 -n kube-system --containers
+POD                                         NAME                   CPU(cores)   MEMORY(bytes)
+solidfire-csi-controller-65677f4746-bm5j2   csi-attacher           1m           10Mi
+solidfire-csi-controller-65677f4746-bm5j2   csi-provisioner        1m           8Mi
+solidfire-csi-controller-65677f4746-bm5j2   csi-resizer            1m           7Mi
+solidfire-csi-controller-65677f4746-bm5j2   csi-snapshotter        1m           7Mi
+solidfire-csi-controller-65677f4746-bm5j2   solidfire-csi-driver   0m           4Mi
+```
+
+SolidFire CSI consumes minimal resources because it tries to do what it's supposed to and not more than that.
+
+### Parity in basic CSI features
+
+All of the basic CSI features work: you can create, modify (extend), delete, and snapshot a volume.
+
+![SolidFire CSI read-write demo](/assets/images/solidfire-csi-00-readwrite-volume.png)
+
+### SolidFire-focused approach to storage objects
+
+One of the key distinguishing characteristics of this CSI is that it is object ID-focused. Volumes, Snapshots, QoS Policies - these all just IDs to SolidFire CSI.
+
+See how "volume handle" (`volumeHandle`) in the spec section of this SolidFire PV shows `122`?
+
+That is a SolidFire volume ID. SolidFire CSI volume handles aren't based on "object name".
+
+```yaml
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: test-pvc
+    namespace: default
+    resourceVersion: "110007"
+    uid: d173a454-5071-4166-be84-3fec60e95938
+  csi:
+    controllerExpandSecretRef:
+      name: solidfire-secret
+      namespace: default
+    controllerPublishSecretRef:
+      name: solidfire-secret
+      namespace: default
+    driver: csi.solidfire.com
+    fsType: ext4
+    nodeStageSecretRef:
+      name: solidfire-secret
+      namespace: default
+    volumeAttributes:
+      storage.kubernetes.io/csiProvisionerIdentity: 1769874269794-1851-csi.solidfire.com
+    volumeHandle: "122"     # <======= HERE 
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: solidfire-bronze
+```
+
+Full `get pv` output as a screenshot to save scrolling time:
+
+![PV volume handle in SolidFire CSIf](/assets/images/solidfire-csi-03-pv-handle.png)
+
+The source section of `describe pvc` shows a SolidFire volume ID as well.
+
+```yaml
+Source:
+    Type:              CSI (a Container Storage Interface (CSI) volume source)
+    Driver:            csi.solidfire.com
+    FSType:            ext4
+    VolumeHandle:      122
+    ReadOnly:          false
+    VolumeAttributes:  storage.kubernetes.io/csiProvisionerIdentity=1769874269794-1851-csi.solidfire.com
+```
+
+You may, but never have to, consider SolidFire CSI volumes names. They're basically ... irrelevant.
+
+Those who care about object names can name and rename them as they see fit. Just remember: if you name it, you own it.
+
+Likewise, you can also tag Volumes and Snapshots with Attributes. If you don't need that, simply ignore SolidFire object Attributes. If you *want* to use Attributes, SolidFire CSI's approach is "Attributes are created when an object (Volume or Snapshot) is created, and from that point on you own them".
+
+SolidFire CSI doesn't employ some magic "maintenance" or "metadata refresh" algorithm to turn SolidFire CSI into a metadata or volume inventory management system. SolidFire storage is the source of truth. CSI attributes rarely (if ever?) need to change, but when they do (maybe after a restore from backup? We'll find out when we test Velero!), all it takes one `ModifyVolume` API call to update them the way you see fit, and your DR, backup or other workflows can then rely on that information. 
+
+This [sample PowerShell script](https://github.com/scaleoutsean/awesome-solidfire/blob/master/scripts/set-sfqosexception.psm1) manipulates volume QoS settings for pre-post backup actions and takes care to not interfere with the Trident KVs in volume attributes simply because it's not clear how changing them might impact Trident CSI. You could adjust it for attribute manipulation of SolidFire CSI. I should mention that Kasten lets you specify custom Storage Class for backup (which clones a snapshot and copies data off ephemeral clone, usually to S3) which means you can create a high performance Storage Class that's automatically applied to backup-to-S3 only.
+
+So, SolidFire CSI sets these for you, and you can edit them directly on SolidFire if you micro-manage your volumes. Because SolidFire CSI doesn't care about them (volume handles are all it cares about), it is recommended to let SolidFire CSI "write" to attributes and read them for whatever purpose you need. You may, of course, ignore this and turn those into a microscopic version of SQLite if you want.
+
+SolidFire did a lousy job "selling" Volume Attributes (they can't even be *set* in the UI in version 12.5, despite being generally useful for non-Kubernetes use cases as well!), but they're accessible through the API and I've been using them for many years. Trident CSI uses them, too.
+
+SolidFire CSI's "volume ID first" works the same way everywhere, of course. Example from Talos 1.12.4:
+
+![volumeHandle in SolidFire CSI on Talos](/assets/images/solidfire-csi-07-solidfire-sc-volumehandle.png)
+
+### Multi-tenancy
+
+Multi-tenancy works on `StorageClass` level.
+
+```yaml
+parameters:
+  endpoint: "192.168.1.34"
+  tenant: "coke"
+  ...
+  csi.storage.k8s.io/provisioner-secret-name: solidfire-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: solidfire-csi
+  csi.storage.k8s.io/controller-publish-secret-name: solidfire-secret
+  csi.storage.k8s.io/controller-publish-secret-namespace: solidfire-csi
+  csi.storage.k8s.io/node-stage-secret-name: solidfire-secret-coke
+  csi.storage.k8s.io/node-stage-secret-namespace: solidfire-csi
+  csi.storage.k8s.io/controller-expand-secret-name: solidfire-secret
+```
+
+Trident CSI has backends. SolidFire CSI doesn't. The above is how a "backend" is configured.
+
+Your Kubernetes administrator can create your `coke` and `pepsi` tenants and get at least some segregation.
+
+I don't know if this is better, but it seems better to me.
+
+Now, I've heard people saying "many storage classes bad", but there's nothing complex here. You still have the option of using a "global" tenant if you want and give up on storage account multi-tenancy like Trident CSI with `solidfire-san` does.
+
+You can use one "global" tenant like Trident CSI prescribes for `solidfire-san` by simply using "global" SolidFire CSI tenant account.
+
+### Stateless design 
+
+As mentioned, SolidFire CSI uses a stateless design with *no persistent backend configuration file*.
+
+You can't "lose" a SolidFire CSI configuration. There is *no* configuration to be lost!
+
+There are just Storage Classes and some (non-critical) metadata in storage objects (volumes, snapshots).
+
+It's easy to understand how it works, easy to recover from failures, and easy to move to another CSI driver if you need to.
+
+Disaster recovery, recovery from failed upgrades.. it's all easy because you don't have to fight with CSI driver and Kuberntes at the same time.
+
+### Storage quotas
+
+Quotas provide means to limit resource consumption with settings such as `max_volume_count` and `max_total_capacity` per SolidFire tenant (that may be configured in StorageClass, one of which may be configured for each SolidFire tenant).
+
+Relevant pointers to Kubernetes features that can help you exercise better control over resources will be added to documentation for extra convenience. This is mostly related to being able to control Kubernetes users' access to Storage Classes: you'd limit SCs to namespaces so that you can, for example, create a SC `hr-gold`, and allow access to it from HR department's namespace(s).
+
+### Snapshots and clones
+
+Native SolidFire snapshot and clone support works.
+
+You can name your snapshots - and that is pushed to backend API as long as you use alphanumeric characters and the `-` character in volume snapshot names.
+
+SolidFire CSI uses Snapshot Attributes the way a SolidFire-focused CSI is supposed to. You can use Attributes information from Snapshots in your backup-to-S3 workflows and copy those attributes to (or from) S3 object tags.
+
+### SolidFire-friendly Quality of Service implementation
+
+SolidFire CSI implements **proper** support for SolidFire QoS through QoS Policy IDs and per-volume Min/Max/Burst settings.
+
+Never waste IOPS or come up short because you can't retype your PVCs.
+
+SolidFire CSI can also set Min/Max/Burst on a per-StorageClass basis, but why do that?
+
+You have half a dozen workload profiles. Don't micro-manage QoS on a volume level.
+
+Create and pick the exact QoS Policy ID you need for the workload. Use that Storage Class and that's what your QoS will be.
+
+![QoS Policy ID SolidFire CSI](/assets/images/solidfire-csi-02-pvc-with-qos-policy-id.png)
+
+No more guesswork with assignment when Min-Max QoS ranges overlap.
+
+No more "just in case" over-provisioning of performance because you can't retype PVCs any time you want, for dozens of volumes at once.
+
+Cluster admin can create a cluster-scoped `VolumeAttributesClass` called `solidfire-silver` that references `storage_qos_policy_id: "2"`. User can then edit the existing PVC `my-pvc` and set `spec.volumeAttributesClassName: solidfire-silver`. The volume will be retyped.
+
+Use validating admission policies to limit access to individual volume attribute classes. For example:
+- "If userInfo.groups contains devs AND object.kind is PersistentVolumeClaim..."
+- "...DENY if spec.volumeAttributesClassName is solidfire-gold or solidfire-platinum."
+
+Micro-management is possible for Storage Classes that do not use QoS policy IDs. There you can specify the usual Min/Max/Burst as long as those are within SolidFire QoS policy limits and within maximums set by SolidFire CSI options.
+
+### Manageability and integrability
+
+That is achieved through enhanced use of SolidFire [volume attributes](https://scaleoutsean.github.io/2024/07/02/solidfire-volume-attributes-from-trident-and-other-apps.html). Example:
+
+```json
+{
+  "pv_name": "pvc-303c1961-db76-4312-a2df-38491d74dab4",
+  "pvc_name": "test-pvc",
+  "pvc_namespace": "default",
+  "fsType": "xfs"
+}
+```
+
+This currently isn't much different from Trident CSI.
+
+The main differences are SolidFire CSI can inject these into Snapshot objects as well and, because **they are there for the user, not for the driver** and *CSI provisioner doesn't depend on Attributes being correct*, you can use them any way you want. Trident CSI is ambiguous about the impact of your changes and use cases, while SolidFire CSI is not.
+
+Attributes are important and their use is encouraged in SolidFire CSI.
+
+It can be your tool for better storage and workload analytics, DR, backup, workload management and more.
+
+### PVC retyping
+
+Since SolidFire CSI's QoS feature can use QoS Policy IDs, all SolidFire CSI needs to do in order to change its performance is let you modify a volume's QoS Policy ID. This is great for backup, on-demand performance upgrades (or downgrades) and more. (Cinder CSI can retype SolidFire volumes as well.)
+
+With QoS Policy-based performance management you can also work in the other direction (or both directions):
+
+- Retype volumes on SolidFire to change their QoS Policy ID setting.
+- Change a QoS Policy itself (not PVC's Storage Class). This isn't the best way but can be done without any consequence for CSI. Can you adjust MinQoS for a policy from 200 to 250 without minding the CSI Storage Class? Of course! 
+
+### Delete for "Pet Volumes"
+
+SolidFire CSI's `delete` lets you take advantage of SolidFire's Volume Restore feature to restore data from cluster's "Recycle Bin".
+
+This rescue method requires SolidFire administrator's action before volume is auto-purged (8h) because SolidFire CSI has no knowledge of SolidFire's Recycle Bin, but you can simply create a static PVC with a pre-created (restored from Recycle Bin) PV and get it back into Kubernetes.
+
+Suppose you mistakenly delete a PVC with `reclaimPolicy: Delete`.
+
+Normally, the PV will be gone forever, but (default is Delete, not Purge) now it's lingers in Recycle Bin.
+
+```sh
+$ curl -s -k -H "Content-Type: application/json" \
+  -d '{"id":1, "jsonrpc":"2.0", "method": "ListVolumes", "params": {}}' \
+  https://${SF_USER}:${SF_PASS}@192.168.1.34/json-rpc/12.5/ \
+  | jq '.result.volumes[] | {id: .volumeID, name: .name, status: .status}'
+{
+  "id": 717,
+  "name": "import-xfs-vol",
+  "status": "active"
+}
+{
+  "id": 718,
+  "name": "pvc-d5c8cfc9-81bc-4f5f-ba1c-41e61c034c8a",
+  "status": "deleted"
+}
+```
+
+Volume ID 718 was deleted, but not purged, from SolidFire and you can still get to it before it expires.
+
+Immediate Purge-on-Delete remains the default StorageClass option.
+
+- Use Purge in high-churn (cattle volumes) environments and when you want to make sure deleted volumes cannot get accessed by storage administrators or exhaust some maximum (volume count, metadata capacity, etc.). This is the approach Trident CSI takes with SolidFire.
+- Use Delete for designated "pet volumes" which you wouldn't want to see instantly purged even if you mistakenly deleted a PVC with `reclaimPolicy: Delete`.
+
+![PVC delete behavior](/assets/images/solidfire-csi-01-delete-pvc.png)
+
+As an aside, this simple request (the "Delete" option) was also a feature request for the NetApp SolidFire Collection for Ansible which was never delivered (the NetApp repostitory was archived in 2023), but if you use SolidFire with Ansible you can get that feature [in my fork of SolidFire Collection here](https://github.com/scaleoutsean/netapp.solidfire).
+
+Once a volume is "undeleted" it becomes "Active" in SolidFire API terms and **its deleted snapshots get restored** as well! Now you can create that volume as static PVC and you can do the same for the snapshots, too! Then Kasten and Velero can view and use those "lost" snapshots again.
+
+### Wider filesystem support
+
+ext3, ext4, XFS, and Btrfs are available.
+
+One may offload high-churn, low-value PVCs to Btrfs which should be nice for KubeVirt VMs. For example: software CI/CD and developer experimentation in KubeVirt environments. I mention [Btrfs](https://docs.kernel.org/filesystems/btrfs.html) because of its support for compression and writable snapshots. [Not all Btrfs features](https://btrfs.readthedocs.io/en/latest/Status.html) are stable, but there's nothing in this use case that requires unstable Btrfs features (which are mostly those related to Btrfs software RAID). See this [Flatcar guide for Btrfs](https://www.flatcar.org/docs/latest/setup/debug/btrfs-troubleshooting/) if interested.
+
+ZFS requires a separate workflow because it has a volume manager (it's like creating an LVM configuration, not just `mkfs.<something>`). That is very different from plain single-volume filesystems. The correct pattern for volume managers is to provision one or more `Block` (not `Filesystem`) mode PVCs and use a sidecar or operator to configure your fileystem of choice, and *this is a DIY workflow*. If you want to do this on your own, for SolidFire I'd recommend [single-volume ZFS](/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#zfs-in-containers) with [`zstd` compression](/2024/02/29/ubuntu-2404-lts-with-netapp-solidfire.html#efficiency---zpools-on-solifire-vs-global-solidfire-efficiencies). Zpools don't make enough sense on SolidFire. ([It's different for E-Series](/2024/02/26/zfs-deduplication-netapp-eseries.html).)
+
+Additional single-disk, mkfs-supporting filesystems may be added if justified. Let me know on X or Github (in SolidFire CSI issues) if you need some other `mkfs`-compatible Linux-native filesystem.
+
+When choosing a filesystem (in Storage Class), don't get too creative unless you're good at managing these details. It's best to stick with one filesystem for everything. Get too creative and sooner or later you'll screw up creating static PVC for a volume with filesystem `A` when assigning it a storage class that defaults to filesystem `B` and possibly lose data. I recommend XFS.
+
+A CSI plugin can't snapshot a volume until it's bound, and it can't be bound until it's used. So, if you think you may forget to to set the correct non-default filesystem type on a static PVC, simply snapshot each static PV *before* trying to use them. You can use the SolidFire UI, Python, Postman or other SolidFire API client for that.
+
+SolidFire CSI injects FS type into new PV's attributes on SolidFire so you should't mess things up, but it's theoretically possible.
+
+### Observability
+
+SolidFire CSI performs automatic "lazy discovery" of backends from Storage Classes and keeps track of global metrics (Total PVCs, Total Capacity, Total MinIOPS, etc.) across all tenants via the Prometheus standard `/metrics` endpoint. 
+
+Controller log example:
+
+```sh
+2026/02/06 01:42:21 Fetched ClusterInfo.
+  SVIP: 192.168.105.34, 
+  MVIP: 192.168.1.34
+  time="2026-02-06T01:46:44Z" 
+  level=info msg="Backend Metrics" 
+  endpoint=192.168.1.34
+  tenant=k0s 
+  total_capacity_bytes=5368709120
+  total_min_iops=250
+  volume_count=5
+```
+
+If you collect storage cluster metrics and configuration via [SFC v2](https://github.com/scaleoutsean/sfc/), you can correlate data from the two to figure out per-tenant or per-volume storage efficiency for showback or chargeback (billing). SFC [already collects](https://github.com/scaleoutsean/sfc/blob/b6a3a432ed1de6c9022e00c5e3aba8233b46637b/sfc/sfc.py#L351) SolidFire volume attributes, so metadata from SolidFire CSI are gathered out-of-box.
+
+SFC v2 also tracks volume replication relationships and other metrics highly desirable for multi-site deployments.
+
+### High Availability
+
+A fully stateless controller design supports CSI controller replicas (Active/Standby) using standard sidecar leader election. Check out these `solidfire-csi-controller` pods.
+
+```sh
+$ kubectl get pods -n kube-system
+NAME                                        READY   STATUS    RESTARTS      AGE
+...
+snapshot-controller-5f8c4ff846-4rv4r        1/1     Running   0             13h
+snapshot-controller-5f8c4ff846-n7sjq        1/1     Running   0             13h
+solidfire-csi-controller-65677f4746-bm5j2   5/5     Running   0             11h
+solidfire-csi-controller-65677f4746-gpx4f   5/5     Running   0             11h
+solidfire-csi-node-s8cwr                    2/2     Running   0             11h
+```
+
+Should the CSI controller `bm5j2` fail (assuming it's currently the leader), `gpx4f` will take over in 10-20 seconds. What if you don't want HA? Deploy just one instance of CSI Controller.
+
+There's no "SolidFire CSI" magic or guesswork - it's just Kubernetes. Here is how it looks like with HA:
+
+```sh
+kubectl --kubeconfig k0.conf get deployment -n kube-system snapshot-controller -o yaml
+```
+
+Example output (the essential part):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+...
+spec:
+  minReadySeconds: 35
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: snapshot-controller
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: snapshot-controller
+    spec:
+      containers:
+      - args:
+        - --v=5
+        - --leader-election=true
+        image: registry.k8s.io/sig-storage/snapshot-controller:v7.0.1
+        imagePullPolicy: IfNotPresent
+        name: snapshot-controller
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: snapshot-controller
+      serviceAccountName: snapshot-controller
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2026-01-31T14:20:42Z"
+    lastUpdateTime: "2026-01-31T14:20:42Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-01-31T14:20:00Z"
+    lastUpdateTime: "2026-01-31T14:20:43Z"
+    message: ReplicaSet "snapshot-controller-5f8c4ff846" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 2
+  replicas: 2
+```
+
+### Auto-discard
+
+SolidFire CSI automatically mounts volumes with `discard`.
+
+There's no need to micromanage StorageClass options or mount options, or to remind users to use it.
+
+Blocks are freed for SolidFire efficiency, backup efficiency and SSD health.
+
+### CSI driver performance
+
+There are neither throttling nor "concurrency" features. It works as it works.
+
+SolidFire CSI doesn't "cache" anything related to the state of backend volumes or snapshots because it'd make HA for CSI controller deployment harder and it's unclear that it would help as bottleneck isn't in the SolidFire API server in any case.
+
+I know some users may now wonder how this compares to Trident CSI and this is the only reason why I mention this. I'm not aware of any public work by others, but I looked into Trident CSI-with-SolidFire in these posts:
+
+- Late 2025: [Trident concurrency with SolidFire](/2025/12/24/trident-enable-concurrency-solidfire.html)
+- Mid-2024: [Rapid PVC provisioning with NetApp Trident and SolidFire](/2024/07/26/netapp-trident-csi-rapid-volume-provisioning-solidfire.html)
+
+I don't think I'll do any new testing with Trident CSI and SolidFire now that I have a self-supported SolidFire CSI driver that does everything I need. I don't deploy enough volumes to care, and SolidFire CSI doesn't seem slower.
+
+I no longer have no access to SolidFire hardware, so my tests now use SolidFire Demo VM which isn't suitable for many iSCSI clients and is software-limited to few volumes.
+
+- In 2024 I used actual pods (NGINX) which added to startup time. That was more realistic, but CSI tests get impacted by worker performance
+- In 2025 I used a different approach, "PVCs only, create-and-bind", and my singleton Kubernetes cluster likely had slightly differnet resources than in 2024. The reason I tried this approach was to eliminate the Kubernetes factor, since I couldn't do anything about that in any case.
+
+Now I test the way I did in late 2025, as that's my recent Trident CSI baseline. The only difference is I put all PVCs into a single YAML file, so that I don't loop over dozens of YAML files.
+
+Currently, with Kubernetes 1.34.6 and SolidFire CSI "v1.0.0 beta":
+
+- Time to create 40 PVCs and bind them (one Worker, one SolidFire Demo VM): 25s
+- Time to start up 40 small pods that mount these from a single-node Kubernetes cluster: 80s
+
+During my small "stress tests", each SolidFire CSI controller uses less than 6 MiB of RAM. The main "bottleneck" isn't CSI or SolidFire API, but iSCSI client. I create all 40 PVCs in one loop, then bind and start pods in another in batches of five.
+
+Both with "Trident CSI with Solidfire" and SolidFire CSI, Create Volume call on Kubernetes usually takes less than 0.3s. The question is what happens later as more volumes are added, or simply exist. I don't expect any issues with this, and I also doubt anyone will run SolidFire CSI on a cluster large enough to stress it (i.e. >2,000 PVCs).
+
+Currently SolidFire CSI isn't slower than Trident CSI with SolidFire, but my environment is minimal and I can't test at scale.
+
+It is probably slightly faster because of the next feature.
+
+### Optional Device Mapper (multipath-tools)
+
+It's supported, but not required.
+
+I've always recommended sticking with the "classic" SolidFire way: two physical paths collapsed into one LACP bond and a single fabric (storage network). I still recommend that.
+
+About DM-MP:
+
+- Remove, or don't install, multipath packages if your only backend is SolidFire and all you use is SolidFire CSI
+- If your workers use other CSI plugin (such as Trident or Cinder CSI) that requires multipath-tools, you may blacklist SolidFire (`vendor: "SolidFir"`) and happily avoid multipathd, assuming you have LACP and don't use dual storage fabric
+
+If you use multipathd and *want* to use it with SolidFire CSI, you can. Just install and enable it.
+
+But, without multipathd, SolidFire CSI with LACP works faster and is expected to have fewer issues.
+
+In my default approach with SideroLabs Talos. multipathd? *¡Afuera!*
+
+![Sidero Labs Talos 1.12.4 with SolidFire CSI](/assets/images/solidfire-csi-06-talos-kubernetes-solidfire.png)
+
+### Volume Group Snapshots
+
+SolidFire CSI can create not just Volume Snapshots that I mentioned at the top ("parity" with the features one finds in Trident CSI with SolidFire), but also Volume Group Snapshots which you [can't do](https://docs.netapp.com/us-en/trident/trident-use/vol-group-snapshots.html#create-volume-group-snapshots) with Trident CSI and SolidFire. They were added to Trident, but support is limited to selected ONTAP backends.
+
+If you need them for SolidFire, you can get them in SolidFire CSI.
+
+![SolidFire CSI Group Snapshot](/assets/images/solidfire-csi-04-group-snapshots.png)
+
+### Other features
+
+Yes, there **are** still other features (which will be documented), but not many because the driver is nearly feature-complete.
+
+Complexity and risk will be considered when adding new features, but given how well SolidFire API and scale-out works, it's hard to do things wrong.
+
+For now I have just one-two extra ideas that definitively make sense from both a SolidFire and Kubernetes perspective, so those will be delivered and anything else - unless it's something obvious that I missed - I'll probably encourage to implemented outside of CSI the way it's supposed to be.
+
+## Who should use SolidFire CSI?
+
+If you need one or more of the features mentioned above, you're qualified.
+
+In my opinion, here's who should take a closer look:
+
+- Anyone who can fix a CSI driver on their own (with or without coding assistants).
+- Anyone who badly needs one or more features mentioned above and doesn't mind using a second CSI driver for SolidFire (keep Trident for workloads that are fine with it, or super-important). Do you have a multi-disk (PostgreSQL) or scale-out (Mongo) database you want to snapshot for local recovery or remote replication? Well, [volume group snapshots](https://docs.netapp.com/us-en/trident/trident-use/vol-group-snapshots.html) are out of your reach with Trident CSI and SolidFire. You may be able to "work around Trident CSI for SolidFire" by suspending IO application-side and snapping your volumes as a Consistency Group on SolidFire, or by taking application backup to S3, but not everyone likes or can do that.
+- Development and prototyping environments with Kubernetes and SolidFire. This is my situation. I can do more with SolidFire CSI, so I'll use only that CSI driver going forward.
+- Anyone who plans to use Kubernetes with SolidFire past the [End-of-Support](/2022/09/23/eoa-solidfire.html) date. (Note that this link is about hardware and Element OS support. I don't know if Trident CSI will stop supporting SolidFire backends before or after that date. "Contact your NetApp representative", as they say.)
+- Anyone who wants to **develop own features or implement new Kubernetes features** for a SolidFire storage environment. That is arguably much easier with SolidFire CSI. Since you can't modify Trident CSI and have it supported at the same time, you'd probably be better off forking or using SolidFire CSI for such use cases.
+
+Who probably shouldn't try:
+
+- Mission-critical environments - don't try SolidFire CSI at home
+- Certification- and vendor support-focused users. Anything Red Hat-related, such as OpenShift-with-SolidFire users, for example.
+- "Large volume count" tenants (1,000 volumes per Storage Class) - at least not without pre-production testing. There's no known limit beyond what your SolidFire allows, but I can't test over 100 PVCs because all I have is a SolidFire Demo VM.
+
+If you can identify yourself in this list, SolidFire CSI is probably not for you.
+
+Don't try SolidFire CSI if the thought of supporting, troubleshooting or fixing it on your own makes you lose sleep.
+
+## What is missing or different in SolidFire CSI
+
+I guess 99% of Kubernetes users with SolidFire use, or have used, Trident CSI with SolidFire backend. Because that's the main frame of reference, here's a few extra words on that.
+
+LUKS support: Trident CSI 25.10 provides LUKS support for *block* backends (ONTAP SAN and ONTAP SAN economy, except with ONTAP ASA r2 arrays). It's not supported with SolidFire, and SolidFire CSI won't even bother with it because it's terrible for storage efficency and you can't get it certified (SolidFire CSI with Hashicorp Vault), so the best one could do would be a "poor man's" implementation that uses Kubernetes Secrets and destroys your storage efficiency.
+
+Base container image-related: I've been using Ubuntu and Alpine Linux in development and will likely release using Alpine (very small image). SolidFire CSI has no special dependencies, so you can build and use whatever base image works for you.
+
+I mention this because it's a big deal for some users due to security policies, and sometimes particular base images are mandated by the Kubernetes distribution (although I don't care about that one because this CSI driver won't get supported by any distribution). In any case, you can try any, including the base image that Trident uses, if you want. Another benefit of simplicity!
+
+For those who aren't aware, SolidFire has added some small, but very welcome API improvements in releases after 12.5. They are very useful for Kubernetes environments. Trident CSI doesn't implement any of them. I know how the API methods look like and work, but I have no way to test them as SolidFire Demo VM was last updated for version 12.5 (what I use in development). I'd gladly consider pull requests from people who have such environments, starting with updates to SolidFire Go SDK.
+
+Auto-healing: that's out of approprirate scope for a CSI driver. Fix your client if it doesn't work properly.
+
+Forced unmount: also out of approprirate scope for a CSI driver. Portworx used to [highlight](https://portworx.com/blog/netapp-trident-failedattachvolume-multiattach-error/) that "feature" of theirs, but it's not CSI driver's job to fix loose coupling and fencing issues in Kubernetes.
+
+Auto-volume growth (new in Trident v26.02): it's easy to do in SolidFire CSI, but this seems out of scope for SolidFire CSI. Monitor fullness of your volumes with SFC v2 or SolidFire Exporter, and create alerts when they're nearly full. Expanding a volume is easy. Shrinking it is not.
+
+I can't think of anything else worth a mention. You lose "certifications" and "support" with SolidFire CSI, that's for sure. Maybe also stability (unlikely, but possible).
+
+## Getting out, and in of SolidFire CSI
+
+How to get the heck out? 
+
+You can't get "stuck" here.
+
+Uninstall SolidFire CSI, deploy Trident CSI, use `tridentctl volume import --managed` to import these formerly SolidFire CSI volumes (and snapshots, if you have them, by creating and importing "static" snapshots). You could create a for-each loop to delete SolidFire CSI metadata before importing SolidFire to Trident CSI as "managed" volumes, but make a backup of volume attributes in the process to know where they come from, and what filesystem they were formatted with!
+
+If you use a bunch of tenants with SolidFire CSI and just one with Trident CSI, you may need to re-assign volume ownership to the tenant you intend to use with Trident CSI (this takes 1-2 seconds) before importing to  Trident CSI.
+
+Trident CSI's import feature matches volume to the specified storage class (which in turn maps to a backend), so test this workflow before trying on production volumes. If you use QoS Policy IDs with SolidFire CSI, create like ranges in Trident CSI, but test thoroughly because that move from SolidFire CSI might be a step back (in terms of QoS).
+
+How to move from Trident CSI to SolidFire CSI?
+
+SolidFire CSI doesn't have (and won't have) the volume import feature.
+
+The lack of that feature makes it easier to use SolidFire CSI. Here's how it goes:
+
+- Get all PVCs, PVs for a target SolidFire backend in Trident CSI
+- Create PVC YAML files where PVs are already fixed (static PVC)
+- Create a SolidFire CSI Storage Class for each Trident CSI SolidFire backend if you don't want SolidFire defaults
+- Shutdown Trident CSI, start SolidFire CSI and "apply" static PVCs with pre-set PVs
+
+**NOTE:** it's nicer to delete PVCs in Trident first in the case the removed CSI driver pops back up. But such PVCs would have to have the reclaim policy **Retain** otherwise you would lose them (and their snapshots) after deleting PVCs. If your volumes are all Retain, delete the PVCs and then delete the Trident backend for the SolidFire cluster and you can even keep Trident for other stuff such as ONTAP or remaining SolidFire cluster(s).
+
+I have a [Trident-with-SolidFire "reporting" script](/2024/06/01/pvc-volume-relationships-in-solidfire-trident-part-1.html) in my Awesome SolidFire repository that could be adjusted to do this. But the procedure is documented for both of these directions in the SolidFire CSI documentation.
+
+## SolidFire and Go language
+
+SolidFire CSI uses Go, which is common for CSI drivers. What's noteworthy is that SolidFire doesn't have an official Go SDK. I built SolidFire CSI by using [John Griffith](https://github.com/j-griffith)'s SolidFire Go SDK and some of the Trident CSI's SolidFire driver code.
+
+On a related note, last year I forked the [community Terraform SolidFire Provider](/2025/07/25/terraform-solidfire-provider-update.html) and improved it in an attempt to "work around" Trident CSI by managing SolidFire outside of CSI, so there's a SolidFire Go client implementation in there as well.
+
+Anyone who wants to "build around Trident CSI", "build with SolidFire CSI", or just "do stuff with SolidFire using Go", you can use Go client code from either of these repositories or repurpose and mix the code as necessary. My Terraform SolidFire Provider remains good for use with latest Terraform and SolidFire and we know there won't be an Element OS v13 (or even if that happens, existing versioned API will remain usable), so whatever works today will continue to work in the future.
+
+Some of you may remember that SolidFire published, and then terminated, its official Go SDK repository because "no one needed it". Right... But the Terraform Provider download counter on the Hashicorp Web site was showing dozens of downloads every weeek and I see there are downloads of my new Terraform Provider SolidFire, so...
+
+We needed it then and we need it now. John's Go SDK used by SolidFire CSI and Terraform Provider exist in part thanks to John going out of his way and publishing his version of SolidFire Go SDK.
+
+### Example workflows made possible with SolidFire Go SDK, Terraform Provider SolidFire and SolidFire CSI
+
+- Large KubeVirt VMs used to test CVE patches at the end of every month are usually not needed for 25 days in a month. Wouldn't it be nice to "evacuate" them after testing is done, and be able to import them back on the 24th?
+- There's a Go version of my "parallel backup to S3" [script](https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts) written in PowerShell years ago that I will publish for SolidFire Go SDK
+  - Verify and, if necessary, update SolidFire Volume Attributes from Kubernetes CSI facts
+  - Use SolidFire CSI information to modify SolidFire volumes' QoS policy for maximum backup performance, store old (CSI) QoS Policy ID key to SolidFire volume Attributes to be able to restore it later
+  - Perform SolidFire "backup to S3" using Volume Attributes as S3 object tags using my Go utility
+  - Remove VM/pod and volume from Kubernetes to free capacity on SolidFire
+- Restore backup from S3 using my Go utility
+  - Create new volumes, set QoS to maximum performance, restore CSI volume backups from S3 in parallel, set each volume's QoS Policy ID to QoS Policy ID value from Volume Attributes (to restore the original QoS Policy ID), apply other Volume Attributes from S3 tags
+
+This entire workflow can now be done in Go.
+
+It's similar to what you could do with Velero, SolidFire Go SDK and SolidFire CSI, but I think the approach with SolidFire-based backup to S3 will be faster. Velero would give you better backups in the sense that Kubernetes deployment, pod, and PVC information can be backed up together with volumes.
+
+## Conclusion and next steps
+
+It's been many years since John Griffith showed me the way and created the foundation to build upon. I'm very happy that I've managed to build something on top of that. And not only that - SolidFire CSI is a CSI driver that achieves parity on main CSI features, exposes valuable storage features that Trident CSI hides, and discards those that I don't want in my CSI driver.
+
+SolidFire CSI isn't for everyone, just like open source NVIDIA drivers aren't for me (I'm happy with NVIDIA's own drivers and see OSS as nothing but a distraction in this case). But they're surely great for many others. The same reasoning applies to SolidFire CSI.
+
+Trident CSI does many things, and better, but *with various ONTAP backends*, which is not the topic of this SolidFire-focused post or project. When it comes to SolidFire, some may be better off with an alternative CSI driver.
+
+SolidFire CSI works with vanilla Kubernetes, Sidero Labs' Talos and k0rdent's k0s. It is likely to work with most Kuberntes distributions out of box.
+- The "building of" is basically done. Work on testing, convenience scripts, documentation, and packaging may take several days, after which I will publish the code on Github.
+- "Building with" will come after that. Some ideas that were hard or impossible to execute with Trident CSI with SolidFire backend will be easier and hopefully get done with SolidFire CSI instead. Backup/restore (Velero, Kasten by Veeam), DR/BC, showback, metrics integration with SFC v2 and more.

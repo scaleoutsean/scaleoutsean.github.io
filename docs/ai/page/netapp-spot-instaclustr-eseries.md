@@ -1,0 +1,152 @@
+# On-prem Spot Instaclustr-managed clusters with NetApp E-Series storage
+
+Why use Instaclustr-managed applications with E-Series storage
+
+- [Introduction](#introduction)
+- [Compute layer and storage interconnect](#compute-layer-and-storage-interconnect)
+- [Small and large clusters](#small-and-large-clusters)
+- [HDDs, SSDs, RAID, DDP...](#hdds-ssds-raid-ddp)
+- [How to automate E-Series volume provisioning to hosts](#how-to-automate-e-series-volume-provisioning-to-hosts)
+- [Data protection and replication](#data-protection-and-replication)
+- [Data and application migration](#data-and-application-migration)
+- [Conclusion](#conclusion)
+
+## Introduction
+
+If you haven't heard of [Instaclustr](http://instaclustr.com), please visit their Web site and read their blog to find out more.
+
+In short, Instaclustr runs a SaaS platform for several popular open source technologies.
+
+![Instaclustr services in late 2022](/assets/images/instaclustr-2022.png)
+
+Great majority of Instaclustr users run in the cloud, but some run on-premises. Why? Cost, regulatory issues, etc.
+
+Let's take a look at currently available services:
+
+- Databases
+  - PostgreSQL
+  - Apache Cassandra
+  - Redis
+- Data streaming
+  - Apache Kafka
+  - Kafka Connect
+  - Apache Zookeeper
+- Analytics
+  - Apache Spark
+- Search
+  - OpenSearch (fork of Elasticsearch)
+- Orchestration
+  - Cadence
+
+What's common to most - if not all - of these applications, as far as NetApp E-Series is concerned?
+
+- They require high throughput for both sequential and random IO patterns
+- They have own tooling for HA, scale-out, tiering, backup and other data management
+- They compress their data
+- There's little-to-no need for sophisticated data management features
+
+E-Series happens to perform well for both sequential and random workloads, it doesn't have many data management features (and compression and deduplication either). 
+
+E-Series has a thin and lean data path and it doesn't do more than absolutely necessary. Which means great value for your money, too.
+
+I've blogged about several of these services so if you search this blog you can hopefully find finer and more detailed points on some of these applications.
+
+## Compute layer and storage interconnect
+
+All of the Instaclustr services can run in VMs.
+
+For most customers this means they download Instaclustr VMs and deploy them to vSphere clusters. Simple.
+
+Most vSphere users connect to E-Series via FC, NVMeoF and iSCSI SAN. For larger clusters with two or more E-Series arrays it may be viable to use Direct Attach connection to E-Series controllers and avoid the cost of SAN if you don't need SAN.
+
+## Small and large clusters
+
+E-Series components are fully redundant and very reliable. Like with other enterprise storage, there's no need to buy a bunch of arrays to get reliable storage service.
+
+If you need to run services in one location and don't need more performance than a single array can provide, there's no need to go crazy on any hardware component. Even the servers could be consolidated down to N+2 or N+1 (e.g. four ESXi for a three-node Kafka cluster). Red volumes are "hot" and blue "cold" data, but if you have no reason to differentiate, one tier and RAID/DDP type will do.
+
+![Instaclustr services with E-Series](/assets/images/instaclustr-eseries-small-detailed.png)
+
+What kind of performance are we talking about? Mixed read-write workload below 500,000 (random) IOPS or 15 GB/s (sequential) can work fine with a single E-Series array.
+
+If you run a multi-site cluster or consume a lot more performance, remember that earlier detail on HA and scale-out: these apps can do it on their own. Just buy N arrays for N locations.
+
+![Instaclustr services with E-Series running across several sites](/assets/images/instaclustr-eseries-big-detailed.png)
+
+## HDDs, SSDs, RAID, DDP...
+
+If your application uses tiering, it's possible to keep hot data and logs on SSDs, and cold data on NL-SAS (RAID 6 or DDP, for example).
+
+Tiering is performed in application, so there's nothing that needs to be done on storage.
+
+SSDs are usually protected with RAID 10, but since mid 2022 it is possible to use DDP (traditionally and by default it protects data with 8D+2P stripes) and create RAID 1-like volumes along RAID 6-like volumes. 
+
+Before, even with all-flash E-Series, we'd create multiple (at least two) disk groups/pools for RAID 1-style volumes (usually for "logs") and "classic" RAID 6-style volumes where the speed wasn't critical. To illustrate this approach, here's what we'd do if we needed two very fast volumes and one normal volume:
+
+- Two RAID 1 (or alternatively, one RAID 10) groups
+  - One Hot Spare
+- One DDP (or RAID 6) pool
+  - Data in RAID 6-like stripes (8D2P)
+  - No Hot Spare because capacity to reconstruct data is automatically reserved on each disk in DDP
+
+![Traditional mix of RAID 1 and DDP](/assets/images/eseries-raid1-ddp-hs.png)
+
+While the above is still fine, now we can also do this on all-flash E-Series:
+
+- One DDP with >=11 SSDs
+  - RAID 10-style volumes for fast IO
+  - RAID 6-style volumes for regular IO
+  - No dedicated Hot Spare required (capacity for reconstruction is reserved within the pool)
+
+You can't see much here, but that's because it's a single DDP and only data chunks in it may be different: as noted earlier, RAID 6-like are 8 strips of data plus 2 strips of parity, while RAID 1-like volumes are 5 strips of data + 5 strips of parity. Every stripe uses a random selection of 10 disks.
+
+![New DDP](/assets/images/instaclustr-ddp.png)
+
+As you can see there's less isolation and more consolidation in second approach. It also makes it possible to make reasonable configuration with any number of spindles rather than in (best practice) multiples of 2 or 10 (RAID 1 and RAID 6, respectively).
+
+Which one is better for Instaclustr applications, RAID 6 or DDP? Both are OK, especially when you decide you have enough performance without RAID 1, then the question of 3 or 5 extra disks (RAID 1 + 1 Hot Spare or RAID 10 + 1 Hot Spare) goes away.
+
+I have a post on the new DDP option [here](/2022/09/12/new-ddp-and-e-series-santricity-web-restful-api.html) in the case you're interested in the second approach.
+
+## How to automate E-Series volume provisioning to hosts
+
+In a vSphere environment create volumes and present them to vSphere. Then deploy VMs and disks on Datastores.
+
+Instaclustr documentation for on-premises deployments probably has more details on this, but even without reading it it goes without saying that with sufficiently large clusters one should not create one monster sized DDP and put all data on it: multiple RAID/DDP groups and even multiple arrays for multiple application-created copies of data are recommended for performance and availability reasons.
+
+If your application has many nodes and many volumes, use SANtricity API or Ansible to create and manage volumes.
+
+- [https://galaxy.ansible.com/netapp_eseries/santricity](https://galaxy.ansible.com/netapp_eseries/santricity) - configure storage (disk groups/pools, volumes, storage settings)
+- [https://galaxy.ansible.com/netapp_eseries/host](https://galaxy.ansible.com/netapp_eseries/santricity) - configure host-to-storage connections
+
+Those looking for sample playbooks can reference NetApp's Ansible playbooks for BeeGFS with E-Series. To save time, check [this](https://github.com/netappeseries/beegfs/blob/ae038bb2f7617d18a36cc4df8ca9464bd5039b8b/getting_started/beegfs_ha_7_2/create_inventory_structure.yml#L1) link for a sample playbook that creates inventory (vars). With those ready, perform the rest of the steps described [here](https://github.com/netappeseries/beegfs/blob/master/getting_started/beegfs_ha_7_2/README.md). Remove BeeGFS-related steps to only execute storage-side automation tasks, obviously.
+
+## Data protection and replication
+
+How does one create a backup? Usually by using built-in, standard backup utilities. Some are developed by Instaclustr, but still open source.
+
+How does one replicate application data? Usually by using built-in replication or multi-replica clustering. 
+
+It works the same way that it works in the public cloud: *well*. 
+
+For example InstaClustr's cloud default for Kafka is RF3. With E-Series we could use RF2 (because storage is already protected with RAID 10 or 6), but we could also use RF1 or RF3. 
+
+If we use RF3 in a three-AZ configuration that uses three E-Series arrays, E-Series volumes can use RAID 0 since we rely on the application to protect data, but in that case failed disks would necessitate volume recreation and data reconstruction over network which may or may not be desirable. Highly agile and automated users with good inter-AZ networking may not mind this, but those who don't like "incidents" may prefer RF3 on RAID 10.
+
+If you need enterprise-grade on-premises S3 storage for backup **and/or application data tiering**, consider NetApp StorageGRID which likely means three or more appliances per AZ (so at least three with one AZ, and at least six for two AZs). Application data tiering is more demanding and can impact data and service availability, which is why it's highlighted.
+
+If you need low-cost S3 storage for backup-to-S3, you can also consider the free MinIO connected to a HDD tier on existing array used by Instacluster, or pick a stand-alone NL-SAS-based mid-range E-Series such as E2800 or EF300. Singleton MinIO VM can write to E-Series at [2 GB/s](/2022/10/21/minio-performance-netapp-e-series.html) which makes it possible backup over 100 TB in less than 24 hours and read 100 TB in less than seven hours (reading at 4.5 GB/s). Scale-out MinIO should perform faster than that, but I haven't tested it yet.
+
+## Data and application migration
+
+How does one move Instaclustr application data from one location to another? 
+
+Usually by replicating data using application features or by taking a backup to S3-compatible storage and restoring from that backup. 
+
+If you want to move your cloud application data to on-prem (or in the opposite direction, or from one hyperscaler to another), Instaclustr can help.
+
+## Conclusion
+
+Instaclustr services happen to work well with E-Series arrays because that's exactly how they're deployed in the cloud, too. Fast and low cost, potentially with multiple copies of data.
+
+If you're interested in deploying Instaclustr on-premises and aren't sure you have the performance or capacity required, NetApp E-Series can be easily attached to existing compute nodes and provide unbeatable value without compromising on security, availability and stability.
