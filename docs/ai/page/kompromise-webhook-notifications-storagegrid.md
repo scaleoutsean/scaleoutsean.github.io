@@ -17,8 +17,8 @@ Given the code's immaturity, there are many areas that need to be fixed. I start
 ## Kompromise webhook for StorageGRID
 
 That's the first two steps from the diagram above:
-- Receive notification
-- Send to data to the right NATS subject
+- Receive notifications from StorageGRID Webhoook notification service
+- Send to processed object (meta)data to designated NATS subject
 
 What's been improved is support for the StorageGRID, because notifications on the Versity S3 Gateway are currently very basic and may change:
 - Reliability - handles objects that get deleted before enrichment and more
@@ -35,19 +35,19 @@ StorageGRID platform services must be enabled, and notification endpoint has to 
 - (1) `sg` for StorageGRID
 - (2) `pepsi` is the tenant name
 - (3) `assumed` is the bucket name
-- (4) `assumed` is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had different notifications, this name would have to be different for each
-- (5) mTLS is strongly suggested for production environments, but requires some effort on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone)
+- (4) `assumed` is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had more notification created, this string would have to be different for each
+- (5) `mTLS` is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side
 
 Bucket owner the sets up Webhook service for `s3.events.<namespace>.<bucket>.<pipeline>` in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:
 
 - Simple: `s3.events.pepsi.assumed.raw`
-- Enriched: `s3.events.pepsi.assumed.enriched`
+- Enriched: `s3.events.pepsi.assumed.enriched` (contains object metadata and tags)
 
-Simple provide less data, but have reliable delivery, while enriched do more, but can fail and there's no "retry" (since StorageGRID has already delivered the notification, and Kompromise Webhook does not retry). If you need "reliable Rich", you can use Simple and create your own enrichment pipeline that uses same NATS service for reliable enrichment.
+Simple provides less data, but has reliable delivery, while Enriched does more but can fail mid-way (crash, network disconnect, etc.) and there's no "retry" (since StorageGRID has already delivered the notification, and Kompromise Webhook does not retry). If you *need* "reliable Enriched", you can use Simple and create your own enrichment pipeline that uses same NATS service for reliable enrichment. 
 
-The first Kompromise post at the top has demos of example functions that can be created and deployed by pipeline owner. The ETL function on video objects is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.
+The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner. The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.
 
-There are several minor limitations, for example by convention it is required to name StorageGRID notifications after the Kubernetes namespace, for automated bucket-to-namespace matching. This doesn't mean all users who consume notifications *must* have workflows in the same namespace - you can have multiple container-based Kubernetes clusters on a VM- or bare metal-based Kubernetes cluster and create notifications for multiple destinations. 
+There are still minor limitations. For example, by convention it is required to use the Webhook link named after the Kubernetes "target" namespace for it as I use that for automated bucket-to-namespace matching. This doesn't mean all users who consume notifications from the same bucket *must* have workflows in the same namespace. You can have multiple container-based Kubernetes clusters on a VM- or bare metal-based Kubernetes cluster and create notifications for multiple destinations.
 
 If you have Coke and Pepsi using notifications for the same bucket, you can create two small Kubernetes-in-Kubernetes clusters and two notification destinations on StorageGRID.
 
@@ -91,7 +91,7 @@ What about Open Source Webhooks? Recently I've [stopped wasting my time on open 
 
 One of the purposes of these projects is to encourage NetApp users to build integrations rather than wait for "features", so if anyone builds their own, that's the ideal outcome.
 
-Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know *mine* works exactly the way I think it should with StorageGRID (it doesn't even work for the Versity S3 Gateway, although I'd like it to work for both). It also has a "rich" mode which Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer is because it works better as far as I can tell.
+Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know *mine* works exactly the way I think it should with StorageGRID ("rich" notifications don't even work for the Versity S3 Gateway at this time, although I'd like them to work with both). My Webhook also has a "rich" mode which generic Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer would be "because it works better, as far as I can tell".
 
 ## Conclusion
 
@@ -99,14 +99,14 @@ The Webhook component of Kompromise is beta-grade now and might be decent enough
 
 Some might ask what "non-critical" use cases can be when notifications can fail? I answered that in the first Kompromise post: if the pipeline is object pre-caching (which is why Kompromise has AIS - that's *the main pipeline*), worst that can happen is a slower, non-cached read.
 
-There are many "professional" solutions out there, from datalake platforms to startups, so for truly mission-critical everyone will buy or rent one of those, to have someone to blame or sue.
+There are many "professional" solutions out there, available from vendors ranging from datalake platforms to start-ups, so for truly "mission-critical" everyone will buy or rent one of those, to have someone to blame or sue. Nobody would use Kompromise for that in any case.
 
-Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on established open source code. It's free, but not worth nothing.
+Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on proven open source components. It's free, but not worth nothing.
 
-My next to-do items:
+I'm approximately 20% done with this pass. To-do items that remain:
 - NATS configuration improvements
 - User pipeline configuration updates to reflect changes in Webhook and NATS
-- Add an additional ETL demo function(s) that I had in "Go NATS!", to create embeddings and search interface as the main use case for "rich" Webhook notifications
+- Add an additional ETL demo function(s) that I had in "Go NATS!", that can create embeddings from content. And a search API as the main use case for "rich" Webhook notifications I added today
 - Documentation
 - Testing
 - Packaging (binaries)

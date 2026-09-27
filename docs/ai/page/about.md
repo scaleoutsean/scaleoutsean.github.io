@@ -16,6 +16,10 @@ The site does not provide technical or other advice to my employer's customers o
 
 All content on this site is released under the terms of [[CC] BY 4.0 Attribution 4.0 International deed](https://creativecommons.org/licenses/by/4.0/deed.en) (tldr: only attribution is required (click on that link to see examples and conventions)).
 
+### Contact
+
+Message me on X (Twitter).
+
 ### Security Disclosures
 
 To security researchers and bounty hunters: passwords, secret keys, bearer tokens and sample data seen in blog posts and screenshots are lab material intentionally exposed on the blog for educational purposes.
