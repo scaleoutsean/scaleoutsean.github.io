@@ -2,14 +2,6 @@
 
 Notes on Kafka notification integration in StorageGRID 11.8
 
-- [Introduction](#introduction)
-- [How to configure](#how-to-configure)
-- [What do Kafka notifications look like](#what-do-kafka-notifications-look-like)
-- [Similarities and differences compared to Elasticsearch search integration](#similarities-and-differences-compared-to-elasticsearch-search-integration)
-- [Use cases for StorageGRID notifications](#use-cases-for-storagegrid-notifications)
-- [Storage platform for Kafka](#storage-platform-for-kafka)
-- [Conclusion](#conclusion)
-
 ## Introduction
 
 Since 11.8, NetApp StorageGRID supports Kafka notifications in addition to the previous cloud-only AWS SNS notifications.

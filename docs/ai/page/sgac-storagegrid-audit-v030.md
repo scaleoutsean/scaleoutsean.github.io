@@ -6,13 +6,13 @@ Major changes and breakage
 
 After last week's [v0.2.4 update to StorageGRID Audit-log Converter aka SGAC](/2026/09/14/sgac-storagegrid-audit-v024.html), this weekend I wound down the Python version.
 
-## What's new in sgac v0.3.0
+## What's new in SGAC v0.3.0
 
 SGAC v0.3.0 is Go-only.
 
 ![sgac vs sgac.py](/assets/images/sgac-go-00-comparison.png)
 
-It's about 800% faster, but performance was never a problem for sgac.py: as I've always said in the old SGAC README, even the Python version was easy to deal with any log sizes and log files could always be chunked and parsed in parallel. 
+It's about 800% faster (not entirely fair due to no console output in SGAC (Go)), but performance was never a problem for sgac.py: as I've always said in the old SGAC README, even the Python version was easy to deal with any log sizes and log files could always be chunked and parsed in parallel. 
 
 Let's look at the important changes.
 
@@ -45,9 +45,9 @@ SGAC (Python) had one output, JSON documents.
 SGAC (Go) can output JSON or Parquet. It can also split output into multiple files and upload files to S3.
 
 Since we're talking about **audit** logs here, I do not recommend uploading audit logs to the same StorageGRID that is supposed to be audited, just as I don't recommend using the StorageGRID "upload logs to a bucket" (anti-)feature:
-- For buckets smaller than 10TB and with less than 50K Parquet entries in largest "prefix" ("directory level"), I recommend [Versity S3 Gateway attached to E-Series](/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html). It costs nothing and can run it in a small VM. You can also upload data to StorageGRID if you need another copy
-- For larger buckets, use another StorageGRID or other S3 object store
-- If you don't need audit logs for auditing (i.e. don't need a copy elsewhere), it's fine to upload audit logs just to the StorageGRID which generates those logs
+- For buckets smaller than 10TB and with less than 50K Parquet entries in largest "prefix" ("directory level"), I recommend [Versity S3 Gateway attached to E-Series](/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html). It costs nothing and we can run it in a small VM. You can always upload the same data to StorageGRID if you need another copy
+- For larger source buckets, use another StorageGRID or other scale-out S3 object store
+- If you don't need audit logs for auditing (i.e. don't need a copy elsewhere), it's fine to upload audit logs just to the StorageGRID which generates those logs. Of course, if you lose that grid and there's no other copy of audit logs...
 
 ## Other stuff
 
@@ -92,6 +92,6 @@ I've successfully wound down another "0 ROI" open source project that had genera
 
 In 2026 I've created more (and non-trivial, like the CSI drivers or API client libraries) open source project than closed the source on existing, but the ROI on closed source ones (sg-COSI, OpenSharing server, Eke, etc.) has been better - I still waste time to get the familiar zero ROI, but I waste much less of it. I'll keep the fundamental OSS projects like CSI drivers and API client libraries open because they enable others to build (if they want), but the stuff that works on top of it... there's no reason to bother.
 
-Anyway, as far as SGAC (Go) is concerned, it's still out there and free. I'll attempt to address the Github issues and feature requests, if any.
+Anyway, as far as SGAC (Go) is concerned, it's out there and free. I'll attempt to address the Github issues and feature requests, if any.
 
-The new version provides a big performance and usability boost and I look forward to enhancing it for more actionable insights the way I started in 2020.
+The new version provides a big performance and usability boost and I look forward to enhancing it for more actionable insights the way I started in 2020.  Parquet files can be imported to anywhere (and faster), so SGAC users who still want to get that data to Elasticsearch can do that.

@@ -18,6 +18,8 @@ We can do cool things like this - this illustration is based on a real-life requ
 
 ![OpenSharing for IoT with VGW E-Series](/assets/images/opensharing-iot-kafka-vgw-parquet.png)
 
+With a POSIX compactor and read-only OpenSharing data, this can process thousands of JSON messages (because it doesn't) at almost no cost and zero management, compared to what was considered (a new scale-out S3 cluster to accept thousands of PUTs with KB-sized objects, plus a very complex application stack).
+
 In previous release of my OpenSharing server implementation, I added AssumeRole support for StorageGRID.
 
 Now we can also use AssumeRoleWithWebIdentity with Versity S3 Gateway.

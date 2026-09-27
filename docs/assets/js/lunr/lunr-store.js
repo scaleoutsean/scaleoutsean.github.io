@@ -1476,7 +1476,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Kafka notifications in NetApp StorageGRID 11.8",
-        "excerpt":"Introduction How to configure What do Kafka notifications look like Similarities and differences compared to Elasticsearch search integration Use cases for StorageGRID notifications Storage platform for Kafka Conclusion Introduction Since 11.8, NetApp StorageGRID supports Kafka notifications in addition to the previous cloud-only AWS SNS notifications. SNS works fine, but it...","categories": ["analytics","storage"],
+        "excerpt":"Introduction Since 11.8, NetApp StorageGRID supports Kafka notifications in addition to the previous cloud-only AWS SNS notifications. SNS works fine, but it requires access to AWS cloud or using a non-AWS alternative in the cloud or locally. Kafka may therefore be an attractive option for users who already use it,...","categories": ["analytics","storage"],
         "tags": ["confluent","elasticsearch","event","instaclustr","kafka","netapp storagegrid","notifications","storagegrid"],
         "url": "/2024/02/23/storagegrid-notifications-kafka.html",
         "teaser": null
@@ -2532,8 +2532,8 @@ var store = [{
         "teaser": null
       },{
         "title": "Kompromise - control plane for S3 data pipelines with NetApp StorageGRID/E-Series and Versity S3 Gateway",
-        "excerpt":"Introduction It’s been almost a year since S3 GO NATS! demonstrated a rigid, centrally-administered pipeline for near real-time generation of vector embeddings for StorageGRID. For at least nine months I’ve been thinking about improving on that approach, but a lot had be done for E-Series which had literally nothing as...","categories": ["storage","s3","ai","analytics"],
-        "tags": ["versity","s3","storagegrid","santricity","csi","ais","nvidia","pipeline"],
+        "excerpt":"Introduction It’s been almost a year since S3 GO NATS! demonstrated a rigid, centrally-administered pipeline for near real-time generation of vector embeddings for StorageGRID. For at least nine months I’ve been thinking about improving on that approach, but a lot had be done for E-Series which had literally nothing as...","categories": ["storage","s3","ai","analytics","projects"],
+        "tags": ["events","s3","storagegrid","csi","ais","nvidia","pipeline","nats"],
         "url": "/2026/06/27/kompromise-pipeline-netapp-storagegrid-eseries-vgw.html",
         "teaser": null
       },{
@@ -2748,7 +2748,7 @@ var store = [{
         "teaser": null
       },{
         "title": "SGAC v0.3.0",
-        "excerpt":"Introduction After last week’s v0.2.4 update to StorageGRID Audit-log Converter aka SGAC, this weekend I wound down the Python version. What’s new in sgac v0.3.0 SGAC v0.3.0 is Go-only. It’s about 800% faster, but performance was never a problem for sgac.py: as I’ve always said in the old SGAC README,...","categories": ["projects","storage","netapp","storagegrid","s3"],
+        "excerpt":"Introduction After last week’s v0.2.4 update to StorageGRID Audit-log Converter aka SGAC, this weekend I wound down the Python version. What’s new in SGAC v0.3.0 SGAC v0.3.0 is Go-only. It’s about 800% faster (not entirely fair due to no console output in SGAC (Go)), but performance was never a problem...","categories": ["projects","storage","netapp","storagegrid","s3"],
         "tags": ["audit","log","sgac","compliance","access"],
         "url": "/2026/09/20/sgac-storagegrid-audit-v030.html",
         "teaser": null
@@ -2765,6 +2765,12 @@ var store = [{
         "url": "/2026/09/24/opensharing-assume-web-role-with-identity.html",
         "teaser": null
       },{
+        "title": "Improved Kompromise webhook for NetApp StorageGRID",
+        "excerpt":"Introduction Kompromise is v2 of my PoC project for S3-based data pipelines with NetApp StorageGRID and Versity S3 Gateway, based on last year’s “GO NATS!”. It aims to create a no-nonsense, fully functional, production-worthy pipeline demonstration. The first Kompromise post last June (link above) was the initial “alpha-grade” stack. Since...","categories": ["storage","s3","ai","analytics","projects"],
+        "tags": ["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],
+        "url": "/2026/09/27/kompromise-webhook-notifications-storagegrid.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2778,7 +2784,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"OpenSharing E-Series data using Assume Role With WebIdentity 2026-09-24 00:00 4 minute read Quick post explores another win for the thinking E-Series user YugabyteDB with NetApp EF-Series storage 2026-09-21 00:00 15 minute read We walk through TFM and look for tips and tricks relevant to EF-Series SGAC v0.3.0 2026-09-20 00:00...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Improved Kompromise webhook for NetApp StorageGRID 2026-09-27 00:00 7 minute read Personal log documenting the Kompromise journey - concretely, Webhook component improvements and its background OpenSharing E-Series data using Assume Role With WebIdentity 2026-09-24 00:00 5 minute read Short post that explores another win for the thinking E-Series user YugabyteDB...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4388,6 +4394,9 @@ var store = [{
     "title": "jetstream",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/jetstream/"
   },{
+    "title": "events",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/events/"
+  },{
     "title": "ais",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/ais/"
   },{
@@ -4498,6 +4507,9 @@ var store = [{
   },{
     "title": "AssumeRoleWithWebIdentity",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/assumerolewithwebidentity/"
+  },{
+    "title": "webhook",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/webhook/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
