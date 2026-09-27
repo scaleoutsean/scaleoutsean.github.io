@@ -18,7 +18,7 @@ All content on this site is released under the terms of [[CC] BY 4.0 Attribution
 
 ### Contact
 
-Message me on X (Twitter).
+[Message me](https://twitter.com/scaleoutsean) on X (Twitter).
 
 ### Security Disclosures
 
