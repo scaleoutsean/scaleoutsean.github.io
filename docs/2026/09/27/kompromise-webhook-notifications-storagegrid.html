@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1656,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1930,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -234,7 +234,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#kompromise-webhook-for-storagegrid">Kompromise webhook for StorageGRID</a></li><li><a href="#walk-through-for-kompromise-webhook">Walk-through for Kompromise webhook</a></li><li><a href="#next-steps">Next steps</a></li><li><a href="#other-thoughts">Other thoughts</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#kompromise-webhook-for-storagegrid">Kompromise webhook for StorageGRID</a></li><li><a href="#walk-through-for-kompromise-webhook">Walk-through for Kompromise webhook</a></li><li><a href="#next-steps">Next steps</a><ul><li><a href="#nats">NATS</a></li><li><a href="#ais">AIS</a></li></ul></li><li><a href="#other-thoughts">Other thoughts</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -278,10 +278,17 @@
   <li>(2) <code class="language-plaintext highlighter-rouge">pepsi</code> is the tenant name</li>
   <li>(3) <code class="language-plaintext highlighter-rouge">assumed</code> is the bucket name</li>
   <li>(4) <code class="language-plaintext highlighter-rouge">assumed</code> is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had more notification created, this string would have to be different for each</li>
-  <li>(5) <code class="language-plaintext highlighter-rouge">mTLS</code> is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side</li>
+  <li>(5) <code class="language-plaintext highlighter-rouge">mTLS</code> is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves. Notifications from the <code class="language-plaintext highlighter-rouge">pepsi</code> tenant contain mTLS:</li>
 </ul>
 
-<p>Bucket owner the sets up Webhook service for <code class="language-plaintext highlighter-rouge">s3.events.&lt;namespace&gt;.&lt;bucket&gt;.&lt;pipeline&gt;</code> in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:</p>
+<pre><code class="language-raw">"tls_client_fingerprint":"5bc3ecbac9d8874894baac2dd2e74ed15a293d42c8a69a71ae781fdf136bfb73","tls_client_serial":"206237059971702461380099440429561764097341810725",
+"tls_client_issuer":"CN=Kompromise CA,O=Kompromise",
+"tls_client_subject":"CN=pepsi,OU=assumed,O=Kompromise",
+"tls_cipher":"TLS_AES_128_GCM_SHA256",
+"tls_version":"tls1.3"
+</code></pre>
+
+<p>Bucket owner configures Webhook service for <code class="language-plaintext highlighter-rouge">s3.events.&lt;namespace&gt;.&lt;bucket&gt;.&lt;pipeline&gt;</code> in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:</p>
 
 <ul>
   <li>Simple: <code class="language-plaintext highlighter-rouge">s3.events.pepsi.assumed.raw</code></li>
@@ -298,11 +305,29 @@
 
 <h2 id="next-steps">Next steps</h2>
 
+<h3 id="nats">NATS</h3>
+
 <p>The Webhook now sends data differently, so NATS configuration and pipeline setup must be updated and improved.</p>
 
 <p>It needs a better configuration, mostly, to implement stronger user segregation, considering that NATS is a shared service managed by the Kompromise admin. If you don't want to have one Kompromise service (and one NATS cluster) per each bucket, you need secure multi-tenancy on shared services (NATS and AIS, primarily).</p>
 
 <p>While this worked in Alpha, it had some loopholes, and needs improvements.</p>
+
+<h3 id="ais">AIS</h3>
+
+<p>AIS (S3 cache) integration also has to be reworked, unfortunately.</p>
+
+<p>I underestimated the complexity of multi-tenancy. Not of implementation - <em>can</em> be done - but of using it. What that means is that one can't just do something like <code class="language-plaintext highlighter-rouge">kompromise up</code> and start using the app.</p>
+
+<p>The user would have to RTFM, understand implications of networking choices, and couldn't even do that without <em>extensive</em> knowledge of StorageGRID (and S3 in general). Which, realistically, nobody wants to do.</p>
+
+<p>So the way I'm going to change it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.</p>
+
+<p>I can create small AIS clusters and use SANtricity CSI or TopoLVM to create PVCs of <em>arbitrary</em> sizes on either protected RAID 10 or unprotected RAID 0 disk groups (with AIS RF=2 or RF3 in the latter case).</p>
+
+<p><img src="/assets/images/kompromise-stack.svg" alt="Kompromise stack" /></p>
+
+<p>Each user still gets enough S3 cache to speed up data processing. The only downside is potential over-provisioning, so some care and PVC fullness monitoring needs to be exercised because SANtricity doesn't have Thin Provisioning (SANtricity CSI fully provisions PVCs; TopoLVM it may be different because it provisions LVMs, not LUNs, but I haven't checked).</p>
 
 <h2 id="other-thoughts">Other thoughts</h2>
 
@@ -320,7 +345,7 @@
 
 <p>Anyway, so I consume Webhook notifications in Kompromise - but don't do anything for search. Notifications are just the shovel for the "shovel-ready job" that modern search is. You have to take care of the job yourself until they build something that may or may not work the way you want.</p>
 
-<p>That's why Kompromise is valuable to me: I'm trying to create a pipeline tool that works for unstructured data (images, videos, unstructured text) exactly the way I want it. To do that, I don't use Search integration because it can't do what AI workloads require. We need to use the shovel.</p>
+<p>That's why Kompromise is valuable to me: I'm trying to create a pipeline tool that works for unstructured data (images, videos, unstructured text) exactly the way I want it. To do that, I don't use Search integration because it can't do what AI workloads require. We need to use the shovel (notifications).</p>
 
 <p>Now, I can't change how StorageGRID Notifications work. I could send Notifications to a Kafka (more reliable) or Webhook service (little less reliable). <a href="/2026/08/05/kafka-on-netapp-eseries.html">Kafka is a hog</a> and if you want to send to Kafka, go ahead.</p>
 
@@ -330,13 +355,15 @@
 
 <p>For the purpose of processing large data objects, Kompromise benefits from AIS, and NATS needs reliable block storage as well. If you make good use of three-to-six LUNs for AIS and three for NATS and save by not spending $500K on something else, it makes sense to buy three EF50 arrays and take care of all block storage needs. Now, that <em>is</em> interesting. You have a <em>better</em> service and you didn't waste $500K on nonsense. Good job!</p>
 
-<p>Stand-alone Webhook service that sends data some NATS to do something I don't know about is viable, but less <em>interesting</em> to me from a solutions architect perspective - it's a little bit like an open-ended "what's better" question that has no clear answer. Not interesting.</p>
+<p>Stand-alone Webhook service that sends data some NATS to do something I don't know about is viable, but less <em>interesting</em> to me from a solutions architect perspective - it's a little bit like an open-ended "what's better" question that has no conclusive answer. Not interesting.</p>
 
 <p>What about Open Source Webhooks? Recently I've <a href="/2026/09/20/sgac-storagegrid-audit-v030.html">stopped wasting my time on open sourcing these projects</a>, and this week I realized that's a new and pertinent question. Why use Kompromise Webhook when I can use my own or some open source S3 notification Webhook or send directly to Kafka instead?</p>
 
 <p>One of the purposes of these projects is to encourage NetApp users to build integrations rather than wait for "features", so if anyone builds their own, that's the ideal outcome.</p>
 
-<p>Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know <em>mine</em> works exactly the way I think it should with StorageGRID ("rich" notifications don't even work for the Versity S3 Gateway at this time, although I'd like them to work with both). My Webhook also has a "rich" mode which generic Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer would be "because it works better, as far as I can tell".</p>
+<p>Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know <em>mine</em> works exactly the way I think it should with StorageGRID ("rich" notifications don't even work for the Versity S3 Gateway at this time, although I'd like them to work with both) <em>and</em> I can change it when I see it doesn't.</p>
+
+<p>Kompromise Webhook has a "rich" mode which generic Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer would be "because it works better, as far as I can tell".</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -346,7 +373,7 @@
 
 <p>There are many "professional" solutions out there, available from vendors ranging from datalake platforms to start-ups, so for truly "mission-critical" everyone will buy or rent one of those, to have someone to blame or sue. Nobody would use Kompromise for that in any case.</p>
 
-<p>Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on proven open source components. It's free, but not worth nothing.</p>
+<p>Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on proven open source components.  It's free, but worth more than it costs. If tenants must be absolutely segregated, run per-tenant Kubernetes on Kubernetes.</p>
 
 <p>I'm approximately 20% done with this pass. To-do items that remain:</p>
 <ul>

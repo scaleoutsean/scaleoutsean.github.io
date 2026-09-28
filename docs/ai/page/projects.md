@@ -28,7 +28,7 @@ Most of them are permissive OSS, but since 2026 I invest less in source code mai
 | [E-Config](https://econfig.pages.dev) | Tools for E-Series SANtricity capacity (DDP capacity splitter, RAID 6, BeeGFS) sizing (SSR JavaScript; haven't open-sourced this project)|
 | [Firemox](https://github.com/scaleoutsean/firemox) | TUI for Proxmox PVE 9 with SolidFire (PowerShell) |
 | [IBM Block Driver CSI](https://github.com/scaleoutsean/ibm-block-csi-driver) (patched) | IBM Block Storage CSI driver with SANtricity patches. Also see SANtricity CSI driver below |
-| Kompromise (WIP) | Data pipeline stack for AI and high-performance unstructured data processing with StorageGRID and Versity S3 Gateway (binaries only) |
+| Kompromise (WIP) | Data pipelines AI/high-performance unstructured data (StorageGRID, Versity S3 Gateway) (binaries only) |
 | [KubeFire](https://github.com/scaleoutsean/kubefire) | Tools for replication, failover, failback of Kubernetes with SolidFire CSI and Trident CSI with SolidFire (Python)|
 | [MCP Easy-E](/2025/09/13/mcp-for-netapp-eseries.html) | MCP server for E-Series optimization. Source code available by request |
 | [MCP TAPOUT](/2025/10/15/mcp-tapout.html) | MCP server for ONTAP to E-Series migration. Source code available by request |

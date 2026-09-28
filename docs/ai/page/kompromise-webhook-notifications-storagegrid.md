@@ -36,9 +36,17 @@ StorageGRID platform services must be enabled, and notification endpoint has to 
 - (2) `pepsi` is the tenant name
 - (3) `assumed` is the bucket name
 - (4) `assumed` is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had more notification created, this string would have to be different for each
-- (5) `mTLS` is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side
+- (5) `mTLS` is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves. Notifications from the `pepsi` tenant contain mTLS:
 
-Bucket owner the sets up Webhook service for `s3.events.<namespace>.<bucket>.<pipeline>` in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:
+```raw
+"tls_client_fingerprint":"5bc3ecbac9d8874894baac2dd2e74ed15a293d42c8a69a71ae781fdf136bfb73","tls_client_serial":"206237059971702461380099440429561764097341810725",
+"tls_client_issuer":"CN=Kompromise CA,O=Kompromise",
+"tls_client_subject":"CN=pepsi,OU=assumed,O=Kompromise",
+"tls_cipher":"TLS_AES_128_GCM_SHA256",
+"tls_version":"tls1.3"
+```
+
+Bucket owner configures Webhook service for `s3.events.<namespace>.<bucket>.<pipeline>` in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:
 
 - Simple: `s3.events.pepsi.assumed.raw`
 - Enriched: `s3.events.pepsi.assumed.enriched` (contains object metadata and tags)
@@ -53,11 +61,29 @@ If you have Coke and Pepsi using notifications for the same bucket, you can crea
 
 ## Next steps
 
+### NATS
+
 The Webhook now sends data differently, so NATS configuration and pipeline setup must be updated and improved.
 
 It needs a better configuration, mostly, to implement stronger user segregation, considering that NATS is a shared service managed by the Kompromise admin. If you don't want to have one Kompromise service (and one NATS cluster) per each bucket, you need secure multi-tenancy on shared services (NATS and AIS, primarily).
 
 While this worked in Alpha, it had some loopholes, and needs improvements.
+
+### AIS
+
+AIS (S3 cache) integration also has to be reworked, unfortunately.
+
+I underestimated the complexity of multi-tenancy. Not of implementation - *can* be done - but of using it. What that means is that one can't just do something like `kompromise up` and start using the app. 
+
+The user would have to RTFM, understand implications of networking choices, and couldn't even do that without *extensive* knowledge of StorageGRID (and S3 in general). Which, realistically, nobody wants to do.
+
+So the way I'm going to change it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.
+
+I can create small AIS clusters and use SANtricity CSI or TopoLVM to create PVCs of *arbitrary* sizes on either protected RAID 10 or unprotected RAID 0 disk groups (with AIS RF=2 or RF3 in the latter case). 
+
+![Kompromise stack](/assets/images/kompromise-stack.svg)
+
+Each user still gets enough S3 cache to speed up data processing. The only downside is potential over-provisioning, so some care and PVC fullness monitoring needs to be exercised because SANtricity doesn't have Thin Provisioning (SANtricity CSI fully provisions PVCs; TopoLVM it may be different because it provisions LVMs, not LUNs, but I haven't checked).
 
 ## Other thoughts
 
@@ -75,7 +101,7 @@ In 2024, [Kafka notifications were added](/2024/02/23/storagegrid-notifications-
 
 Anyway, so I consume Webhook notifications in Kompromise - but don't do anything for search. Notifications are just the shovel for the "shovel-ready job" that modern search is. You have to take care of the job yourself until they build something that may or may not work the way you want.
 
-That's why Kompromise is valuable to me: I'm trying to create a pipeline tool that works for unstructured data (images, videos, unstructured text) exactly the way I want it. To do that, I don't use Search integration because it can't do what AI workloads require. We need to use the shovel.
+That's why Kompromise is valuable to me: I'm trying to create a pipeline tool that works for unstructured data (images, videos, unstructured text) exactly the way I want it. To do that, I don't use Search integration because it can't do what AI workloads require. We need to use the shovel (notifications).
 
 Now, I can't change how StorageGRID Notifications work. I could send Notifications to a Kafka (more reliable) or Webhook service (little less reliable). [Kafka is a hog](/2026/08/05/kafka-on-netapp-eseries.html) and if you want to send to Kafka, go ahead.
 
@@ -85,13 +111,15 @@ The Webhook looks good enough now, so I'll probably release a stand-alone binary
 
 For the purpose of processing large data objects, Kompromise benefits from AIS, and NATS needs reliable block storage as well. If you make good use of three-to-six LUNs for AIS and three for NATS and save by not spending $500K on something else, it makes sense to buy three EF50 arrays and take care of all block storage needs. Now, that *is* interesting. You have a *better* service and you didn't waste $500K on nonsense. Good job!
 
-Stand-alone Webhook service that sends data some NATS to do something I don't know about is viable, but less *interesting* to me from a solutions architect perspective - it's a little bit like an open-ended "what's better" question that has no clear answer. Not interesting.
+Stand-alone Webhook service that sends data some NATS to do something I don't know about is viable, but less *interesting* to me from a solutions architect perspective - it's a little bit like an open-ended "what's better" question that has no conclusive answer. Not interesting.
 
 What about Open Source Webhooks? Recently I've [stopped wasting my time on open sourcing these projects](/2026/09/20/sgac-storagegrid-audit-v030.html), and this week I realized that's a new and pertinent question. Why use Kompromise Webhook when I can use my own or some open source S3 notification Webhook or send directly to Kafka instead? 
 
 One of the purposes of these projects is to encourage NetApp users to build integrations rather than wait for "features", so if anyone builds their own, that's the ideal outcome.
 
-Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know *mine* works exactly the way I think it should with StorageGRID ("rich" notifications don't even work for the Versity S3 Gateway at this time, although I'd like them to work with both). My Webhook also has a "rich" mode which generic Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer would be "because it works better, as far as I can tell".
+Whether some generic S3 notification Webhook works, what's better, what's not, etc. I don't know and - to be honest - I don't care unless I'm engaged in a situation where I need to answer that for work. I know *mine* works exactly the way I think it should with StorageGRID ("rich" notifications don't even work for the Versity S3 Gateway at this time, although I'd like them to work with both) *and* I can change it when I see it doesn't.
+
+Kompromise Webhook has a "rich" mode which generic Webhooks usually don't have. So, another way to ask the same question could be "why does Kompromise use its own Webhook?" and the answer would be "because it works better, as far as I can tell".
 
 ## Conclusion
 
@@ -101,7 +129,7 @@ Some might ask what "non-critical" use cases can be when notifications can fail?
 
 There are many "professional" solutions out there, available from vendors ranging from datalake platforms to start-ups, so for truly "mission-critical" everyone will buy or rent one of those, to have someone to blame or sue. Nobody would use Kompromise for that in any case.
 
-Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on proven open source components. It's free, but not worth nothing.
+Kompromise just needs to works good enough to prove the concept and idea is sound, so that you can build one like it if you want. The basic pipeline is simple, there's no bloat, failures are low-impact events, and the rest is based on proven open source components.  It's free, but worth more than it costs. If tenants must be absolutely segregated, run per-tenant Kubernetes on Kubernetes.
 
 I'm approximately 20% done with this pass. To-do items that remain:
 - NATS configuration improvements
