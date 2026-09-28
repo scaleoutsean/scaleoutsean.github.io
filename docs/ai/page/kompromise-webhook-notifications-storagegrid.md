@@ -20,7 +20,7 @@ That's the first two steps from the diagram above:
 - Receive notifications from StorageGRID Webhoook notification service
 - Send to processed object (meta)data to designated NATS subject
 
-What's been improved is support for the StorageGRID, because notifications on the Versity S3 Gateway are currently very basic and may change:
+What's been improved is support *for StorageGRID only*, because notifications on the Versity S3 Gateway are currently very basic and will change (if they improve them). Improvements for Kompromise Webhook with StorageGRID:
 - Reliability - handles objects that get deleted before enrichment and more
 - Enrichment now offers basic and advanced notifications. Advanced pre-fetches object details, freeing the user from having to do that on their own in Step 3
 - Added S3 authentication needed for rich notifications, uses STS Assume Role
@@ -36,9 +36,9 @@ StorageGRID platform services must be enabled, and notification endpoint has to 
 - (2) `pepsi` is the tenant name
 - (3) `assumed` is the bucket name
 - (4) `assumed` is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had more notification created, this string would have to be different for each
-- (5) `mTLS` is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves. Notifications from the `pepsi` tenant contain mTLS:
+- (5) `mTLS` is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves when sending notifications (v12.1). Notifications from the `pepsi` tenant then contain client TLS certificate details:
 
-```raw
+```sh
 "tls_client_fingerprint":"5bc3ecbac9d8874894baac2dd2e74ed15a293d42c8a69a71ae781fdf136bfb73","tls_client_serial":"206237059971702461380099440429561764097341810725",
 "tls_client_issuer":"CN=Kompromise CA,O=Kompromise",
 "tls_client_subject":"CN=pepsi,OU=assumed,O=Kompromise",
@@ -55,10 +55,6 @@ Simple provides less data, but has reliable delivery, while Enriched does more b
 
 The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner. The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.
 
-There are still minor limitations. For example, by convention it is required to use the Webhook link named after the Kubernetes "target" namespace for it as I use that for automated bucket-to-namespace matching. This doesn't mean all users who consume notifications from the same bucket *must* have workflows in the same namespace. You can have multiple container-based Kubernetes clusters on a VM- or bare metal-based Kubernetes cluster and create notifications for multiple destinations.
-
-If you have Coke and Pepsi using notifications for the same bucket, you can create two small Kubernetes-in-Kubernetes clusters and two notification destinations on StorageGRID.
-
 ## Next steps
 
 ### NATS
@@ -73,11 +69,11 @@ While this worked in Alpha, it had some loopholes, and needs improvements.
 
 AIS (S3 cache) integration also has to be reworked, unfortunately.
 
-I underestimated the complexity of multi-tenancy. Not of implementation - *can* be done - but of using it. What that means is that one can't just do something like `kompromise up` and start using the app. 
+I underestimated the complexity of multi-tenancy. Not of implementation itself - it *can* be done - but of using such stack: with a stack like that one can't just `kompromise up` - far from that. 
 
 The user would have to RTFM, understand implications of networking choices, and couldn't even do that without *extensive* knowledge of StorageGRID (and S3 in general). Which, realistically, nobody wants to do.
 
-So the way I'm going to change it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.
+How I'm changing it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.
 
 I can create small AIS clusters and use SANtricity CSI or TopoLVM to create PVCs of *arbitrary* sizes on either protected RAID 10 or unprotected RAID 0 disk groups (with AIS RF=2 or RF3 in the latter case). 
 

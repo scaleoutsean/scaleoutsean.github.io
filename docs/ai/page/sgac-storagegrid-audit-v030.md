@@ -44,7 +44,7 @@ SGAC (Python) had one output, JSON documents.
 
 SGAC (Go) can output JSON or Parquet. It can also split output into multiple files and upload files to S3.
 
-Since we're talking about **audit** logs here, I do not recommend uploading audit logs to the same StorageGRID that is supposed to be audited, just as I don't recommend using the StorageGRID "upload logs to a bucket" (anti-)feature:
+Since we're talking about **audit** logs here, I do not recommend uploading audit logs to the same StorageGRID that is supposed to be audited, just as I don't recommend using the StorageGRID "upload (raw) logs to a bucket" (anti-)feature:
 - For buckets smaller than 10TB and with less than 50K Parquet entries in largest "prefix" ("directory level"), I recommend [Versity S3 Gateway attached to E-Series](/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html). It costs nothing and we can run it in a small VM. You can always upload the same data to StorageGRID if you need another copy
 - For larger source buckets, use another StorageGRID or other scale-out S3 object store
 - If you don't need audit logs for auditing (i.e. don't need a copy elsewhere), it's fine to upload audit logs just to the StorageGRID which generates those logs. Of course, if you lose that grid and there's no other copy of audit logs...
@@ -81,6 +81,10 @@ Result:
 │ 212.140.30.23 │
 └───────────────┘
 ```
+
+The same will work from Jupyter and other notebooks.
+
+![SGAC in DuckDB UI](/assets/images/sgac-go-01-duckdb.png)
 
 If I publish new releases, analytics-related features will be be where most of my effort will go.
 

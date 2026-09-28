@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1930,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1860,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          8 minute read
         
       </span>
     
@@ -259,7 +259,7 @@
   <li>Send to processed object (meta)data to designated NATS subject</li>
 </ul>
 
-<p>What's been improved is support for the StorageGRID, because notifications on the Versity S3 Gateway are currently very basic and may change:</p>
+<p>What's been improved is support <em>for StorageGRID only</em>, because notifications on the Versity S3 Gateway are currently very basic and will change (if they improve them). Improvements for Kompromise Webhook with StorageGRID:</p>
 <ul>
   <li>Reliability - handles objects that get deleted before enrichment and more</li>
   <li>Enrichment now offers basic and advanced notifications. Advanced pre-fetches object details, freeing the user from having to do that on their own in Step 3</li>
@@ -278,15 +278,15 @@
   <li>(2) <code class="language-plaintext highlighter-rouge">pepsi</code> is the tenant name</li>
   <li>(3) <code class="language-plaintext highlighter-rouge">assumed</code> is the bucket name</li>
   <li>(4) <code class="language-plaintext highlighter-rouge">assumed</code> is not assumed from (3) but the topic name from actual XML notification configuration in the bucket. If this bucket had more notification created, this string would have to be different for each</li>
-  <li>(5) <code class="language-plaintext highlighter-rouge">mTLS</code> is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves. Notifications from the <code class="language-plaintext highlighter-rouge">pepsi</code> tenant contain mTLS:</li>
+  <li>(5) <code class="language-plaintext highlighter-rouge">mTLS</code> is strongly suggested for production environments, but requires configuration on both Kubernetes (where Kompromise Webhook is expected to be, although it can run stand-alone) and StorageGRID side. With mTLS, StorageGRID nodes use Kompromise-issued TLS key to identify themselves when sending notifications (v12.1). Notifications from the <code class="language-plaintext highlighter-rouge">pepsi</code> tenant then contain client TLS certificate details:</li>
 </ul>
 
-<pre><code class="language-raw">"tls_client_fingerprint":"5bc3ecbac9d8874894baac2dd2e74ed15a293d42c8a69a71ae781fdf136bfb73","tls_client_serial":"206237059971702461380099440429561764097341810725",
-"tls_client_issuer":"CN=Kompromise CA,O=Kompromise",
-"tls_client_subject":"CN=pepsi,OU=assumed,O=Kompromise",
-"tls_cipher":"TLS_AES_128_GCM_SHA256",
-"tls_version":"tls1.3"
-</code></pre>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"tls_client_fingerprint"</span>:<span class="s2">"5bc3ecbac9d8874894baac2dd2e74ed15a293d42c8a69a71ae781fdf136bfb73"</span>,<span class="s2">"tls_client_serial"</span>:<span class="s2">"206237059971702461380099440429561764097341810725"</span>,
+<span class="s2">"tls_client_issuer"</span>:<span class="s2">"CN=Kompromise CA,O=Kompromise"</span>,
+<span class="s2">"tls_client_subject"</span>:<span class="s2">"CN=pepsi,OU=assumed,O=Kompromise"</span>,
+<span class="s2">"tls_cipher"</span>:<span class="s2">"TLS_AES_128_GCM_SHA256"</span>,
+<span class="s2">"tls_version"</span>:<span class="s2">"tls1.3"</span>
+</code></pre></div></div>
 
 <p>Bucket owner configures Webhook service for <code class="language-plaintext highlighter-rouge">s3.events.&lt;namespace&gt;.&lt;bucket&gt;.&lt;pipeline&gt;</code> in Kompromise and - depending on whether notifications are basic or advanced, Webhook sends event data to the right NATS "topic" (subject). Using the example above, NATS subjects would be named:</p>
 
@@ -298,10 +298,6 @@
 <p>Simple provides less data, but has reliable delivery, while Enriched does more but can fail mid-way (crash, network disconnect, etc.) and there's no "retry" (since StorageGRID has already delivered the notification, and Kompromise Webhook does not retry). If you <em>need</em> "reliable Enriched", you can use Simple and create your own enrichment pipeline that uses same NATS service for reliable enrichment.</p>
 
 <p>The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner. The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.</p>
-
-<p>There are still minor limitations. For example, by convention it is required to use the Webhook link named after the Kubernetes "target" namespace for it as I use that for automated bucket-to-namespace matching. This doesn't mean all users who consume notifications from the same bucket <em>must</em> have workflows in the same namespace. You can have multiple container-based Kubernetes clusters on a VM- or bare metal-based Kubernetes cluster and create notifications for multiple destinations.</p>
-
-<p>If you have Coke and Pepsi using notifications for the same bucket, you can create two small Kubernetes-in-Kubernetes clusters and two notification destinations on StorageGRID.</p>
 
 <h2 id="next-steps">Next steps</h2>
 
@@ -317,11 +313,11 @@
 
 <p>AIS (S3 cache) integration also has to be reworked, unfortunately.</p>
 
-<p>I underestimated the complexity of multi-tenancy. Not of implementation - <em>can</em> be done - but of using it. What that means is that one can't just do something like <code class="language-plaintext highlighter-rouge">kompromise up</code> and start using the app.</p>
+<p>I underestimated the complexity of multi-tenancy. Not of implementation itself - it <em>can</em> be done - but of using such stack: with a stack like that one can't just <code class="language-plaintext highlighter-rouge">kompromise up</code> - far from that.</p>
 
 <p>The user would have to RTFM, understand implications of networking choices, and couldn't even do that without <em>extensive</em> knowledge of StorageGRID (and S3 in general). Which, realistically, nobody wants to do.</p>
 
-<p>So the way I'm going to change it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.</p>
+<p>How I'm changing it is: remove multi-tenancy which is the source of implementation complexity, and yet unimportant because I'm building this for E-Series. Unlike AIS, which recommends multiple NVMe physical disks per node, E-Series doesn't need to care about that.</p>
 
 <p>I can create small AIS clusters and use SANtricity CSI or TopoLVM to create PVCs of <em>arbitrary</em> sizes on either protected RAID 10 or unprotected RAID 0 disk groups (with AIS RF=2 or RF3 in the latter case).</p>
 
