@@ -103,9 +103,9 @@ Now that that I have a Webhook service that works the way I want and a stack tha
 I have a ton of posts on this, but in short, consider what's going on in this stack:
 - There's [NATS](/2026/06/21/nats-server-on-netapp-eseries.html) (similar to [Kafka](/2026/08/05/kafka-on-netapp-eseries.html)) which is not trivial to operate
 - There's AIS, which needs Replica Factor 2 or more to scale-out to >> 10 GB/s
-- It's likely you'll have a vector database and for that EF-Series is the right choice of external storage. Whether it's [Qdrant](/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html), [Milvus](/2022/07/07/milvus-with-solidfire-e-series.html), [Postgres](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), [Elasticsearch](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html), [Yugabyte](/09/21/yugabytedb-netapp-storage-eseries.html), [DuckDB](/2026/09/14/duckdb-quack-netapp-storage.html), [SQL Server](/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html) or whatever - use an EF-Series array
+- It's likely you'll have a vector database and for that EF-Series is the right choice of external storage. Whether it's [Qdrant](/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html), [Milvus](/2022/07/07/milvus-with-solidfire-e-series.html), [Postgres](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), [Elasticsearch](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html), [YugabyteDB](/09/21/yugabytedb-netapp-storage-eseries.html), [DuckDB](/2026/09/14/duckdb-quack-netapp-storage.html), [SQL Server](/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html) or whatever - use an EF-Series array because it will work better and faster for all these workloads
 
-Let me correct myself: for all of these services, one should really use **multiple arrays**. You *can*, of course, use one EF-Series array, but that's not how any of these applications are supposed to work in this time and age. See these linked posts to find out more.
+Let me correct myself: for all of these services, one should use **multiple EF-Series arrays** ([entry-level models](/2026/03/21/netapp-ef-series-ef80-ef50.html) are perfectly acceptable for this). You *can*, of course, use a single EF-Series array, but that's not how any of these applications are supposed to work in this time and age. See these linked posts to find out why.
 
 ## Walk-through
 
@@ -154,7 +154,7 @@ traffic.mp4					 1.48MiB
 traffic.png					 1.57MiB
 ```
 
-`traffic.png` (interestingly, it's bigger than the video it came from. I think that's because the video was SD quality, and the image has the same resolution, but four different frames of it):
+`traffic.png` (interestingly, it's bigger than the video it came from. I think that's because the video was SD quality, and the image has the same resolution, but four different frames from it):
 
 ![Kompromise ETL output](/assets/images/kompromise-etl-ffmpeg-traffic.png)
 
@@ -179,17 +179,17 @@ version		 NkQ5RkMwQzAtQkJFRi0xMUYxLTgxOTAtMTQ2MzAwQzY0RERC
 
 If I need any other tasks (such as video conversion, especially single source to *many* destinations), they'll *fly* on this thing, for as long as they stay in cache (and if they don't, they'll be pulled on demand). 
 
-I demonstrated this workflow in the first Kompromise post months ago, but it was not a full pipeline. There was a pre-caching pipeline and a separate function. This example now shows a pre-caching, function-calling, pipeline. All we need to do is upload an object to StorageGRID - the rest is hands-off.
+I demonstrated this workflow in the first Kompromise post months ago, but it was not a full pipeline. There was a pre-caching pipeline and a separate function. This example now shows a pre-caching, function-calling, pipeline. All we need to do is upload an object to StorageGRID and watch logs for failures - the rest is hands-off.
 
 ## The possibilities
 
 Sometimes you may hear:
 
-> Traditional applications still need to work on data using POSIX-compatible storage or file share before files can be uploaded to S3
+> Traditional applications still need to work on data using POSIX-compatible storage or file shares before files can be uploaded to S3
 
 But they don't.
 
-FFmpeg is a traditional application. The video file was uploaded to S3, AIS took care of getting it to my local cache and Kompromise triggered my containerized FFmpeg function which processed the video in memory (or ephemeral disk space).
+FFmpeg is a traditional application. The video file was uploaded to S3, AIS took care of getting it to my local cache and Kompromise triggered my containerized FFmpeg function which processed the video in memory (or ephemeral disk space of AIS).
 
 The result was sent back to S3/AIS. Did I use "traditional storage"? No.
 
@@ -215,7 +215,7 @@ These have been bothering me for years:
 
 Kompromise doesn't solve new problems, but it shows how existing ones can be solved correctly and effectively with NetApp EF-Series.
 
-The only new component is Kompromise Webhook, a Webhook server optimized for StorageGRID, and the rest is architecting, solutioning, integration and testing. And, s you can see from the posts on every single component and its alternatives, **all** have been evaluated. Even if you use some of the 3rd party components or SANtricity CSI driver(s), you can still avoid duplicating this work.
+The only new component is Kompromise Webhook, a Webhook server optimized for StorageGRID, and the rest is architecting, solutioning, integration and testing. And, as you can see from the posts on every single component and its alternatives, **all** have been evaluated from a Kubernetes-with-EF-Series perspective. Even if you use some of the 3rd party components or SANtricity CSI driver(s), you can still avoid duplicating this work.
 
 ---
 
