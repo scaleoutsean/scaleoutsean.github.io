@@ -47,7 +47,7 @@ This is a solved problem. All modern AI and analytics stacks and frameworks solv
 
 I've written about this many times. That is one of the reasons why there's no hybrid cloud data sharing problem, either.
 
-I have blogged about some of them Alluxio, Ray, etc. 
+I have blogged about some of them - Alluxio, Ray, etc. 
 
 Why do we need Kompromise, then? Because these stacks aren't very easy to integrate, and Kompromise does it out of box, with optimal choices for NetApp EF-Series. And because AIS is *already* in the diagram above: Kompromise *uses* it, it doesn't copy, emulate or replace it.
 
@@ -103,7 +103,7 @@ Now that that I have a Webhook service that works the way I want and a stack tha
 I have a ton of posts on this, but in short, consider what's going on in this stack:
 - There's [NATS](/2026/06/21/nats-server-on-netapp-eseries.html) (similar to [Kafka](/2026/08/05/kafka-on-netapp-eseries.html)) which is not trivial to operate
 - There's AIS, which needs Replica Factor 2 or more to scale-out to >> 10 GB/s
-- It's likely you'll have a vector database and for that EF-Series is the right choice of external storage. Whether it's [Qdrant](/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html), [Milvus](/2022/07/07/milvus-with-solidfire-e-series.html), [Postgres](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), [Elasticsearch](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html), [YugabyteDB](/09/21/yugabytedb-netapp-storage-eseries.html), [DuckDB](/2026/09/14/duckdb-quack-netapp-storage.html), [SQL Server](/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html) or whatever - use an EF-Series array because it will work better and faster for all these workloads
+- It's likely you'll have a vector database and for that EF-Series is the right choice of external storage. Whether it's [Qdrant](/2026/05/26/multi-node-qdrant-vector-db-netapp-eseries-santricity-csi.html), [Milvus](/2022/07/07/milvus-with-solidfire-e-series.html), [Postgres](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), [Elasticsearch](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html), [YugabyteDB](/2026/09/21/yugabytedb-netapp-storage-eseries.html), [DuckDB](/2026/09/14/duckdb-quack-netapp-storage.html), [SQL Server](/2026/05/29/microsoft-sql-server-kubernetes-netapp-eseries.html) or whatever - use an EF-Series array because it will work better and faster for all these workloads
 
 Let me correct myself: for all of these services, one should use **multiple EF-Series arrays** ([entry-level models](/2026/03/21/netapp-ef-series-ef80-ef50.html) are perfectly acceptable for this). You *can*, of course, use a single EF-Series array, but that's not how any of these applications are supposed to work in this time and age. See these linked posts to find out why.
 
@@ -136,15 +136,15 @@ NODE		 ID		 KIND			 BUCKET			 OBJECTS	 BYTES		 START		 END		 STATE
 YvExplXR	 K6d92XxnC	 prefetch-listrange	 s3://bucketshop	 1		 1.57MiB	 10:33:52	 10:33:52	 Finished
 ```
 
-Some other pipeline may prefetch **and** trigger a function, such as that image sampler for videos. These functions run at all times, and kick off when worker spots a matching event and triggers them.
+Some other pipeline may prefetch **and** trigger a function, such as that image sampler for videos. These functions are in stand-by mode at all times and run when a worker spots a matching event and invokes them.
 
 ```sh
-ais etl show
+$ ais etl show
 NAME			 STAGE		 XACTION	 OBJECTS
 etl-ffmpeg-sampler	 Running	 etl-L1q512oPnf	 5
 ```
 
-This is similar to OpenFaaS, by the way. I had an OpenFaaS demo video on YouTube ages ago (2018-ish?). Unlike OpenFaas, these functions are focused on storage-related tasks - they are meant to use AIS, although that's not mandatory (you could probably use them *with* OpenFaaS, and the extra you'd get would probably be a good Webhook for StorageGRID, and AIS on EF-Series).
+This is similar to OpenFaaS, by the way. I had an OpenFaaS demo video on YouTube ages ago (2018-ish?). Unlike OpenFaas, these functions are focused on storage-heavy tasks - they are meant to use AIS, although that's not mandatory (you could probably use Kompromise *with* OpenFaaS function in the same user namespace and the extra benefit you'd get from that would probably come from having a good Webhook for StorageGRID and AIS on EF-Series).
 
 There was an upload that triggered this function, so when `traffic.mp4` was uploaded, `traffic.png` was created an uploaded back to the same bucket (the choice of destination is flexible). That's why I have these two.
 
