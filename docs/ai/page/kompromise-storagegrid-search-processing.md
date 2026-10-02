@@ -26,6 +26,8 @@ I blogged about this in the [previous post](). In short:
 - Simple notifications are just StorageGRID notifications sent to NATS, so the user just applies a simple configuration YAML on Kompromise
 - Rich notifications fetch object metadata. Also requires just a simple configuration. Rich notifications don't have guaranteed delivery. See the previous post on why that is
 
+I can use this Webhook in other projects where I need it.
+
 ### Pre-fetch for I/O-intensive processing
 
 This is a solved problem. All modern AI and analytics stacks and frameworks solve it.
@@ -77,9 +79,9 @@ spec:
   workflowDelivery: "Auto"
 ```
 
-If my challenge was to get the object cached, so that I can read the file at 15 GB/s when I need, my problem has been solved. Maybe my compute job starts seconds later, triggered via a different workflow. So we can do this any way we want - curated functions, own functions, external workflows...
+If my challenge was to get an object cached, so that I can read that file from AIS at 15 GB/s when I need, my problem has been solved. My compute job or function can start seconds later, triggered by a different workflow. So we can do this any way we want - curated functions, own functions, external workflows...
 
-Just note that, because pre-fetch kicks off seconds after the notification comes in, even if you use another job scheduler in addition to Kompromise for pre-fetch, you don't have to coordinate with Kompromise: you can always read the object through AIS, whether it's there or not yet. If you start reading an object from AIS before Kompromise got to it, that will work fine - no further action needed (AIS will simply skip its own prefetch).
+Just note that, because pre-fetch kicks off seconds after the notification comes in, even if you use another job scheduler in addition to Kompromise for pre-fetch, you don't have to coordinate with Kompromise: you can always read the object through AIS, whether it's there or not yet. If you start reading an object from AIS before Kompromise got to it, that will work fine - no further action needed (AIS will simply skip fetching already prefetched chunks found in AIS cache).
 
 Indexing and embeddings can, but don't need to, use AIS. The simplest workflow is: a notification comes in, a vector goes out (insert or upsert an object record to a database). A more complex workflow can read a pre-cached object and do more with it.
 
@@ -141,11 +143,13 @@ traffic.mp4					 1.48MiB
 traffic.png					 1.57MiB
 ```
 
-`traffic.png` (interestingly, it's bigger than the video it came from. I think that's because the video was SD quality, and the image had (it was downsized for the blog) the same resolution, but four different frames from it):
+`traffic.png`:
 
 ![Kompromise ETL output](/assets/images/kompromise-etl-ffmpeg-traffic.png)
 
-I can check where's that video: it's still cached in AIS (see `location` and `copies` (RF1)).
+Interestingly, processed image is bigger than the video it came from. I think that's because the video was SD quality, and the image had (it was downsized for the blog) higher resolution than the video it came from and contained frames from it.
+
+I can check where that video is: it's still cached in AIS (see `location` and `copies` (RF1)).
 
 ```sh
 $ ais ls ais://bucketshop/traffic.mp4 -props all

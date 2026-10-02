@@ -2777,6 +2777,12 @@ var store = [{
         "url": "/2026/09/29/kompromise-storagegrid-search-processing.html",
         "teaser": null
       },{
+        "title": "Using Kompromise Webhook for automated S3 log indexing",
+        "excerpt":"Introduction Kompromise is my personal reference/demo stack for S3-related stuff - mostly NetApp StorageGRID and Versity S3 Gateawy, as you can tell from blog archives. I haven’t finished it yet, but I’m testing what seems like an acceptable beta version and it’s looking good. New Kompromise Webhook for StorageGRID is...","categories": ["storage","s3","ai","analytics","projects"],
+        "tags": ["events","s3","storagegrid","pipeline","nats","webhook","e-series","quickwit"],
+        "url": "/2026/10/02/kompromise-quickwit-netapp-eseries.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2790,7 +2796,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID 2026-09-29 00:00 9 minute read Personal log documenting the Kompromise journey - final setup Improved Kompromise webhook for NetApp StorageGRID 2026-09-27 00:00 8 minute read Personal log documenting the Kompromise journey - concretely, Webhook component improvements and...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Using Kompromise Webhook for automated S3 log indexing 2026-10-02 00:00 6 minute read Another use case for Kompromise Webhook - notifications for automated log ingestion Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID 2026-09-29 00:00 9 minute read Personal log documenting the Kompromise journey -...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
@@ -4519,6 +4525,9 @@ var store = [{
   },{
     "title": "vectors",
     "excerpt":"","url": "https://scaleoutsean.github.io/tags/vectors/"
+  },{
+    "title": "quickwit",
+    "excerpt":"","url": "https://scaleoutsean.github.io/tags/quickwit/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"

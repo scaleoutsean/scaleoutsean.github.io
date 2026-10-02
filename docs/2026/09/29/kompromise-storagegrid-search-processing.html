@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/29/kompromise-storagegrid-search-processing.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/29/kompromise-storagegrid-search-processing.html"},"headline":"Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID","description":"Kompromise solution with Webhook, NATS and AIS","datePublished":"2026-09-29T00:00:00+08:00","dateModified":"2026-09-29T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series","embeddings","vectors"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":2137,"articleBody":"Kompromise solution with Webhook, NATS and AIS"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/29/kompromise-storagegrid-search-processing.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/29/kompromise-storagegrid-search-processing.html"},"headline":"Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID","description":"Kompromise solution with Webhook, NATS and AIS","datePublished":"2026-09-29T00:00:00+08:00","dateModified":"2026-09-29T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-beta.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series","embeddings","vectors"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":2165,"articleBody":"Kompromise solution with Webhook, NATS and AIS"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -267,6 +267,8 @@
   <li>Rich notifications fetch object metadata. Also requires just a simple configuration. Rich notifications don't have guaranteed delivery. See the previous post on why that is</li>
 </ul>
 
+<p>I can use this Webhook in other projects where I need it.</p>
+
 <h3 id="pre-fetch-for-io-intensive-processing">Pre-fetch for I/O-intensive processing</h3>
 
 <p>This is a solved problem. All modern AI and analytics stacks and frameworks solve it.</p>
@@ -318,9 +320,9 @@
   <span class="na">workflowDelivery</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Auto"</span>
 </code></pre></div></div>
 
-<p>If my challenge was to get the object cached, so that I can read the file at 15 GB/s when I need, my problem has been solved. Maybe my compute job starts seconds later, triggered via a different workflow. So we can do this any way we want - curated functions, own functions, external workflows…</p>
+<p>If my challenge was to get an object cached, so that I can read that file from AIS at 15 GB/s when I need, my problem has been solved. My compute job or function can start seconds later, triggered by a different workflow. So we can do this any way we want - curated functions, own functions, external workflows…</p>
 
-<p>Just note that, because pre-fetch kicks off seconds after the notification comes in, even if you use another job scheduler in addition to Kompromise for pre-fetch, you don't have to coordinate with Kompromise: you can always read the object through AIS, whether it's there or not yet. If you start reading an object from AIS before Kompromise got to it, that will work fine - no further action needed (AIS will simply skip its own prefetch).</p>
+<p>Just note that, because pre-fetch kicks off seconds after the notification comes in, even if you use another job scheduler in addition to Kompromise for pre-fetch, you don't have to coordinate with Kompromise: you can always read the object through AIS, whether it's there or not yet. If you start reading an object from AIS before Kompromise got to it, that will work fine - no further action needed (AIS will simply skip fetching already prefetched chunks found in AIS cache).</p>
 
 <p>Indexing and embeddings can, but don't need to, use AIS. The simplest workflow is: a notification comes in, a vector goes out (insert or upsert an object record to a database). A more complex workflow can read a pre-cached object and do more with it.</p>
 
@@ -379,11 +381,13 @@ traffic.mp4					 1.48MiB
 traffic.png					 1.57MiB
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">traffic.png</code> (interestingly, it's bigger than the video it came from. I think that's because the video was SD quality, and the image had (it was downsized for the blog) the same resolution, but four different frames from it):</p>
+<p><code class="language-plaintext highlighter-rouge">traffic.png</code>:</p>
 
 <p><img src="/assets/images/kompromise-etl-ffmpeg-traffic.png" alt="Kompromise ETL output" /></p>
 
-<p>I can check where's that video: it's still cached in AIS (see <code class="language-plaintext highlighter-rouge">location</code> and <code class="language-plaintext highlighter-rouge">copies</code> (RF1)).</p>
+<p>Interestingly, processed image is bigger than the video it came from. I think that's because the video was SD quality, and the image had (it was downsized for the blog) higher resolution than the video it came from and contained frames from it.</p>
+
+<p>I can check where that video is: it's still cached in AIS (see <code class="language-plaintext highlighter-rouge">location</code> and <code class="language-plaintext highlighter-rouge">copies</code> (RF1)).</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ais <span class="nb">ls </span>ais://bucketshop/traffic.mp4 <span class="nt">-props</span> all
 PROPERTY	 VALUE
@@ -537,7 +541,7 @@ version		 NkQ5RkMwQzAtQkJFRi0xMUYxLTgxOTAtMTQ2MzAwQzY0RERC
       <a href="/2026/09/27/kompromise-webhook-notifications-storagegrid.html" class="pagination--pager" title="Improved Kompromise webhook for NetApp StorageGRID">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/10/02/kompromise-quickwit-netapp-eseries.html" class="pagination--pager" title="Using Kompromise Webhook for automated S3 log indexing">Next</a>
     
   </nav>
 
@@ -661,6 +665,54 @@ version		 NkQ5RkMwQzAtQkJFRi0xMUYxLTgxOTAtMTQ2MzAwQzY0RERC
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
+        <a href="/2026/10/02/kompromise-quickwit-netapp-eseries.html" rel="permalink">Using Kompromise Webhook for automated S3 log indexing
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2026-10-02T00:00:00+08:00">2026-10-02 00:00</time>
+      </span>
+    
+
+    <span class="page__meta-sep"></span>
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Another use case for Kompromise Webhook - notifications for automated log ingestion
+</p>
+  </article>
+</div>
+
+    
+      
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
         <a href="/2024/02/15/storagegrid-on-vmware.html" rel="permalink">NetApp StorageGRID on VMware
 </a>
       
@@ -694,54 +746,6 @@ version		 NkQ5RkMwQzAtQkJFRi0xMUYxLTgxOTAtMTQ2MzAwQzY0RERC
 
 
     <p class="archive__item-excerpt" itemprop="description">Notes on considerations for running StorageGRID S3 SDS on VMware vSphere
-</p>
-  </article>
-</div>
-
-    
-      
-      
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/2026/01/19/netapp-eseries-santricity-csi.html" rel="permalink">NetApp E-Series SANtricity CSI
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-      
-      <span class="page__meta-date">
-        <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
-        
-        <time datetime="2026-01-19T00:00:00+08:00">2026-01-19 00:00</time>
-      </span>
-    
-
-    <span class="page__meta-sep"></span>
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-fw fa-clock" aria-hidden="true"></i>
-        
-          13 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">Community CSI driver for NetApp E-Series arrays: what it is and what it does
 </p>
   </article>
 </div>
