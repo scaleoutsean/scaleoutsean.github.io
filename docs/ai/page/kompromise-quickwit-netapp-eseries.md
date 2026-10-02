@@ -49,8 +49,8 @@ And the whole thing doesn't cost me almost any extra work, because Kompromise ha
 
 The green-shaded areas are per-tenant (namespaced) resources that provide user segregation.
 
-- (1) New logs are landing in `s3://incoming/<app-or-other-prefix>`.
-- (2) StoraeGRID sends notification to Kompromise Webhook
+- (1) New logs land in `s3://incoming/<app-or-other-prefix>`.
+- (2) StorageGRID sends notification to Kompromise Webhook
 - (3) Kompromise pipeline - where I added a new "submitter" worker - sends `ObjectCreated` notifications to a 3rd party SQS server for Quickwit to poll. Quickwit polls it, finds the log file's URI, downloads the file (it has GET access to s3://incoming), indexes the log and appends to index in s3://indexes. It also has to update its own metadata, which can be on S3 as well but only for one indexer. Normally, you'd have more than one and therefore need a highly-available PostgreSQL and that's another strong case for EF-Series here
 
 Since CPNG runs *really well* with E-Series, and [continuous backup to S3 works well too](/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html), there's no better NetApp storage array to serve that database and we already have an object store to upload backups to.
