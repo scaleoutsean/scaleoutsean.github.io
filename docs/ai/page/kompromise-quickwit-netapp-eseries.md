@@ -51,13 +51,13 @@ The green-shaded areas are per-tenant (namespaced) resources that provide user s
 
 - (1) New logs land in `s3://incoming/<app-or-other-prefix>`.
 - (2) StorageGRID sends notification to Kompromise Webhook
-- (3) Kompromise pipeline - where I added a new "submitter" worker - sends `ObjectCreated` notifications to a 3rd party SQS server for Quickwit to poll. Quickwit polls it, finds the log file's URI, downloads the file (it has GET access to s3://incoming), indexes the log and appends to index in s3://indexes. It also has to update its own metadata, which can be on S3 as well but only for one indexer. Normally, you'd have more than one and therefore need a highly-available PostgreSQL and that's another strong case for EF-Series here
+- (3) Kompromise pipeline - where I added a new "submitter" worker for this - sends `ObjectCreated` notifications to a 3rd party SQS server for Quickwit to poll. Quickwit polls it, finds the log file's URI, downloads the file (it has GET access to s3://incoming), indexes the log and appends to index in s3://indexes. It also has to update its own metadata, which can be on S3 as well but only for one indexer. Normally, you'd have more than one and therefore need a highly-available PostgreSQL and that's another strong case for EF-Series here
 
 Since CPNG runs *really well* with E-Series, and [continuous backup to S3 works well too](/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html), there's no better NetApp storage array to serve that database and we already have an object store to upload backups to.
 
-In the minimal setup, you could have one of everything (including NATS servers, PostgreSQL), and no HA. Most people won't do that. They'll want HA for both NATS and PostgreSQL and you *can't* properly protect NATS with less than three arrays across three racks. And that means you can easily pick two or three for a small PostgreSQL DB powered by CNPG.
+In the minimal setup, you could have one of everything (including NATS servers, PostgreSQL), and no HA. Most people won't do that. They'll want HA for both NATS and PostgreSQL and one *can't* properly protect NATS with less than three arrays across three racks. If you already have three small arrays, using CPNG to replicate the small PostgreSQL DB adds no cost.
 
-NATS won't have a lot of data since those notifications are tiny, PostgreSQL won't either, but Quickwit might need a few TB of disk space per indexer because it has to periodically "defrag" its indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not trivial to run.
+NATS won't have a lot of data, since those SNS notifications for objects are tiny. PostgreSQL won't either, but Quickwit might need a TB of "scratch" disk space per indexer because it has to periodically "defrag" indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not a trivial group of workloads. That's why there aren't many "free replacements" for Splunk and Elastic.
 
 ### The role of Kompromise functions
 
