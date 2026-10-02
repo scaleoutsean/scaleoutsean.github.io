@@ -46,9 +46,11 @@ Third, because I use Kompromise Webhooks, I do need NATS. Because I need NATS, I
 
 ![NATS configuration with multiple arrays](/assets/images/nats_eseries_14_3-rack-5-node-nats.png)
 
-Where's CPNG coming from? It's not a hard requirement, but HA for PostgreSQL is required if you want to scale out Quickwit to more than one indexer: at that point you can't have multiple writers to the same metastore object on S3, so you need *some* sort of HA.
+Where's that CPNG requirement coming from? 
 
-Now, this log indexing requirement is interesting because I can securely submit logs (from the public cloud or remote offices, for example) *to a StorageGRID bucket* and have them processed and ingested to Quickwit without *any* intervention. 
+It's not a hard requirement, but HA for PostgreSQL is required if you want to scale out Quickwit to more than one indexer: at that point you can't have multiple writers to the same metastore object on S3, so you need *some* sort of HA and backup plan for that PostgreSQL database.
+
+Now, this index-to-s3 ask is interesting because I can securely submit logs (from the public cloud or remote offices, for example) *to a StorageGRID bucket* and have them processed and ingested to Quickwit without *any* intervention. Without automation, I don't think anyone would want to manually ingest hundreds of log files every day.
 
 And the whole thing doesn't cost me almost any extra work, because Kompromise has almost everything:
 - Webhook
@@ -78,7 +80,7 @@ What I do above is send JSONL to `s3://incoming//`. But what often happens is yo
 
 Kompromise could create a pipeline for this: something.log-to-something.jsonl.
 
-For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send something.log to `s3://incoming/` and have Kompromise take care of conversion before passing it downstream.
+For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send `something.log` to `s3://incoming/` and have Kompromise take care of conversion before passing notification downstream.
 
 ## Walk-through
 
