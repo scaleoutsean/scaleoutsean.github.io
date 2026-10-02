@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/10/02/kompromise-quickwit-netapp-eseries.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/10/02/kompromise-quickwit-netapp-eseries.html"},"headline":"Using Kompromise Webhook for automated S3 log indexing","description":"Kompromise Webhook, NATS, Quickwit and CNPG","datePublished":"2026-10-02T00:00:00+08:00","dateModified":"2026-10-02T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-quickwit-storagegrid-00.png","keywords":["events","s3","storagegrid","pipeline","nats","webhook","e-series","quickwit"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1451,"articleBody":"Kompromise Webhook, NATS, Quickwit and CNPG"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/10/02/kompromise-quickwit-netapp-eseries.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/10/02/kompromise-quickwit-netapp-eseries.html"},"headline":"Using Kompromise Webhook for automated S3 log indexing","description":"Kompromise Webhook, NATS, Quickwit and CNPG","datePublished":"2026-10-02T00:00:00+08:00","dateModified":"2026-10-02T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-quickwit-storagegrid-00.png","keywords":["events","s3","storagegrid","pipeline","nats","webhook","e-series","quickwit"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1467,"articleBody":"Kompromise Webhook, NATS, Quickwit and CNPG"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -300,7 +300,7 @@
 
 <p>In the minimal setup, you could have one of everything (including NATS servers, PostgreSQL), and no HA. Most people won't do that. They'll want HA for both NATS and PostgreSQL and one <em>can't</em> properly protect NATS with less than three arrays across three racks. If you already have three small arrays, using CPNG to replicate the small PostgreSQL DB adds no cost.</p>
 
-<p>NATS won't have a lot of data, since those SNS notifications for objects are tiny. PostgreSQL won't either, but Quickwit might need a TB of "scratch" disk space per indexer because it has to periodically "defrag" indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not a trivial group of workloads. That's why there aren't many "free replacements" for Splunk and Elastic.</p>
+<p>NATS won't have a lot of data, since those SNS notifications for objects are tiny. PostgreSQL won't either, but Quickwit might need a TB of "scratch" disk space per indexer because it has to periodically "defrag" indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not a trivial group of workloads even with most data on S3. That's why there aren't many "free replacements" for Splunk and Elastic.</p>
 
 <h3 id="the-role-of-kompromise-functions">The role of Kompromise functions</h3>
 
@@ -310,7 +310,7 @@
 
 <p>Kompromise could create a pipeline for this: something.log-to-something.jsonl.</p>
 
-<p>For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send <code class="language-plaintext highlighter-rouge">something.log</code> to <code class="language-plaintext highlighter-rouge">s3://incoming/&lt;index-name&gt;</code> and have Kompromise take care of conversion before passing notification downstream.</p>
+<p>For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send <code class="language-plaintext highlighter-rouge">something.log</code> to <code class="language-plaintext highlighter-rouge">s3://incoming/&lt;index-name&gt;/</code> and have Kompromise take care of conversion before passing notification downstream.</p>
 
 <h2 id="walk-through">Walk-through</h2>
 
@@ -320,7 +320,7 @@
 
 <p>Kompromise kicks off the pipeline, forwards the notification to SQS server queue, and Quickwit polls that server periodically to find out what's new.</p>
 
-<p>When it sees a new object is ready, it downloads the object and adds to index in <code class="language-plaintext highlighter-rouge">s3://indexes/&lt;index-name&gt;</code>. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)</p>
+<p>When it sees a new object is ready, it downloads the object and adds to index in <code class="language-plaintext highlighter-rouge">s3://indexes/&lt;index-name&gt;/</code>. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)</p>
 
 <p><img src="/assets/images/kompromise-quickwit-storagegrid-05-storagegrid-indexes-bucket.png" alt="StorageGRID bucket with indexes" /></p>
 
@@ -346,11 +346,13 @@
 
 <p>One of the benefits is now I have a Kompromise submitter pipeline as well, so future integrations with applications that consume S3 feeds - raw or processed - will be even easier.</p>
 
-<p>I do know most applications can get their own notifications directly from StorageGRID, but that's not the point: to get own notifications <em>reliably</em>, you need something like NATS or Kafka and neither is a very fun software to manage (although NATS is much better). Kompromise sets up the <em>entire</em> stack - Webhook notifications, pipelines, functions, NATS and AIS.</p>
+<p><img src="/assets/images/kompromise-quickwit-storagegrid-01-steps.png" alt="Kompromise with Quickwits flow" /></p>
+
+<p>I do know most applications can get their own notifications directly from StorageGRID, but that's not the point: to get own notifications <em>reliably</em> and <em>not lose them</em>, you need something like NATS or Kafka and neither is a very fun software to manage (although NATS is much better). Kompromise sets up the <em>entire</em> stack - Webhook notifications, pipelines, functions, NATS and AIS.</p>
 
 <p>I could have demonstrated Quickwit with a random single VM, manually uploaded logs and S3, but that's not usable for business users. It also wouldn't show how to do it right with StorageGRID, which was an important consideration in my context.</p>
 
-<p>Quickwit at any non-trivial scale needs a reliable PostgreSQL service, amplifying synergy with EF-Series and Kompromise.</p>
+<p>Quickwit at non-trivial scale needs a reliable PostgreSQL service, amplifying synergy with EF-Series and Kompromise.</p>
 
         
       </section>

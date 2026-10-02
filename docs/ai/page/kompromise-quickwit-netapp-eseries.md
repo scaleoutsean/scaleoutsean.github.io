@@ -57,7 +57,7 @@ Since CPNG runs *really well* with E-Series, and [continuous backup to S3 works 
 
 In the minimal setup, you could have one of everything (including NATS servers, PostgreSQL), and no HA. Most people won't do that. They'll want HA for both NATS and PostgreSQL and one *can't* properly protect NATS with less than three arrays across three racks. If you already have three small arrays, using CPNG to replicate the small PostgreSQL DB adds no cost.
 
-NATS won't have a lot of data, since those SNS notifications for objects are tiny. PostgreSQL won't either, but Quickwit might need a TB of "scratch" disk space per indexer because it has to periodically "defrag" indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not a trivial group of workloads. That's why there aren't many "free replacements" for Splunk and Elastic.
+NATS won't have a lot of data, since those SNS notifications for objects are tiny. PostgreSQL won't either, but Quickwit might need a TB of "scratch" disk space per indexer because it has to periodically "defrag" indexes on S3. So when you add it all up, between HA and performance (both random and sequential), it's not a trivial group of workloads even with most data on S3. That's why there aren't many "free replacements" for Splunk and Elastic.
 
 ### The role of Kompromise functions
 
@@ -67,7 +67,7 @@ What I do above is send JSONL to `s3://incoming/<index-name>/`. But what often h
 
 Kompromise could create a pipeline for this: something.log-to-something.jsonl.
 
-For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send `something.log` to `s3://incoming/<index-name>` and have Kompromise take care of conversion before passing notification downstream.
+For example, in this PoC I uploaded StorageGRID logs processed with my tool (SGAC). But if I wanted to make it more convenient, I'd create a function that has my tool and just send `something.log` to `s3://incoming/<index-name>/` and have Kompromise take care of conversion before passing notification downstream.
 
 ## Walk-through
 
@@ -77,7 +77,7 @@ New batch of JSONL is uploaded to `s3://incoming/<index-name>`.
 
 Kompromise kicks off the pipeline, forwards the notification to SQS server queue, and Quickwit polls that server periodically to find out what's new.
 
-When it sees a new object is ready, it downloads the object and adds to index in `s3://indexes/<index-name>`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
+When it sees a new object is ready, it downloads the object and adds to index in `s3://indexes/<index-name>/`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
 
 ![StorageGRID bucket with indexes](/assets/images/kompromise-quickwit-storagegrid-05-storagegrid-indexes-bucket.png)
 
@@ -101,8 +101,10 @@ Enterprise standard for this is Elasticsearch. You get [ILM, snapshots to S3](/2
 
 One of the benefits is now I have a Kompromise submitter pipeline as well, so future integrations with applications that consume S3 feeds - raw or processed - will be even easier.
 
-I do know most applications can get their own notifications directly from StorageGRID, but that's not the point: to get own notifications *reliably*, you need something like NATS or Kafka and neither is a very fun software to manage (although NATS is much better). Kompromise sets up the *entire* stack - Webhook notifications, pipelines, functions, NATS and AIS.
+![Kompromise with Quickwits flow](/assets/images/kompromise-quickwit-storagegrid-01-steps.png)
+
+I do know most applications can get their own notifications directly from StorageGRID, but that's not the point: to get own notifications *reliably* and *not lose them*, you need something like NATS or Kafka and neither is a very fun software to manage (although NATS is much better). Kompromise sets up the *entire* stack - Webhook notifications, pipelines, functions, NATS and AIS.
  
 I could have demonstrated Quickwit with a random single VM, manually uploaded logs and S3, but that's not usable for business users. It also wouldn't show how to do it right with StorageGRID, which was an important consideration in my context. 
 
-Quickwit at any non-trivial scale needs a reliable PostgreSQL service, amplifying synergy with EF-Series and Kompromise.
+Quickwit at non-trivial scale needs a reliable PostgreSQL service, amplifying synergy with EF-Series and Kompromise.
