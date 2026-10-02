@@ -33,23 +33,23 @@ Third, because I use Kompromise Webhooks, I do need NATS. Because I need NATS, I
 
 ![NATS configuration with multiple arrays](/assets/images/nats_eseries_14_3-rack-5-node-nats.png)
 
-Where's CPNG coming from? It's required if you want to scale out Quickwit to more than one indexer - at that point you can't have multiple writers to the same file. 
+Where's CPNG coming from? It's not a hard requirement, but HA for PostgreSQL is required if you want to scale out Quickwit to more than one indexer: at that point you can't have multiple writers to the same metastore object on S3, so you need *some* sort of HA.
 
-Now this log indexing becomes interesting because I can securely submit logs (from the public cloud, for example) *to a StorageGRID bucket* and have them processed and ingested to Quickwit without *any* intervention. 
+Now, this log indexing requirement is interesting because I can securely submit logs (from the public cloud or remote offices, for example) *to a StorageGRID bucket* and have them processed and ingested to Quickwit without *any* intervention. 
 
 And the whole thing doesn't cost me almost any extra work, because Kompromise has almost everything:
 - Webhook
 - HA NATS
 - Pipeline
-- (Optional) I did not leverage AIS i Kompromise to make the PoC and this post less complicated
+- (Optional) For large logs, AIS (S3 read cache) would be helpfulI did not leverage AIS from Kompromise to make the PoC and this post less complicated
 
 ![Kompromise for Quickwit](/assets/images/kompromise-quickwit-storagegrid-00.png)
 
-The green-shaded areas are per-namespace resources.
+The green-shaded areas are per-tenant (namespaced) resources that provide user segregation.
 
-- (1) New logs are coming to s3://incoming/<app-or-other-prefix>
+- (1) New logs are landing in `s3://incoming/<app-or-other-prefix>`.
 - (2) StoraeGRID sends notification to Kompromise Webhook
-- (3) Kompromise pipeline - where I added a "submitter" worker - sends ObjectCreated notifications to a 3rd party SQS server for Quickwit to poll. Quickwit polls it, finds the log file's URI, downloads the file (it has GET access to s3://incoming), indexes the log and appends to index in s3://indexes. It also has to update its own metadata, which can be on S3 as well but only for one indexer. Normally, you'd have more than one and therefore need a highly-available PostgreSQL and that's another strong case for EF-Series here
+- (3) Kompromise pipeline - where I added a new "submitter" worker - sends `ObjectCreated` notifications to a 3rd party SQS server for Quickwit to poll. Quickwit polls it, finds the log file's URI, downloads the file (it has GET access to s3://incoming), indexes the log and appends to index in s3://indexes. It also has to update its own metadata, which can be on S3 as well but only for one indexer. Normally, you'd have more than one and therefore need a highly-available PostgreSQL and that's another strong case for EF-Series here
 
 Since CPNG runs *really well* with E-Series, and [continuous backup to S3 works well too](/2026/06/03/cloud-native-postgres-kubernetes-netapp-eseries-backup-restore.html), there's no better NetApp storage array to serve that database and we already have an object store to upload backups to.
 
