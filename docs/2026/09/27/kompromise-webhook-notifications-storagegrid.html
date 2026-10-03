@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":1860,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://scaleoutsean.github.io/2026/09/27/kompromise-webhook-notifications-storagegrid.html"},"headline":"Improved Kompromise webhook for NetApp StorageGRID","description":"Notes on the improvements to Kompromise Webhook service","datePublished":"2026-09-27T00:00:00+08:00","dateModified":"2026-09-27T00:00:00+08:00","author":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://scaleoutsean.github.io/#scaleoutsean"},"isPartOf":{"@id":"https://scaleoutsean.github.io/#website"},"image":"https://scaleoutsean.github.io/assets/images/kompromise-storagegrid-webhook.png","keywords":["events","s3","storagegrid","ais","nvidia","pipeline","nats","webhook","e-series"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"}],"wordCount":2307,"articleBody":"Notes on the improvements to Kompromise Webhook service"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -297,7 +297,79 @@
 
 <p>Simple provides less data, but has reliable delivery, while Enriched does more but can fail mid-way (crash, network disconnect, etc.) and there's no "retry" (since StorageGRID has already delivered the notification, and Kompromise Webhook does not retry). If you <em>need</em> "reliable Enriched", you can use Simple and create your own enrichment pipeline that uses same NATS service for reliable enrichment.</p>
 
-<p>The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner. The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.</p>
+<p>Enriched has extra data in <code class="language-plaintext highlighter-rouge">kompromise</code> JSON which - if Rich Notification is configured - means second query to StorageGRID is required.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"Records"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"eventVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"eventSource"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sgws:s3"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"eventTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-03T05:01:30Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"eventName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ObjectCreated:Put"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"userIdentity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"principalId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"55295525968323305569"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"requestParameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"sourceIPAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"192.168.1.13"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"responseElements"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"x-amz-request-id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1791003690190920"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"s3"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"s3SchemaVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"configurationId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object-created"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"bucket"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"assumed"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"ownerIdentity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"principalId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"55295525968323305569"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nl">"arn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"urn:sgws:s3:::assumed"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"object"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date.txt"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"eTag"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85fe585f87cfd3650f48e20318014ecd"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"versionId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"N0YwMjg2NjgtQkVFNy0xMUYxLTlGRTUtQTk5RjAwQzRGOUFB"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"sequencer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18DAEC5E05A027A1"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"kompromise"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rich"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"pipeline"</span><span class="p">:</span><span class="w"> </span><span class="s2">"enriched"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sgws"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tenant"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pepsi"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"bucket"</span><span class="p">:</span><span class="w"> </span><span class="s2">"assumed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"enriched_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-03T05:01:35.210514147Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"objects"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"record_index"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date.txt"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"version_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"N0YwMjg2NjgtQkVFNy0xMUYxLTlGRTUtQTk5RjAwQzRGOUFB"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"version_pinned"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"enrichment_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"enrichment_attempts"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"enrichment_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-03T05:01:35.001309645Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"content_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"binary/octet-stream"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"last_modified"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-03T05:01:30Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"user_metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"x-amz-meta-author"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scaleoutSean"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"x-amz-meta-location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Taipei"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"object_tags"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"Confidentiality"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Internal"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"Project"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dating"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner.</p>
+
+<p>The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.</p>
 
 <h2 id="next-steps">Next steps</h2>
 

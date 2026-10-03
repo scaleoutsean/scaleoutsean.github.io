@@ -53,7 +53,80 @@ Bucket owner configures Webhook service for `s3.events.<namespace>.<bucket>.<pip
 
 Simple provides less data, but has reliable delivery, while Enriched does more but can fail mid-way (crash, network disconnect, etc.) and there's no "retry" (since StorageGRID has already delivered the notification, and Kompromise Webhook does not retry). If you *need* "reliable Enriched", you can use Simple and create your own enrichment pipeline that uses same NATS service for reliable enrichment. 
 
-The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner. The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.
+Enriched has extra data in `kompromise` JSON which - if Rich Notification is configured - means second query to StorageGRID is required.
+
+```json
+{
+  "Records": [
+    {
+      "eventVersion": "2.0",
+      "eventSource": "sgws:s3",
+      "eventTime": "2026-10-03T05:01:30Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "55295525968323305569"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "192.168.1.13"
+      },
+      "responseElements": {
+        "x-amz-request-id": "1791003690190920"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "object-created",
+        "bucket": {
+          "name": "assumed",
+          "ownerIdentity": {
+            "principalId": "55295525968323305569"
+          },
+          "arn": "urn:sgws:s3:::assumed"
+        },
+        "object": {
+          "key": "date.txt",
+          "size": 32,
+          "eTag": "85fe585f87cfd3650f48e20318014ecd",
+          "versionId": "N0YwMjg2NjgtQkVFNy0xMUYxLTlGRTUtQTk5RjAwQzRGOUFB",
+          "sequencer": "18DAEC5E05A027A1"
+        }
+      }
+    }
+  ],
+  "kompromise": {
+    "mode": "rich",
+    "pipeline": "enriched",
+    "source": "sgws",
+    "tenant": "pepsi",
+    "bucket": "assumed",
+    "enriched_at": "2026-10-03T05:01:35.210514147Z",
+    "objects": [
+      {
+        "record_index": 0,
+        "key": "date.txt",
+        "version_id": "N0YwMjg2NjgtQkVFNy0xMUYxLTlGRTUtQTk5RjAwQzRGOUFB",
+        "version_pinned": true,
+        "enrichment_status": "ok",
+        "enrichment_attempts": 2,
+        "enrichment_at": "2026-10-03T05:01:35.001309645Z",
+        "content_type": "binary/octet-stream",
+        "last_modified": "2026-10-03T05:01:30Z",
+        "user_metadata": {
+          "x-amz-meta-author": "scaleoutSean",
+          "x-amz-meta-location": "Taipei"
+        },
+        "object_tags": {
+          "Confidentiality": "Internal",
+          "Project": "Dating"
+        }
+      }
+    ]
+  }
+}
+```
+
+The first Kompromise post at the top has demonstrations of example functions that can be created and deployed by the pipeline owner.
+
+The ETL function for video content shown there is one such example which only needs a simple notification and the rest is handled in user's ETL function, so that is already available.
 
 ## Next steps
 

@@ -2783,6 +2783,12 @@ var store = [{
         "url": "/2026/10/02/kompromise-quickwit-netapp-eseries.html",
         "teaser": null
       },{
+        "title": "Feed StorageGRID 12 data to Elasticsearch 9 indexes with Kompromise",
+        "excerpt":"Introduction StorageGRID has two integrations with Elasticsearch. I blogged about them here: there’s search and there’s (indirect, via Logstash) logging. This post is about search. Let’s see if we can integrate StorageGRID 12.1 and Elasticsearch 9 better using Kompromise. This was already demonstrated in an early prototype of Kompromise called...","categories": ["storage","s3","ai","analytics","projects"],
+        "tags": ["events","notifications","s3","storagegrid","e-series","elasticsearch","opensearch"],
+        "url": "/2026/10/03/kompromise-elasticsearch-storagegrid-search.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
   },{
@@ -2796,7 +2802,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Using Kompromise Webhook for automated S3 log indexing 2026-10-02 00:00 6 minute read Another use case for Kompromise Webhook - notifications for automated log ingestion Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID 2026-09-29 00:00 9 minute read Personal log documenting the Kompromise journey -...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Feed StorageGRID 12 data to Elasticsearch 9 indexes with Kompromise 2026-10-03 00:00 11 minute read This is about using Kompromise to get StorageGRID object data into Elasticsearch (and OpenSearch, if you can get it to work) Using Kompromise Webhook for automated S3 log indexing 2026-10-02 00:00 6 minute read Another...","url": "https://scaleoutsean.github.io/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
