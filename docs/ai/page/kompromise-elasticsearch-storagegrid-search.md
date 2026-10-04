@@ -156,15 +156,19 @@ Chunk details (`[3]` and `[4]`) and document URIs is what you'd get as URLs to t
 
 ## Comparison vs...
 
-Kompromise isn't a product and if it gets published it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products.
+Kompromise isn't a product and if it gets published it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products: you can't get support for it, and you'd probably build a similar tool if you wanted to use it in production in an enterprise environment. 
 
-As of now, your choices are limited and you have to build own integrations. Maybe Komprise can work well with StorageGRID notifications, but their documentation isn't detailed (or publicly available).
+But since the topic is of interest to StorageGRID users in general, I'll share what I currently know because it may not be available elsewhere.
 
-Just two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I expect it works the same way Kompromise does. Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise because it focuses only on data flow and pipeline.
+As of now, your choices are fairly limited and you have to build own integrations. Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, but their documentation isn't detailed (or publicly available), so it's hard to tell.
 
-There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if any of them do it.
+Just two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I expect it to work the same way Kompromise does.
 
-Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but [there is this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) which indicates that indexes are built using brute-force listing (full ObjectListv2 every time you update), so it may not be directly comparable to Kompromise.
+Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise because it focuses only on data flow and pipeline.
+
+There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if they do it and how their indexes look like. Kompromise could be used in migrations, but it's primarily targeting event-driven unstructured data processing.
+
+Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but [there is this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) which indicates that indexes are built using brute-force listing (full ObjectListV2 every time you update an index), so it may not be directly comparable to Kompromise.
 
 But indeed, if we have TBs of data that's already in a bucket, how to index it?
 - Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output result to a file and loop through it to get the data you need. Se [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern here is I've seen NAS traditionalists who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do anything for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? 
@@ -183,6 +187,8 @@ As far as getting the full list (and building a search index from that content) 
 - The Snapshot Lease function in my `sg-cosi` was created for bucket backup workflows, but you can use it to run ListObjectsV2 for 36-hours non-stop if you'd like (not the greatest idea because such scanning competes with ILM and all workloads - you should throttle it or have limits on the StorageGRID load balancer to control this behavior)
 - Then, we can send those results to any, or several, places to perform index maintenance
 
+Kompromise, as a reference stack for data pipelines, does not need prescriptive integrations because it's supposed to be able to work with anything on either input or output side. Notifications are resource-cheap, while data churning is expensive and with Kompromise I can do both and it scales out. After processing, data can be stored on StorageGRID - a scale-out platform - and indexes on any scale out database (such as Elasticsearch), so Kompromise plays well here - it focuses on specific areas where it can add value.
+
 ## Conclusion
 
 In 2026, keeping your data out of reach for agents is almost as bad as keeping it on tapes.
@@ -191,6 +197,6 @@ Kompromise makes StorageGRID-parked data more valuable because with it, you and 
 
 I mention in every Kompromise post: the Webhook is the only new part here, while the rest is off the shelf software, but I perhaps shouldn't, because much of commercial software is not any better.
 
-Today's post doesn't include AIS, but it does show that simply with the Webhook and per-tenant NATS queues, I can easily deliver any search integration I need - including heavy media processing - without spending days on reinventing the wheel.
+Today's post doesn't include AIS examples (I showed them in previous posts, though), but it does show that simply with the Webhook and per-tenant NATS queues, I can easily deliver any kind of search integration we need - including heavy media processing steps, if any - without spending days on reinventing the wheel.
 
 While the scripts to used to populate Elasticsearch indexes aren't part of Kompromise, I may add their key parts to the repo where Kompromise Webhook is expected to appear. These are out of scope (downstream from Kompromise) and everyone does things slightly differently, so I'd rather let everyone do what they like with StorageGRID events.
