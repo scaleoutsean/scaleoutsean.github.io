@@ -91,7 +91,7 @@ The free edition can't run own pipelines with vectors. This is why I create them
 
 The commercial edition can run vectorization on Elasticsearch, using their own curated models which are very good.
 
-Likewise, when searching using the free edition, I can't search embeddings for words. I compute queries into vectors on the client, and search for matching vectors on Elasticsearch. It works, but it's less convenient. 
+Likewise, when searching using the free edition, I can't search embeddings for words. I compute queries into vectors on the client, and search for best-matching vectors on Elasticsearch. It works, but it's less convenient. 
 
 OpenSearch, on the other hand, is "free" but always has bugs and ends up frustrating me much more than the limitations in Elasticsearch'es Community Edition.
 
@@ -114,7 +114,7 @@ The question was:
    es, to—” At this moment Five, who had been anxiously looking across the garden, called out “The Queen! The Queen!” and the three gardeners instantly threw themselves flat upon their faces. There was a...
 ```
 
-Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the answer. But you don't get a chatbot answer in this search, you get chunks whose contents match vectors from the query string you sent.
+Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the answer (the other is #4, but there are other relevant answers). But you don't get a chatbot answer in this search, you get chunks that best match vectors from the query string you sent.
 
 There are different techniques to do this better, but normally we'd work with agents or LLMs, so there's no need to try and turn this into a chatbot experience. That comes later.
 
