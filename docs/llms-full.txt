@@ -169,23 +169,31 @@ Chunk details (`[3]` and `[4]`) and document URIs is what you'd get as URLs to t
 
 ## Comparison vs...
 
-Kompromise isn't a product and if it gets published it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products: you can't get support for it, and you'd probably build a similar tool if you wanted to use it in production in an enterprise environment. 
+Kompromise isn't a product and if it gets published it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products: you can't get support for it and you'd probably build a similar tool if you wanted to use it in production in an enterprise environment. 
 
-But since the topic is of interest to StorageGRID users in general, I'll share what I currently know because it may not be available elsewhere.
+But since the topic is of interest to StorageGRID users in general, I'll share what I currently know because it's hard to find StorageGRID-specific information elsewhere.
 
-As of now, your choices are fairly limited and you have to build own integrations. Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, but their documentation isn't detailed (or publicly available), so it's hard to tell.
+### What else is out there
 
-There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if they do it and how their indexes look like. Kompromise could be used in migrations, but it's primarily targeting event-driven unstructured data processing.
+As of now, your choices in terms of near real-time integration are limited and you have to build own integrations.
 
-There's also [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor tool, so similar to Komprise (it can drive workflows) and Datadobi (it can be used in migrations).
+Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, but their documentation isn't detailed (or publicly available), so it's hard to tell.
 
-Among the more recent ones, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I expect it to work the same way Kompromise does.
+There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if they do it and how their indexes look like (I'm sure they have them, but do they store information AI agents need, or does it need to be re-created by the user?). Kompromise could be used in migrations, but it primarily targets event-driven unstructured data processing use cases.
 
-Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise because it focuses only on data flow and pipeline.
+Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it can be used in migrations).
 
-Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but [there is this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) and [this page](https://docs.netapp.com/us-en/ai-data-engine/data-sources/connect-data-source.html#add-a-data-source) which indicate that indexes are built using scanning (full ObjectListV2 every time you update an index), so it may not be directly comparable to Kompromise as far as the "how indexes are updated" question is concerned. How other things compare, I do not know, but it seems this month's release is more of a "[storage capacity monitoring and management](https://docs.netapp.com/us-en/ai-data-engine/investigate/understand-dashboard.html)" play - closer to Starfish Software than what Kompromise does. 
+Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would expect it to work the same way Kompromise does. But it could be doing full re-scans rather than use Notifications.
 
-NetApp has another product called Cloud Sync, which is a data replication tool which may (that part is unclear to me) receive S3 event notifications, but doesn't do any processing except synchronization (copying).
+Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise.
+
+Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but there are documentation pages like [this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) and [this page](https://docs.netapp.com/us-en/ai-data-engine/data-sources/connect-data-source.html#add-a-data-source) which indicate that indexes are built using bucket scans (ObjectListV2 every time you update an index), so it may not be directly comparable to Kompromise as far as the "how indexes are updated" question is concerned.
+
+How other AIDE things compare, I do not know, but it seems this month's release is more of a "[storage capacity monitoring and management](https://docs.netapp.com/us-en/ai-data-engine/investigate/understand-dashboard.html)" tool - much closer to Starfish Software than Kompromise.
+
+NetApp has a product called Cloud Sync, which is a data replication tool which may (that part is unclear to me) receive S3 event notifications, but doesn't do any processing except synchronization (copying).
+
+## Full re-scan vs notifications
 
 But indeed, if we have TBs of data that's already in a bucket, how to index it?
 - Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output the result to a file and loop through the list to get the data you need. See [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern is I've seen users with NAS background who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do something for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? "Storage admin" has no clue what chatbot or Elasticsearch instance may be linking to the stuff in your bucket. Clearly, management issues should be fixed in the workflows, not by "storage admin" actions.
@@ -194,18 +202,22 @@ But indeed, if we have TBs of data that's already in a bucket, how to index it?
 
 But wait, why even use Notifications when we can simply re-index buckets?
 - You can't reindex an entire bucket once every minute, but you can receive Notifications of new objects *every second* and business may not be able to wait until next weekend
-- Brute-force scanning doesn't work at scale. Imagine re-listing all objects a cross hundreds of TB sized buckets... I don't know if that's what others do or not, but I do know that's unlikely to work well
+- Brute-force listing doesn't work at scale. Imagine re-listing all objects a cross hundreds of TB sized buckets... I don't know if that's what others do or not, but I do know that's unlikely to work well
 - "Scanning performance" mostly doesn't matter here. ListObjectsV2 is a metadata query that costs the S3 client almost nothing, but consumes non-insignificant resources the object store (which is why AWS charges for such API calls). Most users should throttle these rather than try to do "scan faster". They'll be constrained by object storage performance, not by client performance.
 - Bottom line is, there's no substitute for Notifications. *It doesn't matter how you get 'em*, Webhook or Kafka, every consumer and every software gets the same information at the same time. Kompromise Webhooks won't have less information than any other software, so I expect Notifications to remain one of the least dirty shirts in the closet. You can supplement Notifications with full re-scan once a week to pick objects you missed and maybe reconcile with Elasticsearch (Kompromise can do that as well, just read the list from a file rather than from NATS and the rest is identical), but that should be an exception, not a pattern
 - You'd also have to re-scan all Elasticsearch indexes, not just buckets. Why? Because you probably want to remove stale objects from indexes, not just add new ones. Or maybe mark stale index entries as deleted, if you have to keep indexes in sync
 
-As far as getting the full list (and building a search index from that content) of a bucket is concerned, we already have a free solution for that: [Snapshot Leases](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) with `sg-cosi`:
+As far as getting full list (and building a search index from that content) of a bucket is concerned, we already have a free solution for that: [Snapshot Leases](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) with `sg-cosi`:
 - Create a Snapshot Lease using my StorageGRID COSI driver. Let's say you create a 48 hour snapshot lease
-- That gives 48 hours (this can be extended up to 7 days) to access the bucket from anywhere it's accessible to S3 clients by using ephemeral S3 keys
+- That gives you 48 hours (this can be extended up to 7 days) to access the bucket from anywhere it's accessible to S3 clients by using ephemeral S3 keys generated by `sg-cosi`
 - The Snapshot Lease function in my `sg-cosi` was created for bucket backup workflows, but you can use it to run ListObjectsV2 for 36-hours non-stop if you'd like (not the greatest idea because such scanning competes with ILM and all workloads - you should throttle it or have limits on the StorageGRID load balancer to control this behavior)
 - Then, we can send those results to any, or several, places to perform index maintenance
 
 That's available and easy to use, but it should be used only in exceptional situations, not as the main method to keep track of your S3 data. It can't scale well and it's very taxing on object store.
+
+I see a lot of AI-related examples that are based on full bucket scans of buckets with few to few thousand images. "You just rescan". That's fine, you just rescan.
+
+But why would you have a bucket with just a few thousand images? It must be a consequence of copying. You have the same 7,500 images in another bucket, together with 750 thousand other images, but rather than organizing that data you copy objects to an app-specific bucket *for every application*. This doesn't seem right. It does make full rescan possible.
 
 Kompromise, as a reference stack for data pipelines, does not aim for prescriptive integrations because it's supposed to be able to work with anything on either input (matter of implementation; I hope to add Versity S3 Gateway with E-Series later) or output (matter of user's choice) side.
 
