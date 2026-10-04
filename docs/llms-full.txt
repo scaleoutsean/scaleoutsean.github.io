@@ -90,13 +90,13 @@ That's where step 3A and the integrated AIS come in play: we can pre-fetch to ca
 
 ![Kompromise and embeddings in Elasticsearch 9](/assets/images/kompromise-beta.png)
 
-Here's a screenshot from the same "Alice in Wonderland" document, but with embeddings. This is the `assume-vectors` index, focused on chunk #3 which is one of the places where the answer to our question can be found.
+Here's a screenshot from the same "Alice in Wonderland" document, but with embeddings. This is the `assume-vectors` index, focused on chunk #3 which is one of the places which have information related to the question we'll ask.
 
 ![Kompromise and embeddings in Elasticsearch 9](/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
 
 Unlike with Full Text Search, here I have a bunch of smaller chunks, each of which has a fraction of overall text, and a vector field for semantic search.
 
-The query shows just one chunk, which is the chunk where "ten soldiers" are mentioned.
+The query shows just one chunk, which is one of the chunks where "ten soldiers" (the highest number) are mentioned (the same sequence also appears in chunk #4). The challenge - for a human reader, at least - is there are many places where different soldier numbers are mentioned.
 
 ### Community vs. commercial Elasticsearch
 
@@ -146,7 +146,7 @@ If you have the both kinds of indexes, you can do fancy searches or have an agen
 
 ## Agents and LLMs
 
-I'll leave this for another post related to Kompromise, but [I've written about this before and created some examples](/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html) with indexes on S3. This is the same thing except indexes are stored on block devices (e.g EF-Series) and tiered to S3 only later.
+I'll leave this for another post related to Kompromise, but [I've written about this before and created some examples](/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html) with indexes on S3. This is the same thing except indexes are stored on block devices (e.g. EF-Series) and tiered to S3 only later.
 
 But let's see what we expect to happen later:
 - We have one or two indexes
@@ -157,7 +157,7 @@ YMMV, as they say. Earlier, we've established there were ten soldiers. At least,
 
 When an LLM comes into the picture, it searches (like we did above) and does its own reasoning from and with the results. There's a bunch of techniques and models and each can produce different results.
 
-To illustrate this point, I used two approaches to answer the question - now in the right "chat form" -  with LLMs that had access to the same indexes.
+To illustrate this point, I used two approaches to answer the question - now in the right "chat form" -  with LLMs that had access to the same indexes. The LLM model was the same, but the technique was not.
 
 Example answer from approach A: 
 
@@ -185,15 +185,15 @@ But since the topic is of interest to StorageGRID users in general, I'll share w
 
 As of now, your choices in terms of near real-time integration are limited and you have to build own integrations.
 
-Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, but their documentation isn't detailed (or publicly available), so it's hard to tell.
+Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, but their documentation isn't detailed (or publicly available), so it's hard to tell. They have excellent workflows for hybrid cloud and AI and analytics solutions.
 
 There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if they do it and how their indexes look like (I'm sure they have them, but do they store information AI agents need, or does it need to be re-created by the user?). Kompromise could be used in migrations, but it primarily targets event-driven unstructured data processing use cases.
 
-Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it can be used in migrations).
+Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it can be used in migrations). Starfish includes own database (standard PostgreSQL) and lets you access it with to dispatch jobs and workflows to other places.
 
-Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would hope it works the same way Kompromise does (based on Notifiations). But it could be doing full re-scans.
+Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would hope it works the same way Kompromise does (based on Notifiations). But it could be doing full bucket enumeration instead.
 
-Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise.
+Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise. One last thing about Diskover: good integration with Elasticsearch, so if ES is what you already use, this makes it a strong contender.
 
 Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but there are documentation pages like [this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) and [this page](https://docs.netapp.com/us-en/ai-data-engine/data-sources/connect-data-source.html#add-a-data-source) which indicate that indexes are built using bucket scans (ObjectListV2 every time you update an index), so it may not be directly comparable to Kompromise as far as the "how indexes are updated" question is concerned.
 
