@@ -187,7 +187,11 @@ As far as getting the full list (and building a search index from that content) 
 - The Snapshot Lease function in my `sg-cosi` was created for bucket backup workflows, but you can use it to run ListObjectsV2 for 36-hours non-stop if you'd like (not the greatest idea because such scanning competes with ILM and all workloads - you should throttle it or have limits on the StorageGRID load balancer to control this behavior)
 - Then, we can send those results to any, or several, places to perform index maintenance
 
-Kompromise, as a reference stack for data pipelines, does not need prescriptive integrations because it's supposed to be able to work with anything on either input or output side. Notifications are resource-cheap, while data churning is expensive and with Kompromise I can do both and it scales out. After processing, data can be stored on StorageGRID - a scale-out platform - and indexes on any scale out database (such as Elasticsearch), so Kompromise plays well here - it focuses on specific areas where it can add value.
+Kompromise, as a reference stack for data pipelines, does not aim for prescriptive integrations because it's supposed to be able to work with anything on either input or output side.
+
+Notifications are resource-cheap, while data churning is expensive and with Kompromise I can do both and it scales out. After processing, data can be stored on StorageGRID - a scale-out platform itself - and indexes on any scale out database (such as Elasticsearch), so Kompromise plays well here - it focuses on specific areas where it can add value. It doesn't make you change or fragment your workflows - it just makes existing work better. 
+
+The only hard-coded dependency is NATS, which is there for a reason. I could support two event stores ("never say never"), but NATS is integrated and doesn't require the user to come up with own NATS cluster. Additionally, any qualified user (with requirements matching what Kompromise does) will use AIS as well, and NATS and AIS have the same requirements storage-wise.
 
 ## Conclusion
 
@@ -195,8 +199,8 @@ In 2026, keeping your data out of reach for agents is almost as bad as keeping i
 
 Kompromise makes StorageGRID-parked data more valuable because with it, you and your agents can actually find your stuff. 
 
-I mention in every Kompromise post: the Webhook is the only new part here, while the rest is off the shelf software, but I perhaps shouldn't, because much of commercial software is not any better.
+I mention this in almost every Kompromise post: the Webhook is the only new part here, while the rest is off the shelf software, but I perhaps shouldn't, because much of commercial software is not any better in that regard.
 
-Today's post doesn't include AIS examples (I showed them in previous posts, though), but it does show that simply with the Webhook and per-tenant NATS queues, I can easily deliver any kind of search integration we need - including heavy media processing steps, if any - without spending days on reinventing the wheel.
+Today's post doesn't include AIS examples (I showed them in the previous posts, though), but it does show that simply with the Webhook and per-tenant NATS queues, I can easily deliver any kind of search integration we need - including heavy media processing steps, if any - without spending days on reinventing the wheel.
 
-While the scripts to used to populate Elasticsearch indexes aren't part of Kompromise, I may add their key parts to the repo where Kompromise Webhook is expected to appear. These are out of scope (downstream from Kompromise) and everyone does things slightly differently, so I'd rather let everyone do what they like with StorageGRID events.
+While the scripts to used to populate Elasticsearch indexes aren't part of Kompromise, I may add their key parts to the repo where Kompromise Webhook is expected to appear when ready. These are out of scope (downstream from Kompromise) and everyone does things slightly differently, so I'd rather let everyone consume StorageGRID events the way they prefer - existing compute workflows and existing databases/indexes.
