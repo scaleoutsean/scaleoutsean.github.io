@@ -4,15 +4,15 @@ Consume Kompromise queues to populate Elasticsearch indexes
 
 ## Introduction
 
-StorageGRID has two integrations with Elasticsearch. I blogged about them [here](/2023/07/20/storagegrid-and-elaticsearches.html): there's search and there's (indirect, via Logstash) logging. 
+StorageGRID has two integrations with Elasticsearch. I blogged about them [here](/2023/07/20/storagegrid-and-elaticsearches.html): there's Search and there's (indirect, via Logstash, but it's part of ELK stack) Logging. 
 
-This post is about Search. Let's see if we can integrate StorageGRID 12.1 and Elasticsearch 9 better using Kompromise.
+This post is about Search (not Logging). Let's see if we can integrate StorageGRID 12.1 and Elasticsearch 9 better using Kompromise.
 
-This was already demonstrated in an early prototype of Kompromise called "Go NATS!" last year, but this is a more detailed version that are unlikely to change by the time I share Webhook binaries.
+This was already demonstrated in an early prototype of Kompromise called "Go NATS!" last year, but this is a more detailed version that are unlikely to change by the time I share Kompromise Webhook binaries.
 
 ## From Kompromise to Elasticsearch
 
-As I wrote in the recent post on [Kompromise Webhooks](/2026/09/27/kompromise-webhook-notifications-storagegrid.html#kompromise-webhook-for-storagegrid), there are simple and enhanced. 
+As I wrote in the recent post on [Kompromise Webhooks](/2026/09/27/kompromise-webhook-notifications-storagegrid.html#kompromise-webhook-for-storagegrid), there are Simple and Enhanced. 
 
 Here's an example of an index entry created from Enhanced Notifications in Kompromise:
 
@@ -20,7 +20,7 @@ Here's an example of an index entry created from Enhanced Notifications in Kompr
 
 There are details such as date, tags, metadata and the source IP that created the object.
 
-Simple notifications will have the usual (bare) details - nothing from `kompromise.*` above. Simple notifications are fine if you search for things like object names, prefixes and dates, but you probably realize that this is useless for most practical purposes (especially anything AI-related).
+Simple Notifications will have the usual (bare) details - nothing from `kompromise.*` keys above. Simple Notifications are fine if you search for things like object names, prefixes and dates, but you probably realize that this is useless for most practical purposes (especially anything AI-related).
 
 So:
 
@@ -35,13 +35,13 @@ We can do basic (Simple or Rich), we can do lexical, we can do vectors. And we c
 
 For basic search (that only stores data from Simple or Rich notifications), you don't have to do anything extra.
 
-Pick 'em up from NATS and submit to Elasticsearch. 
+Pick 'em up from NATS topics and submit to Elasticsearch. 
 
-With Kompromise, *indexing* works better than StorageGRID's own Search Integration in 12.1 and that is reasonable, given that we use more resources to do it.
+With Kompromise, *indexing* works better than StorageGRID's own Search Integration in 12.1 and that is reasonable, given that we use more resources to do it - Kompromise should better do it better.
 
 > With Kompromise, Simple notifications are persisted in NATS queues and batched to Elasticsearch, so we consume IOPS on NATS (3x, at that) but spare Elasticsearch (also RF3, if you do it right) from being bombarded with 100 byte requests every few seconds - this is *much* better for Elasticsearch, especially if you pay for it! Rich Kompromise notifications may be lost in rare circumstances (heavy load on Kompromise or StorageGRID) but, as I explained elsewhere, if those are critical you can use Simple and create own jobs for reliable Rich that work off Simple.
 
-*Search* also works better with Kompromise if you use Rich Notifications (tags, metadata are included).
+*Search* also works better with Kompromise if you use Rich Notifications (where tags, metadata are included).
 
 Here's an example of default StorageGRID Search Integration entry (bucket versioning is off, unlike in the Kompromise Rich example above):
 
@@ -53,27 +53,27 @@ Let's just say this won't get your AI initiatives very far.
 
 We need to read all object content and store it in `body` or similar index field.
 
-This is impractical for huge documents which need to be broken down in shorter segments. For e-commerce product descriptions and even small to medium documents - it's fine.
+This is impractical for large documents which need to be broken down in shorter segments. For e-commerce product descriptions and even small to medium documents, it's fine.
 
-I used the content from free books ([Alice in Wonderland](https://www.gutenberg.org/cache/epub/11/pg11-images.html#chap08) and [Moby Dick](https://www.gutenberg.org/cache/epub/2701/pg2701-images.html#link2HCH0022)) in my early testing. There were just a couple of KB each, so I did not need to prefetch to AIS.
+I used the content from free books ([Alice in Wonderland](https://www.gutenberg.org/cache/epub/11/pg11-images.html#chap08) and [Moby Dick](https://www.gutenberg.org/cache/epub/2701/pg2701-images.html#link2HCH0022)) in my early testing. There were just a couple of KB each, so I did not need to prefetch them to AIS cache.
 
-Document conversion and OCR may be required before one can even begin, but we used text files (markdown, CSV, and similar formats would also work).
+Document conversion and OCR may be required before one can even begin, but we used text files (markdown, CSV, and similar formats would also work) since data preparation is an extra step (although some commercial tools have it included to provide end-to-end, fully self-contained, workflows).
 
 ![Full text search in Elasticsearch 9](/assets/images/kompromise-storagegrid-search-indexing-04-elasticsearch-lexical.png)
 
-S3 access isn't a problem because this works out of tenant's Kubernetes namespace (which maps 1:1 to bucket name on StorageGRID). Our "worker" here needs `GET` access to read the object from the notification message.
+S3 access isn't a problem because this works out of the tenant's Kubernetes namespace (which maps 1:1 to the bucket name on StorageGRID). Our "worker" needs `GET` access to read the object from the notification message.
 
 ## Vector search with Kompromise
 
 Here, too, we must read full *content* of the object. 
 
-The way that usually works is we "cut" an object in pieces ("chunks") and create embeddings for each. Then we store one or more embeddings under the S3 object's key in Elasticsearch.
+The way embeddings usually work is we "cut" an object in pieces ("chunks") and create embeddings for each piece. Then we store one or more embeddings under the S3 object's key in Elasticsearch.
 
 Imagine that's a movie: 30 frames per second times 1,800 seconds. That's over 50,000 images.
 
 We could probably run image analysis on just one compute node, but that would be *much* slower than if we did it on two or 12 Kubernetes workers. 
 
-That's where step 3A and the integrated AIS come in play: we can pre-fetch to cache (3A) and then compute. Or just compute (3B) using own client that connects to NATs or a curated function.
+That's where step 3A and the integrated AIS come in play: we can pre-fetch to cache (3A) and then compute. Or just compute (3B) using own client that connects to NATs or a curated function if we deal with lightweight content.
 
 ![Kompromise and embeddings in Elasticsearch 9](/assets/images/kompromise-beta.png)
 
@@ -91,21 +91,21 @@ The free edition can't run own pipelines with vectors. This is why I create them
 
 The commercial edition can run vectorization on Elasticsearch, using their own curated models which are very good.
 
-Likewise, when searching on the free edition, I can't search embeddings for words. I compute questions into vectors on the client, and search for matching vectors on Elasticsearch. It works, but it's less convenient. 
+Likewise, when searching using the free edition, I can't search embeddings for words. I compute queries into vectors on the client, and search for matching vectors on Elasticsearch. It works, but it's less convenient. 
 
 OpenSearch, on the other hand, is "free" but always has bugs and ends up frustrating me much more than the limitations in Elasticsearch'es Community Edition.
 
 ## Search results
 
-With lexical search, you type words. For an example, "ten soldiers". This does appear in the document and the entire the document gets found.
+With lexical search, we type words. For an example, "ten soldiers". This does appear in the document we have, so the document gets found.
 
-With embeddings, you look for stuff that may be found in multiple chunks. You can search with questions, but in the free version that doesn't work well because - mentioned above - you're not talking to a chatbot, you're comparing vectors.
+With embeddings, we look for stuff that may be found in multiple chunks. We can search with vectorized questions, but in the free version that doesn't work well because - mentioned above - you're not talking to a chatbot, you're comparing vectors.
 
 The question was:
 
 > "Which of the two groups, gardeners or soldiers, was more numerous?" 
 
-Asking a question doesn't help at all because "which" doesn't help in content comparison, there's no mention of "ten soldiers", so results are likely to suck.
+"Query as a a question" doesn't help because "which" doesn't help with semantic comparison and there's no mention of "ten soldiers", so results are likely to suck.
 
 ```sh
 1. score=0.8049 assumed/alice01.txt#10
@@ -114,13 +114,13 @@ Asking a question doesn't help at all because "which" doesn't help in content co
    es, to—” At this moment Five, who had been anxiously looking across the garden, called out “The Queen! The Queen!” and the three gardeners instantly threw themselves flat upon their faces. There was a...
 ```
 
-Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the answer. But you don't get a chatbot answer, you get chunks whose contents match vectors from the query string you sent.
+Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the answer. But you don't get a chatbot answer in this search, you get chunks whose contents match vectors from the query string you sent.
 
-There are different techniques to do this better, but normally we'd work with agents or LLMs, so there's no need to try and turn this into a chatbot experience. It does work.
+There are different techniques to do this better, but normally we'd work with agents or LLMs, so there's no need to try and turn this into a chatbot experience. That comes later.
 
 We can build one or both index types (lexical and semantic) or even something hybrid, depending what we need to achieve.
 
-If you have the both kinds, you can do fancy searches or have an agent or LLM do that for you. So, our work on getting StorageGRID contents to agents and AIs has been completed!
+If you have the both kinds of indexes, you can do fancy searches or have an agent or LLM do that for you. So, our work on getting StorageGRID contents to agents and AIs has been completed!
 
 - Documents get uploaded to a bucket
 - Kompromise processes notifications and workers - that possibly require extra steps for conversion, extraction, normalization - store documents in Elasticsearch or OpenSearch (focus of this post, although we could use other indexers)
@@ -148,9 +148,11 @@ Example answer from approach B:
 > [answer]
 > The story mentions three soldiers in passages [3] and [4], and ten soldiers in passage [5]. These groups are distinct, as the ten soldiers are part of a procession during the Queen's arrival, while the three soldiers are part of the court. Thus, the total number of soldiers is **3 + 10 = 13**.  
 
-That's pretty intriguing. But it's also not our problem: we are in charge of making sure they have data to work with.
+That's intriguing! 
 
-Chunk details (`[3]` and `[4]`) and document URIs is what you'd get as URLs to the sources - the same as in my other RAG-related posts.
+But it's also not our problem: we are in charge of making sure they have data to work with.
+
+Chunk details (`[3]` and `[4]`) and document URIs is what you'd get as URLs to the sources, as is common in RAG or similar applications.
 
 ## Comparison vs...
 
@@ -158,26 +160,28 @@ Kompromise isn't a product and if it gets published it will be distributed as (b
 
 As of now, your choices are limited and you have to build own integrations. Maybe Komprise can work well with StorageGRID notifications, but their documentation isn't detailed (or publicly available).
 
-Just two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know how Diskover works with StorageGRID, but presumably it will, and I expect it will work the same way Kompromise does.
+Just two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I expect it works the same way Kompromise does. Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise because it focuses only on data flow and pipeline.
 
-There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to notifications as that would be helpful in migrations, but I don't know if any of them do it.
+There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if any of them do it.
 
-Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, [there is this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) which indicates that indexes are built using brute-force listing (full ObjectListv2 every time you update), so it may not be directly comparable to Kompromise.
+Finally, earlier this week NetApp also announced next version of AIDE would support StorageGRID. As of October 4, the software is not yet available (based on the Web site it seems its GA is planned for October 23), but [there is this page](https://docs.netapp.com/us-en/ai-data-engine/get-started/architecture.html#data-flow) which indicates that indexes are built using brute-force listing (full ObjectListv2 every time you update), so it may not be directly comparable to Kompromise.
 
 But indeed, if we have TBs of data that's already in a bucket, how to index it?
-- Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output result to a file and loop through it to get the data you need
-- If you need to create embeddings or lexical index, it may be worth automating with Kompromise or other workflow
+- Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output result to a file and loop through it to get the data you need. Se [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern here is I've seen NAS traditionalists who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do anything for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? 
+- If you need to create embeddings or lexical index, it may be worth automating with Kompromise or other tool
 
 But wait, why even use Notifications when we can simply re-index buckets?
-- You can't reindex an entire bucket every minute, but you can receive Notifications of new objects every second
+- You can't reindex an entire bucket every minute, but you can receive Notifications of new objects *every second* and business may not be able to wait until weekend
 - Brute-force searching doesn't work at scale. Imagine re-listing all objects a cross hundreds of TB sized buckets... I don't know if that's what others do or not, but I do know that's unlikely to work well
-- There's no substitute for Notifications. It doesn't matter how you get 'em Webhooks or Kafka, everyone gets the same information. Kompromise Webhooks won't have less information than anyone else, so I expect them to remain the least dirty shirt in the closet. You can supplement Notifications with full re-scan once a week to pick objects you missed and maybe reconcile and Kompromise can do that as well
+- "Scanning performance" mostly doesn't matter here. ListObjectsV2 is a metadata query that costs the S3 client almost nothing, but consumes non-insignificant resources the object store (which is why AWS charges for such API calls). Most users should throttle these rather than try to do "scan faster".
+- There's no substitute for Notifications. *It doesn't matter how you get 'em*, Webhook or Kafka, every consumer gets the same information at the same time. Kompromise Webhooks won't have less information than any other software, so I expect Notifications to remain the least dirty shirt in the closet. You can supplement Notifications with full re-scan once a week to pick objects you missed and maybe reconcile with Elasticsearch (Kompromise can do that as well, just read the list from a file rather than from NATS and the rest is identical)
+- You'd also have to scan all Elasticsearch indexes, not just buckets. Why? Because you probably want to remove stale objects from indexes. Or maybe mark their index entries as deleted, if you have to keep the record of that
 
 As far as getting the full list (and building a search index from that content) of a bucket is concerned, we already have a free solution for that: [Snapshot Leases](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) with `sg-cosi`:
-- You create a Snapshot Lease using my StorageGRID COSI driver, let's say it's a 48 hour lease
-- That gives you 48 hours (can be extended) to access it from anywhere it's accessible from using ephemeral S3 keys
-- Snapshot Leases function in my COSI driver was created for bucket backup workflows, but you can use it to run ListObjectsv2 for 36-hours if you like
-- Then, you can send those results to any, or several, places
+- Create a Snapshot Lease using my StorageGRID COSI driver. Let's say you create a 48 hour snapshot lease
+- That gives 48 hours (this can be extended up to 7 days) to access the bucket from anywhere it's accessible to S3 clients by using ephemeral S3 keys
+- The Snapshot Lease function in my `sg-cosi` was created for bucket backup workflows, but you can use it to run ListObjectsV2 for 36-hours non-stop if you'd like (not the greatest idea because such scanning competes with ILM and all workloads - you should throttle it or have limits on the StorageGRID load balancer to control this behavior)
+- Then, we can send those results to any, or several, places to perform index maintenance
 
 ## Conclusion
 
