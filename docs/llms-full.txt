@@ -90,7 +90,7 @@ That's where step 3A and the integrated AIS come in play: we can pre-fetch to ca
 
 ![Kompromise and embeddings in Elasticsearch 9](/assets/images/kompromise-beta.png)
 
-Here's a screenshot from the same "Alice in Wonderland" document, but with embeddings. This is the `assume-vectors` index.
+Here's a screenshot from the same "Alice in Wonderland" document, but with embeddings. This is the `assume-vectors` index, focused on chunk #3 which is one of the places where the answer to our question can be found.
 
 ![Kompromise and embeddings in Elasticsearch 9](/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
 
@@ -120,6 +120,10 @@ To demonstrate this, the question was:
 
 "Query as a a question" doesn't work well because "which" doesn't help with semantic comparison, so results are likely to suck more than if we tried "there were five soldiers" (as "five" is at least a number).
 
+Also, this question is hard, if you read that chapter from the book. 
+
+Let's see what 768-dimensional vectors have to say:
+
 ```sh
 1. score=0.8049 assumed/alice01.txt#10
    d she put them into a large flower-pot that stood near. The three soldiers wandered about for a minute or two, looking for them, and then quietly marched off after the others.  “Are their heads off?” ...
@@ -129,7 +133,7 @@ To demonstrate this, the question was:
 
 Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the information we're looking for (the other is #4, but there are other relevant chunks). But you don't get a chatbot answer in vector search like this - you get chunks that best match the vectors you sent.
 
-There are different techniques to identify better results (other than simple ranking), but normally we'd work with agents or LLMs which take care of that; there's no need to try and turn this into a chatbot experience. That comes later.
+There are different techniques to identify better results (other than simple ranking), but normally we'd work with agents or LLMs which take care of that for us; there's no need to try and turn this into a chatbot experience. That comes later.
 
 We can build one or both index types (lexical and semantic) or even something hybrid, depending what we need to achieve.
 
@@ -151,6 +155,10 @@ But let's see what we expect to happen later:
 
 YMMV, as they say. Earlier, we've established there were ten soldiers. At least, that's what I thought.
 
+When an LLM comes into the picture, it searches (like we did above) and does its own reasoning from and with the results. There's a bunch of techniques and models and each can produce different results.
+
+To illustrate this point, I used two approaches to answer the question - now in the right "chat form" -  with LLMs that had access to the same indexes.
+
 Example answer from approach A: 
 
 > [answer]
@@ -163,13 +171,13 @@ Example answer from approach B:
 
 That's intriguing! 
 
-But it's also not our problem: we are in charge of making sure they have data to work with.
+But it's also not our problem: we are in just charge of making sure they have data to work with.
 
-Chunk details (`[3]` and `[4]`) and document URIs is what you'd get as URLs to the sources, as is common in RAG or similar applications.
+Chunk details (like `[3]`, `[4]`) and document URIs is what you'd get as URLs to the sources, as usual in RAG or similar applications.
 
 ## Comparison vs...
 
-Kompromise isn't a product and if it gets published it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products: you can't get support for it and you'd probably build a similar tool if you wanted to use it in production in an enterprise environment. 
+Kompromise isn't a product and, if it gets published, it will be distributed as (binary) freeware, so it shouldn't be compared with shipping or supported products: you can't get support for it and you'd probably build a similar tool if you wanted to use it in production in an enterprise environment. 
 
 But since the topic is of interest to StorageGRID users in general, I'll share what I currently know because it's hard to find StorageGRID-specific information elsewhere.
 
@@ -183,7 +191,7 @@ There are data migration products such as Datadobi, which support StorageGRID. I
 
 Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it can be used in migrations).
 
-Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would expect it to work the same way Kompromise does. But it could be doing full re-scans rather than use Notifications.
+Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would hope it works the same way Kompromise does (based on Notifiations). But it could be doing full re-scans.
 
 Diskover has many valuable plugins that come useful in those pre-indexing steps I mentioned earlier, while Kompromise doesn't have any and can't parse complex document formats. Although I could develop those or use existing open source tools like I did in [this post](/2023/08/01/fscrawler-filesystem-analytics-elasticsearch.html), that's out of scope for Kompromise.
 
@@ -191,23 +199,28 @@ Finally, earlier this week NetApp also announced next version of AIDE would supp
 
 How other AIDE things compare, I do not know, but it seems this month's release is more of a "[storage capacity monitoring and management](https://docs.netapp.com/us-en/ai-data-engine/investigate/understand-dashboard.html)" tool - much closer to Starfish Software than Kompromise.
 
-NetApp has a product called Cloud Sync, which is a data replication tool which may (that part is unclear to me) receive S3 event notifications, but doesn't do any processing except synchronization (copying).
+NetApp also has an existing product called Cloud Sync, which is a data replication tool which may (that part is unclear to me) receive S3 event notifications, but doesn't do any processing except synchronization (copying).
+
+Long story short: there are very few tools with explicit StorageGRID support as far as near real-time processing is concerned. I couldn't find even one, but maybe some of these can consume Notification.
 
 ## Full re-scan vs notifications
 
-But indeed, if we have TBs of data that's already in a bucket, how to index it?
+There's one valid question here, though: if we have TBs of data that's *already* in a bucket, how to index it for AI or other workflows?
+
 - Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output the result to a file and loop through the list to get the data you need. See [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern is I've seen users with NAS background who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do something for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? "Storage admin" has no clue what chatbot or Elasticsearch instance may be linking to the stuff in your bucket. Clearly, management issues should be fixed in the workflows, not by "storage admin" actions.
 - If you need to create embeddings or a lexical index, that may be worth automating separately using own tool
-- If you use a brute-force scanner to scan buckets for "storage administration", and another tool to do it for AI, that becomes very expensive quickly
+- If you use a "brute-force lister" to enumerate bucket contents for "storage administration", and another tool to do it for AI, that becomes very expensive quickly
 
 But wait, why even use Notifications when we can simply re-index buckets?
-- You can't reindex an entire bucket once every minute, but you can receive Notifications of new objects *every second* and business may not be able to wait until next weekend
-- Brute-force listing doesn't work at scale. Imagine re-listing all objects a cross hundreds of TB sized buckets... I don't know if that's what others do or not, but I do know that's unlikely to work well
-- "Scanning performance" mostly doesn't matter here. ListObjectsV2 is a metadata query that costs the S3 client almost nothing, but consumes non-insignificant resources the object store (which is why AWS charges for such API calls). Most users should throttle these rather than try to do "scan faster". They'll be constrained by object storage performance, not by client performance.
-- Bottom line is, there's no substitute for Notifications. *It doesn't matter how you get 'em*, Webhook or Kafka, every consumer and every software gets the same information at the same time. Kompromise Webhooks won't have less information than any other software, so I expect Notifications to remain one of the least dirty shirts in the closet. You can supplement Notifications with full re-scan once a week to pick objects you missed and maybe reconcile with Elasticsearch (Kompromise can do that as well, just read the list from a file rather than from NATS and the rest is identical), but that should be an exception, not a pattern
-- You'd also have to re-scan all Elasticsearch indexes, not just buckets. Why? Because you probably want to remove stale objects from indexes, not just add new ones. Or maybe mark stale index entries as deleted, if you have to keep indexes in sync
 
-As far as getting full list (and building a search index from that content) of a bucket is concerned, we already have a free solution for that: [Snapshot Leases](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) with `sg-cosi`:
+- You can't re-enumerate an entire bucket once every minute, but you can receive Notifications of new objects *every second* and business may not be able to wait until next weekend
+- Brute-force listing doesn't work well at scale. Imagine enumerating all objects across hundreds of TB sized buckets every week. I don't know if that's what others do or not, but I do know that's unlikely to work well. This isn't done for one-off migration, mind you
+- "Scanning performance" doesn't play a role in tool selection. ListObjectsV2 is a metadata query that costs the S3 client almost nothing, but consumes non-insignificant resources the object store (which is why AWS charges for such API calls). Most users should throttle these rather than try to do "scan faster". They'll be constrained by object storage performance, not by client performance.
+- Bottom line is, there's no substitute for Notifications. *It doesn't matter how you get 'em*, Webhook or Kafka, every consumer and every software gets the same information at the same time. Kompromise Webhooks won't have less information than any other software, so I expect Notifications to remain one of the least dirty shirts in the closet. You can supplement Notifications with full re-scan once a week to pick objects you missed and maybe reconcile with Elasticsearch (Kompromise can do that as well, just read the list from a file rather than from NATS and the rest is identical), but that should be an exception, not a pattern
+- You'd also have to update all Elasticsearch indexes, not just S3 buckets. Why? Because you probably want to remove stale objects from indexes, not just add new ones. Or, maybe you want mark stale index entries as deleted, if you have to keep indexes in sync with S3
+
+As far as getting a full listing (and building a search index from that content) of a bucket is concerned, we already have a solution for that: [Snapshot Leases](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) with `sg-cosi`:
+
 - Create a Snapshot Lease using my StorageGRID COSI driver. Let's say you create a 48 hour snapshot lease
 - That gives you 48 hours (this can be extended up to 7 days) to access the bucket from anywhere it's accessible to S3 clients by using ephemeral S3 keys generated by `sg-cosi`
 - The Snapshot Lease function in my `sg-cosi` was created for bucket backup workflows, but you can use it to run ListObjectsV2 for 36-hours non-stop if you'd like (not the greatest idea because such scanning competes with ILM and all workloads - you should throttle it or have limits on the StorageGRID load balancer to control this behavior)
@@ -215,11 +228,15 @@ As far as getting full list (and building a search index from that content) of a
 
 That's available and easy to use, but it should be used only in exceptional situations, not as the main method to keep track of your S3 data. It can't scale well and it's very taxing on object store.
 
-I see a lot of AI-related examples that are based on full bucket scans of buckets with few to few thousand images. "You just rescan". That's fine, you just rescan.
+I see a lot of AI-related examples that are based on full bucket scans of buckets with few to few thousand images. "You just re-scan". That's fine - you can do that. But why would you have a bucket with just a few thousand images?
 
-But why would you have a bucket with just a few thousand images? It must be a consequence of copying. You have the same 7,500 images in another bucket, together with 750 thousand other images, but rather than organizing that data you copy objects to an app-specific bucket *for every application*. This doesn't seem right. It does make full rescan possible.
+It must be a consequence of copying. You have the same 7,500 images in another bucket, together with 750 thousand other images, but rather than organizing that data in a [datalake](/2026/09/03/lakekeeper-iceberg-compression-snapshots.html) (which lets you use [SQL and permissions](/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html)) or using [OpenSharing](/2026/09/24/opensharing-assume-web-role-with-identity.html), you choose to copy objects to an app-specific bucket *for every application*, and then re-scan and re-index every time anything changes. Well, that *can* work, but it doesn't sound right.
+
+People also forget that vector embeddings aren't cheap to recreate at scale, so if you don't have a database or a "diff" utility, how can you even tell which new or updated documents need to be processed and updated? If you are lucky and have "just 7,500 documents", rebuilding the entire Elasticsearch index every day won't be expensive. There's a chance!
 
 Kompromise, as a reference stack for data pipelines, does not aim for prescriptive integrations because it's supposed to be able to work with anything on either input (matter of implementation; I hope to add Versity S3 Gateway with E-Series later) or output (matter of user's choice) side.
+
+Even with Notifications, you can still re-scan and rebuild indexes every day (or week), but at least you'll get updates seconds later and avoid daily reconciliations.
 
 Notifications are resource-cheap, while data churning is expensive and with Kompromise I can do both and it scales out. After processing, data can be stored on StorageGRID - a scale-out platform itself - and indexes on any scale out database (such as Elasticsearch), so Kompromise plays well here - it focuses on specific areas where it can add value. It doesn't make you change or fragment your workflows - it just makes existing work better.
 
