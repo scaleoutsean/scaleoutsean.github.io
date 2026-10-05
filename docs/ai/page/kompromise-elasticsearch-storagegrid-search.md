@@ -109,7 +109,7 @@ To demonstrate this, the question was:
 
 Also, this question is hard, if you read that chapter from the book. 
 
-Let's see what 768-dimensional vectors have to say:
+Let's see what 768-dimensional vectors have to say (don't read the text, it's enough to check `score` and `#<number>`):
 
 ```sh
 1. score=0.8049 assumed/alice01.txt#10
@@ -118,7 +118,7 @@ Let's see what 768-dimensional vectors have to say:
    es, to—” At this moment Five, who had been anxiously looking across the garden, called out “The Queen! The Queen!” and the three gardeners instantly threw themselves flat upon their faces. There was a...
 ```
 
-Actually, this isn't bad, because chunk #3 is in fact one of two chunks that have the information we're looking for (the other is #4, but there are other relevant chunks). But you don't get a chatbot answer in vector search like this - you get chunks that best match the vectors you sent.
+Actually, this isn't bad, because chunk #3 is in fact one of the two chunks that have the information we're looking for (the other is #4, but there are other relevant chunks, too). But you don't get a chatbot answer in vector search like this - you get chunks that best match the vectors you sent.
 
 There are different techniques to identify better results (other than simple ranking), but normally we'd work with agents or LLMs which take care of that for us; there's no need to try and turn this into a chatbot experience. That comes later.
 
@@ -160,7 +160,7 @@ That's intriguing!
 
 But it's also not our problem: we are in just charge of making sure they have data to work with.
 
-Chunk details (like `[3]`, `[4]`) and document URIs is what you'd get as URLs to the sources, as usual in RAG or similar applications.
+Chunk details (like `[3]`, `[4]`) and document URIs is what you'd get as URLs to the sources, as usual in RAG or similar applications - the so-called "grounded answers".
 
 ## Comparison vs...
 
@@ -176,7 +176,7 @@ Maybe [Komprise](https://komprise.com) can receive StorageGRID notifications, bu
 
 There are data migration products such as Datadobi, which support StorageGRID. I think they may subscribe to Notifications as that would be helpful in migrations, but I don't know if they do it and how their indexes look like (I'm sure they have them, but do they store information AI agents need, or does it need to be re-created by the user?). Kompromise could be used in migrations, but it primarily targets event-driven unstructured data processing use cases.
 
-Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it can be used in migrations). Starfish includes own database (standard PostgreSQL) and lets you access it their API or CLI or even PostgreSQL clients to query the database and dispatch jobs and workflows to other places.
+Then there's [Starfish Software](/2026/08/27/starfish-software-beegfs.html) with explicit StorageGRID support. It appears they use bucket scans as well. Positioning-wise, it's a cross-vendor storage management tool with support for storage-related jobs and workflows, so similar to the Komprise (it can drive workflows) and Datadobi (it is used for migrations). Starfish includes own database (standard PostgreSQL) and lets you access it their API or CLI or even PostgreSQL clients to query the database and dispatch jobs and workflows to other places.
 
 Among the more recent solutions, two-three days ago Blocks & Files mentioned NetApp partnered with [Diskover](https://www.blocksandfiles.com/file/2026/10/01/netapp-discovers-and-resells-diskover-rot-technology/5300499). I don't know if Diskover works with StorageGRID, but presumably it does and I would hope it works the same way Kompromise does (based on Notifiations). But it could be doing full bucket enumeration instead.
 
@@ -194,7 +194,7 @@ Long story short: there are very few tools with explicit support for StorageGRID
 
 There's one valid question here, though: if we have TBs of data that's *already* in a bucket, how to index it for AI or other workflows?
 
-- Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output the result to a file and loop through the list to get the data you need. See [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern is I've seen users with NAS background who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do something for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? "Storage admin" has no clue what chatbot or Elasticsearch instance may be linking to the stuff in your bucket. Clearly, management issues should be fixed in the workflows, not by "storage admin" actions.
+- Please do not worry. It's just one CLI command with AWS CLI or [MinIO client](https://github.com/scaleoutsean/minio-client). You can output the result to a file and loop through the list to get the data you need. See [this example for finding "version hogs"](/2026/07/13/storagegrid-version-monitoring-pruning.html). One interesting pattern is I've seen users with NAS background who expect "the storage admin" to do these things for them, but that's not how it should work on S3. Who's going to do something for the user whose files are encrypted client-side, or who creates ephemeral COSI bucket claims? "Storage admin" has no clue if a chatbot or Elasticsearch instance may be linking to the stuff in your bucket. Clearly, data management issues should be fixed in workflows, not by "storage admin" actions like it used to be done in 2003
 - If you need to create embeddings or a lexical index, that may be worth automating separately using own tool
 - If you use a "brute-force lister" to enumerate bucket contents for "storage administration", and another tool to do it for AI, that becomes very expensive quickly
 
@@ -228,6 +228,12 @@ Even with Notifications, you can still re-scan and rebuild indexes every day (or
 Notifications are resource-cheap, while data churning is expensive and with Kompromise I can do both and it scales out. After processing, data can be stored on StorageGRID - a scale-out platform itself - and indexes on any scale out database (such as Elasticsearch), so Kompromise plays well here - it focuses on specific areas where it can add value. It doesn't make you change or fragment your workflows - it just makes existing work better.
 
 The only hard-coded dependency is NATS, which is there for a reason. I could support two event stores ("never say never"), but NATS is integrated and doesn't require the user to come up with own NATS cluster. Additionally, any qualified user (with requirements matching what Kompromise does) will likely need AIS as well, and NATS and AIS have the same requirements storage-wise - there are no unnecessary overheads.
+
+## Kompromise Lite
+
+[Kompromise Lite](https://github.com/scaleoutsean/kompromise/) is s simplified binary version of the Webhook component that only requires Docker, but provides only basic features sufficient for non-production demonstrations of Webhook forwarding (see in the repo).
+
+It also gives a way to forward events to Kafka, since full Kompromise stack will continue using NATS.
 
 ## Conclusion
 
