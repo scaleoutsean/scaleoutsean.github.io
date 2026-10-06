@@ -67,3 +67,23 @@ What was the problem that caused it? I used the SANtricity API to create a very 
 - Failures: `/devmgr/v2/storage-systems/{system-id}/failures` and EPA v3.0.0 tags these with `failures`
 - MEL: `/devmgr/v2/storage-systems/{system-id}/mel-events` and EPA v3.0.0 tags these with `major_event_log`
   - New MEL events: `/devmgr/v2/storage-systems/{system-id}/mel-events/available`
+
+## Appendix A: MEL for Automatic Load Balancing (ALB)
+ 
+The [ALB TR](https://www.netapp.com/pdf.html?item=/media/17144-tr4737.pdf) (TR-4737) is an example of the joys of PDFs. Because it's a PDF and because the events are given in a user-hostile form, I had to manually copy-paste each to make use of the list. Yeah, maybe I could have used an AI, but maybe also this should have been available in the JSON or markdown format on Github in the first place.
+
+```raw
+event,event_id
+MEL_EV_LOAD_BALANCING_VD_TRANSFER,0x2044
+MEL_EV_IMPLICIT_FAILBACK_VD_TRANSFER,0x2049
+MEL_EV_IMPLICIT_WORKLOAD_VD_TRANSFER,0x204A 
+MEL_EV_ALB_OPTIMIZATION_CONSIDERED,0x9104
+MEL_EV_ALB_OPTIMIZATION_PERFORMED,0x9105
+MEL_EV_ALB_OPTIMIZATION_EVALUATED,0x9106
+MEL_EV_AUTO_LOAD_BALANCE_ENABLED,0x9100
+MEL_EV_AUTO_LOAD_BALANCE_DISABLED,0x9101
+MEL_EV_HOST_CONNECTIVITY_REPORTING_DISABLED,0x9107
+MEL_EV_HOST_CONNECTIVITY_REPORTING_ENABLED,0x9108
+MEL_EV_HOST_REDUNDANCY_LOST,0x9102
+MEL_EV_MULTIPATH_CONFIG_ERROR,0x9103
+```

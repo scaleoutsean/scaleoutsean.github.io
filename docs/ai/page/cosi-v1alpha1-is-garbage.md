@@ -46,13 +46,17 @@ Maybe that COSIeist Manifesto that aims to make it easy to migrate data off MinI
 
 ![MinIO's COSI contributions](/assets/images/cosi_is_garbage_03_minio_cosi_commits.png)
 
-In case you haven't noticed, COSI doesn't have the concept of Controller and Node. In CSI, a CSI Node needs to connect to CSI Controller which may be running elsewhere and be the only pod that can manage storage. Not in COSI, where the tech bros were laser-focused on convenience, so if you create a bucket and S3 keys, your COSI controller may connect to both S3 API (`mb cosi/my-bucket`) and management API (to issue S3 keys). 
+In case you haven't noticed, COSI doesn't have the concept of Controller and Node.
+
+In CSI, a CSI Node needs to connect to CSI Controller which may be running elsewhere and be the only pod that can manage storage. Not in COSI, where the tech bros were laser-focused on convenience, so if you create a bucket and S3 keys, your COSI controller may connect to both the S3 API (`mb cosi/my-bucket`) and management API (to issue S3 keys). 
 
 ### COSI v1alpha1 vs CSI
 
 I'm a CSI user as well, so I naturally wondered how come CSI wasn't such a disaster.
 
-CSI has had its problems over the years - several issues with the specification were discovered much later and in some cases the specification is still ambiguous. By now, CSI is much more mature than COSI's specification, so one could say it's unfair to compare COSI `v1alpha1` with today's CSI. But even the earliest CSI specs and implementations weren't such a disaster and positioning failure! (In terms of complexity, COSI is much closer to Docker storage drivers, really; I also used the early ones in [2016](https://github.com/solidfire/solidfire-docker-driver/commit/19704e5763b16ccf489051bfa618abbe7be58f8d) and I can tell you they did *not* suck.)
+CSI has had its problems over the years - several issues with the specification were discovered much later and in some cases the specification is still ambiguous. By now, CSI is much more mature than COSI's specification, so one could say it's unfair to compare COSI `v1alpha1` with today's CSI. But even the earliest CSI specs and implementations weren't such a disaster and positioning failure! 
+
+In terms of complexity, COSI is much closer to Docker storage drivers, really; I also used the early Docker drivers in [2016](https://github.com/solidfire/solidfire-docker-driver/commit/19704e5763b16ccf489051bfa618abbe7be58f8d) and I can tell you they did *not* suck nearly as much.
 
 Could that be because CSI had storage vendors, hyperscalers and other **stakeholders** on board, and they clearly knew what problems needed solving, and how? Perhaps.
 
@@ -124,23 +128,25 @@ Few other thoughts:
 
 The idea that "self-service" or "portability" were high on the list of priorities for on-premise Object Storage users or vendors shows just how clueless the people who created COSI v1 Alpha 1 were.
 
-Most heavy users of on-premises S3 are *heavily* regulated (FSI, healthcare, government, you name it). All deal with compliance (Object Lock enabled in compliance or governance mode), versioning, auditing and S3 implementation (not COSI) challenges.
+Most heavy users of on-premises S3 are *heavily* regulated (FSI, healthcare, government, you name it). All deal with compliance (Object Lock enabled in compliance or governance mode), versioning, auditing and S3 implementation - not COSI - challenges.
 
 No on-premises Object Store user can arbitrarily move their regulated data around, while unregulated data they have is semi-junk that can be `rclone`-d anywhere, so application and data portability is **not** a top concern - it's impractical and has nothing to do with COSI. COSI doesn't solve anything here. 
 
 And almost no one cares about "self-service" either - it's mostly seen as an anti-feature (self-service S3 in BFSI - imagine that, what could possibly go wrong?) and at best as a minor feature for small sandbox environments. **Not** a significant concern either.
 
-Well, at least Alpha 2 is less bad. Maybe MinIO's absence has helped!?
+Well, at least Alpha 2 is less bad. Maybe MinIO's absence has helped?
 
 Practical matters, the way I see it, given that COSI `v1alpha2` is **not** available for use:
 
 - Perform bucket lifecycle operations by yourself (Ansible, Terraform, operators)
-- If developers need S3 for experimentation, they can [deploy](/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html) Versity S3 Gateway container to their development clusters. No COSI. Just deploy VGW and down when you tear down the cluster. It's for in-cluster or in-namespace S3 closed to the world - why would anyone need COSI for that?
-- There's a use case for temp/scratch S3 space (batch jobs, analytics, AI), just like it exists for temp/scratch shared filesystems (CSI). Because COSI Drivers hand out S3 credentials to anyone who asks within the namespace, I wonder if even this use case requires COSI integration as opposed to simply calling Webhooks (`?action=create&size=100T` and `?action=delete`) and using own canned scripts that work faster and more reliably with your environment (networks, firewalls and S3 storage)
+- If developers need S3 for experimentation, they can [deploy](/2026/03/07/versity-s3-gateway-netapp-eseries-santricity-csi.html) Versity S3 Gateway container to their development clusters. No COSI. Just deploy VGW and down when you tear down the cluster. It's for in-cluster or in-namespace S3 closed to the world - why would anyone need COSI for that? If you backup the namespace, the PVC will be protected, if that's what you need
+- There's a use case for temp/scratch S3 space (batch jobs, analytics, AI), just like it exists for temp/scratch shared filesystems (CSI). Because COSI Drivers hand out S3 credentials to anyone who asks within the namespace, I wonder if even this use case requires COSI integration as opposed to simply calling Webhooks (`?action=create&size=100T` and `?action=delete`) and using own canned scripts that work faster and more reliably with your environment (networks, firewalls and S3 storage). S3 accounting isn't real time anyway, so by the time accounting catches up and starts throttling or erroring out, my temporary bucket will be gone.
 
 After thinking about these topics for a while, I just don't see much need for bucket lifecycle management that I'd let COSI handle. (The other part is credentials management, which seems more useful).
 
-In the Alpha 2 specification they say they envision a future where multiple namespaces will be able to share access to COSI-managed buckets and in Alpha 1 they said Cross Cluster portability (not portability of data, but of access) was another goal of theirs. It looks like someone has a solution and is looking for problems to solve. Most of these problems have already been solved by applications such as job schedules, or don't even exist.
+In the Alpha 2 specification they say they envision a future where multiple namespaces will be able to share access to COSI-managed buckets and in Alpha 1 they said Cross Cluster portability (not portability of data, but of access) was another goal of theirs.
+
+It looks like someone has a solution and is looking for problems to solve. Most of these problems have already been solved by applications such as job schedulers or don't even exist.
 
 To finish on a positive note: the Alpha 2 specification shows some signs of sanity. If Alpha 2 gets *implemented*, COSI might become usable for a small fraction of production use cases where on-premises Kubernetes applications need access to Object Storage.
 
@@ -150,7 +156,7 @@ Another good option would be if CSI took over COSI and made it into a CSI sub-pr
 
 As a "not yet a fan" (of COSI), I put together `sg-cosi`, an opinionated vending machine for S3 credentials.
 
-I don't implement bucket lifecycle because I see no value in it with `v1alpha1` workflows and features.
+I don't implement (new) bucket lifecycle because I see no value in it with the `v1alpha1` workflows and features.
 
 ### What works
 
