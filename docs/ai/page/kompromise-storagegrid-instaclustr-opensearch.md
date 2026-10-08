@@ -106,11 +106,11 @@ If you need LAN-latency search locally, you can stand up own OpenSearch replicas
 
 You can replicate from Instaclustr OpenSearch to on-prem (Instaclustr as "Single Source of Truth"), or push Kompromise notifications to two destinations (Instaclustr OpenSearch and on-premises cluster).
 
-StorageGRID can span sites and Starburst can search any and all these locations. Availability, replication, search performance... All solved!
+StorageGRID can span sites and [Starburst](https://starburst.io/) can search any and all of them. Availability, replication, search performance, federated search... All solved!
 
-If you want to repatriate the workflow with data, simply export data and redirect Kompromise to OpenSearch on-premises. Zero lock-in due to open data format and no API changes required anywhere.
+If you want to repatriate the workflow with data, simply export data and redirect Kompromise to OpenSearch on-premises. Zero lock-in due to open data format and no API changes required anywhere!
 
-And if you want to do more in the cloud with Instaclustr: vector search, Kafka, MCP, caching... It's all minutes away in your Instaclustr console. 
+And if you want to do more in the cloud with Instaclustr: vector search, Kafka, MCP, caching... It's all minutes away in your Instaclustr console.
 
 ### Other use cases for SGII
 
@@ -119,6 +119,12 @@ The `sg-cosi` post on Snapshot Leases was about the main use case: S3 bucket bac
 - SGII lets you perform incremental backups fully without `sg-cosi`
 - Every SGII run builds inventory tables, so you keep track of what happened in every step - not just "retain your `rclone` logs, but you don't have to do anything special to keep record of what **inputs** `rclone` received
 - SGII uses the open Parquet format that can be consumed by a bunch of applications. It's meant to be stored on S3 and can be used for reporting
+
+SGII does not delete bucket snapshots that it takes. The main reason is maybe you want to hang on them for compliance or whatever other reason.
+
+The second reason is that StorageGRID now supports 20,000 buckets per tenant, so the risk of hitting that limit isn't very high and even at 2 snapshots per bucket day, it will take a while for TSHTF. You'll notice it before there's 1,000 of outdated snapshot buckets.
+
+But also: if you use SGII to copy data to a vault and hang onto those tables (which you can also copy to a vault), you can nuke the read-only snapshot buckets: checksums, keys, object IDs and everything else is in the tables. SGII will list stale snapshots for you - if you don't want them, just loop-delete them with a script or from Ansible. 
 
 It's a zero-cost, modern interface to a workflow that used to be a challenge, require 20x more resources and leave you with data locked behind a proprietary API. 
 
