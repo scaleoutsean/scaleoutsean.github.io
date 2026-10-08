@@ -1,6 +1,6 @@
 # Kompromise, SGII, StorageGRID and Instaclustr OpenSearch
 
-Consume Kompromise queues to populate Elasticsearch indexes
+Worry-free notifications-based global search with Komproise, SGII, StorageGRID and Instaclustr OpenSearch
 
 ## Introduction
 
@@ -54,27 +54,29 @@ SGII is a CLI that uses the same code to create bucket snapshots without COSI.
 Fun fact: `sg-cosi` supports "between"-style bucket snapshots. That means:
 
 - I can take a bucket snapshot today at noon
-- Tomorrow nooon, I can take an "between" snapshot for last 24 hours
-- Then I look at that snapshot bucket and what do I see? I see *what was deleted and what added in last 24 hours*
+- Tomorrow nooon, I can take a "between" bucket snapshot for last 24 hours
+- Then I look at that snapshot bucket and what do I see? I see *what was deleted and added i last 24 hours*
 
 SGII automates this and spits out a database table. 
 
 That's why it's called SGII: StorageGRID incremental inventory.
 
-So, while you use Kompromise (or send notifications directly to Instaclustr Kafka, which sends them to Instaclustr OpenSearch) to get instant AI ready data going, you now can also use SGII to verify stuff's been inventoried as expected, and do that **without full bucket enumeration**.
+So, while you use Kompromise (or send StorageGRID notifications directly to Instaclustr Kafka, which sends them to Instaclustr OpenSearch) to get instant AI-ready pipelines going, you now can also use SGII to verify the stuff's been inventoried as expected, and do that **without full bucket enumeration**.
 
 Example:
 - Kompromise runs 24x7, sending notifications to OpenSearch
-- Every Saturday noon, you take a snapshot for the period "between last Saturday noon and now" using SGII. You get a table out. It takes four hours rather than 45.
-- With this table, you can run random checks against OpenSearch (sample 1% of the new objects), or full check of all incremental changes, to see if your OpenSearch is up to date and if anything was missed. If you want, you can also fix it.
+- Every Saturday noon, you take a snapshot for the period "between last Saturday noon and now" using SGII and get a table with all changes. Because it's incremental, it takes four hours rather than 45 hours and you can have 7 rather than 10 StorageGRID nodes because you don't beat on StorageGRID metadata service like a maniac.
+- With this table, you can run random checks against OpenSearch (sample 1% of the new and deleted objects to confirm all `PASS`), or do a full check of all incremental changes to see if your OpenSearch is up to date and if anything was missed. If you want, you can also fix any misses by re-touching objects (Kompromise should later get an option to automate these fixes for you).
 
 ## What does all that mean?
 
-SGII adds the ability to take advantage of notifications without being concerned about "missing some data".
+SGII adds an ability to take advantage of notifications without being concerned about "missing some data".
 
-If you want to use SGII as primary synchronization method and notifications as supplemental/advisory, you simply schedule SGII for periodic re-sync and avoid full bucket enumeration.
+Do not settle for an inferior approach (periodic re-sync) if your business needs near real-time!
 
-Instaclustr provides similar peace of mind - if you're not sure if you can handle OpenSearch or Kafka, Instaclustr is just a click away.
+If you want to use SGII as your primary synchronization method and notifications as supplemental/advisory, you simply schedule SGII for periodic re-synchronization to avoid full bucket enumeration. Please do not worry: it doesn't do anything that StorageGRID 12.1 doesn't do.
+
+Instaclustr provides similar peace of mind - if you're not sure you can handle OpenSearch or Kafka, Instaclustr is just a click away.
 
 I had a similar diagram last year when Kompromise predecessor "Go NATS!" was shared:
 
@@ -108,13 +110,23 @@ If you want to repatriate the workflow with data, simply export data and redirec
 
 And if you want to do more in the cloud with Instaclustr: vector search, Kafka, MCP, caching... It's all minutes away in your Instaclustr console. 
 
+### Other use cases for SGII
+
+The `sg-cosi` post on Snapshot Leases was about the main use case: S3 bucket backup. That's one of "other" use cases for SGII:
+
+- SGII lets you perform incremental backups fully without `sg-cosi`
+- Every SGII run builds inventory tables, so you keep track of what happened in every step - not just "retain your `rclone` logs, but you don't have to do anything special to keep record of what **inputs** `rclone` received
+- SGII uses the open Parquet format that can be consumed by a bunch of applications. It's meant to be stored on S3 and can be used for reporting
+
+It's a zero-cost, modern interface to a workflow that used to be a challenge and require 20x more resources and left you with data locked behind proprietary APIs. 
+
 ## Take-aways
 
 I've always had confidence that `sg-cosi`, Kompromise and Instaclustr all add plenty of value to StorageGRID, which is why I had a similar post last year. But I didn't have `sg-cosi`.
 
-Now, that approach is even better, although I do notice "not everyone gets it", and that's fine.
+Now, that approach is even better, although I do notice "not everyone around me gets it" - that's fine.
 
- `sg-cosi` has supported StorageGRID snapshots for weeks and it seems some people on the Internet get it (because I see downloads), 
+ `sg-cosi` has supported StorageGRID snapshots for weeks and it seems some people on the Internet do get it (I see the downloads are more than random bot traffic).
 
 SGII (StorageGRID incremental inventory) takes `sg-cosi` Snapshot Leases and packages them into a stand-alone tool.
 
@@ -125,6 +137,8 @@ If you're comfortable with notifications and prefer them, you even don't need to
 In any of these approaches, it takes hours to start benefitting from results. You can scale up and out, scale across sites, but also get in and out any time, together with your data and unchanged applications/clients. 
 
 At this time, there's **no better NetApp solution for making meta-data AI-ready across sites or hybrid clouds**.
+
+I plan another (demo-focused) post on SGII before I finalize the code and documentation and share a binary in the `sg-cosi` repository.
 
 The sharing of data was [discussed in many earlier posts](/2026/09/08/opensharing-data-mobility-netapp-eseries-storagegrid.html) - basically, you open TCP/443 to your cloud compute instances - another solution that takes 30 minutes to implement.
 
