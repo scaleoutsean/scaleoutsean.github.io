@@ -70,7 +70,7 @@ This is like Varnish, but much more suitable for Big Data applications. It can w
 
 If your application is one of these (but also other, generic applications), you could use S3A with StorageGRID, but Alluxio is very feature-rich and will likely do a much better job. For example, the scale-out feature means you could process a TB-sized working set in the RAM of four VMs with 256GiB RAM.
 
-If you'd like to find out more, I wrote several posts about [Alluxio](https://scaleoutsean.github.io/2021/11/12/alluxio-storagegrid-s3.html). Find the other two in Archive.
+If you'd like to find out more, I wrote several posts about [Alluxio](https://blog.scaleoutsean.com/2021/11/12/alluxio-storagegrid-s3.html). Find the other two in Archive.
 
 Alluxio has a Community Edition which you can try out for free.
 
@@ -82,7 +82,7 @@ Long story short, it's an excellent NFS and SMB caching feature in ONTAP which a
 
 ## Cloud Sync
 
-Cloud Sync is a data replication service by NetApp. I recently [blogged about it](https://scaleoutsean.github.io/2022/01/17/using-netapp-cloudsync-api.html).
+Cloud Sync is a data replication service by NetApp. I recently [blogged about it](https://blog.scaleoutsean.com/2022/01/17/using-netapp-cloudsync-api.html).
 
 Now you may be wondering why I mention Cloud Sync if I don't intend to copy data (i.e. no Data-at-Rest in the cloud). Two reasons:
 

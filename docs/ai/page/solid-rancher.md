@@ -8,7 +8,7 @@ A non-mission is to substitute or duplicate information from the official docume
 
 Like with other repos I maintain, the idea is to share useful information quickly and in an accessible way. Quality contributions are welcome (submit issue on Github).
 
-This repo is experimentally published as a Web site located at [https://scaleoutsean.github.io/solid-rancher](https://scaleoutsean.github.io/solid-rancher/).
+This repo is experimentally published as a Web site located at [https://scaleoutsean.github.io/solid-rancher](https://blog.scaleoutsean.com/solid-rancher/).
 
 ## UPDATE (September 2021)
 

@@ -2796,2033 +2796,2033 @@ var store = [{
         "teaser": null
       },{
     "title": "About this site",
-    "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://scaleoutsean.github.io/about/"
+    "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
     "title": "Posts by Category",
-    "excerpt":" ","url": "https://scaleoutsean.github.io/categories/"
+    "excerpt":" ","url": "https://blog.scaleoutsean.com/categories/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/"
   },{
     "title": "Page Archive",
-    "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://scaleoutsean.github.io/page-archive/"
+    "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kompromise, SGII, StorageGRID and Instaclustr OpenSearch 2026-10-08 00:00 11 minute read We could always send notifications to the cloud, but now there’s SGII which helps us do it better Feed StorageGRID 12 data to Elasticsearch 9 indexes with Kompromise 2026-10-03 00:00 19 minute read This is about using Kompromise to...","url": "https://scaleoutsean.github.io/archive/"
+    "excerpt":"Kompromise, SGII, StorageGRID and Instaclustr OpenSearch 2026-10-08 00:00 11 minute read We could always send notifications to the cloud, but now there’s SGII which helps us do it better Feed StorageGRID 12 data to Elasticsearch 9 indexes with Kompromise 2026-10-03 00:00 19 minute read This is about using Kompromise to...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
-    "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://scaleoutsean.github.io/projects.html"
+    "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
   },{
     "title": "Posts by Tag",
-    "excerpt":" ","url": "https://scaleoutsean.github.io/tags/"
+    "excerpt":" ","url": "https://blog.scaleoutsean.com/tags/"
   },{
     "title": "Posts by Year",
-    "excerpt":" ","url": "https://scaleoutsean.github.io/year-archive/"
+    "excerpt":" ","url": "https://blog.scaleoutsean.com/year-archive/"
   },{
     "title": "hci",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hci/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hci/"
   },{
     "title": "kubernetes",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kubernetes/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kubernetes/"
   },{
     "title": "netapp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/netapp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/netapp/"
   },{
     "title": "rancher",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rancher/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rancher/"
   },{
     "title": "solidfire",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/solidfire/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/solidfire/"
   },{
     "title": "github",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/github/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/github/"
   },{
     "title": "dark mode",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/dark-mode/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/dark-mode/"
   },{
     "title": "certificate",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/certificate/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/certificate/"
   },{
     "title": "postman",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/postman/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/postman/"
   },{
     "title": "devops",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/devops/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/devops/"
   },{
     "title": "plugin",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/plugin/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/plugin/"
   },{
     "title": "provider",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/provider/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/provider/"
   },{
     "title": "terraform",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/terraform/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/terraform/"
   },{
     "title": "hcc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hcc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hcc/"
   },{
     "title": "log",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/log/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/log/"
   },{
     "title": "logging",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/logging/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/logging/"
   },{
     "title": "powershell",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/powershell/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/powershell/"
   },{
     "title": "qos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/qos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/qos/"
   },{
     "title": "e-series",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/e-series/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/e-series/"
   },{
     "title": "eseries",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/eseries/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/eseries/"
   },{
     "title": "fc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fc/"
   },{
     "title": "fibre channel",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fibre-channel/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fibre-channel/"
   },{
     "title": "iscsi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iscsi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/iscsi/"
   },{
     "title": "performance",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/performance/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/performance/"
   },{
     "title": "api",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/api/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/api/"
   },{
     "title": "python",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/python/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/python/"
   },{
     "title": "f5",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/f5/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/f5/"
   },{
     "title": "ingress",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ingress/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ingress/"
   },{
     "title": "nginx",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nginx/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nginx/"
   },{
     "title": "backup",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/backup/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/backup/"
   },{
     "title": "data protection",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data-protection/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data-protection/"
   },{
     "title": "k10",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/k10/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/k10/"
   },{
     "title": "kanister",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kanister/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kanister/"
   },{
     "title": "kasten",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kasten/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kasten/"
   },{
     "title": "trident",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/trident/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/trident/"
   },{
     "title": "networking",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/networking/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/networking/"
   },{
     "title": "vlan",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vlan/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vlan/"
   },{
     "title": "vmware",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vmware/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vmware/"
   },{
     "title": "vsphere",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vsphere/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vsphere/"
   },{
     "title": "benchmark",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/benchmark/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/benchmark/"
   },{
     "title": "diskspd",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/diskspd/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/diskspd/"
   },{
     "title": "veeam",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/veeam/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/veeam/"
   },{
     "title": "beegfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/beegfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/beegfs/"
   },{
     "title": "splunk",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/splunk/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/splunk/"
   },{
     "title": "vm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vm/"
   },{
     "title": "elasticsearch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/elasticsearch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/elasticsearch/"
   },{
     "title": "elk",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/elk/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/elk/"
   },{
     "title": "monitoring",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/monitoring/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/monitoring/"
   },{
     "title": "visualization",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/visualization/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/visualization/"
   },{
     "title": "smartstore",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/smartstore/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/smartstore/"
   },{
     "title": "storagegrid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/storagegrid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/storagegrid/"
   },{
     "title": "object versioning",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/object-versioning/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/object-versioning/"
   },{
     "title": "s3",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/s3/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/s3/"
   },{
     "title": "nutanix",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nutanix/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nutanix/"
   },{
     "title": "sizing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sizing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sizing/"
   },{
     "title": "cbs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cbs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cbs/"
   },{
     "title": "cloud backup",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloud-backup/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloud-backup/"
   },{
     "title": "cloud backup service",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloud-backup-service/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloud-backup-service/"
   },{
     "title": "ontap",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ontap/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ontap/"
   },{
     "title": "ontap select",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ontap-select/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ontap-select/"
   },{
     "title": "helm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/helm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/helm/"
   },{
     "title": "velero",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/velero/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/velero/"
   },{
     "title": "storage efficiency",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/storage-efficiency/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/storage-efficiency/"
   },{
     "title": "csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/csi/"
   },{
     "title": "container registry",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/container-registry/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/container-registry/"
   },{
     "title": "docker",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/docker/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/docker/"
   },{
     "title": "registry",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/registry/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/registry/"
   },{
     "title": "arm64",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/arm64/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/arm64/"
   },{
     "title": "database",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/database/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/database/"
   },{
     "title": "vertica",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vertica/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vertica/"
   },{
     "title": "hcicollector",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hcicollector/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hcicollector/"
   },{
     "title": "exporter",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/exporter/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/exporter/"
   },{
     "title": "prometheus",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/prometheus/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/prometheus/"
   },{
     "title": "solidfire-exporter",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/solidfire-exporter/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/solidfire-exporter/"
   },{
     "title": "bc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/bc/"
   },{
     "title": "dr",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/dr/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/dr/"
   },{
     "title": "edge",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/edge/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/edge/"
   },{
     "title": "photon iot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/photon-iot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/photon-iot/"
   },{
     "title": "duplicati",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/duplicati/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/duplicati/"
   },{
     "title": "kvm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kvm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kvm/"
   },{
     "title": "cloud mirror",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloud-mirror/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloud-mirror/"
   },{
     "title": "cloud sync",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloud-sync/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloud-sync/"
   },{
     "title": "cloudsync",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudsync/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloudsync/"
   },{
     "title": "replication",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/replication/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/replication/"
   },{
     "title": "sync",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sync/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sync/"
   },{
     "title": "mirantis",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mirantis/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mirantis/"
   },{
     "title": "az",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/az/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/az/"
   },{
     "title": "failure domain",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/failure-domain/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/failure-domain/"
   },{
     "title": "ha",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ha/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ha/"
   },{
     "title": "pd",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pd/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pd/"
   },{
     "title": "protection domain",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/protection-domain/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/protection-domain/"
   },{
     "title": "management",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/management/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/management/"
   },{
     "title": "mvip",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mvip/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mvip/"
   },{
     "title": "svip",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/svip/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/svip/"
   },{
     "title": "duplicacy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/duplicacy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/duplicacy/"
   },{
     "title": "kopia",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kopia/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kopia/"
   },{
     "title": "rclone",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rclone/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rclone/"
   },{
     "title": "restic",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/restic/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/restic/"
   },{
     "title": "restore",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/restore/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/restore/"
   },{
     "title": "ddp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ddp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ddp/"
   },{
     "title": "onecollect",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/onecollect/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/onecollect/"
   },{
     "title": "chap",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/chap/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/chap/"
   },{
     "title": "iqn",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iqn/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/iqn/"
   },{
     "title": "security",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/security/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/security/"
   },{
     "title": "alerting",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/alerting/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/alerting/"
   },{
     "title": "snmp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snmp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snmp/"
   },{
     "title": "audit",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/audit/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/audit/"
   },{
     "title": "grafana",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/grafana/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/grafana/"
   },{
     "title": "telegraf",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/telegraf/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/telegraf/"
   },{
     "title": "ilm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ilm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ilm/"
   },{
     "title": "go",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/go/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/go/"
   },{
     "title": "quay",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/quay/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/quay/"
   },{
     "title": "redhat",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/redhat/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/redhat/"
   },{
     "title": "observability",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/observability/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/observability/"
   },{
     "title": "sgac",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sgac/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sgac/"
   },{
     "title": "insight",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/insight/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/insight/"
   },{
     "title": "alluxio",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/alluxio/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/alluxio/"
   },{
     "title": "cache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cache/"
   },{
     "title": "caching",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/caching/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/caching/"
   },{
     "title": "hadoop",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hadoop/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hadoop/"
   },{
     "title": "hdfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hdfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hdfs/"
   },{
     "title": "ram cache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ram-cache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ram-cache/"
   },{
     "title": "analytics",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/analytics/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/analytics/"
   },{
     "title": "digital ocean",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/digital-ocean/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/digital-ocean/"
   },{
     "title": "coreos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/coreos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/coreos/"
   },{
     "title": "flatcar",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/flatcar/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/flatcar/"
   },{
     "title": "linux",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/linux/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/linux/"
   },{
     "title": "servicenow",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/servicenow/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/servicenow/"
   },{
     "title": "rsync",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rsync/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rsync/"
   },{
     "title": "nextcloud",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nextcloud/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nextcloud/"
   },{
     "title": "cve",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cve/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cve/"
   },{
     "title": "ontap s3",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ontap-s3/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ontap-s3/"
   },{
     "title": "cloud",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloud/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloud/"
   },{
     "title": "wasabi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/wasabi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/wasabi/"
   },{
     "title": "workflow",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/workflow/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/workflow/"
   },{
     "title": "ansible",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ansible/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ansible/"
   },{
     "title": "rbac",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rbac/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rbac/"
   },{
     "title": "gitops",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/gitops/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/gitops/"
   },{
     "title": "cinder",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cinder/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cinder/"
   },{
     "title": "driver",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/driver/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/driver/"
   },{
     "title": "openstack",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/openstack/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/openstack/"
   },{
     "title": "provisioning",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/provisioning/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/provisioning/"
   },{
     "title": "xena",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/xena/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/xena/"
   },{
     "title": "csv",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/csv/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/csv/"
   },{
     "title": "parquet",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/parquet/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/parquet/"
   },{
     "title": "sql",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sql/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sql/"
   },{
     "title": "sql select",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sql-select/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sql-select/"
   },{
     "title": "activeiq",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/activeiq/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/activeiq/"
   },{
     "title": "aiq",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/aiq/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/aiq/"
   },{
     "title": "photon",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/photon/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/photon/"
   },{
     "title": "curl",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/curl/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/curl/"
   },{
     "title": "s3tester",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/s3tester/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/s3tester/"
   },{
     "title": "kestra",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kestra/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kestra/"
   },{
     "title": "hashicorp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hashicorp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hashicorp/"
   },{
     "title": "nomad",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nomad/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nomad/"
   },{
     "title": "jupyter",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/jupyter/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/jupyter/"
   },{
     "title": "report",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/report/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/report/"
   },{
     "title": "visualize",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/visualize/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/visualize/"
   },{
     "title": "platform",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/platform/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/platform/"
   },{
     "title": "pmk",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pmk/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pmk/"
   },{
     "title": "rest server",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rest-server/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rest-server/"
   },{
     "title": "lvm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lvm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lvm/"
   },{
     "title": "proxmox",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/proxmox/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/proxmox/"
   },{
     "title": "ephemeral",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ephemeral/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ephemeral/"
   },{
     "title": "rest",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rest/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rest/"
   },{
     "title": "object lock",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/object-lock/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/object-lock/"
   },{
     "title": "tanzu",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tanzu/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tanzu/"
   },{
     "title": "economics",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/economics/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/economics/"
   },{
     "title": "spot.io",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/spot-io/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/spot-io/"
   },{
     "title": "data management",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data-management/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data-management/"
   },{
     "title": "automation",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/automation/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/automation/"
   },{
     "title": "kafka",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kafka/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kafka/"
   },{
     "title": "efficiency",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/efficiency/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/efficiency/"
   },{
     "title": "apache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/apache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/apache/"
   },{
     "title": "ozone",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ozone/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ozone/"
   },{
     "title": "lnn",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lnn/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lnn/"
   },{
     "title": "milvus",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/milvus/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/milvus/"
   },{
     "title": "search",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/search/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/search/"
   },{
     "title": "storage",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/storage/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/storage/"
   },{
     "title": "vector-database",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vector-database/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vector-database/"
   },{
     "title": "cassandra",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cassandra/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cassandra/"
   },{
     "title": "xcp-ng",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/xcp-ng/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/xcp-ng/"
   },{
     "title": "xen",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/xen/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/xen/"
   },{
     "title": "xen server",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/xen-server/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/xen-server/"
   },{
     "title": "apptainer",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/apptainer/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/apptainer/"
   },{
     "title": "minio",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/minio/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/minio/"
   },{
     "title": "nextflow",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nextflow/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nextflow/"
   },{
     "title": "influxdb",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/influxdb/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/influxdb/"
   },{
     "title": "rocky",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rocky/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rocky/"
   },{
     "title": "rocky linux",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rocky-linux/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rocky-linux/"
   },{
     "title": "oracle",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/oracle/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/oracle/"
   },{
     "title": "timesten",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/timesten/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/timesten/"
   },{
     "title": "storage network",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/storage-network/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/storage-network/"
   },{
     "title": "sbom",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sbom/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sbom/"
   },{
     "title": "container",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/container/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/container/"
   },{
     "title": "lxd",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lxd/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lxd/"
   },{
     "title": "capacity",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/capacity/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/capacity/"
   },{
     "title": "weka",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/weka/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/weka/"
   },{
     "title": "weka.io",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/weka-io/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/weka-io/"
   },{
     "title": "end of availability",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/end-of-availability/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/end-of-availability/"
   },{
     "title": "eoa",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/eoa/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/eoa/"
   },{
     "title": "tensorstore",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tensorstore/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tensorstore/"
   },{
     "title": "compression",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/compression/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/compression/"
   },{
     "title": "cloudflare",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudflare/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloudflare/"
   },{
     "title": "containers",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/containers/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/containers/"
   },{
     "title": "hybrid cloud",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid-cloud/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hybrid-cloud/"
   },{
     "title": "workers",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/workers/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/workers/"
   },{
     "title": "fsnotify",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fsnotify/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fsnotify/"
   },{
     "title": "watch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/watch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/watch/"
   },{
     "title": "hsm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hsm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hsm/"
   },{
     "title": "irods",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/irods/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/irods/"
   },{
     "title": "epa",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/epa/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/epa/"
   },{
     "title": "auth",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/auth/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/auth/"
   },{
     "title": "jwt",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/jwt/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/jwt/"
   },{
     "title": "login",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/login/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/login/"
   },{
     "title": "santricity",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/santricity/"
   },{
     "title": "token",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/token/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/token/"
   },{
     "title": "instaclustr",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/instaclustr/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/instaclustr/"
   },{
     "title": "password",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/password/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/password/"
   },{
     "title": "script",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/script/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/script/"
   },{
     "title": "directpv",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/directpv/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/directpv/"
   },{
     "title": "lvm csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lvm-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lvm-csi/"
   },{
     "title": "topolvm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/topolvm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/topolvm/"
   },{
     "title": "forwarding",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/forwarding/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/forwarding/"
   },{
     "title": "syslog",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/syslog/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/syslog/"
   },{
     "title": "event",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/event/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/event/"
   },{
     "title": "mel",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mel/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mel/"
   },{
     "title": "beeegfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/beeegfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/beeegfs/"
   },{
     "title": "ssd",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssd/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ssd/"
   },{
     "title": "wear",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/wear/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/wear/"
   },{
     "title": "flash",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/flash/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/flash/"
   },{
     "title": "spot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/spot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/spot/"
   },{
     "title": "reporting",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/reporting/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/reporting/"
   },{
     "title": "scripting",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/scripting/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/scripting/"
   },{
     "title": "overprovisioning",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/overprovisioning/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/overprovisioning/"
   },{
     "title": "data broker",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data-broker/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data-broker/"
   },{
     "title": "ransomware",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ransomware/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ransomware/"
   },{
     "title": "snapshot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapshot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snapshot/"
   },{
     "title": "elastic",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/elastic/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/elastic/"
   },{
     "title": "metrics",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/metrics/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/metrics/"
   },{
     "title": "k8s",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/k8s/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/k8s/"
   },{
     "title": "kubevirt",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kubevirt/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kubevirt/"
   },{
     "title": "synchronization",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/synchronization/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/synchronization/"
   },{
     "title": "volsync",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volsync/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volsync/"
   },{
     "title": "projects",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/projects/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/projects/"
   },{
     "title": "mountpoint-s3",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mountpoint-s3/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mountpoint-s3/"
   },{
     "title": "flatcar linux",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/flatcar-linux/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/flatcar-linux/"
   },{
     "title": "nfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nfs/"
   },{
     "title": "rethin",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rethin/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rethin/"
   },{
     "title": "unmap",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/unmap/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/unmap/"
   },{
     "title": "consistency group",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/consistency-group/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/consistency-group/"
   },{
     "title": "cloudcasa",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudcasa/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloudcasa/"
   },{
     "title": "pvc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pvc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pvc/"
   },{
     "title": "azure",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/azure/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/azure/"
   },{
     "title": "cbl-mariner",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cbl-mariner/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cbl-mariner/"
   },{
     "title": "gateway",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/gateway/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/gateway/"
   },{
     "title": "versity",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/versity/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/versity/"
   },{
     "title": "logstash",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/logstash/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/logstash/"
   },{
     "title": "version",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/version/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/version/"
   },{
     "title": "versioning",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/versioning/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/versioning/"
   },{
     "title": "worm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/worm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/worm/"
   },{
     "title": "object store",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/object-store/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/object-store/"
   },{
     "title": "thanos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/thanos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/thanos/"
   },{
     "title": "forward proxy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/forward-proxy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/forward-proxy/"
   },{
     "title": "proxy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/proxy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/proxy/"
   },{
     "title": "reverse proxy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/reverse-proxy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/reverse-proxy/"
   },{
     "title": "squid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/squid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/squid/"
   },{
     "title": "compliance",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/compliance/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/compliance/"
   },{
     "title": "filesytem",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/filesytem/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/filesytem/"
   },{
     "title": "fscrawler",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fscrawler/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fscrawler/"
   },{
     "title": "indexing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/indexing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/indexing/"
   },{
     "title": "expand",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/expand/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/expand/"
   },{
     "title": "pool",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pool/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pool/"
   },{
     "title": "preservation",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/preservation/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/preservation/"
   },{
     "title": "shrink",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/shrink/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/shrink/"
   },{
     "title": "ai",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ai/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ai/"
   },{
     "title": "generative ai",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/generative-ai/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/generative-ai/"
   },{
     "title": "gpt",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/gpt/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/gpt/"
   },{
     "title": "h2o",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/h2o/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/h2o/"
   },{
     "title": "lln",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lln/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lln/"
   },{
     "title": "retention",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/retention/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/retention/"
   },{
     "title": "statefulset",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/statefulset/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/statefulset/"
   },{
     "title": "ec",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ec/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ec/"
   },{
     "title": "erasure coding",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/erasure-coding/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/erasure-coding/"
   },{
     "title": "policy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/policy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/policy/"
   },{
     "title": "snapmirror",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapmirror/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snapmirror/"
   },{
     "title": "polybase",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/polybase/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/polybase/"
   },{
     "title": "sql server",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sql-server/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sql-server/"
   },{
     "title": "broker",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/broker/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/broker/"
   },{
     "title": "memphis",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/memphis/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/memphis/"
   },{
     "title": "memphis.dev",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/memphis-dev/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/memphis-dev/"
   },{
     "title": "message broker",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/message-broker/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/message-broker/"
   },{
     "title": "queue",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/queue/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/queue/"
   },{
     "title": "streaming",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/streaming/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/streaming/"
   },{
     "title": "clone",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/clone/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/clone/"
   },{
     "title": "delta lake",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/delta-lake/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/delta-lake/"
   },{
     "title": "json",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/json/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/json/"
   },{
     "title": "nos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nos/"
   },{
     "title": "teradata",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/teradata/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/teradata/"
   },{
     "title": "vantage",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vantage/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vantage/"
   },{
     "title": "btrfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/btrfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/btrfs/"
   },{
     "title": "fileystem",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fileystem/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fileystem/"
   },{
     "title": "volumemode",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volumemode/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volumemode/"
   },{
     "title": "zfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/zfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/zfs/"
   },{
     "title": "b2",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/b2/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/b2/"
   },{
     "title": "backblaze",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/backblaze/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/backblaze/"
   },{
     "title": "data",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data/"
   },{
     "title": "sample",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sample/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sample/"
   },{
     "title": "synthetic",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/synthetic/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/synthetic/"
   },{
     "title": "volume",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volume/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volume/"
   },{
     "title": "dpp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/dpp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/dpp/"
   },{
     "title": "ef300",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef300/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ef300/"
   },{
     "title": "ef600",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef600/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ef600/"
   },{
     "title": "simple backups",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/simple-backups/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/simple-backups/"
   },{
     "title": "simplebackups",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/simplebackups/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/simplebackups/"
   },{
     "title": "inf-01-00",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/inf-01-00/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/inf-01-00/"
   },{
     "title": "mib",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mib/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mib/"
   },{
     "title": "oid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/oid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/oid/"
   },{
     "title": "versitygw",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/versitygw/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/versitygw/"
   },{
     "title": "ef-series",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef-series/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ef-series/"
   },{
     "title": "iser",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iser/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/iser/"
   },{
     "title": "rdma",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rdma/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rdma/"
   },{
     "title": "custom",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/custom/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/custom/"
   },{
     "title": "prtg",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/prtg/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/prtg/"
   },{
     "title": "traps",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/traps/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/traps/"
   },{
     "title": "cg",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cg/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cg/"
   },{
     "title": "r1",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/r1/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/r1/"
   },{
     "title": "r10",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/r10/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/r10/"
   },{
     "title": "raid1",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/raid1/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/raid1/"
   },{
     "title": "raid6",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/raid6/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/raid6/"
   },{
     "title": "volume group",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volume-group/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volume-group/"
   },{
     "title": "repository",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/repository/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/repository/"
   },{
     "title": "snapshot image",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapshot-image/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snapshot-image/"
   },{
     "title": "snapshot volume",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapshot-volume/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snapshot-volume/"
   },{
     "title": "pgbench",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pgbench/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pgbench/"
   },{
     "title": "postgresql",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/postgresql/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/postgresql/"
   },{
     "title": "raid 1",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/raid-1/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/raid-1/"
   },{
     "title": "raid 6",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/raid-6/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/raid-6/"
   },{
     "title": "e-series perf analyzer",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/e-series-perf-analyzer/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/e-series-perf-analyzer/"
   },{
     "title": "psu",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/psu/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/psu/"
   },{
     "title": "sensors",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sensors/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sensors/"
   },{
     "title": "temperature",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/temperature/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/temperature/"
   },{
     "title": "element",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/element/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/element/"
   },{
     "title": "hec",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hec/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hec/"
   },{
     "title": "http event collector",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/http-event-collector/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/http-event-collector/"
   },{
     "title": "pgvector",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pgvector/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pgvector/"
   },{
     "title": "postgres",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/postgres/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/postgres/"
   },{
     "title": "rag",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rag/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rag/"
   },{
     "title": "vector",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vector/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vector/"
   },{
     "title": "nvidia",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nvidia/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nvidia/"
   },{
     "title": "delegation",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/delegation/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/delegation/"
   },{
     "title": "roles",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/roles/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/roles/"
   },{
     "title": "ntfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ntfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ntfs/"
   },{
     "title": "retrim",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/retrim/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/retrim/"
   },{
     "title": "sdelete",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sdelete/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sdelete/"
   },{
     "title": "trim",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/trim/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/trim/"
   },{
     "title": "windows",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/windows/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/windows/"
   },{
     "title": "checkpoint",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/checkpoint/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/checkpoint/"
   },{
     "title": "dcp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/dcp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/dcp/"
   },{
     "title": "distributed",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/distributed/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/distributed/"
   },{
     "title": "load",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/load/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/load/"
   },{
     "title": "pytorch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pytorch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pytorch/"
   },{
     "title": "save",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/save/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/save/"
   },{
     "title": "torch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/torch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/torch/"
   },{
     "title": "autoscaling",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/autoscaling/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/autoscaling/"
   },{
     "title": "keda",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/keda/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/keda/"
   },{
     "title": "hardened",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hardened/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hardened/"
   },{
     "title": "antimalware",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/antimalware/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/antimalware/"
   },{
     "title": "antivirus",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/antivirus/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/antivirus/"
   },{
     "title": "av",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/av/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/av/"
   },{
     "title": "malware",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/malware/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/malware/"
   },{
     "title": "scan",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/scan/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/scan/"
   },{
     "title": "virus",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/virus/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/virus/"
   },{
     "title": "hyper-v",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hyper-v/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hyper-v/"
   },{
     "title": "netapp hci",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/netapp-hci/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/netapp-hci/"
   },{
     "title": "netapp storagegrid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/netapp-storagegrid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/netapp-storagegrid/"
   },{
     "title": "sds",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sds/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sds/"
   },{
     "title": "broadcom",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/broadcom/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/broadcom/"
   },{
     "title": "licensing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/licensing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/licensing/"
   },{
     "title": "confluent",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/confluent/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/confluent/"
   },{
     "title": "notifications",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/notifications/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/notifications/"
   },{
     "title": "dedup",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/dedup/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/dedup/"
   },{
     "title": "fast_dedup",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fast-dedup/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fast-dedup/"
   },{
     "title": "incus",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/incus/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/incus/"
   },{
     "title": "ubuntu",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ubuntu/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ubuntu/"
   },{
     "title": "media scan",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/media-scan/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/media-scan/"
   },{
     "title": "grok",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/grok/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/grok/"
   },{
     "title": "block size",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/block-size/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/block-size/"
   },{
     "title": "xfs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/xfs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/xfs/"
   },{
     "title": "hooks",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hooks/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hooks/"
   },{
     "title": "verda",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/verda/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/verda/"
   },{
     "title": "ssd cache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssd-cache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ssd-cache/"
   },{
     "title": "best practices",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/best-practices/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/best-practices/"
   },{
     "title": "firewall",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/firewall/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/firewall/"
   },{
     "title": "beegfs csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/beegfs-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/beegfs-csi/"
   },{
     "title": "sfc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sfc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sfc/"
   },{
     "title": "elementos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/elementos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/elementos/"
   },{
     "title": "json-rpc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/json-rpc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/json-rpc/"
   },{
     "title": "jsonrpc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/jsonrpc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/jsonrpc/"
   },{
     "title": "openapi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/openapi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/openapi/"
   },{
     "title": "swagger",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/swagger/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/swagger/"
   },{
     "title": "123456",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/123456/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/123456/"
   },{
     "title": "histograms",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/histograms/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/histograms/"
   },{
     "title": "longhorny",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/longhorny/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/longhorny/"
   },{
     "title": "schedule",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/schedule/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/schedule/"
   },{
     "title": "failback",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/failback/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/failback/"
   },{
     "title": "failover",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/failover/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/failover/"
   },{
     "title": "aws",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/aws/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/aws/"
   },{
     "title": "openshift",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/openshift/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/openshift/"
   },{
     "title": "rcos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rcos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rcos/"
   },{
     "title": "red dot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/red-dot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/red-dot/"
   },{
     "title": "ublock",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ublock/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ublock/"
   },{
     "title": "netapp e-series",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/netapp-e-series/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/netapp-e-series/"
   },{
     "title": "volume copy",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volume-copy/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volume-copy/"
   },{
     "title": "harvest",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/harvest/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/harvest/"
   },{
     "title": "cloudera",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudera/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloudera/"
   },{
     "title": "deduplication",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/deduplication/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/deduplication/"
   },{
     "title": "embedding",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/embedding/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/embedding/"
   },{
     "title": "tiering",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tiering/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tiering/"
   },{
     "title": "agent",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/agent/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/agent/"
   },{
     "title": "mcp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mcp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mcp/"
   },{
     "title": "opea",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/opea/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/opea/"
   },{
     "title": "2025",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/2025/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/2025/"
   },{
     "title": "server",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/server/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/server/"
   },{
     "title": "data pipeline",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data-pipeline/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data-pipeline/"
   },{
     "title": "mlops",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/mlops/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/mlops/"
   },{
     "title": "reference",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/reference/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/reference/"
   },{
     "title": "spark",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/spark/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/spark/"
   },{
     "title": "stack",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/stack/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/stack/"
   },{
     "title": "thinkparq",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/thinkparq/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/thinkparq/"
   },{
     "title": "tr-4890",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tr-4890/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tr-4890/"
   },{
     "title": "enumeration",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/enumeration/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/enumeration/"
   },{
     "title": "scanning",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/scanning/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/scanning/"
   },{
     "title": "aistor",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/aistor/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/aistor/"
   },{
     "title": "clamav",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/clamav/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/clamav/"
   },{
     "title": "pipeline",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pipeline/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pipeline/"
   },{
     "title": "pve",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pve/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pve/"
   },{
     "title": "group snapshot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/group-snapshot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/group-snapshot/"
   },{
     "title": "knn",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/knn/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/knn/"
   },{
     "title": "s3 vectors",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/s3-vectors/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/s3-vectors/"
   },{
     "title": "similarity",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/similarity/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/similarity/"
   },{
     "title": "opensearch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/opensearch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/opensearch/"
   },{
     "title": "hcl",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hcl/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hcl/"
   },{
     "title": "windows admin center",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/windows-admin-center/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/windows-admin-center/"
   },{
     "title": "qlc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/qlc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/qlc/"
   },{
     "title": "wac",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/wac/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/wac/"
   },{
     "title": "agents",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/agents/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/agents/"
   },{
     "title": "beeond",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/beeond/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/beeond/"
   },{
     "title": "object",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/object/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/object/"
   },{
     "title": "post-quantum",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/post-quantum/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/post-quantum/"
   },{
     "title": "pq",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pq/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pq/"
   },{
     "title": "pqc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pqc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pqc/"
   },{
     "title": "lockout",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lockout/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lockout/"
   },{
     "title": "kinetica",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kinetica/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kinetica/"
   },{
     "title": "blog",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/blog/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/blog/"
   },{
     "title": "meta",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/meta/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/meta/"
   },{
     "title": "ceph",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ceph/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ceph/"
   },{
     "title": "tr-4549",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tr-4549/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tr-4549/"
   },{
     "title": "cli",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cli/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cli/"
   },{
     "title": "library",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/library/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/library/"
   },{
     "title": "smcli",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/smcli/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/smcli/"
   },{
     "title": "module",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/module/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/module/"
   },{
     "title": "odx",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/odx/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/odx/"
   },{
     "title": "vaai",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vaai/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vaai/"
   },{
     "title": "nvme",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nvme/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nvme/"
   },{
     "title": "windows server",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/windows-server/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/windows-server/"
   },{
     "title": "disk group",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/disk-group/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/disk-group/"
   },{
     "title": "golang",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/golang/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/golang/"
   },{
     "title": "opentofu",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/opentofu/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/opentofu/"
   },{
     "title": "pulumi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pulumi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pulumi/"
   },{
     "title": "big data",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/big-data/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/big-data/"
   },{
     "title": "branch-bucket",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/branch-bucket/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/branch-bucket/"
   },{
     "title": "bucket-snapshot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bucket-snapshot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/bucket-snapshot/"
   },{
     "title": "invalid key length",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/invalid-key-length/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/invalid-key-length/"
   },{
     "title": "openssh",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/openssh/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/openssh/"
   },{
     "title": "ssh",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssh/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ssh/"
   },{
     "title": "roce",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/roce/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/roce/"
   },{
     "title": "hardware",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hardware/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hardware/"
   },{
     "title": "documentation",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/documentation/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/documentation/"
   },{
     "title": "docs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/docs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/docs/"
   },{
     "title": "trixie",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/trixie/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/trixie/"
   },{
     "title": "debian",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/debian/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/debian/"
   },{
     "title": "k0s",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/k0s/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/k0s/"
   },{
     "title": "k0rdent",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/k0rdent/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/k0rdent/"
   },{
     "title": "snapshots",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/snapshots/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/snapshots/"
   },{
     "title": "clones",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/clones/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/clones/"
   },{
     "title": "talos linux",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/talos-linux/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/talos-linux/"
   },{
     "title": "ubuntu 26.04",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ubuntu-26-04/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ubuntu-26-04/"
   },{
     "title": "resolute-raccoon",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/resolute-raccoon/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/resolute-raccoon/"
   },{
     "title": "santricity csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/santricity-csi/"
   },{
     "title": "pbs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/pbs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/pbs/"
   },{
     "title": "nl-sas",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nl-sas/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nl-sas/"
   },{
     "title": "frc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/frc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/frc/"
   },{
     "title": "bcache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bcache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/bcache/"
   },{
     "title": "hybrid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hybrid/"
   },{
     "title": "ef80",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef80/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ef80/"
   },{
     "title": "ef50",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ef50/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ef50/"
   },{
     "title": "schnapps-shot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/schnapps-shot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/schnapps-shot/"
   },{
     "title": "repos",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/repos/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/repos/"
   },{
     "title": "sanmox",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sanmox/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sanmox/"
   },{
     "title": "workloads",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/workloads/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/workloads/"
   },{
     "title": "eck",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/eck/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/eck/"
   },{
     "title": "logs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/logs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/logs/"
   },{
     "title": "victoria-logs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/victoria-logs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/victoria-logs/"
   },{
     "title": "vdo",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vdo/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vdo/"
   },{
     "title": "embeddings",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/embeddings/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/embeddings/"
   },{
     "title": "qdrant",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/qdrant/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/qdrant/"
   },{
     "title": "data-mover",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/data-mover/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/data-mover/"
   },{
     "title": "oadp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/oadp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/oadp/"
   },{
     "title": "cloudnativepg",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cloudnativepg/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cloudnativepg/"
   },{
     "title": "ibm",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ibm/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ibm/"
   },{
     "title": "microk8s",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/microk8s/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/microk8s/"
   },{
     "title": "ibm-block-csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ibm-block-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ibm-block-csi/"
   },{
     "title": "santricity-client",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-client/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/santricity-client/"
   },{
     "title": "rook",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rook/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rook/"
   },{
     "title": "firemox",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/firemox/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/firemox/"
   },{
     "title": "solidfire-csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/solidfire-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/solidfire-csi/"
   },{
     "title": "kv-cache",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/kv-cache/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kv-cache/"
   },{
     "title": "cosi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cosi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cosi/"
   },{
     "title": "bucket-branch",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/bucket-branch/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/bucket-branch/"
   },{
     "title": "iceberg",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iceberg/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/iceberg/"
   },{
     "title": "delta",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/delta/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/delta/"
   },{
     "title": "opensharing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/opensharing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/opensharing/"
   },{
     "title": "delta-lake",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/delta-lake/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/delta-lake/"
   },{
     "title": "compaction",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/compaction/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/compaction/"
   },{
     "title": "iot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/iot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/iot/"
   },{
     "title": "volumes",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/volumes/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/volumes/"
   },{
     "title": "file-sharing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/file-sharing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/file-sharing/"
   },{
     "title": "lakekeeper",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lakekeeper/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lakekeeper/"
   },{
     "title": "santricity-csi",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/santricity-csi/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/santricity-csi/"
   },{
     "title": "message",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/message/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/message/"
   },{
     "title": "nats",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nats/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nats/"
   },{
     "title": "jetstream",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/jetstream/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/jetstream/"
   },{
     "title": "events",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/events/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/events/"
   },{
     "title": "ais",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ais/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ais/"
   },{
     "title": "objectivefs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/objectivefs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/objectivefs/"
   },{
     "title": "fuse",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fuse/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fuse/"
   },{
     "title": "template",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/template/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/template/"
   },{
     "title": "linked-clone",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/linked-clone/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/linked-clone/"
   },{
     "title": "ssot",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ssot/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ssot/"
   },{
     "title": "tables",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/tables/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/tables/"
   },{
     "title": "onelake",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/onelake/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/onelake/"
   },{
     "title": "lakebase",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lakebase/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lakebase/"
   },{
     "title": "sharing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/sharing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sharing/"
   },{
     "title": "deltasharing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/deltasharing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/deltasharing/"
   },{
     "title": "shortcut",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/shortcut/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/shortcut/"
   },{
     "title": "messaging",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/messaging/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/messaging/"
   },{
     "title": "automq",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/automq/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/automq/"
   },{
     "title": "fswa",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/fswa/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/fswa/"
   },{
     "title": "rst",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/rst/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/rst/"
   },{
     "title": "hybrid-cloud",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hybrid-cloud/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hybrid-cloud/"
   },{
     "title": "vgw",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vgw/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vgw/"
   },{
     "title": "nixl",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/nixl/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nixl/"
   },{
     "title": "gds",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/gds/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/gds/"
   },{
     "title": "datalake",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/datalake/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/datalake/"
   },{
     "title": "inferencing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/inferencing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/inferencing/"
   },{
     "title": "lakefs",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/lakefs/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lakefs/"
   },{
     "title": "s3-files",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/s3-files/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/s3-files/"
   },{
     "title": "cucomp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/cucomp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cucomp/"
   },{
     "title": "checkpointing",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/checkpointing/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/checkpointing/"
   },{
     "title": "agentic",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/agentic/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/agentic/"
   },{
     "title": "starfish",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/starfish/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/starfish/"
   },{
     "title": "hpc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/hpc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/hpc/"
   },{
     "title": "duckdb",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/duckdb/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/duckdb/"
   },{
     "title": "trino",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/trino/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/trino/"
   },{
     "title": "quack",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/quack/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/quack/"
   },{
     "title": "access",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/access/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/access/"
   },{
     "title": "ray",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ray/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ray/"
   },{
     "title": "ml",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/ml/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ml/"
   },{
     "title": "yugabytedb",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/yugabytedb/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/yugabytedb/"
   },{
     "title": "AssumeRoleWithWebIdentity",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/assumerolewithwebidentity/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/assumerolewithwebidentity/"
   },{
     "title": "webhook",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/webhook/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/webhook/"
   },{
     "title": "vectors",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/vectors/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/vectors/"
   },{
     "title": "quickwit",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/quickwit/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/quickwit/"
   },{
     "title": "starburst",
-    "excerpt":"","url": "https://scaleoutsean.github.io/tags/starburst/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/starburst/"
   },{
     "title": "projects",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/projects/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
   },{
     "title": "solidfire",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/solidfire/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/solidfire/"
   },{
     "title": "random",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/random/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/random/"
   },{
     "title": "kubernetes",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/kubernetes/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/kubernetes/"
   },{
     "title": "virtualization",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/virtualization/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/virtualization/"
   },{
     "title": "automation",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/automation/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/automation/"
   },{
     "title": "storage",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/storage/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/storage/"
   },{
     "title": "analytics",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/analytics/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/analytics/"
   },{
     "title": "containers",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/containers/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/containers/"
   },{
     "title": "cloud",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/cloud/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/cloud/"
   },{
     "title": "meta",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/meta/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/meta/"
   },{
     "title": "openstack",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/openstack/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/openstack/"
   },{
     "title": "linux",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/linux/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/linux/"
   },{
     "title": "monitoring",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/monitoring/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/monitoring/"
   },{
     "title": "backup",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/backup/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/backup/"
   },{
     "title": "ai",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/ai/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/ai/"
   },{
     "title": "netapp hci",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/netapp-hci/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/netapp-hci/"
   },{
     "title": "netapp",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/netapp/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/netapp/"
   },{
     "title": "hci",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/hci/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/hci/"
   },{
     "title": "performance",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/performance/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/performance/"
   },{
     "title": "e-series",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/e-series/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/e-series/"
   },{
     "title": "eseries",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/eseries/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/eseries/"
   },{
     "title": "security",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/security/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/security/"
   },{
     "title": "s3",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/s3/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/s3/"
   },{
     "title": "project",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/project/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/project/"
   },{
     "title": "hpc",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/hpc/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/hpc/"
   },{
     "title": "storagegrid",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/storagegrid/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/storagegrid/"
   },{
     "title": "instaclustr",
-    "excerpt":"","url": "https://scaleoutsean.github.io/categories/instaclustr/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/categories/instaclustr/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page2/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page2/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page3/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page3/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page4/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page4/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page5/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page5/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page6/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page6/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page7/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page7/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page8/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page8/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page9/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page9/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page10/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page10/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page11/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page11/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page12/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page12/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page13/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page13/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page14/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page14/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page15/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page15/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page16/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page16/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page17/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page17/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page18/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page18/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page19/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page19/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page20/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page20/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page21/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page21/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page22/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page22/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page23/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page23/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page24/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page24/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page25/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page25/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page26/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page26/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page27/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page27/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page28/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page28/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page29/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page29/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page30/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page30/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page31/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page31/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page32/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page32/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page33/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page33/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page34/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page34/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page35/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page35/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page36/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page36/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page37/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page37/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page38/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page38/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page39/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page39/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page40/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page40/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page41/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page41/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page42/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page42/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page43/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page43/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page44/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page44/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page45/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page45/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page46/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page46/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page47/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page47/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page48/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page48/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page49/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page49/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page50/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page50/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page51/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page51/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page52/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page52/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page53/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page53/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page54/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page54/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page55/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page55/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page56/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page56/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page57/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page57/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page58/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page58/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page59/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page59/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page60/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page60/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page61/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page61/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page62/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page62/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page63/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page63/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page64/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page64/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page65/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page65/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page66/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page66/"
   },{
     "title": "Home",
-    "excerpt":"","url": "https://scaleoutsean.github.io/page67/"
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page67/"
   }]

@@ -51,7 +51,7 @@ To properly protect replicas, use multiple entry-level EF-Series arrays, one per
 
 ![Yeah, we don't really do that here](/assets/images/meme_we_dont_do_that_here.gif)
 
-SSDs are [also required](https://docs.yugabyte.com/stable/deploy/checklist/#disks). Get one of the [EF arrays](https://scaleoutsean.github.io/2026/03/21/netapp-ef-series-ef80-ef50.html) including the older models that are currently still available and might be cheaper.
+SSDs are [also required](https://docs.yugabyte.com/stable/deploy/checklist/#disks). Get one of the [EF arrays](https://blog.scaleoutsean.com/2026/03/21/netapp-ef-series-ef80-ef50.html) including the older models that are currently still available and might be cheaper.
 
 There's [this](https://docs.yugabyte.com/stable/deploy/checklist/#disks):
 

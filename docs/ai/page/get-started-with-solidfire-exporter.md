@@ -4,7 +4,7 @@ SolidFire metrics for Kubernetes and other clusters
 
 **NOTICE**: any and all credentials and tokens on this page are samples, not leaked.
 
-In yesterday's [post](https://scaleoutsean.github.io/2021/03/08/hcicollector-v0.7.html) about HCICollector v0.7 I mentioned [solidfire-exporter](https://github.com/mjavier2k/solidfire-exporter).
+In yesterday's [post](https://blog.scaleoutsean.com/2021/03/08/hcicollector-v0.7.html) about HCICollector v0.7 I mentioned [solidfire-exporter](https://github.com/mjavier2k/solidfire-exporter).
 
 Here's how to get started with it without Kubernetes and Docker in under 2 minutes. 
 

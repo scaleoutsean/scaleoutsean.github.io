@@ -11,7 +11,7 @@ E-Series Performance Analyzer 4 is coming
 
 ## Introduction
 
-In 2023 [I forked](https://scaleoutsean.github.io/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html) the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. 
+In 2023 [I forked](https://blog.scaleoutsean.com/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html) the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. 
 
 I accomplished all of the goals I set for it at the time:
 
@@ -20,9 +20,9 @@ I accomplished all of the goals I set for it at the time:
 - Simplify Docker deployments
 - Create Kubernetes deployment recipe
 
-Later I added [some small improvements](https://scaleoutsean.github.io/2023/11/04/eseries-perf-analyzer-epa-330.html) and kept dependencies up to date.
+Later I added [some small improvements](https://blog.scaleoutsean.com/2023/11/04/eseries-perf-analyzer-epa-330.html) and kept dependencies up to date.
 
-I wanted to do more, but [it's not the only under-served area](https://scaleoutsean.github.io/projects.html) so I've been happy with what I've achieved. 
+I wanted to do more, but [it's not the only under-served area](https://blog.scaleoutsean.com/projects.html) so I've been happy with what I've achieved. 
 
 Earlier this year [InfluxDB 3 entered public beta](/2025/01/24/influxdb-3-core-alpha.html), so I knew soon time will come to do the long-awaited step and update EPA for InfluxDB v3. I also have SoliFire Collector that uses InfluxDB and [I updated that one for InfluxDB 3 in June](/2025/06/18/sfc-2-dot-1.html). EPA was next.
 

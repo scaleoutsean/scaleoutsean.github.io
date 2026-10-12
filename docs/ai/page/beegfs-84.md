@@ -34,7 +34,7 @@ More on the RST auto-sync feature:
 > The File System Modification Events feature must be enabled with a Watch service configured to listen to all metadata services with Remote as a subscriber.
 > Event dispatch must be enabled in Remote and appropriate rate limits and file filters configured.
 
-I think the File System Modification Events feature is great. I blogged about it [here](/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#file-system-events) and [built a file scanner](https://scaleoutsean.github.io/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html) for BeeGFS which could be used for DIY replication as well.
+I think the File System Modification Events feature is great. I blogged about it [here](/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#file-system-events) and [built a file scanner](https://blog.scaleoutsean.com/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html) for BeeGFS which could be used for DIY replication as well.
 
 The tricky part is making sure problems are detected when they happen. As you can see ("rate limits and file filters configured"), there may be non-trivial failure scenarios which are hard to test and are usually discovered in field. 
 

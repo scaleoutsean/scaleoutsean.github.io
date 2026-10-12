@@ -43,7 +43,7 @@ Here's a couple of general criteria I'd consider and (below that) why for *Hot T
 | Protocol       | block; file only for small | block | block  |
 | Media          | TLC flash   | TLC flash  | TLC flash |
 | Docker         | Trident     | LVM, Terraform Provider  | Trident |
-| Kubernetes     | Trident CSI | TopoLVM, [SANtricity CSI](https://scaleoutsean.github.io/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html) | TopoLVM, Trident CSI, SolidFire CSI |
+| Kubernetes     | Trident CSI | TopoLVM, [SANtricity CSI](https://blog.scaleoutsean.com/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html) | TopoLVM, Trident CSI, SolidFire CSI |
 | Rel. cost of perf | $$      | $           | $$$ | 
 | Rel. cost of cap  | $$      | $           | $$$ |
 | Rec. replicas  | 1      | 1 (S,M) or 2 (L+)| 1  |

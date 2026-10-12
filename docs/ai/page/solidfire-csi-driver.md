@@ -224,7 +224,7 @@ Micro-management is possible for Storage Classes that do not use QoS policy IDs.
 
 ### Manageability and integrability
 
-That is achieved through enhanced use of SolidFire [volume attributes](https://scaleoutsean.github.io/2024/07/02/solidfire-volume-attributes-from-trident-and-other-apps.html). Example:
+That is achieved through enhanced use of SolidFire [volume attributes](https://blog.scaleoutsean.com/2024/07/02/solidfire-volume-attributes-from-trident-and-other-apps.html). Example:
 
 ```json
 {

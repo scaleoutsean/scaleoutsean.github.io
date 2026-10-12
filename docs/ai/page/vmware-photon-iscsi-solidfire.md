@@ -100,7 +100,7 @@ I built and installed Open-iSCSI 2.1.6 (instead of Photon's 2.1.3) and it seemed
 ## To-Do's
 
 - Try Kubernetes with Trident CSI (iSCSI) and Photon OS - maybe next time
-- Try [Velero Plugin vSphere](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-E7D7E987-2686-4458-BE9E-81A8D79D7859.html) - I don't have vSphere and Tanzu in personal lab so I won't try this anytime soon, but I tested [Velero with SolidFire](https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) and don't expect it to be a problem if Kubernetes with Trident CSI on Photon OS can work. Notice how the VMware documentation suggests to use Photon 3.0 (which also has iSCSI SRPMS, but I haven't tested that version). Non-Tanzu Kubernetes with Velero should work as well, although that would be a DIY approach
+- Try [Velero Plugin vSphere](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-E7D7E987-2686-4458-BE9E-81A8D79D7859.html) - I don't have vSphere and Tanzu in personal lab so I won't try this anytime soon, but I tested [Velero with SolidFire](https://blog.scaleoutsean.com/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) and don't expect it to be a problem if Kubernetes with Trident CSI on Photon OS can work. Notice how the VMware documentation suggests to use Photon 3.0 (which also has iSCSI SRPMS, but I haven't tested that version). Non-Tanzu Kubernetes with Velero should work as well, although that would be a DIY approach
 
 ## Software versions
 

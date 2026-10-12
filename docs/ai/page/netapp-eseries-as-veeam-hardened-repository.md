@@ -18,7 +18,7 @@ The idea behind [Veeam Hardened Repository](https://helpcenter.veeam.com/docs/ba
 - A Linux box runs the Veeam Data Mover Service (veeamtransport) and the Veeam Immutability Service (veeamimmureposvc)
 - The latter "checks file immutability attributes every 20 minutes, calculates the time until a file needs to be immutable, and sets or removes the immutable attribute" (on backup files stored on XFS filesystem)
 
-Among the free (and far less featured) approaches there's [Rest Server](/2022/04/03/restic-server-netapp-eseries.html) for Restic clients, and [Kopia](https://scaleoutsean.github.io/2023/09/03/solidbackup-with-kopia.html).
+Among the free (and far less featured) approaches there's [Rest Server](/2022/04/03/restic-server-netapp-eseries.html) for Restic clients, and [Kopia](https://blog.scaleoutsean.com/2023/09/03/solidbackup-with-kopia.html).
 
 So, does Veeam Hardened Repository (let's call it VHR) support E-Series or vice versa?
 

@@ -2,7 +2,7 @@
 
 How OpenSharing and the Versity S3 Gateway make NetApp E-Series Volume assets shareable
 
-- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](https://scaleoutsean.github.io/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
+- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](https://blog.scaleoutsean.com/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
 - PART TWO: [IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series](/2026/06/16/netapp-eseries-iot-compaction-opensharing.html)
 - **PART THREE:** NetApp volume content sharing with OpenSharing and Versity S3 Gateway
 - PART FOUR: [OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html)

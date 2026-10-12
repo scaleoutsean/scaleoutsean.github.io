@@ -31,9 +31,9 @@ Backup to S3 is *not* a replacement for enterprise data protection software (or 
 
 When Backup to S3 may be just good enough? Some examples:
 
-- you don't have enterprise backup software (or don't have the skill or time to implement a community backup software such as [Velero](https://scaleoutsean.github.io/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) for Kubernetes) and don't need advanced data protection features
-- you don't have ONTAP to which you could copy data with SnapMirror and from there use Cloud Backup Service to backup to S3 (I wrote about that use case [here](https://scaleoutsean.github.io/2021/01/27/netapp-hci-cloud-backup-service.html))
-- you have more data than you can backup with a free/community edition of enterprise software like [Veeam](https://scaleoutsean.github.io/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html) or [Kasten](https://scaleoutsean.github.io/2021/02/12/kasten-solidfire-trident.html), and have simple basic backup/restore requirements
+- you don't have enterprise backup software (or don't have the skill or time to implement a community backup software such as [Velero](https://blog.scaleoutsean.com/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) for Kubernetes) and don't need advanced data protection features
+- you don't have ONTAP to which you could copy data with SnapMirror and from there use Cloud Backup Service to backup to S3 (I wrote about that use case [here](https://blog.scaleoutsean.com/2021/01/27/netapp-hci-cloud-backup-service.html))
+- you have more data than you can backup with a free/community edition of enterprise software like [Veeam](https://blog.scaleoutsean.com/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html) or [Kasten](https://blog.scaleoutsean.com/2021/02/12/kasten-solidfire-trident.html), and have simple basic backup/restore requirements
 
 Backup to S3 doesn't have a mechanism to freeze (quiesce) a volume because it's completely self-contained in the storage software and has no client components; a snapshot ID can be provided but if it does not exist, on-demand snapshot is created and used to perform backup.
 
@@ -471,4 +471,4 @@ For advanced and enterprise use, especially with 100's of TBs to protect, I'd re
 
 At the risk of fragmenting your data protection approaches - not something I'd advocate, but I'll mention it for the sake of discussion - you could use a community edition of enterprise data protection software for important data (Firewall VM, DBs, ADS/LDAP, Git, K8s Masters), and Backup to S3 for the rest (generic VMs).
 
-One so far unexplored area is "in between" situations where community applications could be used to cover niche use cases. More on that in [the next post](https://scaleoutsean.github.io/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html).
+One so far unexplored area is "in between" situations where community applications could be used to cover niche use cases. More on that in [the next post](https://blog.scaleoutsean.com/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html).

@@ -795,7 +795,7 @@ Optionally:
 
 Finally, SolidFire Demo VM (free download from the NetApp support Web site) is excellent for this type testing in a VMware environment.
 
-You can develop automation and run replicated test clusters without dedicated physical hardware - all you need is 4 VMs (2 Kubernetes and 2 SolidFire). That is what I used to write this post (apart from the ARM64 screenshot which is just a screenshot taken while working on the [Trident-on-ARM64](https://scaleoutsean.github.io/2021/02/24/netapp-trident-on-arm64.html) post).
+You can develop automation and run replicated test clusters without dedicated physical hardware - all you need is 4 VMs (2 Kubernetes and 2 SolidFire). That is what I used to write this post (apart from the ARM64 screenshot which is just a screenshot taken while working on the [Trident-on-ARM64](https://blog.scaleoutsean.com/2021/02/24/netapp-trident-on-arm64.html) post).
 
 ### Automate storage failover steps
 

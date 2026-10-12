@@ -6,7 +6,7 @@ Hybrid Cloud Control (HCC) is a group of services - management plane, if you wil
 
 **NOTICE**: all credentials and tokens on this page are samples, not leaked.
 
-As noted in last week's [post on HCC and mNode log forwarding](https://scaleoutsean.github.io/2020/11/27/solidfire-mnode-hcc-log-forwarding.html) (you may want to read it if you want additional context), right now we can't forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest. 
+As noted in last week's [post on HCC and mNode log forwarding](https://blog.scaleoutsean.com/2020/11/27/solidfire-mnode-hcc-log-forwarding.html) (you may want to read it if you want additional context), right now we can't forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest. 
 
 ### `GET /logs`
 

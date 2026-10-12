@@ -26,9 +26,9 @@ To security researchers and bounty hunters: passwords, secret keys, bearer token
 
 ### Privacy
 
-Github Pages provide no analytics or reporting to blog owners which is why the blog collects basics statistics - to get an idea if anyone's visiting and what's in demand. I *cannot* see the visitors' domains or IP address, for example. I can see referrers, countries, and the number of pages that were seen (not cross-referenced by referrer or country).
+The site uses Web analytics from Umami. Please see their T&Cs for details.
 
-This site's Web logs aren't accessible to me. This site is hosted by Github. Their privacy policy can be found [here](https://docs.github.com/en/free-pro-team@latest/github/site-policy/github-privacy-statement).
+This blog doesn't "sell" or retain logs. 
 
 ### Trademarks
 

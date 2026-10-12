@@ -6,7 +6,7 @@ It's been almost a year since [S3 GO NATS! demonstrated](http:///2025/07/23/s3-v
 
 ![S3 GO NATS!](/assets/images/s3-go-nats.png)
 
-For at least [nine months]([/2025/10/09/storagegrid-s3-cache-branch-buckets.html](https://scaleoutsean.github.io/2025/10/09/storagegrid-s3-cache-branch-buckets.html#so-how-is-this-supposed-to-be-used)) I've been thinking about improving on that approach, but a lot had be done for E-Series which had literally [nothing](/2025/12/22/reautomating-eseries.html) as recently as last December. Most of that is now available and "good enough", so lately I have been playing with StorageGRID again.
+For at least [nine months]([/2025/10/09/storagegrid-s3-cache-branch-buckets.html](https://blog.scaleoutsean.com/2025/10/09/storagegrid-s3-cache-branch-buckets.html#so-how-is-this-supposed-to-be-used)) I've been thinking about improving on that approach, but a lot had be done for E-Series which had literally [nothing](/2025/12/22/reautomating-eseries.html) as recently as last December. Most of that is now available and "good enough", so lately I have been playing with StorageGRID again.
 
 ## Kompromise 
 

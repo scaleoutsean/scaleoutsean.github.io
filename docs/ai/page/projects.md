@@ -44,7 +44,7 @@ Most of them are permissive OSS, but since 2026 I invest less in source code mai
 | [solidfire-csi](https://github.com/scaleoutsean/solidfire-csi/) | Community SolidFire CSI driver (Go language) |
 | [solidfire-go](https://github.com/scaleoutsean/solidfire-go/) | SolidFire Go SDK (Go language) |
 | [SolidBackup](https://github.com/scaleoutsean/solidbackup) | Scripts for rapid cloning and backup job templating with SolidFire (PowerShell, Ansible)|
-| [SolidFire Operator](https://github.com/scaleoutsean/solidfire-operator) | SolidFire (toy) Operator for Kubernetes (Ansible) |
+| [SolidFire Operator](https://github.com/scaleoutsean/solidfire-operator) | SolidFire (toy) Operator for Kubernetes (Ansible)|
 | [sg-cosi](https://github.com/scaleoutsean/sg-cosi) | An opinionated Kubernetes COSI `v1alpha1` driver for NetApp StorageGRID (Go). Binaries only. |
 | [SGAC](https://github.com/scaleoutsean/storagegrid-audit-analysis) | Audit log converter (to JSON) for NetApp StorageGRID 11.0-12.1 (Python, Go). Binaries only since v0.3.0. |
 | [Terraform Provider for SANtricity](https://github.com/scaleoutsean/santricity-go/tree/master/provider) | Terraform Provider for SANtricity (Go, HCL, docs) |

@@ -35,7 +35,7 @@ And - although not directly related - this "AWS S3-compliant edge" that I mentio
 
 I gather various audit logs and store them on StorageGRID. This includes StorageGRID 11.5's own audit.log. I want to keep them for a long time, prevent tampering, and the price must be affordable.
 
-To analyze such logs, I use a [tool](https://scaleoutsean.github.io/2021/10/20/sgac-storagegrid-audit-log-converter-v0.2.1.html). You may have your own, and you may analyze genomics data or something else. It doesn't matter.
+To analyze such logs, I use a [tool](https://blog.scaleoutsean.com/2021/10/20/sgac-storagegrid-audit-log-converter-v0.2.1.html). You may have your own, and you may analyze genomics data or something else. It doesn't matter.
 
 In the past I'd download such logs to my VM and analyze them there, creating unnecessary read-write workload on my VMware storage (with NetApp HCI that storage is SolidFire).
 

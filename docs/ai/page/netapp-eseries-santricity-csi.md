@@ -269,4 +269,4 @@ If you're curious about using Linux with highly available NVMe-oF storage, see [
 
 ### Update (Feb 26, 2026)
 
-You may also consider [my SANtricity-aware patch for IBM Block CSI](https://scaleoutsean.github.io/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html) driver.
+You may also consider [my SANtricity-aware patch for IBM Block CSI](https://blog.scaleoutsean.com/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html) driver.

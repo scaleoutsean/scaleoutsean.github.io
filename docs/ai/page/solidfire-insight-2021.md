@@ -10,7 +10,7 @@ I can't reproduce any content without the written permission of NetApp, so no sc
 
 SolidFire product managers introduce and demonstrate new features in SolidFire and eSDS ([link](https://www.netapp.tv/details/28332)).
 
-Why: I wrote about SolidFire Protection Domains [here](https://scaleoutsean.github.io/2021/07/06/solidfire-protection-domains-data-path.html), and the feature isn't exactly new, but the session contains newer and different information. Also some good information if you're interested in eSDS (those who build infrastructure on Dell & HPE servers, for example).
+Why: I wrote about SolidFire Protection Domains [here](https://blog.scaleoutsean.com/2021/07/06/solidfire-protection-domains-data-path.html), and the feature isn't exactly new, but the session contains newer and different information. Also some good information if you're interested in eSDS (those who build infrastructure on Dell & HPE servers, for example).
 
 Highlights: SolidFire Protection Domains and what's new in eSDS.
 
@@ -36,8 +36,8 @@ Invest 25 min of your time to find out how to get started with SolidFire automat
 
 Why: this presentation packs a lot in 25 minutes - from getting started with Postman to Ansible, PowerShell, Python and Terraform - and all source code used in the scripts is available, so you can easily recreate those examples. Only two examples weren't shown:
 
-- Terraform example (because there are several files involved), but the good news is you can get it [here](https://scaleoutsean.github.io/2021/09/18/using-terraform-1-with-solidfire-12.html)
-- Set-SFQoSException module (because its source code is too long to retype by looking at the screen) - you can find about it [here](https://scaleoutsean.github.io/2020/11/28/powershell-set-sfqosexception.html) and the source code is in [Awesome SolidFire](https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts) on Github
+- Terraform example (because there are several files involved), but the good news is you can get it [here](https://blog.scaleoutsean.com/2021/09/18/using-terraform-1-with-solidfire-12.html)
+- Set-SFQoSException module (because its source code is too long to retype by looking at the screen) - you can find about it [here](https://blog.scaleoutsean.com/2020/11/28/powershell-set-sfqosexception.html) and the source code is in [Awesome SolidFire](https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts) on Github
 
 Highlights: Postman, Ansible, Python, PowerShell, Hashicorp Terraform.
 

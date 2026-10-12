@@ -147,7 +147,7 @@ Possible workarounds include a change of disk controller. I've tried several fro
 
 ![Proxmox 7.1 SCSI controller choices](/assets/images/proxmox-solidfire-demo-vm-storage-controller-options.png)
 
-As you can see from [my notes on SolidFire Demo VM with Virtualbox](https://scaleoutsean.github.io/2021/04/20/solidfire-12.3.html), I managed to get it to work by detaching all of the disks from SCSI controller, adding a new SATA (AHCI, to be exact) controller, and finally attaching the disks to AHCI controller in the exact same order (although, apart from boot disk, the order maybe doesn't matter).
+As you can see from [my notes on SolidFire Demo VM with Virtualbox](https://blog.scaleoutsean.com/2021/04/20/solidfire-12.3.html), I managed to get it to work by detaching all of the disks from SCSI controller, adding a new SATA (AHCI, to be exact) controller, and finally attaching the disks to AHCI controller in the exact same order (although, apart from boot disk, the order maybe doesn't matter).
 
 To do the same on Proxmox I detached all SCSI disks so that they become Unused, then attached them as SATA devices. I had to hit ESC to get to boot menu where I picked the largest (60GB) disk which is boot disk, but just like before it timed out after a while.
 

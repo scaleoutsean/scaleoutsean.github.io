@@ -193,7 +193,7 @@ To find out what happened between the most recent and one before it (baseline):
   --env-file kompromise-cosi-snapshots/.env
 ```
 
-We may get something like "three new versions, one delete":
+We may get something like "three new versions, one new delete":
 
 ```sh
 versions=3 delete-markers=1
