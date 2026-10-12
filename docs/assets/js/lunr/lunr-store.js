@@ -2795,6 +2795,12 @@ var store = [{
         "url": "/2026/10/08/kompromise-storagegrid-instaclustr-opensearch.html",
         "teaser": null
       },{
+        "title": "Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch",
+        "excerpt":"Introduction You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need embeddings for your data. You can offload some of that work by using managed OpenSearch by Instaclustr. It takes 15 minutes to start, after...","categories": ["storage","s3","ai","analytics","projects","instaclustr"],
+        "tags": ["s3","storagegrid","opensearch","embeddings","vectors"],
+        "url": "/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2808,7 +2814,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Kompromise, SGII, StorageGRID and Instaclustr OpenSearch 2026-10-08 00:00 12 minute read We could always send notifications to the cloud, but now there’s SGII which helps us do it better Feed StorageGRID 12 data to Elasticsearch 9 indexes with Kompromise 2026-10-03 00:00 19 minute read This is about using Kompromise to...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch 2026-10-13 00:00 8 minute read We walk through setup and generating embeddings for AI and search Kompromise, SGII, StorageGRID and Instaclustr OpenSearch 2026-10-08 00:00 12 minute read We could always send notifications to the cloud, but now there’s SGII which helps us...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
