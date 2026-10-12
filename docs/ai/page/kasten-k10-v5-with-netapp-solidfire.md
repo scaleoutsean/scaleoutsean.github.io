@@ -37,7 +37,7 @@ These are now easy to manage (create, view, edit).
 
 SQL Server for Linux is extremely easy to use and automate with SolidFire (years ago I did [this short demo with  data masking using SQL Server for Linux and SolidFire](https://www.youtube.com/watch?v=qgHuWYQwhUA)), so I'll likely do a post dedicated to this.
 
-Both SQL Server and PGO leverage Kanister. I blogged about [Kanister](https://blog.scaleoutsean.com/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) recently, if you're curious about that [part of K10](https://docs.kasten.io/5.0.0/install/generic.html).
+Both SQL Server and PGO leverage Kanister. I blogged about [Kanister](/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) recently, if you're curious about that [part of K10](https://docs.kasten.io/5.0.0/install/generic.html).
 
 ## OpenStack and vSphere in Infrastructure Profiles
 
@@ -51,8 +51,8 @@ Similarly, Tanzu clusters on vSphere can use Sphere CSI plugin with SolidFire or
 
 Related posts:
 
-- [Tanzu with vSphere CSI and E-Series](https://blog.scaleoutsean.com/2022/05/18/vmware-tanzu-netapp-eseries.html)
-- [Kubernetes on OpenStack with Cinder CSI and SolidFire](https://blog.scaleoutsean.com/2022/03/02/openstack-solidfire-part-2.html)
+- [Tanzu with vSphere CSI and E-Series](/2022/05/18/vmware-tanzu-netapp-eseries.html)
+- [Kubernetes on OpenStack with Cinder CSI and SolidFire](/2022/03/02/openstack-solidfire-part-2.html)
 
 ## "Officialized" Veeam Backup Server in Location Profiles
 
@@ -64,7 +64,7 @@ Now let's see what these updates mean for SolidFire and E-Series users.
 
 ## K10 v5.0.0 with NetApp SolidFire 12 and NetApp Trident 22.04
 
-I've blogged about Kasten with SolidFire before (see [Archive](https://blog.scaleoutsean.com/archive.html)), so I will skip the routine installation and features that existed in v4.
+I've blogged about Kasten with SolidFire before (see [Archive](/archive.html)), so I will skip the routine installation and features that existed in v4.
 
 The other reeason is I had Kasten v4 up and running, so I simply upgraded by copy-pasting a Helm-based Kasten upgrade command from TFM.
 
@@ -145,7 +145,7 @@ It's easy to take on-demand snapshots without any Backup Policy and - if you don
 
 At the bottom you can see that Kanister options could be used, if you wanted to build a customized blueprint.
 
-If you're not sure what's there to be protected, you can click on an application's details to examine them. (This `sfc` container is my SolidFire Collector, which gathers SolidFire metricis and stuffs them into Graphite for visualization in Grafana - last month I finally [documented](https://blog.scaleoutsean.com/2022/05/02/solidfire-collector-in-kubernetes.html) how to run the sucker in Kubernetes.)
+If you're not sure what's there to be protected, you can click on an application's details to examine them. (This `sfc` container is my SolidFire Collector, which gathers SolidFire metricis and stuffs them into Graphite for visualization in Grafana - last month I finally [documented](/2022/05/02/solidfire-collector-in-kubernetes.html) how to run the sucker in Kubernetes.)
 
 ![Identify application resources](/assets/images/kasten-5.0-with-netapp-solidfire-trident-04.png)
 
@@ -175,7 +175,7 @@ At the beginning of this post I mentioned how the Kanister stuff seems to be pro
 
 ![Location Profiles for S3, NFS, Veeam](/assets/images/kasten-5.0-with-netapp-solidfire-trident-10.png)
 
-If you're curious about Kanister, RTFM and check the Kasten and Kanister posts in Archives - specifically the one on stand-alone Kanister with BeeGFS CSI as well as [this post on Kasten's logical backup](https://blog.scaleoutsean.com/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html) feature).
+If you're curious about Kanister, RTFM and check the Kasten and Kanister posts in Archives - specifically the one on stand-alone Kanister with BeeGFS CSI as well as [this post on Kasten's logical backup](/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html) feature).
 
 And finally, some eye candy! Kasten 5 lets you get its metrics into Prometheus, but it also comes with a built-in Grafana instance that can be opened from the main K10 Web UI.
 
@@ -187,9 +187,9 @@ Kasten K10 5.0.0 contains improvements related to security, increased ecosystem 
 
 From a SolidFire and E-Series perspective there are no new features, but Kasten 5 opens up new possibilities in vSphere (vSphere CSI + both E-Series and SolidFire) and OpenStack (Cinder CSI + SolidFire) environments.
 
-Additionally, improved Kanister integration means that even BeeGFS CSI clusters with E-Series [may be able](https://blog.scaleoutsean.com/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) to use Kasten's Kanister plugin to take large backups of multi-TB BeeGFS volumes and protect them in S3 Objet Lock-compatible buckets. 
+Additionally, improved Kanister integration means that even BeeGFS CSI clusters with E-Series [may be able](/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) to use Kasten's Kanister plugin to take large backups of multi-TB BeeGFS volumes and protect them in S3 Objet Lock-compatible buckets. 
 
-Why is this a big deal? Because users with [BeeGFS CSI](https://blog.scaleoutsean.com/2022/04/09/beegfs-csi-introduction.html) on E-Series can now buy an extra E-Series array, configure S3 Object Lock compatible StorageGRID cluster running on 1U bare metal servers, and get a reliable and secure backup destination for BeeGFS data. It's not something that works out of the box, but the Kanister post shows that it can work and it should behave the same way with Kasten.
+Why is this a big deal? Because users with [BeeGFS CSI](/2022/04/09/beegfs-csi-introduction.html) on E-Series can now buy an extra E-Series array, configure S3 Object Lock compatible StorageGRID cluster running on 1U bare metal servers, and get a reliable and secure backup destination for BeeGFS data. It's not something that works out of the box, but the Kanister post shows that it can work and it should behave the same way with Kasten.
 
 The new Microsoft SQL Server and PostgreSQL (PGO) integrations remains to be covered in another post, maybe after first minor update for Kasten K10 comes out.
 

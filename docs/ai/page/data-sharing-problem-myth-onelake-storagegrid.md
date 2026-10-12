@@ -16,7 +16,7 @@ Even for "traditional" (POSIX-only) clients, S3 access works fine. There's AWS M
 - Compared to NFS and SMB, S3 is a much simpler protocol that's easy to test.
 - HTTP caching and proxying is very well understood
 - If you have Object Storage XYZ on premises and access it from public cloud, it's the same XYZ object storage you use on-premises. You're not using another S3 implementation
-- Growing number of modern applications default to S3 as the preferred and sometimes the only supported protocol. Consistent file sharing service may help you avoid re-platforming, but you'll have issues onboarding and supporting new applications. I [blogged about this - related to data protection - days ago](https://blog.scaleoutsean.com/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html)
+- Growing number of modern applications default to S3 as the preferred and sometimes the only supported protocol. Consistent file sharing service may help you avoid re-platforming, but you'll have issues onboarding and supporting new applications. I [blogged about this - related to data protection - days ago](/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html)
 
 For databases, S3 has been an even better enabler than for unstructured data. For over half a decade now, databases have been using external tables located on S3. I blogged about [SQL Server PolyBase](/2023/08/28/sql-server-polybase-s3.html) years ago. On the front-end, it's SQL Server, on the back end, it's Parquet. We can run SQL Server anywhere and still get to our data, as long as SQL Server can reach S3.
 

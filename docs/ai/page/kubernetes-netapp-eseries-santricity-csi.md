@@ -6,7 +6,7 @@ CSI options for NetApp E-Series Storage
 
 I wrote a post [about CSI options with E-Series SANtricity systems](/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html) more than three years ago.
 
-Almost everything from that post is true except [SANtricity CSI](https://blog.scaleoutsean.com/2026/01/19/netapp-eseries-santricity-csi.html) is now available for experimental use.
+Almost everything from that post is true except [SANtricity CSI](/2026/01/19/netapp-eseries-santricity-csi.html) is now available for experimental use.
 
 This is an update that's going to be short, and hopefully easier to figure out and then you can move on or continue investigating these options.
 

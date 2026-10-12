@@ -202,13 +202,33 @@ version[2]=sgi-source/sgi-workload/created-20261008T142440Z.txt/RkY3Qjc1M0EtQzMy
 delete-marker[1]=sgi-source/sgi-workload/delete-me.txt/MDA1M0VGOTYtQzMyNC0xMUYxLTlCQTUtMzNERjAwQzRGOUFB
 ```
 
+#### SGII for S3 index and table updates
+
 At this point, we're entering the mouth of madness. There may also be "missing" versions compared to previous (in this case, baseline) if delete markers themselves got deleted. We can find those by comparing "current vs. previous", but before running random queries we need to understand what we're looking for and why.
 
-For OpenSearch index reconciliation, if an object gets overwritten (a new version is created), you may or may not want the older version remain in search index. SGII isn't prescriptive - it creates databases, lets you decide what to do with it. 
+For OpenSearch index reconciliation, if an object gets overwritten (a new version is created), you may or may not want the older version remain in search index. SGII isn't prescriptive - it creates databases and lets you decide what to do with that data.
 
 If you keep older version on StorageGRID, you may want still not keep them in OpenSearch. If you don't keep them in StorageGRID, you are unlikely to keep them in OpenSearch. But, although this may seem logical, I'm sure there are users who have real requirements to do it differently.
 
-SGII reports used for S3 backup are easier to reason about. If you already use Cloud Mirror or Kompromise Notifications to drive object replication, you could simply pick 1,000 samples and check to make sure these objects exists in the target bucket, and report (or try to replicate to fix it) if any are missing. Remote object versions don't correspond to local and depending on technique deletions aren't propagated in the first place, so Version ID information may not be useful when checking the remote bucket, but it can be useful when examining objects at the source. 
+For the common case, index updates - everyone needs that - you can use latest version of each new or overwritten object:
+
+- `--latest-only` - just last if there are more
+- `--kind version` - no deletes
+
+This gives you a list to refresh your index. If you want to delete expired or deleted entries as well, `--kind delete-marker` and not just latest-only if you want to delete all older index entries.
+
+#### SGII for bucket backup and replication
+
+SGII reports used for S3 backup are easier to reason about. If you already use Cloud Mirror or Kompromise Notifications to drive object replication, you could simply pick 1,000 samples and check to make sure these objects exists in the target bucket, and report (or try to replicate to fix it) if any are missing.
+
+Remote object versions don't correspond to local and depending on technique deletions aren't propagated in the first place, so source-side Version ID information may not be useful when checking the remote bucket, but it can be useful when examining objects at the source. 
+
+Similarly to index updates:
+
+- Create a snapshot of `incremental` type
+- Query database to get the same changes as in the index example above
+- Feed the list of objects to `rsync sync`
+- If you run these on a schedule, delete StorageGRID bucket snapshots for the bucket that are older than most recent two (since you need previous for comparison). You can do this from PowerShell or Ansible or other own CLI command
 
 ### Other use cases for SGII
 
@@ -220,7 +240,7 @@ The `sg-cosi` post on Snapshot Leases was about the main use case: S3 bucket bac
 
 SGII does not delete bucket snapshots that it creates. The main reason is you may want to hang on to them for compliance or other reasons.
 
-The second reason is that StorageGRID now supports 20,000 buckets per tenant, so the risk of hitting that limit isn't very high and even at 2 snapshots per bucket per day, it would take a while for TSHTF. You'd notice it before there's 1,000 of outdated snapshot buckets even if you didn't pay attention to the documentation.
+The second reason is that StorageGRID now supports 20,000 buckets per tenant, so the risk of hitting that limit isn't very high and even at 2 snapshots per bucket per day, it would take a while for TSHTF. You'd notice it before there's 1,000 of outdated snapshot buckets even if you didn't pay attention to the SGII README.
 
 But also: if you use SGII to copy data to a vault and hang onto those tables (which you can also copy to a vault), you can nuke the read-only snapshot buckets: checksums, keys, object IDs and everything else is in the tables. SGII will list stale snapshots for you - if you don't want them, just loop-delete them with a script or from Ansible. 
 

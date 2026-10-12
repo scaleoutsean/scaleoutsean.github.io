@@ -22,7 +22,7 @@ Where things still get challenging is large Splunk deployments and the use of ti
 
 Since last month NetApp has released these two documents:
 
-- [NVA-1152-DESIGN](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html), which shows that price/performance of E-Series and EF-Series can add value to many NetApp HCI deployments (perhaps not much to VDI, but a lot to many other workloads and use cases). Personally I've known this since NetApp HCI came out and I've designed several "NetApp HCI with E/EF-Series" solutions, but this combination didn't receive much attention before.
+- [NVA-1152-DESIGN](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html), which shows that price/performance of E-Series and EF-Series can add value to many NetApp HCI deployments (perhaps not much to VDI, but a lot to many other workloads and use cases). Personally I've known this since NetApp HCI came out and I've designed several "NetApp HCI with E/EF-Series" solutions, but this combination didn't receive much attention before.
 - [TR-4869](https://www.netapp.com/media/20646-tr-4869.pdf), which shows how Splunk SmartStore can take advantage of NetApp StorageGRID S3 object storage, which may be of interest to all large Splunk users who archive Splunk data on-premises
 
 ## Does EF-Series for Splunk on NetApp HCI make sense

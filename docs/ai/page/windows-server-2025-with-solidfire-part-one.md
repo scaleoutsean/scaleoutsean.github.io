@@ -109,9 +109,9 @@ On SolidFire itself, (storage) snapshot doesn't have to be retained for a very s
 
 Because SolidFire's VSS hardware provider hasn't been developed for a while, that was a problem for some SQL Servers, from what I've heard second-hand. I didn't understand in what business or technical circumstances the lack of a VSS hardware provider present problems when SolidFire is so easy to automate. 
 
-One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are [ways to mitigate the lack of rich RBAC](https://blog.scaleoutsean.com/2023/12/07/solidfire-rbac-for-json-rpc-api.html) which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).
+One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are [ways to mitigate the lack of rich RBAC](/2023/12/07/solidfire-rbac-for-json-rpc-api.html) which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).
 
-Another "recent" (not really) SQL Server feature is the ability to backup SQL Server to [an object store](https://blog.scaleoutsean.com/2023/08/28/sql-server-polybase-s3.html#backup-use-case). It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.
+Another "recent" (not really) SQL Server feature is the ability to backup SQL Server to [an object store](/2023/08/28/sql-server-polybase-s3.html#backup-use-case). It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.
 
 ## Single and multi-site SolidFire clusters and Disaster Recovery
 

@@ -599,7 +599,7 @@ Next day, when I logged in to NetCrunch I found two new fault alerts (the fault 
 - Review ActiveIQ and TR-4694 (or the SolidFire Admin Guide and API documentation) for the details on what is commonly monitored.
 - SolidFire SNMP counters (as you can see in the MIB files) don't have everything that is available through the SolidFire API. In addition to that, some "analytics" insights require more than one compute operation which may be hard to do in SNMP applications. Because of that it makes sense to:
   - Focus on the important and available, such as (1) cluster faults (especially severity levels Warning, Error and Critical), (2) cluster utilization, (3) volume QoS and queues 
-  - Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter, [ELK](https://blog.scaleoutsean.com/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html), etc.)
+  - Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter, [ELK](/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html), etc.)
 - Many monitoring applications provide not just SNMP, but various other means of integration including plugins, Webhooks or scripts. For some tasks it *very easy* to integrate those rather than rely on SNMP (especially when, like in this case, not everything is available via SNMP). In the case of SolidFire it literally takes a 10 line script to create a reliable PowerShell or Python script to check on something. Example: basic [SolidFire plugin for Nagios](https://github.com/scaleoutsean/nagfire) that I keep alive for reference purposes.
 
 ## Demo

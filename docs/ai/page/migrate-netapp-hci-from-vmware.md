@@ -69,7 +69,7 @@ Debian, Rocky Linux and Ubuntu (in alphabetic order) all provide free updates th
 
 What about NetApp HCI storage (SolidFire) support?
 
-You probably won't find Ubuntu 22.04 in the IMT for NetApp HCI Gen 1 (or maybe even SolidFire, I am lazy to check now), but I'd be shocked if some of them didn't work. As you can see [here](https://github.com/scaleoutsean/solidfire-windows/?tab=readme-ov-file#windows-server-2016-2019-and-2022), I briefly tested Windows Server 2022 with SolidFire 12 and it worked fine. Personally I use Ubuntu 22.04, Rocky 9, Debian 11 with SolidFire 12 and that includes both x86_64 and [ARM64](https://blog.scaleoutsean.com/2021/02/24/netapp-trident-on-arm64.html) (usually with Debian and Ubuntu).
+You probably won't find Ubuntu 22.04 in the IMT for NetApp HCI Gen 1 (or maybe even SolidFire, I am lazy to check now), but I'd be shocked if some of them didn't work. As you can see [here](https://github.com/scaleoutsean/solidfire-windows/?tab=readme-ov-file#windows-server-2016-2019-and-2022), I briefly tested Windows Server 2022 with SolidFire 12 and it worked fine. Personally I use Ubuntu 22.04, Rocky 9, Debian 11 with SolidFire 12 and that includes both x86_64 and [ARM64](/2021/02/24/netapp-trident-on-arm64.html) (usually with Debian and Ubuntu).
 
 So, officially it is what it is in the NetApp IMT (interoperability matrix), but I wouldn't worry about that if I were to use a "not officially supported" compute client. You may as well give it a try.
 
@@ -84,7 +84,7 @@ When done just swap DNS entries or remove the source set the destination's IP to
 
 There are probably 3rd party migration solutions which should work as they work with any iSCSI storage.
 
-For vSphere RDM disks, those can be simply cloned and the clone assigned to a new host or a VM or a container (NetApp Trident CSI can import non-Kubernetes volumes, but they must be non-partitioned - I can't find that in the docs right now but [this post](https://blog.scaleoutsean.com/2021/03/20/kubernetes-solidfire-failover-failback.html), albeit long - shows in detail how Trident import works with non-partitioned volumes). 
+For vSphere RDM disks, those can be simply cloned and the clone assigned to a new host or a VM or a container (NetApp Trident CSI can import non-Kubernetes volumes, but they must be non-partitioned - I can't find that in the docs right now but [this post](/2021/03/20/kubernetes-solidfire-failover-failback.html), albeit long - shows in detail how Trident import works with non-partitioned volumes). 
 
 Regarding migration from VMware VMs to Kubernetes, for light VMs maybe KubeVirt is now good enough for production. A workaround that could be used here is a VM-based script that mounts a partitioned RDM iSCSI disk as well as an non-partitioned. 
 
@@ -95,7 +95,7 @@ Here's how migration could be done with a dedicated "migration service" VM:
 - Ensure the permissions are correct (especially for Kubernetes data); modify if necessary
 - Once done, log out of the both targets, present the destination volume to Kubernetes and import from Trident. Trident can also grow volumes, by the way. I recommend XFS on destination if possible
 
-If you're happy with the result, you may delete the clone of the source volume, but you can also keep it for a while (it should be deduplicated and not take extra space) or [back it up](https://blog.scaleoutsean.com/2021/04/21/solidfire-backup-to-s3.html) to a low cost S3 service (such as [Wasabi](https://blog.scaleoutsean.com/2022/01/19/solidfire-backup-restore-wasabi-s3.html), [Backblaze](https://blog.scaleoutsean.com/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html), on-prem MinIO) and then you can remove the clone volume.
+If you're happy with the result, you may delete the clone of the source volume, but you can also keep it for a while (it should be deduplicated and not take extra space) or [back it up](/2021/04/21/solidfire-backup-to-s3.html) to a low cost S3 service (such as [Wasabi](/2022/01/19/solidfire-backup-restore-wasabi-s3.html), [Backblaze](/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html), on-prem MinIO) and then you can remove the clone volume.
 
 Again, I wouldn't bother with this for databases; dump & load or replication-based seems much cleaner to me. But if you want to automate you can consider that approach. For Windows RDM you could use rsync as well, but robocopy or other tools may be more suitable for NTFS or ReFS.
 

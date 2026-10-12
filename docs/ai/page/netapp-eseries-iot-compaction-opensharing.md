@@ -2,7 +2,7 @@
 
 Package IoT sensor data and make it ready for OpenSharing clients
 
-- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](https://blog.scaleoutsean.com/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
+- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
 - **PART TWO:** IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series
 - PART THREE: [NetApp volume content sharing with OpenSharing and Versity S3 Gateway](/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html)
 - PART FOUR: [OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html)

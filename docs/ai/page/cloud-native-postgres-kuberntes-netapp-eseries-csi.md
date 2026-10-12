@@ -23,7 +23,7 @@ I should say something about that because the NetApp E-Series docs make vague re
 Here's what I think and my reasons are not necessarily PostgreSQL-specific, so readers may have seen them elsewhere in other context:
 
 - Simple and reliable arrays
-- Fast (see about the [new EF80](https://blog.scaleoutsean.com/2026/03/21/netapp-ef-series-ef80-ef50.html) model, for example, or check out this [recent post](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#fio-tests) with the previous NVMe model, EF600, as well as the PG with RAID 1 post linked further below)
+- Fast (see about the [new EF80](/2026/03/21/netapp-ef-series-ef80-ef50.html) model, for example, or check out this [recent post](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#fio-tests) with the previous NVMe model, EF600, as well as the PG with RAID 1 post linked further below)
 - Simple data path - doesn't "enrich" your I/O, make it smart, efficient, etc. There's just data and uptime protection, both of which work well
 - Choices of data protection schemas - RAID 0, 1, 5, 6 and DDP (Dynamic Disk Pools) with de-clustered RAID-6 and RAID-1 volume support
 - Snapshots and clones are available, making it possible to use both CSI snapshots and plugins, depending on requirements

@@ -23,7 +23,7 @@ Elasticsearch on HCI done right, with NetApp HCI and EF-Series
 
 ## Summary
 
-In [this post](https://blog.scaleoutsean.com/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html) I laid out my arguments on why shared core HCI, although it *can* run structured log management applications, is inherently unsuitable for anything but small scale deployments of such workloads.
+In [this post](/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html) I laid out my arguments on why shared core HCI, although it *can* run structured log management applications, is inherently unsuitable for anything but small scale deployments of such workloads.
 
 Shared core HCI (VxRail, Nutanix) and general purpose DAS servers ("white box" servers with internal storage) are require relatively more hardware, software and management effort. White box servers become cost effective at scale not commonly found in Enterprises, but disadvantages of shared core HCI grow with its footprint.
 
@@ -34,7 +34,7 @@ A short (1m26s) video with highlights: [https://youtu.be/A3o_j9M1UsY](https://yo
 After that post I examined my preferred approach for medium-to-large deployments (NetApp HCI Compute with EF Series storage) using Elasticsearch and found that:
 
 - Three-node Elasticsearch cluster running on a H615C server attached to EF280 array can easily bulk-load uncompressed JSON-formatted structured logs at approximately 80 MB/s (> 6 TB/day). This ingest speed was observed by monitoring NFS network throughput from NFS server where JSON log was ingested from.
-- Testing was done without concurrent search workloads and performance monitoring (Elasticsearch cluster had only one workload), but EF280 was only moderately loaded and based on [performance testing results with H615C and EF280 iSCSI](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) we should be able to get approximately twice as much from this storage system (10-15 TB/day, perhaps)
+- Testing was done without concurrent search workloads and performance monitoring (Elasticsearch cluster had only one workload), but EF280 was only moderately loaded and based on [performance testing results with H615C and EF280 iSCSI](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) we should be able to get approximately twice as much from this storage system (10-15 TB/day, perhaps)
 - Data (index) was split in 9 shards and one replica (i.e. two copies) was created for additional data protection, as many users would do in production when Elasticsearch data is stored on protected storage. Due to sharding and replication, bulk loading at 80 MB/s resulted in approximately 1 GB/s throughput to back end storage (close to 100 MB/s was read from NFS server but the rest was Elasticsearch).
 
 ## Configuration

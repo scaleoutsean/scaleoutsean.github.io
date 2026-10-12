@@ -215,13 +215,33 @@ version[2]=sgi-source/sgi-workload/created-20261008T142440Z.txt/RkY3Qjc1M0EtQzMy
 delete-marker[1]=sgi-source/sgi-workload/delete-me.txt/MDA1M0VGOTYtQzMyNC0xMUYxLTlCQTUtMzNERjAwQzRGOUFB
 ```
 
+#### SGII for S3 index and table updates
+
 At this point, we're entering the mouth of madness. There may also be "missing" versions compared to previous (in this case, baseline) if delete markers themselves got deleted. We can find those by comparing "current vs. previous", but before running random queries we need to understand what we're looking for and why.
 
-For OpenSearch index reconciliation, if an object gets overwritten (a new version is created), you may or may not want the older version remain in search index. SGII isn't prescriptive - it creates databases, lets you decide what to do with it. 
+For OpenSearch index reconciliation, if an object gets overwritten (a new version is created), you may or may not want the older version remain in search index. SGII isn't prescriptive - it creates databases and lets you decide what to do with that data.
 
 If you keep older version on StorageGRID, you may want still not keep them in OpenSearch. If you don't keep them in StorageGRID, you are unlikely to keep them in OpenSearch. But, although this may seem logical, I'm sure there are users who have real requirements to do it differently.
 
-SGII reports used for S3 backup are easier to reason about. If you already use Cloud Mirror or Kompromise Notifications to drive object replication, you could simply pick 1,000 samples and check to make sure these objects exists in the target bucket, and report (or try to replicate to fix it) if any are missing. Remote object versions don't correspond to local and depending on technique deletions aren't propagated in the first place, so Version ID information may not be useful when checking the remote bucket, but it can be useful when examining objects at the source. 
+For the common case, index updates - everyone needs that - you can use latest version of each new or overwritten object:
+
+- `--latest-only` - just last if there are more
+- `--kind version` - no deletes
+
+This gives you a list to refresh your index. If you want to delete expired or deleted entries as well, `--kind delete-marker` and not just latest-only if you want to delete all older index entries.
+
+#### SGII for bucket backup and replication
+
+SGII reports used for S3 backup are easier to reason about. If you already use Cloud Mirror or Kompromise Notifications to drive object replication, you could simply pick 1,000 samples and check to make sure these objects exists in the target bucket, and report (or try to replicate to fix it) if any are missing.
+
+Remote object versions don't correspond to local and depending on technique deletions aren't propagated in the first place, so source-side Version ID information may not be useful when checking the remote bucket, but it can be useful when examining objects at the source. 
+
+Similarly to index updates:
+
+- Create a snapshot of `incremental` type
+- Query database to get the same changes as in the index example above
+- Feed the list of objects to `rsync sync`
+- If you run these on a schedule, delete StorageGRID bucket snapshots for the bucket that are older than most recent two (since you need previous for comparison). You can do this from PowerShell or Ansible or other own CLI command
 
 ### Other use cases for SGII
 
@@ -233,7 +253,7 @@ The `sg-cosi` post on Snapshot Leases was about the main use case: S3 bucket bac
 
 SGII does not delete bucket snapshots that it creates. The main reason is you may want to hang on to them for compliance or other reasons.
 
-The second reason is that StorageGRID now supports 20,000 buckets per tenant, so the risk of hitting that limit isn't very high and even at 2 snapshots per bucket per day, it would take a while for TSHTF. You'd notice it before there's 1,000 of outdated snapshot buckets even if you didn't pay attention to the documentation.
+The second reason is that StorageGRID now supports 20,000 buckets per tenant, so the risk of hitting that limit isn't very high and even at 2 snapshots per bucket per day, it would take a while for TSHTF. You'd notice it before there's 1,000 of outdated snapshot buckets even if you didn't pay attention to the SGII README.
 
 But also: if you use SGII to copy data to a vault and hang onto those tables (which you can also copy to a vault), you can nuke the read-only snapshot buckets: checksums, keys, object IDs and everything else is in the tables. SGII will list stale snapshots for you - if you don't want them, just loop-delete them with a script or from Ansible. 
 
@@ -1222,7 +1242,7 @@ To properly protect replicas, use multiple entry-level EF-Series arrays, one per
 
 ![Yeah, we don't really do that here](/assets/images/meme_we_dont_do_that_here.gif)
 
-SSDs are [also required](https://docs.yugabyte.com/stable/deploy/checklist/#disks). Get one of the [EF arrays](https://blog.scaleoutsean.com/2026/03/21/netapp-ef-series-ef80-ef50.html) including the older models that are currently still available and might be cheaper.
+SSDs are [also required](https://docs.yugabyte.com/stable/deploy/checklist/#disks). Get one of the [EF arrays](/2026/03/21/netapp-ef-series-ef80-ef50.html) including the older models that are currently still available and might be cheaper.
 
 There's [this](https://docs.yugabyte.com/stable/deploy/checklist/#disks):
 
@@ -6660,7 +6680,7 @@ Even for "traditional" (POSIX-only) clients, S3 access works fine. There's AWS M
 - Compared to NFS and SMB, S3 is a much simpler protocol that's easy to test.
 - HTTP caching and proxying is very well understood
 - If you have Object Storage XYZ on premises and access it from public cloud, it's the same XYZ object storage you use on-premises. You're not using another S3 implementation
-- Growing number of modern applications default to S3 as the preferred and sometimes the only supported protocol. Consistent file sharing service may help you avoid re-platforming, but you'll have issues onboarding and supporting new applications. I [blogged about this - related to data protection - days ago](https://blog.scaleoutsean.com/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html)
+- Growing number of modern applications default to S3 as the preferred and sometimes the only supported protocol. Consistent file sharing service may help you avoid re-platforming, but you'll have issues onboarding and supporting new applications. I [blogged about this - related to data protection - days ago](/2026/07/30/backup-restore-modern-k8s-apps-without-csi-snapshots.html)
 
 For databases, S3 has been an even better enabler than for unstructured data. For over half a decade now, databases have been using external tables located on S3. I blogged about [SQL Server PolyBase](/2023/08/28/sql-server-polybase-s3.html) years ago. On the front-end, it's SQL Server, on the back end, it's Parquet. We can run SQL Server anywhere and still get to our data, as long as SQL Server can reach S3.
 
@@ -6883,7 +6903,7 @@ I found [the S3-based blueprint](https://github.com/kanisterio/blueprints/tree/m
 ```
    
 
-If you try this at home (or in office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series [here](https://blog.scaleoutsean.com/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html)). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.
+If you try this at home (or in office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series [here](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html)). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.
 
 NetApp StorageGRID 12 is known to work with both Elasticsearch 8 and 9 snapshots to S3. I blogged about StorageGRID with Elasticsearch ILM [here](/2023/11/30/elasticsearch-ilm-netapp-eseries.html), by the way.
 
@@ -7560,7 +7580,7 @@ More on the RST auto-sync feature:
 > The File System Modification Events feature must be enabled with a Watch service configured to listen to all metadata services with Remote as a subscriber.
 > Event dispatch must be enabled in Remote and appropriate rate limits and file filters configured.
 
-I think the File System Modification Events feature is great. I blogged about it [here](/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#file-system-events) and [built a file scanner](https://blog.scaleoutsean.com/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html) for BeeGFS which could be used for DIY replication as well.
+I think the File System Modification Events feature is great. I blogged about it [here](/2025/05/17/beegfs-v8-netapp-e-series-indexing-tiering-workflows.html#file-system-events) and [built a file scanner](/2025/06/22/data-pipeline-with-beegfs-file-system-notifications-and-versity-s3-gateway.html) for BeeGFS which could be used for DIY replication as well.
 
 The tricky part is making sure problems are detected when they happen. As you can see ("rate limits and file filters configured"), there may be non-trivial failure scenarios which are hard to test and are usually discovered in field. 
 
@@ -8476,7 +8496,7 @@ It's been almost a year since [S3 GO NATS! demonstrated](http:///2025/07/23/s3-v
 
 ![S3 GO NATS!](/assets/images/s3-go-nats.png)
 
-For at least [nine months]([/2025/10/09/storagegrid-s3-cache-branch-buckets.html](https://blog.scaleoutsean.com/2025/10/09/storagegrid-s3-cache-branch-buckets.html#so-how-is-this-supposed-to-be-used)) I've been thinking about improving on that approach, but a lot had be done for E-Series which had literally [nothing](/2025/12/22/reautomating-eseries.html) as recently as last December. Most of that is now available and "good enough", so lately I have been playing with StorageGRID again.
+For at least [nine months]([/2025/10/09/storagegrid-s3-cache-branch-buckets.html](/2025/10/09/storagegrid-s3-cache-branch-buckets.html#so-how-is-this-supposed-to-be-used)) I've been thinking about improving on that approach, but a lot had be done for E-Series which had literally [nothing](/2025/12/22/reautomating-eseries.html) as recently as last December. Most of that is now available and "good enough", so lately I have been playing with StorageGRID again.
 
 ## Kompromise 
 
@@ -9722,7 +9742,7 @@ In a future post we'll look at specific Lakekeeper solutions and use cases.
 URL: https://blog.scaleoutsean.com/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html
 Date: 2026-06-17
 
-- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](https://blog.scaleoutsean.com/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
+- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
 - PART TWO: [IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series](/2026/06/16/netapp-eseries-iot-compaction-opensharing.html)
 - **PART THREE:** NetApp volume content sharing with OpenSharing and Versity S3 Gateway
 - PART FOUR: [OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html)
@@ -9894,7 +9914,7 @@ Sometimes you'll want direct S3 access, other times you won't, and OpenSharing f
 URL: https://blog.scaleoutsean.com/2026/06/16/netapp-eseries-iot-compaction-opensharing.html
 Date: 2026-06-16
 
-- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](https://blog.scaleoutsean.com/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
+- PART ONE: [Does OpenSharing have anything for NetApp E-Series?](/2026/06/14/netapp-eseries-opensharing-deltasharing.html)
 - **PART TWO:** IoT ingress, OpenSharing, Versity S3 Gateway and NetApp E-Series
 - PART THREE: [NetApp volume content sharing with OpenSharing and Versity S3 Gateway](/2026/06/17/opensharing-files-versity-s3-gateway-netapp-eseries.html)
 - PART FOUR: [OpenSharing server for NetApp StorageGRID and E-Series with Versity S3 Gateway](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html)
@@ -14656,7 +14676,7 @@ I should say something about that because the NetApp E-Series docs make vague re
 Here's what I think and my reasons are not necessarily PostgreSQL-specific, so readers may have seen them elsewhere in other context:
 
 - Simple and reliable arrays
-- Fast (see about the [new EF80](https://blog.scaleoutsean.com/2026/03/21/netapp-ef-series-ef80-ef50.html) model, for example, or check out this [recent post](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#fio-tests) with the previous NVMe model, EF600, as well as the PG with RAID 1 post linked further below)
+- Fast (see about the [new EF80](/2026/03/21/netapp-ef-series-ef80-ef50.html) model, for example, or check out this [recent post](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html#fio-tests) with the previous NVMe model, EF600, as well as the PG with RAID 1 post linked further below)
 - Simple data path - doesn't "enrich" your I/O, make it smart, efficient, etc. There's just data and uptime protection, both of which work well
 - Choices of data protection schemas - RAID 0, 1, 5, 6 and DDP (Dynamic Disk Pools) with de-clustered RAID-6 and RAID-1 volume support
 - Snapshots and clones are available, making it possible to use both CSI snapshots and plugins, depending on requirements
@@ -24645,7 +24665,7 @@ Date: 2026-01-20
 
 I wrote a post [about CSI options with E-Series SANtricity systems](/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseries.html) more than three years ago.
 
-Almost everything from that post is true except [SANtricity CSI](https://blog.scaleoutsean.com/2026/01/19/netapp-eseries-santricity-csi.html) is now available for experimental use.
+Almost everything from that post is true except [SANtricity CSI](/2026/01/19/netapp-eseries-santricity-csi.html) is now available for experimental use.
 
 This is an update that's going to be short, and hopefully easier to figure out and then you can move on or continue investigating these options.
 
@@ -24981,7 +25001,7 @@ If you're curious about using Linux with highly available NVMe-oF storage, see [
 
 ### Update (Feb 26, 2026)
 
-You may also consider [my SANtricity-aware patch for IBM Block CSI](https://blog.scaleoutsean.com/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html) driver.
+You may also consider [my SANtricity-aware patch for IBM Block CSI](/2026/02/26/ibm-block-storage-cis-driver-santricity-fork.html) driver.
 
 ---
 
@@ -29096,7 +29116,7 @@ Date: 2025-08-11
 
 ## Introduction
 
-In 2023 [I forked](https://blog.scaleoutsean.com/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html) the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. 
+In 2023 [I forked](/2023/01/14/eseries-performance-analyzer-container-orchestrator-kubernetes.html) the dead (archived) E-Series Performance Analyzer (EPA) v3 to make sure it remains usable and improve it. 
 
 I accomplished all of the goals I set for it at the time:
 
@@ -29105,9 +29125,9 @@ I accomplished all of the goals I set for it at the time:
 - Simplify Docker deployments
 - Create Kubernetes deployment recipe
 
-Later I added [some small improvements](https://blog.scaleoutsean.com/2023/11/04/eseries-perf-analyzer-epa-330.html) and kept dependencies up to date.
+Later I added [some small improvements](/2023/11/04/eseries-perf-analyzer-epa-330.html) and kept dependencies up to date.
 
-I wanted to do more, but [it's not the only under-served area](https://blog.scaleoutsean.com/projects.html) so I've been happy with what I've achieved. 
+I wanted to do more, but [it's not the only under-served area](/projects.html) so I've been happy with what I've achieved. 
 
 Earlier this year [InfluxDB 3 entered public beta](/2025/01/24/influxdb-3-core-alpha.html), so I knew soon time will come to do the long-awaited step and update EPA for InfluxDB v3. I also have SoliFire Collector that uses InfluxDB and [I updated that one for InfluxDB 3 in June](/2025/06/18/sfc-2-dot-1.html). EPA was next.
 
@@ -32801,7 +32821,7 @@ Inferencing may not need much more than just block devices, but if you do need o
 
 Some other useful and relevant details in the context of AI services:
 
-- Storage performance and event monitoring: [E-Series Performance Analyzer](/2023/11/04/eseries-perf-analyzer-epa-330.html), [PRTG](https://blog.scaleoutsean.com/2023/09/25/monitoring-netapp-eseries-with-prtg.html), [SNMP](https://blog.scaleoutsean.com/2023/09/17/netapp-e-series-snmp-trap-notifications.html) (event only)
+- Storage performance and event monitoring: [E-Series Performance Analyzer](/2023/11/04/eseries-perf-analyzer-epa-330.html), [PRTG](/2023/09/25/monitoring-netapp-eseries-with-prtg.html), [SNMP](/2023/09/17/netapp-e-series-snmp-trap-notifications.html) (event only)
 - Access control
   - Linux NFS server - Yes
   - BeeGFS (even in the free community edition 8) - Yes
@@ -35348,7 +35368,7 @@ I don't know what the guy from that issue was trying to do, so I'll assume it's 
 
 ## Making it faster
 
-I actually wrote about this before in [NetApp SolidFire with GenAI and inferencing workloads](https://blog.scaleoutsean.com/2023/11/22/genai-with-netapp-solidfire.html#ready-to-clone-pvs-for-tools-applications-models).
+I actually wrote about this before in [NetApp SolidFire with GenAI and inferencing workloads](/2023/11/22/genai-with-netapp-solidfire.html#ready-to-clone-pvs-for-tools-applications-models).
 
 The idea is to pre-create volumes and keep them parked there for import by Trident. That's all.
 
@@ -42790,9 +42810,9 @@ On SolidFire itself, (storage) snapshot doesn't have to be retained for a very s
 
 Because SolidFire's VSS hardware provider hasn't been developed for a while, that was a problem for some SQL Servers, from what I've heard second-hand. I didn't understand in what business or technical circumstances the lack of a VSS hardware provider present problems when SolidFire is so easy to automate. 
 
-One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are [ways to mitigate the lack of rich RBAC](https://blog.scaleoutsean.com/2023/12/07/solidfire-rbac-for-json-rpc-api.html) which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).
+One problem area that I recognized is the lack of proper RBAC, so some users hesitate to make the API accessible to server admins. But even so, there are [ways to mitigate the lack of rich RBAC](/2023/12/07/solidfire-rbac-for-json-rpc-api.html) which most enterprises know how to securely implement (or better, most already have such infrastructure in place and just need to add a virtual host for SolidFire API endpoint).
 
-Another "recent" (not really) SQL Server feature is the ability to backup SQL Server to [an object store](https://blog.scaleoutsean.com/2023/08/28/sql-server-polybase-s3.html#backup-use-case). It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.
+Another "recent" (not really) SQL Server feature is the ability to backup SQL Server to [an object store](/2023/08/28/sql-server-polybase-s3.html#backup-use-case). It takes minutes to configure and for small and medium databases that may be the easiest way to backup SQL Server and achieve ransomware-resistant (if your object store has Object Lock) backups with just a handful of SQL Server CLI commands.
 
 ## Single and multi-site SolidFire clusters and Disaster Recovery
 
@@ -46931,7 +46951,7 @@ Debian, Rocky Linux and Ubuntu (in alphabetic order) all provide free updates th
 
 What about NetApp HCI storage (SolidFire) support?
 
-You probably won't find Ubuntu 22.04 in the IMT for NetApp HCI Gen 1 (or maybe even SolidFire, I am lazy to check now), but I'd be shocked if some of them didn't work. As you can see [here](https://github.com/scaleoutsean/solidfire-windows/?tab=readme-ov-file#windows-server-2016-2019-and-2022), I briefly tested Windows Server 2022 with SolidFire 12 and it worked fine. Personally I use Ubuntu 22.04, Rocky 9, Debian 11 with SolidFire 12 and that includes both x86_64 and [ARM64](https://blog.scaleoutsean.com/2021/02/24/netapp-trident-on-arm64.html) (usually with Debian and Ubuntu).
+You probably won't find Ubuntu 22.04 in the IMT for NetApp HCI Gen 1 (or maybe even SolidFire, I am lazy to check now), but I'd be shocked if some of them didn't work. As you can see [here](https://github.com/scaleoutsean/solidfire-windows/?tab=readme-ov-file#windows-server-2016-2019-and-2022), I briefly tested Windows Server 2022 with SolidFire 12 and it worked fine. Personally I use Ubuntu 22.04, Rocky 9, Debian 11 with SolidFire 12 and that includes both x86_64 and [ARM64](/2021/02/24/netapp-trident-on-arm64.html) (usually with Debian and Ubuntu).
 
 So, officially it is what it is in the NetApp IMT (interoperability matrix), but I wouldn't worry about that if I were to use a "not officially supported" compute client. You may as well give it a try.
 
@@ -46946,7 +46966,7 @@ When done just swap DNS entries or remove the source set the destination's IP to
 
 There are probably 3rd party migration solutions which should work as they work with any iSCSI storage.
 
-For vSphere RDM disks, those can be simply cloned and the clone assigned to a new host or a VM or a container (NetApp Trident CSI can import non-Kubernetes volumes, but they must be non-partitioned - I can't find that in the docs right now but [this post](https://blog.scaleoutsean.com/2021/03/20/kubernetes-solidfire-failover-failback.html), albeit long - shows in detail how Trident import works with non-partitioned volumes). 
+For vSphere RDM disks, those can be simply cloned and the clone assigned to a new host or a VM or a container (NetApp Trident CSI can import non-Kubernetes volumes, but they must be non-partitioned - I can't find that in the docs right now but [this post](/2021/03/20/kubernetes-solidfire-failover-failback.html), albeit long - shows in detail how Trident import works with non-partitioned volumes). 
 
 Regarding migration from VMware VMs to Kubernetes, for light VMs maybe KubeVirt is now good enough for production. A workaround that could be used here is a VM-based script that mounts a partitioned RDM iSCSI disk as well as an non-partitioned. 
 
@@ -46957,7 +46977,7 @@ Here's how migration could be done with a dedicated "migration service" VM:
 - Ensure the permissions are correct (especially for Kubernetes data); modify if necessary
 - Once done, log out of the both targets, present the destination volume to Kubernetes and import from Trident. Trident can also grow volumes, by the way. I recommend XFS on destination if possible
 
-If you're happy with the result, you may delete the clone of the source volume, but you can also keep it for a while (it should be deduplicated and not take extra space) or [back it up](https://blog.scaleoutsean.com/2021/04/21/solidfire-backup-to-s3.html) to a low cost S3 service (such as [Wasabi](https://blog.scaleoutsean.com/2022/01/19/solidfire-backup-restore-wasabi-s3.html), [Backblaze](https://blog.scaleoutsean.com/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html), on-prem MinIO) and then you can remove the clone volume.
+If you're happy with the result, you may delete the clone of the source volume, but you can also keep it for a while (it should be deduplicated and not take extra space) or [back it up](/2021/04/21/solidfire-backup-to-s3.html) to a low cost S3 service (such as [Wasabi](/2022/01/19/solidfire-backup-restore-wasabi-s3.html), [Backblaze](/2023/09/02/solidfire-backup-to-s3-backblaze-b2.html), on-prem MinIO) and then you can remove the clone volume.
 
 Again, I wouldn't bother with this for databases; dump & load or replication-based seems much cleaner to me. But if you want to automate you can consider that approach. For Windows RDM you could use rsync as well, but robocopy or other tools may be more suitable for NTFS or ReFS.
 
@@ -47258,7 +47278,7 @@ The idea behind [Veeam Hardened Repository](https://helpcenter.veeam.com/docs/ba
 - A Linux box runs the Veeam Data Mover Service (veeamtransport) and the Veeam Immutability Service (veeamimmureposvc)
 - The latter "checks file immutability attributes every 20 minutes, calculates the time until a file needs to be immutable, and sets or removes the immutable attribute" (on backup files stored on XFS filesystem)
 
-Among the free (and far less featured) approaches there's [Rest Server](/2022/04/03/restic-server-netapp-eseries.html) for Restic clients, and [Kopia](https://blog.scaleoutsean.com/2023/09/03/solidbackup-with-kopia.html).
+Among the free (and far less featured) approaches there's [Rest Server](/2022/04/03/restic-server-netapp-eseries.html) for Restic clients, and [Kopia](/2023/09/03/solidbackup-with-kopia.html).
 
 So, does Veeam Hardened Repository (let's call it VHR) support E-Series or vice versa?
 
@@ -61413,7 +61433,7 @@ Personally my favorite new feature is alpha level support for Nomad. Nomad CSI-r
 
 I've written several posts on Hashicorp Nomad. Because it didn't have CSI support Nomad was less popular for stateful workloads, but with the addition of CSI support that issue is largely gone. 
 
-Since this year Nomad users can provision CSI volumes, there's [Helm-like Nomad Pack](https://blog.scaleoutsean.com/2022/08/11/nomad-pack-influxdb-beegfs.html) and although in some areas Nomad is behind Kubernetes, it is ahead in others and far ahead when it comes to simplicity. Use the search feature to find other posts on Nomad on this blog.
+Since this year Nomad users can provision CSI volumes, there's [Helm-like Nomad Pack](/2022/08/11/nomad-pack-influxdb-beegfs.html) and although in some areas Nomad is behind Kubernetes, it is ahead in others and far ahead when it comes to simplicity. Use the search feature to find other posts on Nomad on this blog.
 
 BeeGFS Community Edition and BeeGFS CSI driver are both open source and can be used for free. Enterprise users who need professional support for software and hardware can buy BeeGFS Enterprise Edition integrated with NetApp E-Series appliances.
 
@@ -65464,7 +65484,7 @@ If you're looking for a "KVM Lite that doesn't suck", LXD is great. Once it gets
 
 But I still recommend to evaluate it because LXD VMs are really good and single-host LXD is so much easier to use than KVM.
 
-If you don't have any important container or VM workload that is IO-heavy and tends to work with 64kB requests or higher, there may be no value in adding BeeGFS to your LXD environment - you'd have extra software to manage and additional considerations to think about. As illustrated [here](https://blog.scaleoutsean.com/2022/04/09/beegfs-csi-introduction.html#options-in-a-mixed-environment), LXD servers can consume E-Series storage (block devices) directly from LXD hosts using LXD's [LVM driver](https://linuxcontainers.org/lxd/docs/master/reference/storage_lvm/#storage-lvm), and BeeGFS can be using other E-Series storage for suitable workloads.
+If you don't have any important container or VM workload that is IO-heavy and tends to work with 64kB requests or higher, there may be no value in adding BeeGFS to your LXD environment - you'd have extra software to manage and additional considerations to think about. As illustrated [here](/2022/04/09/beegfs-csi-introduction.html#options-in-a-mixed-environment), LXD servers can consume E-Series storage (block devices) directly from LXD hosts using LXD's [LVM driver](https://linuxcontainers.org/lxd/docs/master/reference/storage_lvm/#storage-lvm), and BeeGFS can be using other E-Series storage for suitable workloads.
 
 On the other hand, IO-heavy containers and VMs with mixed or sequential workload could benefit from directory-style pools on BeeGFS storage.
 
@@ -67800,7 +67820,7 @@ The idea behind HDFS R2 and E-Series was and still is that by using RF2 over RAI
 
 In the latter case, RF2 over RAID6 (8+2) means 2 x (10/8) or 250%. (You'd have some hot spares on the side, but you'd have even more of them for JBOD storage.)
 
-In the case of DDP, or Dynamic Disk Pools, protection overhead is even lower (see [here](https://blog.scaleoutsean.com/2021/07/06/e-series-ddp-expansion-and-rebalancing.html)).
+In the case of DDP, or Dynamic Disk Pools, protection overhead is even lower (see [here](/2021/07/06/e-series-ddp-expansion-and-rebalancing.html)).
 
 External storage - whether it uses DDP or RAID6 or something else - needs controllers and enclosures, so there's additional cost to that, but for many users these trade-offs are well worth it:
 
@@ -67908,7 +67928,7 @@ HDFS can be exported (shared) to non-HDFS clients via a built-in NFS gateway. Wh
 
 [Snapshots](https://hadoop.apache.org/docs/r3.3.3/hadoop-project-dist/hadoop-hdfs/HdfsSnapshots.html) may be taken on snapshottable directories.
 
-Once you have a snapshot, you can [copy](https://blog.scaleoutsean.com/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html) its files to S3, ONTAP, [BeeGFS](https://blog.scaleoutsean.com/2022/06/14/batch-copy-files-beegfs.html), or public cloud targets using either NetApp XCP (NetApp-to-NetApp only), [CloudSync](https://blog.scaleoutsean.com/2022/01/18/using-netapp-cloudsync-api.html) (any-to-any), DataOps Toolkit, or other utilities and services of your choosing.
+Once you have a snapshot, you can [copy](/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html) its files to S3, ONTAP, [BeeGFS](/2022/06/14/batch-copy-files-beegfs.html), or public cloud targets using either NetApp XCP (NetApp-to-NetApp only), [CloudSync](/2022/01/18/using-netapp-cloudsync-api.html) (any-to-any), DataOps Toolkit, or other utilities and services of your choosing.
 
 NetApp XCP and CloudSync can work with NFS sources, which is one of the situations where having snapshot directories available through NFS gateway can be useful (which I why I mentioned it earlier).
 
@@ -67916,7 +67936,7 @@ NetApp XCP and CloudSync can work with NFS sources, which is one of the situatio
 
 I don't know if there are important use cases where these would be preferred over S3, but they provide additional protocols to access HDFS.
 
-If you happen to dislike HDFS, you may as well migrate some or all of your data to object storage such as StorageGRID rather than manage and secure HttpFS and WebHDFS in addition to HDFS which you cannot stand. With StorageGRID you get 2-Copy and several EC schemas, security, encryption, built-in async [replication](https://docs.netapp.com/us-en/storagegrid-116/tenant/configuring-cloudmirror-replication.html) to AWS S3, auditing, etc. - out of the box. If you want to keep some workloads on a fast tier, use something like [Alluxio](https://blog.scaleoutsean.com/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html) to move data on-demand to RAM, local disks, or a smaller all flash array (E-Series EF300 with 20-200 TiB), while persisting new writes to StorageGRID. And you could cache these S3 reads from cloud-based Spark or Hadoop instances as well (just deploy Alluxio on them and let it access on-premises StorageGRID) and eliminate extra redundancy for on-prem Hadoop or Spark.
+If you happen to dislike HDFS, you may as well migrate some or all of your data to object storage such as StorageGRID rather than manage and secure HttpFS and WebHDFS in addition to HDFS which you cannot stand. With StorageGRID you get 2-Copy and several EC schemas, security, encryption, built-in async [replication](https://docs.netapp.com/us-en/storagegrid-116/tenant/configuring-cloudmirror-replication.html) to AWS S3, auditing, etc. - out of the box. If you want to keep some workloads on a fast tier, use something like [Alluxio](/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html) to move data on-demand to RAM, local disks, or a smaller all flash array (E-Series EF300 with 20-200 TiB), while persisting new writes to StorageGRID. And you could cache these S3 reads from cloud-based Spark or Hadoop instances as well (just deploy Alluxio on them and let it access on-premises StorageGRID) and eliminate extra redundancy for on-prem Hadoop or Spark.
 
 ## Recommended settings for E-Series
 
@@ -68042,7 +68062,7 @@ These are now easy to manage (create, view, edit).
 
 SQL Server for Linux is extremely easy to use and automate with SolidFire (years ago I did [this short demo with  data masking using SQL Server for Linux and SolidFire](https://www.youtube.com/watch?v=qgHuWYQwhUA)), so I'll likely do a post dedicated to this.
 
-Both SQL Server and PGO leverage Kanister. I blogged about [Kanister](https://blog.scaleoutsean.com/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) recently, if you're curious about that [part of K10](https://docs.kasten.io/5.0.0/install/generic.html).
+Both SQL Server and PGO leverage Kanister. I blogged about [Kanister](/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) recently, if you're curious about that [part of K10](https://docs.kasten.io/5.0.0/install/generic.html).
 
 ## OpenStack and vSphere in Infrastructure Profiles
 
@@ -68056,8 +68076,8 @@ Similarly, Tanzu clusters on vSphere can use Sphere CSI plugin with SolidFire or
 
 Related posts:
 
-- [Tanzu with vSphere CSI and E-Series](https://blog.scaleoutsean.com/2022/05/18/vmware-tanzu-netapp-eseries.html)
-- [Kubernetes on OpenStack with Cinder CSI and SolidFire](https://blog.scaleoutsean.com/2022/03/02/openstack-solidfire-part-2.html)
+- [Tanzu with vSphere CSI and E-Series](/2022/05/18/vmware-tanzu-netapp-eseries.html)
+- [Kubernetes on OpenStack with Cinder CSI and SolidFire](/2022/03/02/openstack-solidfire-part-2.html)
 
 ## "Officialized" Veeam Backup Server in Location Profiles
 
@@ -68069,7 +68089,7 @@ Now let's see what these updates mean for SolidFire and E-Series users.
 
 ## K10 v5.0.0 with NetApp SolidFire 12 and NetApp Trident 22.04
 
-I've blogged about Kasten with SolidFire before (see [Archive](https://blog.scaleoutsean.com/archive.html)), so I will skip the routine installation and features that existed in v4.
+I've blogged about Kasten with SolidFire before (see [Archive](/archive.html)), so I will skip the routine installation and features that existed in v4.
 
 The other reeason is I had Kasten v4 up and running, so I simply upgraded by copy-pasting a Helm-based Kasten upgrade command from TFM.
 
@@ -68150,7 +68170,7 @@ It's easy to take on-demand snapshots without any Backup Policy and - if you don
 
 At the bottom you can see that Kanister options could be used, if you wanted to build a customized blueprint.
 
-If you're not sure what's there to be protected, you can click on an application's details to examine them. (This `sfc` container is my SolidFire Collector, which gathers SolidFire metricis and stuffs them into Graphite for visualization in Grafana - last month I finally [documented](https://blog.scaleoutsean.com/2022/05/02/solidfire-collector-in-kubernetes.html) how to run the sucker in Kubernetes.)
+If you're not sure what's there to be protected, you can click on an application's details to examine them. (This `sfc` container is my SolidFire Collector, which gathers SolidFire metricis and stuffs them into Graphite for visualization in Grafana - last month I finally [documented](/2022/05/02/solidfire-collector-in-kubernetes.html) how to run the sucker in Kubernetes.)
 
 ![Identify application resources](/assets/images/kasten-5.0-with-netapp-solidfire-trident-04.png)
 
@@ -68180,7 +68200,7 @@ At the beginning of this post I mentioned how the Kanister stuff seems to be pro
 
 ![Location Profiles for S3, NFS, Veeam](/assets/images/kasten-5.0-with-netapp-solidfire-trident-10.png)
 
-If you're curious about Kanister, RTFM and check the Kasten and Kanister posts in Archives - specifically the one on stand-alone Kanister with BeeGFS CSI as well as [this post on Kasten's logical backup](https://blog.scaleoutsean.com/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html) feature).
+If you're curious about Kanister, RTFM and check the Kasten and Kanister posts in Archives - specifically the one on stand-alone Kanister with BeeGFS CSI as well as [this post on Kasten's logical backup](/2021/09/09/kasten-v4-with-solidfire-logical-and-snapshot-assisted-data-protection.html) feature).
 
 And finally, some eye candy! Kasten 5 lets you get its metrics into Prometheus, but it also comes with a built-in Grafana instance that can be opened from the main K10 Web UI.
 
@@ -68192,9 +68212,9 @@ Kasten K10 5.0.0 contains improvements related to security, increased ecosystem 
 
 From a SolidFire and E-Series perspective there are no new features, but Kasten 5 opens up new possibilities in vSphere (vSphere CSI + both E-Series and SolidFire) and OpenStack (Cinder CSI + SolidFire) environments.
 
-Additionally, improved Kanister integration means that even BeeGFS CSI clusters with E-Series [may be able](https://blog.scaleoutsean.com/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) to use Kasten's Kanister plugin to take large backups of multi-TB BeeGFS volumes and protect them in S3 Objet Lock-compatible buckets. 
+Additionally, improved Kanister integration means that even BeeGFS CSI clusters with E-Series [may be able](/2022/04/13/backup-restore-beegfs-csi-pv-with-kanister-kasten.html) to use Kasten's Kanister plugin to take large backups of multi-TB BeeGFS volumes and protect them in S3 Objet Lock-compatible buckets. 
 
-Why is this a big deal? Because users with [BeeGFS CSI](https://blog.scaleoutsean.com/2022/04/09/beegfs-csi-introduction.html) on E-Series can now buy an extra E-Series array, configure S3 Object Lock compatible StorageGRID cluster running on 1U bare metal servers, and get a reliable and secure backup destination for BeeGFS data. It's not something that works out of the box, but the Kanister post shows that it can work and it should behave the same way with Kasten.
+Why is this a big deal? Because users with [BeeGFS CSI](/2022/04/09/beegfs-csi-introduction.html) on E-Series can now buy an extra E-Series array, configure S3 Object Lock compatible StorageGRID cluster running on 1U bare metal servers, and get a reliable and secure backup destination for BeeGFS data. It's not something that works out of the box, but the Kanister post shows that it can work and it should behave the same way with Kasten.
 
 The new Microsoft SQL Server and PostgreSQL (PGO) integrations remains to be covered in another post, maybe after first minor update for Kasten K10 comes out.
 
@@ -68411,7 +68431,7 @@ The SDKs, PowerShell Tools and so on have been updated as well.
 
 The SolidFire Demo VM (OVA for VMware 6.7 and 7.0) has been posted to [the Tools section of the NetApp Support Web site](https://mysupport.netapp.com/site/tools/tool-eula/element-demonode) (registration required).
 
-Among non-supported Demo VM options that work: [when v12.3 came out I noted](https://blog.scaleoutsean.com/2021/04/20/solidfire-12.3.html) I made it work on VirtualBox 6 (both Linux and Windows; a [video demo can be seen here](https://youtu.be/6SXa-0Amhx0)), while recently I discovered on Proxmox it can't run natively - there the OVA can run inside of ESXi VM runnign on Proxmox. Just remember that management and iSCSI MTU must be at least 1500 bytes. See the post on SolidFire 12.3 for additional details.
+Among non-supported Demo VM options that work: [when v12.3 came out I noted](/2021/04/20/solidfire-12.3.html) I made it work on VirtualBox 6 (both Linux and Windows; a [video demo can be seen here](https://youtu.be/6SXa-0Amhx0)), while recently I discovered on Proxmox it can't run natively - there the OVA can run inside of ESXi VM runnign on Proxmox. Just remember that management and iSCSI MTU must be at least 1500 bytes. See the post on SolidFire 12.3 for additional details.
 
 It seems crazy in hindsight, but in versions 10 and 11 the Demo VM was almost 30GB. The OVA for 12.3 was 7GB, and SolidFire OVA 12.5 is under 6GB. If you download the OVA, make sure you compare checksums; I had to re-download five times because four times I ended up with an incomplete or corrupt OVA file.
 
@@ -70816,7 +70836,7 @@ Possible workarounds include a change of disk controller. I've tried several fro
 
 ![Proxmox 7.1 SCSI controller choices](/assets/images/proxmox-solidfire-demo-vm-storage-controller-options.png)
 
-As you can see from [my notes on SolidFire Demo VM with Virtualbox](https://blog.scaleoutsean.com/2021/04/20/solidfire-12.3.html), I managed to get it to work by detaching all of the disks from SCSI controller, adding a new SATA (AHCI, to be exact) controller, and finally attaching the disks to AHCI controller in the exact same order (although, apart from boot disk, the order maybe doesn't matter).
+As you can see from [my notes on SolidFire Demo VM with Virtualbox](/2021/04/20/solidfire-12.3.html), I managed to get it to work by detaching all of the disks from SCSI controller, adding a new SATA (AHCI, to be exact) controller, and finally attaching the disks to AHCI controller in the exact same order (although, apart from boot disk, the order maybe doesn't matter).
 
 To do the same on Proxmox I detached all SCSI disks so that they become Unused, then attached them as SATA devices. I had to hit ESC to get to boot menu where I picked the largest (60GB) disk which is boot disk, but just like before it timed out after a while.
 
@@ -72750,7 +72770,7 @@ I built and installed Open-iSCSI 2.1.6 (instead of Photon's 2.1.3) and it seemed
 ## To-Do's
 
 - Try Kubernetes with Trident CSI (iSCSI) and Photon OS - maybe next time
-- Try [Velero Plugin vSphere](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-E7D7E987-2686-4458-BE9E-81A8D79D7859.html) - I don't have vSphere and Tanzu in personal lab so I won't try this anytime soon, but I tested [Velero with SolidFire](https://blog.scaleoutsean.com/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) and don't expect it to be a problem if Kubernetes with Trident CSI on Photon OS can work. Notice how the VMware documentation suggests to use Photon 3.0 (which also has iSCSI SRPMS, but I haven't tested that version). Non-Tanzu Kubernetes with Velero should work as well, although that would be a DIY approach
+- Try [Velero Plugin vSphere](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-E7D7E987-2686-4458-BE9E-81A8D79D7859.html) - I don't have vSphere and Tanzu in personal lab so I won't try this anytime soon, but I tested [Velero with SolidFire](/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) and don't expect it to be a problem if Kubernetes with Trident CSI on Photon OS can work. Notice how the VMware documentation suggests to use Photon 3.0 (which also has iSCSI SRPMS, but I haven't tested that version). Non-Tanzu Kubernetes with Velero should work as well, although that would be a DIY approach
 
 ## Software versions
 
@@ -73057,7 +73077,7 @@ Here's a couple of general criteria I'd consider and (below that) why for *Hot T
 | Protocol       | block; file only for small | block | block  |
 | Media          | TLC flash   | TLC flash  | TLC flash |
 | Docker         | Trident     | LVM, Terraform Provider  | Trident |
-| Kubernetes     | Trident CSI | TopoLVM, [SANtricity CSI](https://blog.scaleoutsean.com/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html) | TopoLVM, Trident CSI, SolidFire CSI |
+| Kubernetes     | Trident CSI | TopoLVM, [SANtricity CSI](/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html) | TopoLVM, Trident CSI, SolidFire CSI |
 | Rel. cost of perf | $$      | $           | $$$ | 
 | Rel. cost of cap  | $$      | $           | $$$ |
 | Rec. replicas  | 1      | 1 (S,M) or 2 (L+)| 1  |
@@ -75269,7 +75289,7 @@ This is like Varnish, but much more suitable for Big Data applications. It can w
 
 If your application is one of these (but also other, generic applications), you could use S3A with StorageGRID, but Alluxio is very feature-rich and will likely do a much better job. For example, the scale-out feature means you could process a TB-sized working set in the RAM of four VMs with 256GiB RAM.
 
-If you'd like to find out more, I wrote several posts about [Alluxio](https://blog.scaleoutsean.com/2021/11/12/alluxio-storagegrid-s3.html). Find the other two in Archive.
+If you'd like to find out more, I wrote several posts about [Alluxio](/2021/11/12/alluxio-storagegrid-s3.html). Find the other two in Archive.
 
 Alluxio has a Community Edition which you can try out for free.
 
@@ -75281,7 +75301,7 @@ Long story short, it's an excellent NFS and SMB caching feature in ONTAP which a
 
 ## Cloud Sync
 
-Cloud Sync is a data replication service by NetApp. I recently [blogged about it](https://blog.scaleoutsean.com/2022/01/17/using-netapp-cloudsync-api.html).
+Cloud Sync is a data replication service by NetApp. I recently [blogged about it](/2022/01/17/using-netapp-cloudsync-api.html).
 
 Now you may be wondering why I mention Cloud Sync if I don't intend to copy data (i.e. no Data-at-Rest in the cloud). Two reasons:
 
@@ -77986,7 +78006,7 @@ And - although not directly related - this "AWS S3-compliant edge" that I mentio
 
 I gather various audit logs and store them on StorageGRID. This includes StorageGRID 11.5's own audit.log. I want to keep them for a long time, prevent tampering, and the price must be affordable.
 
-To analyze such logs, I use a [tool](https://blog.scaleoutsean.com/2021/10/20/sgac-storagegrid-audit-log-converter-v0.2.1.html). You may have your own, and you may analyze genomics data or something else. It doesn't matter.
+To analyze such logs, I use a [tool](/2021/10/20/sgac-storagegrid-audit-log-converter-v0.2.1.html). You may have your own, and you may analyze genomics data or something else. It doesn't matter.
 
 In the past I'd download such logs to my VM and analyze them there, creating unnecessary read-write workload on my VMware storage (with NetApp HCI that storage is SolidFire).
 
@@ -78199,7 +78219,7 @@ I can't reproduce any content without the written permission of NetApp, so no sc
 
 SolidFire product managers introduce and demonstrate new features in SolidFire and eSDS ([link](https://www.netapp.tv/details/28332)).
 
-Why: I wrote about SolidFire Protection Domains [here](https://blog.scaleoutsean.com/2021/07/06/solidfire-protection-domains-data-path.html), and the feature isn't exactly new, but the session contains newer and different information. Also some good information if you're interested in eSDS (those who build infrastructure on Dell & HPE servers, for example).
+Why: I wrote about SolidFire Protection Domains [here](/2021/07/06/solidfire-protection-domains-data-path.html), and the feature isn't exactly new, but the session contains newer and different information. Also some good information if you're interested in eSDS (those who build infrastructure on Dell & HPE servers, for example).
 
 Highlights: SolidFire Protection Domains and what's new in eSDS.
 
@@ -78225,8 +78245,8 @@ Invest 25 min of your time to find out how to get started with SolidFire automat
 
 Why: this presentation packs a lot in 25 minutes - from getting started with Postman to Ansible, PowerShell, Python and Terraform - and all source code used in the scripts is available, so you can easily recreate those examples. Only two examples weren't shown:
 
-- Terraform example (because there are several files involved), but the good news is you can get it [here](https://blog.scaleoutsean.com/2021/09/18/using-terraform-1-with-solidfire-12.html)
-- Set-SFQoSException module (because its source code is too long to retype by looking at the screen) - you can find about it [here](https://blog.scaleoutsean.com/2020/11/28/powershell-set-sfqosexception.html) and the source code is in [Awesome SolidFire](https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts) on Github
+- Terraform example (because there are several files involved), but the good news is you can get it [here](/2021/09/18/using-terraform-1-with-solidfire-12.html)
+- Set-SFQoSException module (because its source code is too long to retype by looking at the screen) - you can find about it [here](/2020/11/28/powershell-set-sfqosexception.html) and the source code is in [Awesome SolidFire](https://github.com/scaleoutsean/awesome-solidfire/tree/master/scripts) on Github
 
 Highlights: Postman, Ansible, Python, PowerShell, Hashicorp Terraform.
 
@@ -80187,7 +80207,7 @@ Next day, when I logged in to NetCrunch I found two new fault alerts (the fault 
 - Review ActiveIQ and TR-4694 (or the SolidFire Admin Guide and API documentation) for the details on what is commonly monitored.
 - SolidFire SNMP counters (as you can see in the MIB files) don't have everything that is available through the SolidFire API. In addition to that, some "analytics" insights require more than one compute operation which may be hard to do in SNMP applications. Because of that it makes sense to:
   - Focus on the important and available, such as (1) cluster faults (especially severity levels Warning, Error and Critical), (2) cluster utilization, (3) volume QoS and queues 
-  - Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter, [ELK](https://blog.scaleoutsean.com/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html), etc.)
+  - Offload complex and advanced analytics and reporting to other tools (e.g. SolidFire Exporter, [ELK](/2021/10/18/solidfire-syslog-filebeat-logstash-elk-stack.html), etc.)
 - Many monitoring applications provide not just SNMP, but various other means of integration including plugins, Webhooks or scripts. For some tasks it *very easy* to integrate those rather than rely on SNMP (especially when, like in this case, not everything is available via SNMP). In the case of SolidFire it literally takes a 10 line script to create a reliable PowerShell or Python script to check on something. Example: basic [SolidFire plugin for Nagios](https://github.com/scaleoutsean/nagfire) that I keep alive for reference purposes.
 
 ## Demo
@@ -82101,7 +82121,7 @@ If CloudMirror doesn't support your destination object store (say, Azure Blob), 
 URL: https://blog.scaleoutsean.com/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html
 Date: 2021-04-22
 
-In the [previous post](https://blog.scaleoutsean.com/2021/04/21/solidfire-backup-to-s3.html) I explained how SolidFire's built-in backup/restore to/from S3 works and how we can automate it. This post is about doing less automation and more integration.
+In the [previous post](/2021/04/21/solidfire-backup-to-s3.html) I explained how SolidFire's built-in backup/restore to/from S3 works and how we can automate it. This post is about doing less automation and more integration.
 
 ## Why
 
@@ -82183,9 +82203,9 @@ Backup to S3 is *not* a replacement for enterprise data protection software (or 
 
 When Backup to S3 may be just good enough? Some examples:
 
-- you don't have enterprise backup software (or don't have the skill or time to implement a community backup software such as [Velero](https://blog.scaleoutsean.com/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) for Kubernetes) and don't need advanced data protection features
-- you don't have ONTAP to which you could copy data with SnapMirror and from there use Cloud Backup Service to backup to S3 (I wrote about that use case [here](https://blog.scaleoutsean.com/2021/01/27/netapp-hci-cloud-backup-service.html))
-- you have more data than you can backup with a free/community edition of enterprise software like [Veeam](https://blog.scaleoutsean.com/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html) or [Kasten](https://blog.scaleoutsean.com/2021/02/12/kasten-solidfire-trident.html), and have simple basic backup/restore requirements
+- you don't have enterprise backup software (or don't have the skill or time to implement a community backup software such as [Velero](/2021/02/08/use-velero-with-netapp-solidfire-and-trident-csi.html) for Kubernetes) and don't need advanced data protection features
+- you don't have ONTAP to which you could copy data with SnapMirror and from there use Cloud Backup Service to backup to S3 (I wrote about that use case [here](/2021/01/27/netapp-hci-cloud-backup-service.html))
+- you have more data than you can backup with a free/community edition of enterprise software like [Veeam](/2020/12/30/netapp-hci-ef280-diskspd-for-backup.html) or [Kasten](/2021/02/12/kasten-solidfire-trident.html), and have simple basic backup/restore requirements
 
 Backup to S3 doesn't have a mechanism to freeze (quiesce) a volume because it's completely self-contained in the storage software and has no client components; a snapshot ID can be provided but if it does not exist, on-demand snapshot is created and used to perform backup.
 
@@ -82623,7 +82643,7 @@ For advanced and enterprise use, especially with 100's of TBs to protect, I'd re
 
 At the risk of fragmenting your data protection approaches - not something I'd advocate, but I'll mention it for the sake of discussion - you could use a community edition of enterprise data protection software for important data (Firewall VM, DBs, ADS/LDAP, Git, K8s Masters), and Backup to S3 for the rest (generic VMs).
 
-One so far unexplored area is "in between" situations where community applications could be used to cover niche use cases. More on that in [the next post](https://blog.scaleoutsean.com/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html).
+One so far unexplored area is "in between" situations where community applications could be used to cover niche use cases. More on that in [the next post](/2021/04/22/solidfire-kvm-duplicati-and-backup-to-s3.html).
 
 ---
 
@@ -84017,7 +84037,7 @@ Optionally:
 
 Finally, SolidFire Demo VM (free download from the NetApp support Web site) is excellent for this type testing in a VMware environment.
 
-You can develop automation and run replicated test clusters without dedicated physical hardware - all you need is 4 VMs (2 Kubernetes and 2 SolidFire). That is what I used to write this post (apart from the ARM64 screenshot which is just a screenshot taken while working on the [Trident-on-ARM64](https://blog.scaleoutsean.com/2021/02/24/netapp-trident-on-arm64.html) post).
+You can develop automation and run replicated test clusters without dedicated physical hardware - all you need is 4 VMs (2 Kubernetes and 2 SolidFire). That is what I used to write this post (apart from the ARM64 screenshot which is just a screenshot taken while working on the [Trident-on-ARM64](/2021/02/24/netapp-trident-on-arm64.html) post).
 
 ### Automate storage failover steps
 
@@ -84038,7 +84058,7 @@ Date: 2021-03-09
 
 **NOTICE**: any and all credentials and tokens on this page are samples, not leaked.
 
-In yesterday's [post](https://blog.scaleoutsean.com/2021/03/08/hcicollector-v0.7.html) about HCICollector v0.7 I mentioned [solidfire-exporter](https://github.com/mjavier2k/solidfire-exporter).
+In yesterday's [post](/2021/03/08/hcicollector-v0.7.html) about HCICollector v0.7 I mentioned [solidfire-exporter](https://github.com/mjavier2k/solidfire-exporter).
 
 Here's how to get started with it without Kubernetes and Docker in under 2 minutes. 
 
@@ -86691,7 +86711,7 @@ Date: 2021-01-04
 
 ## Summary
 
-In [this post](https://blog.scaleoutsean.com/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html) I laid out my arguments on why shared core HCI, although it *can* run structured log management applications, is inherently unsuitable for anything but small scale deployments of such workloads.
+In [this post](/2020/12/31/virtualized-splunk-on-netapp-hci-and-ef-series.html) I laid out my arguments on why shared core HCI, although it *can* run structured log management applications, is inherently unsuitable for anything but small scale deployments of such workloads.
 
 Shared core HCI (VxRail, Nutanix) and general purpose DAS servers ("white box" servers with internal storage) are require relatively more hardware, software and management effort. White box servers become cost effective at scale not commonly found in Enterprises, but disadvantages of shared core HCI grow with its footprint.
 
@@ -86702,7 +86722,7 @@ A short (1m26s) video with highlights: [https://youtu.be/A3o_j9M1UsY](https://yo
 After that post I examined my preferred approach for medium-to-large deployments (NetApp HCI Compute with EF Series storage) using Elasticsearch and found that:
 
 - Three-node Elasticsearch cluster running on a H615C server attached to EF280 array can easily bulk-load uncompressed JSON-formatted structured logs at approximately 80 MB/s (> 6 TB/day). This ingest speed was observed by monitoring NFS network throughput from NFS server where JSON log was ingested from.
-- Testing was done without concurrent search workloads and performance monitoring (Elasticsearch cluster had only one workload), but EF280 was only moderately loaded and based on [performance testing results with H615C and EF280 iSCSI](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) we should be able to get approximately twice as much from this storage system (10-15 TB/day, perhaps)
+- Testing was done without concurrent search workloads and performance monitoring (Elasticsearch cluster had only one workload), but EF280 was only moderately loaded and based on [performance testing results with H615C and EF280 iSCSI](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) we should be able to get approximately twice as much from this storage system (10-15 TB/day, perhaps)
 - Data (index) was split in 9 shards and one replica (i.e. two copies) was created for additional data protection, as many users would do in production when Elasticsearch data is stored on protected storage. Due to sharding and replication, bulk loading at 80 MB/s resulted in approximately 1 GB/s throughput to back end storage (close to 100 MB/s was read from NFS server but the rest was Elasticsearch).
 
 ## Configuration
@@ -86911,7 +86931,7 @@ Where things still get challenging is large Splunk deployments and the use of ti
 
 Since last month NetApp has released these two documents:
 
-- [NVA-1152-DESIGN](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html), which shows that price/performance of E-Series and EF-Series can add value to many NetApp HCI deployments (perhaps not much to VDI, but a lot to many other workloads and use cases). Personally I've known this since NetApp HCI came out and I've designed several "NetApp HCI with E/EF-Series" solutions, but this combination didn't receive much attention before.
+- [NVA-1152-DESIGN](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html), which shows that price/performance of E-Series and EF-Series can add value to many NetApp HCI deployments (perhaps not much to VDI, but a lot to many other workloads and use cases). Personally I've known this since NetApp HCI came out and I've designed several "NetApp HCI with E/EF-Series" solutions, but this combination didn't receive much attention before.
 - [TR-4869](https://www.netapp.com/media/20646-tr-4869.pdf), which shows how Splunk SmartStore can take advantage of NetApp StorageGRID S3 object storage, which may be of interest to all large Splunk users who archive Splunk data on-premises
 
 ## Does EF-Series for Splunk on NetApp HCI make sense
@@ -87220,7 +87240,7 @@ Date: 2020-12-30
 - VM running on a NetApp HCI compute node can get about 1 GB/s sequential throughput to/from a Datastore or Raw Device on EF280, making it an effective primary backup storage target
 - Per-filesystem (NTFS, ReFS) and per-workload performance can be doubled by striping across Datastores or Raw Devices
 - Users who want even more performance can use RAID10 for selected volumes (tests in this post were performed with DDP, a RAID 6-like data protection schema from NetApp E/EF Series arrays)
-- Aggregate backup and restore throughput can be increased by using multiple backup repositories (see my earlier [post on iSCSI vs. FC](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) or NetApp EF-Series [data sheet](https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf) to get an idea of potential upper limits) and multiple backup servers
+- Aggregate backup and restore throughput can be increased by using multiple backup repositories (see my earlier [post on iSCSI vs. FC](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) or NetApp EF-Series [data sheet](https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf) to get an idea of potential upper limits) and multiple backup servers
 
 ## Why test EF280 performance from a VM
 
@@ -88778,7 +88798,7 @@ Hybrid Cloud Control (HCC) is a group of services - management plane, if you wil
 
 **NOTICE**: all credentials and tokens on this page are samples, not leaked.
 
-As noted in last week's [post on HCC and mNode log forwarding](https://blog.scaleoutsean.com/2020/11/27/solidfire-mnode-hcc-log-forwarding.html) (you may want to read it if you want additional context), right now we can't forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest. 
+As noted in last week's [post on HCC and mNode log forwarding](/2020/11/27/solidfire-mnode-hcc-log-forwarding.html) (you may want to read it if you want additional context), right now we can't forward Docker container logs to external destination (not in a supported way). We need to use the HCC API to get container logs of interest. 
 
 ### `GET /logs`
 
@@ -89810,7 +89830,7 @@ A non-mission is to substitute or duplicate information from the official docume
 
 Like with other repos I maintain, the idea is to share useful information quickly and in an accessible way. Quality contributions are welcome (submit issue on Github).
 
-This repo is experimentally published as a Web site located at [https://scaleoutsean.github.io/solid-rancher](https://blog.scaleoutsean.com/solid-rancher/).
+This repo is experimentally published as a Web site located at [https://scaleoutsean.github.io/solid-rancher](https://scaleoutsean.github.io/solid-rancher/).
 
 ## UPDATE (September 2021)
 

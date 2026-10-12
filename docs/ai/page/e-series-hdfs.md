@@ -28,7 +28,7 @@ The idea behind HDFS R2 and E-Series was and still is that by using RF2 over RAI
 
 In the latter case, RF2 over RAID6 (8+2) means 2 x (10/8) or 250%. (You'd have some hot spares on the side, but you'd have even more of them for JBOD storage.)
 
-In the case of DDP, or Dynamic Disk Pools, protection overhead is even lower (see [here](https://blog.scaleoutsean.com/2021/07/06/e-series-ddp-expansion-and-rebalancing.html)).
+In the case of DDP, or Dynamic Disk Pools, protection overhead is even lower (see [here](/2021/07/06/e-series-ddp-expansion-and-rebalancing.html)).
 
 External storage - whether it uses DDP or RAID6 or something else - needs controllers and enclosures, so there's additional cost to that, but for many users these trade-offs are well worth it:
 
@@ -136,7 +136,7 @@ HDFS can be exported (shared) to non-HDFS clients via a built-in NFS gateway. Wh
 
 [Snapshots](https://hadoop.apache.org/docs/r3.3.3/hadoop-project-dist/hadoop-hdfs/HdfsSnapshots.html) may be taken on snapshottable directories.
 
-Once you have a snapshot, you can [copy](https://blog.scaleoutsean.com/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html) its files to S3, ONTAP, [BeeGFS](https://blog.scaleoutsean.com/2022/06/14/batch-copy-files-beegfs.html), or public cloud targets using either NetApp XCP (NetApp-to-NetApp only), [CloudSync](https://blog.scaleoutsean.com/2022/01/18/using-netapp-cloudsync-api.html) (any-to-any), DataOps Toolkit, or other utilities and services of your choosing.
+Once you have a snapshot, you can [copy](/2022/01/28/storagegrid-hybrid-cloud-processing-without-data-at-rest.html) its files to S3, ONTAP, [BeeGFS](/2022/06/14/batch-copy-files-beegfs.html), or public cloud targets using either NetApp XCP (NetApp-to-NetApp only), [CloudSync](/2022/01/18/using-netapp-cloudsync-api.html) (any-to-any), DataOps Toolkit, or other utilities and services of your choosing.
 
 NetApp XCP and CloudSync can work with NFS sources, which is one of the situations where having snapshot directories available through NFS gateway can be useful (which I why I mentioned it earlier).
 
@@ -144,7 +144,7 @@ NetApp XCP and CloudSync can work with NFS sources, which is one of the situatio
 
 I don't know if there are important use cases where these would be preferred over S3, but they provide additional protocols to access HDFS.
 
-If you happen to dislike HDFS, you may as well migrate some or all of your data to object storage such as StorageGRID rather than manage and secure HttpFS and WebHDFS in addition to HDFS which you cannot stand. With StorageGRID you get 2-Copy and several EC schemas, security, encryption, built-in async [replication](https://docs.netapp.com/us-en/storagegrid-116/tenant/configuring-cloudmirror-replication.html) to AWS S3, auditing, etc. - out of the box. If you want to keep some workloads on a fast tier, use something like [Alluxio](https://blog.scaleoutsean.com/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html) to move data on-demand to RAM, local disks, or a smaller all flash array (E-Series EF300 with 20-200 TiB), while persisting new writes to StorageGRID. And you could cache these S3 reads from cloud-based Spark or Hadoop instances as well (just deploy Alluxio on them and let it access on-premises StorageGRID) and eliminate extra redundancy for on-prem Hadoop or Spark.
+If you happen to dislike HDFS, you may as well migrate some or all of your data to object storage such as StorageGRID rather than manage and secure HttpFS and WebHDFS in addition to HDFS which you cannot stand. With StorageGRID you get 2-Copy and several EC schemas, security, encryption, built-in async [replication](https://docs.netapp.com/us-en/storagegrid-116/tenant/configuring-cloudmirror-replication.html) to AWS S3, auditing, etc. - out of the box. If you want to keep some workloads on a fast tier, use something like [Alluxio](/2021/12/16/hadoop-multi-tiered-s3-read-write-cache.html) to move data on-demand to RAM, local disks, or a smaller all flash array (E-Series EF300 with 20-200 TiB), while persisting new writes to StorageGRID. And you could cache these S3 reads from cloud-based Spark or Hadoop instances as well (just deploy Alluxio on them and let it access on-premises StorageGRID) and eliminate extra redundancy for on-prem Hadoop or Spark.
 
 ## Recommended settings for E-Series
 

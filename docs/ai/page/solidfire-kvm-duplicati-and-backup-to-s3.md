@@ -2,7 +2,7 @@
 
 Use SolidFire APIs and Duplicati to automate data protection in KVM environments
 
-In the [previous post](https://blog.scaleoutsean.com/2021/04/21/solidfire-backup-to-s3.html) I explained how SolidFire's built-in backup/restore to/from S3 works and how we can automate it. This post is about doing less automation and more integration.
+In the [previous post](/2021/04/21/solidfire-backup-to-s3.html) I explained how SolidFire's built-in backup/restore to/from S3 works and how we can automate it. This post is about doing less automation and more integration.
 
 ## Why
 

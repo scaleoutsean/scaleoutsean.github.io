@@ -98,7 +98,7 @@ Inferencing may not need much more than just block devices, but if you do need o
 
 Some other useful and relevant details in the context of AI services:
 
-- Storage performance and event monitoring: [E-Series Performance Analyzer](/2023/11/04/eseries-perf-analyzer-epa-330.html), [PRTG](https://blog.scaleoutsean.com/2023/09/25/monitoring-netapp-eseries-with-prtg.html), [SNMP](https://blog.scaleoutsean.com/2023/09/17/netapp-e-series-snmp-trap-notifications.html) (event only)
+- Storage performance and event monitoring: [E-Series Performance Analyzer](/2023/11/04/eseries-perf-analyzer-epa-330.html), [PRTG](/2023/09/25/monitoring-netapp-eseries-with-prtg.html), [SNMP](/2023/09/17/netapp-e-series-snmp-trap-notifications.html) (event only)
 - Access control
   - Linux NFS server - Yes
   - BeeGFS (even in the free community edition 8) - Yes

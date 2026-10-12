@@ -63,7 +63,7 @@ I don't know what the guy from that issue was trying to do, so I'll assume it's 
 
 ## Making it faster
 
-I actually wrote about this before in [NetApp SolidFire with GenAI and inferencing workloads](https://blog.scaleoutsean.com/2023/11/22/genai-with-netapp-solidfire.html#ready-to-clone-pvs-for-tools-applications-models).
+I actually wrote about this before in [NetApp SolidFire with GenAI and inferencing workloads](/2023/11/22/genai-with-netapp-solidfire.html#ready-to-clone-pvs-for-tools-applications-models).
 
 The idea is to pre-create volumes and keep them parked there for import by Trident. That's all.
 

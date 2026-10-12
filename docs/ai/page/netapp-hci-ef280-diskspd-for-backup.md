@@ -18,7 +18,7 @@ Backup workload with single VM on NetApp H615C compute node attached to EF280
 - VM running on a NetApp HCI compute node can get about 1 GB/s sequential throughput to/from a Datastore or Raw Device on EF280, making it an effective primary backup storage target
 - Per-filesystem (NTFS, ReFS) and per-workload performance can be doubled by striping across Datastores or Raw Devices
 - Users who want even more performance can use RAID10 for selected volumes (tests in this post were performed with DDP, a RAID 6-like data protection schema from NetApp E/EF Series arrays)
-- Aggregate backup and restore throughput can be increased by using multiple backup repositories (see my earlier [post on iSCSI vs. FC](https://blog.scaleoutsean.com/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) or NetApp EF-Series [data sheet](https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf) to get an idea of potential upper limits) and multiple backup servers
+- Aggregate backup and restore throughput can be increased by using multiple backup repositories (see my earlier [post on iSCSI vs. FC](/2020/12/05/iscsi-vs-fibre-channel-fc-performance.html) or NetApp EF-Series [data sheet](https://www.netapp.com/pdf.html?item=/media/19339-DS-4082.pdf) to get an idea of potential upper limits) and multiple backup servers
 
 ## Why test EF280 performance from a VM
 

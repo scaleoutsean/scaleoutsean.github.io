@@ -124,7 +124,7 @@ I found [the S3-based blueprint](https://github.com/kanisterio/blueprints/tree/m
 ```
    
 
-If you try this at home (or in office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series [here](https://blog.scaleoutsean.com/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html)). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.
+If you try this at home (or in office) before I do, you can use stand-alone Elasticsearch or Elasticsearch Operator for Kubernetes (tested with E-Series [here](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html)). I'd first pick the exact same version (not Elasticsearch 9) as the blueprint targets Elasticsearch version 8 and that version is more forgiving in any case.
 
 NetApp StorageGRID 12 is known to work with both Elasticsearch 8 and 9 snapshots to S3. I blogged about StorageGRID with Elasticsearch ILM [here](/2023/11/30/elasticsearch-ilm-netapp-eseries.html), by the way.
 
