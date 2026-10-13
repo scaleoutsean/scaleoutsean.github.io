@@ -2,6 +2,11 @@
 
 This post describes how to use Instaclustr OpenSearch for vector search on StorageGRID content
 
+This is a multi-part post:
+
+- **PART 1 (this post):** Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch
+- Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP)
+
 ## Introduction
 
 You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need an index of embeddings for your data.
@@ -12,7 +17,7 @@ StorageGRID has search integration that's the same as it was 10 years ago. It wo
 
 We can create embeddings ourselves client-side, but we can also **auto-generate** embeddings by indexing text from objects using OpenSearch. 
 
-This post shows how this simpler auto-generated approach works. It also shows why that probably isn't enough and how other approaches to generating embeddings in OpenSearch can help you.
+This post shows how this simpler auto-generated approach works. It also shows why that probably isn't enough and how other approaches to generating embeddings in OpenSearch can help you (more on that in Part 2).
 
 ## Auto-generate embeddings in Instaclustr OpenSearch
 
@@ -484,7 +489,7 @@ You can create embeddings manually on your side, without using OpenSearch for it
 
 I blogged about that in [this post](/2026/10/03/kompromise-elasticsearch-storagegrid-search.html#full-text-search-with-kompromise), so I won't repeat that.
 
-Will you need "other approaches"? Almost certainly, yes.
+Will you need "other approaches"? Almost certainly, yes. We'll consider a Kompromise- and OpenSearch-specific approach in Part 2.
 
 ## StorageGRID integration
 
@@ -503,7 +508,7 @@ Because embeddings require content (you could create it from an object's metadat
 
 Remember that these models have limits - you can't create a vector for an entire movie or book. You need to "chunk" them, as shown in [the search section](/2026/10/03/kompromise-elasticsearch-storagegrid-search#vector-search-with-kompromise) of that post above.
 
-Most of these things are in the previous post so I won't spend much time on rehashing them. 
+Most of these things are in the previous post, so I won't spend much time on rehashing them. 
 
 ## Conclusion
 
@@ -518,3 +523,5 @@ Related to StorageGRID and vector search, you will likely not want to use the bu
 You can build your own indexes based on StorageGRID Event Notification and object reads, or use something like Kompromise Lite described in the previous post (full-featured version is complicated, I'm still working on it). If you don't need near-real-time search, you can generate updated object lists with [SGII](/2026/10/08/kompromise-storagegrid-instaclustr-opensearch#whats-the-role-of-sgii-again) or your own tool, and batch-upload once every day to OpenSearch.
 
 If you want to generate embeddings yourself, then create manual indexes and read, chunk and vectorize before uploading data to OpenSearch. This is where the value of "100% reproducible" stack comes in play: you want the same models, same dimensions and same workflows on-premises (development, for example) and in the cloud (production). Instaclustr's OpenSearch and Kafka give you that, and more.
+
+Part 2 will focus on a manually created OpenSearch pipeline for Kompromise notifications from StorageGRID, that hopefully simplifies the process on both StorageGRID side (Kompromise doesn't use StorageGRID Search Integration) and OpenSearch side, where we can make use of custom pipelines.

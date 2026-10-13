@@ -2796,7 +2796,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch",
-        "excerpt":"Introduction You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need an index of embeddings for your data. You can offload some of that work by using managed OpenSearch by Instaclustr. It takes 15 minutes...","categories": ["storage","s3","ai","analytics","projects","instaclustr"],
+        "excerpt":"This is a multi-part post: PART 1 (this post): Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP) Introduction You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases....","categories": ["storage","s3","ai","analytics","projects","instaclustr"],
         "tags": ["s3","storagegrid","opensearch","embeddings","vectors","pipeline"],
         "url": "/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html",
         "teaser": null
