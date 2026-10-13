@@ -4,23 +4,23 @@ This post describes how to use Instaclustr OpenSearch for vector search on Stora
 
 ## Introduction
 
-You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need embeddings for your data.
+You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need an index of embeddings for your data.
 
 You can offload some of that work by using [managed OpenSearch by Instaclustr](https://www.instaclustr.com/platform/managed-opensearch/). It takes 15 minutes to start, after which you have a properly configured OpenSearch with TLS access.
 
 StorageGRID has search integration that's the same as it was 10 years ago. It works, but it's not good enough for AI.
 
-We can create embeddings ourselves, but we can also **auto-generate** embeddings using OpenSearch. 
+We can create embeddings ourselves client-side, but we can also **auto-generate** embeddings by indexing text from objects using OpenSearch. 
 
-This post shows how this simpler auto-generated approach works. It also shows why that probably isn't enough and how OpenSearch can help you.
+This post shows how this simpler auto-generated approach works. It also shows why that probably isn't enough and how other approaches to generating embeddings in OpenSearch can help you.
 
 ## Auto-generate embeddings in Instaclustr OpenSearch
 
-Note that you can do it at scale by provisioning a "vectorization worker" if you have a lot of stuff to vectorize. 
+We can create embeddings at scale (hundreds per second, for example) by provisioning a "vectorization worker" if we have a lot of documents to vectorize. 
 
-For smaller scale, meaning simple text, small documents and tiny small images, maybe you can get away by using CPU. Don't go too crazy with "benchmarking" if you also search and index at scale.
+For smaller scale RAG (meaning simple text, small documents or tiny images) and development, maybe we can get away by using CPU in regular OpenSearch nodes. (Don't go too crazy with "benchmarking" if you also search and index at scale using the same nodes.)
 
-Instead of trying to get creative, we just [RTFM](https://docs.opensearch.org/latest/vector-search/getting-started/auto-generated-embeddings/) and copy-paste their stuff.
+Instead of trying to get creative, we just [RTFM](https://docs.opensearch.org/latest/vector-search/getting-started/auto-generated-embeddings/) and copy-paste their instructions.
 
 First, we enable generic OpenSearch nodes for vectorization workload:
 
@@ -34,7 +34,7 @@ PUT _cluster/settings
 }
 ```
 
-If you use dedicated nodes, don't use the above - configure a [dedicated node](https://docs.opensearch.org/latest/ml-commons-plugin/pretrained-models/#prerequisites) instead.
+If you use dedicated nodes, don't use the above payload - configure a [dedicated node](https://docs.opensearch.org/latest/ml-commons-plugin/pretrained-models/#prerequisites) instead.
 
 Second, join OpenSearch Confusion Fest at [this page](https://docs.opensearch.org/latest/ml-commons-plugin/pretrained-models/). Take your time picking through the 100 choices!
 
@@ -48,7 +48,7 @@ POST /_plugins/_ml/model_groups/_register
 }
 ```
 
-Use the returned ID  in `model_group_id` below (or otherwise drop the key below) and pick one of the models from that pre-trained list (also get the model version right).
+Use the returned ID  in `model_group_id` below (or otherwise drop the key below from payload) and pick one of the models from that pre-trained list (also, get the model version right).
 
 **NOTE:** this one generates 384-d vectors. Maybe you want a different model or version. DYOR.
 
@@ -77,7 +77,7 @@ Get the sucker:
 GET /_plugins/_ml/tasks/-sVWMaEBxbvMjUqWG_dc
 ```
 
-Model ID is needed later so copy this into some "notepad" of sorts:
+Model ID is needed later, so copy this into some "notepad" of sorts to not lose that ID:
 
 ```json
 {
@@ -94,44 +94,19 @@ Model ID is needed later so copy this into some "notepad" of sorts:
 }
 ```
 
-Deploy that ID:
+Deploy that model ID:
 
 ```http
 POST /_plugins/_ml/models/hqRWMaEB62QuBhwmJD7e/_deploy
 ```
 
-Done?
+Check if okay:
 
 ```json
 {
   "task_id": "JcVaMaEBxbvMjUqWjfjP",
   "task_type": "DEPLOY_MODEL",
   "status": "CREATED"
-}
-```
-
-Check what happened:
-
-```http
-GET /_plugins/_ml/tasks/JcVaMaEBxbvMjUqWjfjP
-```
-
-Response:
-
-```json
-{
-  "model_id": "hqRWMaEB62QuBhwmJD7e",
-  "task_type": "DEPLOY_MODEL",
-  "function_name": "TEXT_EMBEDDING",
-  "state": "COMPLETED",
-  "worker_node": [
-    "-oALb9-DTSCiT_gmhMYeaQ",
-    "akGpd1uwQxiIVho1qp1c9Q",
-    "u8KOQW00RwSpeVcAkr2iig"
-  ],
-  "create_time": 1791829380508,
-  "last_update_time": 1791829408386,
-  "is_async": true
 }
 ```
 
@@ -146,7 +121,7 @@ POST /_plugins/_ml/_predict/text_embedding/hqRWMaEB62QuBhwmJD7e
 }
 ```
 
-This took around 3 seconds on a small CPU node.
+This took around three seconds on a small CPU node.
 
 Result (trimmed):
 
@@ -174,7 +149,7 @@ Result (trimmed):
 }
 ```
 
-Since this works, our next step would be to doing something useful with it.
+Since this works, our next step would be to do something useful with that model.
 
 OpenSearch has an automated pipeline approach described [here](https://docs.opensearch.org/latest/vector-search/getting-started/auto-generated-embeddings/#using-automated-workflows).
 
@@ -228,7 +203,7 @@ Response:
 }
 ```
 
-Now we can use some Wikipedia content from the S3 storage page to create entries:
+Now we can use some Wikipedia content from the S3 storage page to create a few entries in our index:
 
 ```http
 PUT /my-nlp-index/_doc/1
@@ -246,6 +221,8 @@ PUT /my-nlp-index/_doc/3
   "passage": "Other related work includes the Coda filesystem project at Carnegie Mellon, which started in 1987, and spawned the Lustre file system ."
 }
 ```
+
+If we were using StorageGRID objects, this content would be text from our objects or (weaker use case) object tags.
 
 These resulted in three responses like this one:
 
@@ -265,7 +242,7 @@ These resulted in three responses like this one:
 }
 ```
 
-Let's try to find something. Provide your model ID (`hqRWMaEB62QuBhwmJD7e`) and a search term. Say, `Coda` appears in the third document we indexed.
+Let's try to find something from that content. Provide your model ID (`hqRWMaEB62QuBhwmJD7e`) and a search term. Say, `Coda` appears in the third document we indexed.
 
 ```http
 GET /my-nlp-index/_search
@@ -320,6 +297,8 @@ GET /my-nlp-index/_search
 ```
 
 The score (0.4139904) is relative. The absolute value doesn't significantly matter. You want `k` top results first and maybe massage that set from another aspect to re-rank or pick based on some hybrid evaluation approach. You could get `k=N` for top N, but drop results below a certain limit, etc.
+
+`Coda` is trivial as the word could be easily found using lexical search. Try `files` or `university`, for example. I got the same document returned, which confirms my vector search is working.
 
 At the end, let's take a look at that auto-index:
 
@@ -385,7 +364,7 @@ Response:
 }
 ```
 
-That's different from indexes generated by StorageGRID storage integration. Example (objects with tags haven't been ingested, but "metadata" is present):
+That's very different from indexes generated by StorageGRID storage integration. Check out this example (objects with tags haven't been ingested so I don't have tags in my index, but version ID and metadata (the other "optional" entries in StorageGRID index) are present because some of the objects had these):
 
 ```json
 {
@@ -499,7 +478,7 @@ Will you need "other approaches"? Almost certainly, yes.
 
 ## StorageGRID integration
 
-StorageGRID search integration for OpenSearch isn't useful for AI, because its format is fixed.
+StorageGRID search integration for OpenSearch isn't useful for AI, because its index format is fixed.
 
 You're gonna need a bigger ~~boat~~ index. This is where "custom" indexes come in:
 
@@ -518,14 +497,14 @@ Most of these things are in the previous post so I won't spend much time on reha
 
 ## Conclusion
 
-It takes minutes to get your vectorization pipeline ready with Instaclustr OpenSearch. It's simple, but it gets complicated quickly.
+It takes minutes to get your vectorization pipeline ready with Instaclustr OpenSearch. That part is simple, but the rest can get complicated quickly.
 
-If you're trying to meet deadlines, you probably don't want to add OpenSearch to your list of worries.
+If you're trying to meet deadlines or avoid learning how to administrate OpenSearch, you probably don't want to add OpenSearch to your list of worries.
 
 With [Instaclustr OpenSearch](https://www.instaclustr.com/platform/managed-opensearch/), you can run OpenSearch worry-free in your own cloud account. If you're up for custom indexes and pipelines, you probably want Instaclustr Kafka as well. These are fully Open Source-based, and you can replicate them 100% on premises. There's value in using the same exact software on-premises and in the cloud when complexity of your stack isn't trivial.
 
-Related to StorageGRID, you will likely not want to use the built-in search integration feature. 
+Related to StorageGRID and vector search, you will likely not want to use the built-in search integration feature. 
 
-You can build your own indexes based on StorageGRID Event Notification and object reads or use something like Kompromise Lite described in the previous post (full-featured version is complicated, I'm still working on it). If you don't need near-real-time search, you can generate updated object lists with [SGII](/2026/10/08/kompromise-storagegrid-instaclustr-opensearch#whats-the-role-of-sgii-again) or your own tool, and batch-upload to OpenSearch.
+You can build your own indexes based on StorageGRID Event Notification and object reads, or use something like Kompromise Lite described in the previous post (full-featured version is complicated, I'm still working on it). If you don't need near-real-time search, you can generate updated object lists with [SGII](/2026/10/08/kompromise-storagegrid-instaclustr-opensearch#whats-the-role-of-sgii-again) or your own tool, and batch-upload once every day to OpenSearch.
 
-If you want to generate embeddings yourself, then create manual indexes and read, chunk and vectorize before uploading data to OpenSearch. This is where the value of "100% reproducible" comes in play: you want same models, same dimensions and same workflows on-premises (development, for example) and in the cloud (production). Instaclustr's OpenSearch and Kafka give you that, and more.
+If you want to generate embeddings yourself, then create manual indexes and read, chunk and vectorize before uploading data to OpenSearch. This is where the value of "100% reproducible" stack comes in play: you want the same models, same dimensions and same workflows on-premises (development, for example) and in the cloud (production). Instaclustr's OpenSearch and Kafka give you that, and more.
