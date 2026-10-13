@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html"},"headline":"Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch","description":"This post describes how to use Instaclustr OpenSearch for vector search on StorageGRID content","datePublished":"2026-10-13T00:00:00+08:00","dateModified":"2026-10-13T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/","keywords":["s3","storagegrid","opensearch","embeddings","vectors"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"instaclustr"}],"wordCount":3008,"articleBody":"This post describes how to use Instaclustr OpenSearch for vector search on StorageGRID content"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html"},"headline":"Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch","description":"This post describes how to use Instaclustr OpenSearch for vector search on StorageGRID content","datePublished":"2026-10-13T00:00:00+08:00","dateModified":"2026-10-13T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/instaclustr-opensearch-embeddings-00-indexes.png","keywords":["s3","storagegrid","opensearch","embeddings","vectors","pipeline"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"s3"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"instaclustr"}],"wordCount":3096,"articleBody":"This post describes how to use Instaclustr OpenSearch for vector search on StorageGRID content"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -463,7 +463,7 @@ PUT /my-nlp-index/_doc/3
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Let's try to find something from that content. Provide your model ID (<code class="language-plaintext highlighter-rouge">hqRWMaEB62QuBhwmJD7e</code>) and a search term. Say, <code class="language-plaintext highlighter-rouge">Coda</code> appears in the third document we indexed.</p>
+<p>Let's try to find something from that content. Provide your model ID (<code class="language-plaintext highlighter-rouge">hqRWMaEB62QuBhwmJD7e</code>) and a search term. Say, <code class="language-plaintext highlighter-rouge">Coda</code> appears in the third document we indexed. Exclude <code class="language-plaintext highlighter-rouge">passage_embedding</code> to avoid full text-searching the embeddings themselves.</p>
 
 <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">GET /my-nlp-index/_search
 {
@@ -517,7 +517,7 @@ PUT /my-nlp-index/_doc/3
 
 <p>The score (0.4139904) is relative. The absolute value doesn't significantly matter. You want <code class="language-plaintext highlighter-rouge">k</code> top results first and maybe massage that set from another aspect to re-rank or pick based on some hybrid evaluation approach. You could get <code class="language-plaintext highlighter-rouge">k=N</code> for top N, but drop results below a certain limit, etc.</p>
 
-<p><code class="language-plaintext highlighter-rouge">Coda</code> is trivial as the word could be easily found using lexical search. Try <code class="language-plaintext highlighter-rouge">files</code> or <code class="language-plaintext highlighter-rouge">university</code>, for example. I got the same document returned, which confirms my vector search is working.</p>
+<p><code class="language-plaintext highlighter-rouge">Coda</code> is trivial as the word could be easily found using lexical search. Try <code class="language-plaintext highlighter-rouge">files</code> or <code class="language-plaintext highlighter-rouge">university</code>, for example. I got the same document returned as expected.</p>
 
 <p>At the end, let's take a look at that auto-index:</p>
 
@@ -684,6 +684,16 @@ PUT /my-nlp-index/_doc/3
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
+<p>With this "dual" setup, we'd have one index for vectors, another for plain StorageGRID search integration:</p>
+
+<p><img src="/assets/images/instaclustr-opensearch-embeddings-00-indexes.png" alt="Discovery view" /></p>
+
+<p>A nicer view of what's in the index with embeddings:</p>
+
+<p><img src="/assets/images/instaclustr-opensearch-embeddings-01-embeddings-index.png" alt="Embeddings index" /></p>
+
+<p>Obviously, we'd want more KVs (bucket, key, etc.) to be able to identify the document from which these came from, but that's simply a consequence of what fields we include when creating entries. So, the challenge is on the source side (getting these values from StorageGRID).</p>
+
 <h2 id="other-approaches">Other approaches</h2>
 
 <p>You can create embeddings manually on your side, without using OpenSearch for it. OpenSearch would be used only for search - i.e. comparison between stored embeddings with embeddings you send in queries.</p>
@@ -746,6 +756,8 @@ PUT /my-nlp-index/_doc/3
       <a href="/tags/embeddings" class="page__taxonomy-item p-category" rel="tag">embeddings</a><span class="sep">, </span>
     
       <a href="/tags/opensearch" class="page__taxonomy-item p-category" rel="tag">opensearch</a><span class="sep">, </span>
+    
+      <a href="/tags/pipeline" class="page__taxonomy-item p-category" rel="tag">pipeline</a><span class="sep">, </span>
     
       <a href="/tags/s3" class="page__taxonomy-item p-category" rel="tag">s3</a><span class="sep">, </span>
     
@@ -982,7 +994,7 @@ PUT /my-nlp-index/_doc/3
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
-        <a href="/2023/07/20/storagegrid-and-elaticsearches.html" rel="permalink">StorageGRID and Elasticsearches
+        <a href="/2026/09/29/kompromise-storagegrid-search-processing.html" rel="permalink">Kompromise - demo stack with Webhooks, S3 caching and indexing for NetApp StorageGRID
 </a>
       
     </h2>
@@ -994,7 +1006,7 @@ PUT /my-nlp-index/_doc/3
       <span class="page__meta-date">
         <i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i>
         
-        <time datetime="2023-07-20T00:00:00+08:00">2023-07-20 00:00</time>
+        <time datetime="2026-09-29T00:00:00+08:00">2026-09-29 00:00</time>
       </span>
     
 
@@ -1007,14 +1019,14 @@ PUT /my-nlp-index/_doc/3
       <span class="page__meta-readtime">
         <i class="far fa-fw fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          9 minute read
         
       </span>
     
   </p>
 
 
-    <p class="archive__item-excerpt" itemprop="description">Things to know about NetApp StorageGRID and Elasticsearch integrations
+    <p class="archive__item-excerpt" itemprop="description">Personal log documenting the Kompromise journey - final setup
 </p>
   </article>
 </div>
