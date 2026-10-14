@@ -18,15 +18,19 @@ In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/
 - [Verify compatibility](https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-snapshot-verify-repository) - this is so that you don't use an unsupported configuration
 - Snapshot and check
 
-Configure:
+Add BeeGFS mount point to Docker Compose (or edit Elasticsearch configuration YAML for VMbare metal) and restart.
+
+To configure:
 
 ![Configure shared filesystem](/assets/images/elasticsearch-snapshot-shared-filesystem-00-configure.png)
 
-Check the containers to make sure the shared filesystem is mounted and accessible:
+Check the containers to make sure the shared BeeGFS filesystem is mounted and accessible:
 
 ![Docker inspect of BeeGFS](/assets/images/elasticsearch-snapshot-shared-filesystem-01-fs-view.png)
 
-Notice that, in the screenshot above, Elasticsearch Docker Compose is also on BeeGFS. But the images and main volumes are in the usual Docker store. Only the *shared filesystem* path (for snapshots) is on BeeGFS (BeeOND). BeeOND is used because it's easier to set up (I have a nice script, it takes me 30 seconds to stand it up), but normally you'd use the non-BeeOND BeeGFS. Functionally they're the same.
+Notice that, in the screenshot above, Elasticsearch Docker Compose is also on BeeGFS. But the images and main volumes are in the usual Docker store. Only the *shared filesystem* path (for snapshots) is on BeeGFS (BeeOND).
+
+BeeOND is used because it's easier to set up (I have a nice little script that takes 30 seconds to stand it up), but normally you'd use the non-BeeOND BeeGFS. Functionally they're the same.
 
 Verify shared filesystem:
 
@@ -103,15 +107,17 @@ Elasticsearch snapshot dump to disk worked. Over 400 MB was dumped to BeeGFS. Re
 
 ## Conclusion
 
-NetApp doesn't have this BeeGFS solution featured, but the fact that it passes Elasticsearch validation makes it supported by Elasticsearch and ThinkParq.
+NetApp doesn't have this BeeGFS solution featured, but the fact that it passes Elasticsearch 9 validation makes it supported by Elasticsearch and ThinkParq.
 
-With BeeGFS, we can dump Elasticsearch to disk at whatever speed you can get from the storage. With E-Series E4000, that can be 10 GB/s to NL-SAS is possible and more with EF-Series EF50 and EF80 (which also have a NL-SAS-based hybrid option).
+With BeeGFS, we can dump Elasticsearch to disk at whatever speed we get from the storage. With E-Series E4000, that can be 5-10 GB/s to NL-SAS and a lot more with hybrid EF-Series EF50 and EF80 (which have NVMe controller shelf, but can attach NL-SAS expansion shelves).
 
-In fact, with hybrid EF-Series there's no reason to use other storage for Elasticsearch because you can solve Hot Tier in the same array(s). You can move [Elasticsearch to Kubernetes](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html) (or keep it on bare metal or in VMs), you can dump snapshots to a shared filesystem on NL-SAS, and you can get [best NVMe performance possible from a NetApp disk array](/2023/02/25/elasticsearch-eseries-performance.html) (see about [the EF80 here](/2026/03/21/netapp-ef-series-ef80-ef50.html)).
+In fact, with hybrid EF-Series used for snapshots there's little reason to use other storage for Elasticsearch because you can solve Hot Tier in the same array(s). You can move [Elasticsearch to Kubernetes](/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html) (or keep it on bare metal or in VMs), you can dump snapshots to a shared filesystem on NL-SAS, and you can get [best NVMe performance possible from a NetApp disk array](/2023/02/25/elasticsearch-eseries-performance.html) (see about [the EF80 here](/2026/03/21/netapp-ef-series-ef80-ef50.html)).
 
 BeeGFS can run [out of VMs](/2020/12/31/beegfs-on-netapp-hci-and-ef-series.html) and for large Elasticsearch clusters you could put BeeGFS into own cluster and run Elasticsearch in Kubernetes (use BeeGFS CSI to mount shared filesystem). If you have dozens of Elasticsearch nodes and need to dump data at tens of GB/s...
 
 BeeGFS 8 has [RST](/2026/08/02/eke-update.html), a feature that syncs BeeGFS files to/from S3. RST lets you ship ("push") BeeGFS contents to S3 (e.g. some public cloud with ILM set up to move it to a low cost tier). Even if BeeGFS gets destroyed, snapshot data can be recovered from another BeeGFS cluster, or even [accessed directly](/2026/08/07/simple-access-to-beegfs-rst-data.html) from authorized S3 clients.
+
+With this approach, while your snapshot dumps still use a shared POSIX filesystem, at least everything is modern. If you decide to tap out and get with the program (S3), the same E-Series storage arrays can be consumed from StorageGRID SDS VMs without investment in new hardware (you'd get a performance penalty because of increased redundancies in S3, but mostly eliminate the need to make a copy in public cloud).
 
 ## Appendix A: API response (snapshot)
 
