@@ -10,7 +10,7 @@ scaleoutSean is I create solutions.
 
 ## Posts
 
-### Custom workflow for Instaclustr OpenSearch with StorageGRID using Kompromise
+### Custom workflow for Instaclustr OpenSearch for StorageGRID using Kompromise
 
 URL: https://blog.scaleoutsean.com/2026/10/14/kompromise-instaclustr-opensearch-workflow.html
 Date: 2026-10-14
@@ -30,7 +30,7 @@ I figure my chances of getting something useful done would be above zero only wi
 
 ## Workflow on Instaclustr OpenSearch
 
-We create 
+We create a pipeline for Kompromise using the model we registered (see Part 1). Make sure you use the model you want, not just because there's one that was registered.
 
 ```json
 PUT /_ingest/pipeline/kompromise-text-embedding
@@ -126,7 +126,7 @@ Response:
 }
 ```
 
-I still managed to make a mistake: passage_embedding > dimension is 768, but I recycled yesterday's CPU-saving model with only 384 dimensions. Which means it's all ready - to not work.
+I still managed to make a mistake: `passage_embedding`'s dimension count is 768, but I recycled yesterday's CPU-saving model with only 384 dimensions. Which means it's ready - to not work!
 
 Create a test index:
 
@@ -155,7 +155,7 @@ POST /_ingest/pipeline/kompromise-text-embedding/_simulate
 }
 ```
 
-Response:
+Response (`passage_embedding` has 384 dimensions, so I'm cooked):
 
 ```json
 {
@@ -167,7 +167,8 @@ Response:
         "_source": {
           "passage_embedding": [
             0.05434283,
-           0.025497774,
+            0.025497774,
+            ...
             -0.03705213
           ],
           "passage": "A short test sentence."
@@ -211,11 +212,31 @@ Response:
 }
 ```
 
+If we check the UI (see Part 1) or query the model (or [look it up](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)), we'll see it's game over as far as 768-dims are concerned.
+
+```json
+{
+  "name": "huggingface/sentence-transformers/all-MiniLM-L6-v2",
+  "model_group_id": "1sVSMaEBxbvMjUqWqPfr",
+  "algorithm": "TEXT_EMBEDDING",
+  "model_version": "3",
+  "model_format": "TORCH_SCRIPT",
+  "model_state": "DEPLOYED",
+  "model_content_size_in_bytes": 91789778,
+  "model_content_hash_value": "25e2858993cd477936f24e412a508b005aa6b59a308301cc69690e4b90cab439",
+  "model_config": {
+    "model_type": "bert",
+    "embedding_dimension": 384,
+...
+  }
+}
+```
+
 Assuming 768 dimensions is what I want, I should deploy a 768-dim model and recreate the index template and indexes. Ouch! At least they're not populated with TBs of data and don't have applications that depend on them.
 
 ## Workflow on StorageGRID
 
-It's not just StorageGRID, it's also Kompromise, but you get the idea:
+It's not just StorageGRID, it's also Kompromise (and maybe NATS/Kafka), but you get the idea:
 
 - StorageGRID: grid admin needs to enable Platform Services and Tenant Admin needs to create an endpoint, enable bucket versioning and bucket notifications for the source bucket
 - Stand-up Kompromise Lite (for example; that's a simple version that uses a local or Instacluster Kafka)
@@ -263,9 +284,17 @@ python consumer.py ... \
   --model nomic-embed-text
 ```
 
-Like in the recent post for Elasticsearch, the end result is we get Kompromise indexes *with embeddings* if we choose so (local-generated or Opensearch-generated).
+Like in the recent post for Elasticsearch, the end result is we get Kompromise indexes *with embeddings* if we choose so (local- or OpenSearch-generated).
 
 ![Kompromise index with embeddings](/assets/images/https://blog.scaleoutsean.com/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
+
+### Multi-modal embeddings
+
+I glossed over *what* is being vectorized. The assumption is "text", but if you start with videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
+
+That part is separate from either Kompromise or OpenSearch, though. [Chunking](/2026/10/03/kompromise-elasticsearch-storagegrid-search#search-results) of text is covered in a recent post, and [this walk-through](/2026/09/29/kompromise-storagegrid-search-processing#walk-through) shows how Kompromise can be used to prefetch videos and perform I/O-intensive processing out of box.
+
+Some AI models can be used to create embeddings for both text and non-text data. The trade-off is separate models may be better, but maybe you want one model rather than two, so that's up to you.
 
 ## What about SGII?
 
@@ -552,7 +581,7 @@ Date: 2026-10-13
 This is a multi-part post:
 
 - **PART 1 (this post):** Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch
-- Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP)
+- Part 2: [Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP)](/2026/10/14/kompromise-instaclustr-opensearch-workflow.html)
 
 ## Introduction
 

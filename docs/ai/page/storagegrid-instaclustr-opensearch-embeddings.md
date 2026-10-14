@@ -5,7 +5,7 @@ This post describes how to use Instaclustr OpenSearch for vector search on Stora
 This is a multi-part post:
 
 - **PART 1 (this post):** Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch
-- Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP)
+- Part 2: [Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP)](/2026/10/14/kompromise-instaclustr-opensearch-workflow.html)
 
 ## Introduction
 
