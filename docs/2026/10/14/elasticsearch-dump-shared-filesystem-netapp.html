@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html"},"headline":"Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem","description":"Dump Elasticsearch 9 snapshots to NetApp BeeGFS with E-Series","datePublished":"2026-10-14T00:00:00+08:00","dateModified":"2026-10-14T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/elasticsearch-snapshot-shared-filesystem-01-fs-view.png","keywords":["analytics","snapshot","e-series","elasticsearch","elk","ilm","beegfs","storagegrid"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"}],"wordCount":1530,"articleBody":"Dump Elasticsearch 9 snapshots to NetApp BeeGFS with E-Series"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html"},"headline":"Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem","description":"Dump Elasticsearch 9 snapshots to NetApp BeeGFS with E-Series","datePublished":"2026-10-14T00:00:00+08:00","dateModified":"2026-10-14T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/elasticsearch-snapshot-shared-filesystem-01-fs-view.png","keywords":["analytics","snapshot","e-series","elasticsearch","elk","ilm","beegfs","storagegrid"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"}],"wordCount":1555,"articleBody":"Dump Elasticsearch 9 snapshots to NetApp BeeGFS with E-Series"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          4 minute read
+          5 minute read
         
       </span>
     
@@ -245,7 +245,7 @@
 
 <p>Some users of on-premises Elasticsearch prefer to use a shared filesystem. Maybe they think the cost is lower (it's likely not), or don't want to have on-premises S3 (that's fine, but <a href="/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html">there's no other place big data should go</a> and by delaying they just increase technical debt in their infrastructure).</p>
 
-<p>Do you think Elasticsearch serverless or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html">Splunk SmartStore</a> does on-premises and in the cloud?</p>
+<p>Do you think Elasticsearch serverless (in <a href="https://www.elastic.co/cloud">Elastic Cloud</a>) or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that <a href="/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html">Splunk SmartStore</a> does on-premises and in the cloud?</p>
 
 <p>In 2023, I blogged about taking <a href="/2023/11/30/elasticsearch-ilm-netapp-eseries.html">Elasticsearch 8snapshots to StorageGRID</a>. This post is for the POSIX hold-outs: Elasticsearch 9 supports taking <a href="https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository#filesystem-repository-settings">snapshots to a shared POSIX filesystem</a>, so here's how I'd do it if I had to use a shared POSIX filesystem.</p>
 
@@ -257,25 +257,25 @@
   <li>Snapshot and check</li>
 </ul>
 
-<p>Add BeeGFS mount point to Docker Compose (or edit Elasticsearch configuration YAML for VMbare metal) and restart.</p>
+<p>Add a path on BeeGFS to Docker Compose mounts (or edit Elasticsearch configuration YAML for VMbare metal) on all nodes, and perform a rolling restart of Elasticsearch.</p>
 
 <p>To configure:</p>
 
-<p><img src="/assets/images/elasticsearch-snapshot-shared-filesystem-00-configure.png" alt="Configure shared filesystem" /></p>
+<p><img src="/assets/images/elasticsearch-snapshot-shared-filesystem-00-configure.png" alt="Configure shared POSIX filesystem" /></p>
 
 <p>Check the containers to make sure the shared BeeGFS filesystem is mounted and accessible:</p>
 
 <p><img src="/assets/images/elasticsearch-snapshot-shared-filesystem-01-fs-view.png" alt="Docker inspect of BeeGFS" /></p>
 
-<p>Notice that, in the screenshot above, Elasticsearch Docker Compose is also on BeeGFS. But the images and main volumes are in the usual Docker store. Only the <em>shared filesystem</em> path (for snapshots) is on BeeGFS (BeeOND).</p>
+<p>Notice that, in the screenshot above, Elasticsearch Docker Compose is also on BeeGFS. But the images and main volumes are in the usual Docker store. Only the <em>shared filesystem</em> path (for snapshots) is on BeeGFS (BeeOND). You shouldn't have Hot tier on BeeGFS.</p>
 
-<p>BeeOND is used because it's easier to set up (I have a nice little script that takes 30 seconds to stand it up), but normally you'd use the non-BeeOND BeeGFS. Functionally they're the same.</p>
+<p>BeeOND is used because it's easier to set up (I have a nice little script that takes 30 seconds to stand it up), but normally you'd use the non-BeeOND BeeGFS. Functionally, they're the same.</p>
 
 <p>Verify shared filesystem:</p>
 
 <p><img src="/assets/images/elasticsearch-snapshot-shared-filesystem-02-shared-fs-verify.png" alt="Verify shared filesystem" /></p>
 
-<p>Configure with <code class="language-plaintext highlighter-rouge">_snapshot/&lt;target&gt;</code>:</p>
+<p>Configure step with <code class="language-plaintext highlighter-rouge">_snapshot/&lt;target&gt;</code>:</p>
 
 <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">PUT _snapshot/beegfs
 {
@@ -293,7 +293,7 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Verify <code class="language-plaintext highlighter-rouge">/_snapshot/&lt;target&gt;/_verify</code>:</p>
+<p>Verify step with <code class="language-plaintext highlighter-rouge">/_snapshot/&lt;target&gt;/_verify</code>:</p>
 
 <div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">POST /_snapshot/beegfs/_verify
 </span></code></pre></div></div>
@@ -562,7 +562,7 @@
       <a href="/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html" class="pagination--pager" title="Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch">Previous</a>
     
     
-      <a href="#" class="pagination--pager disabled">Next</a>
+      <a href="/2026/10/14/instaclustr-opensearch-snapshot-to-storagegrid.html" class="pagination--pager" title="Snapshot Instaclustr OpenSearch to StorageGRID">Next</a>
     
   </nav>
 
