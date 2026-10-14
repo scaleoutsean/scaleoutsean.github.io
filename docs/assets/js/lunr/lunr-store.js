@@ -2801,6 +2801,12 @@ var store = [{
         "url": "/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html",
         "teaser": null
       },{
+        "title": "Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem",
+        "excerpt":"Introduction In my opinion, S3 is the only valid choice for Elasticsearch snapshot destination. Some users of on-premises Elasticsearch prefer to use a shared filesystem. Maybe they think the cost is lower (it’s likely not), or don’t want to have on-premises S3 (that’s fine, but there’s no other place big...","categories": ["storage","analytics"],
+        "tags": ["analytics","snapshot","e-series","elasticsearch","elk","ilm","beegfs","storagegrid"],
+        "url": "/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2814,7 +2820,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch 2026-10-13 00:00 9 minute read We walk through setup and generating embeddings for AI and search Kompromise, SGII, StorageGRID and Instaclustr OpenSearch 2026-10-08 00:00 12 minute read We could always send notifications to the cloud, but now there’s SGII which helps us...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem 2026-10-14 00:00 4 minute read If you won’t use S3 and want to keep using POSIX, try the other other shared filesystem Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch 2026-10-13 00:00 9 minute read We walk through setup and generating embeddings...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
