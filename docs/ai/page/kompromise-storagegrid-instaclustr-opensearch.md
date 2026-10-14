@@ -156,7 +156,7 @@ We're also curious if any objects were overwritten or deleted. We can use this d
 We take an incremental snapshot.
 
 ```sh
-./bin/sgi snap \
+$ ./bin/sgi snap \
   --type incremental \
   --source sgi-source \
   --db-bucket sgi \
@@ -188,7 +188,7 @@ $ mc ls pepsi/sgi/scans/7b39cf70-c15f-4154-a293-6813ccddf8e7/20261008T142545.741
 To find out what happened between the most recent and one before it (baseline):
 
 ```sh
- ./bin/sgi report \
+$ ./bin/sgi report \
   --manifest s3://sgi/scans/7b39cf70-c15f-4154-a293-6813ccddf8e7/20261008T144909.108513215Z/manifest.json \
   --env-file kompromise-cosi-snapshots/.env
 ```

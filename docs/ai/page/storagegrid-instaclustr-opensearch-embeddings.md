@@ -115,6 +115,10 @@ Check if okay:
 }
 ```
 
+You may find your registered model in *Machine Learning* > *Overview*. If you check the details, you'll see which nodes it's running and responding on.
+
+![Embeddings model in OpenSearch](/assets/images/instaclustr-opensearch-embeddings-02-embeddings-model.png)
+
 We're supposedly "ready" now. Let's give it a try!
 
 ```http
