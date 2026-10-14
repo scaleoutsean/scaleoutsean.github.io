@@ -9,7 +9,7 @@ This is a multi-part post:
 
 ## Introduction
 
-You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases. To do that, you need an index of embeddings for your data.
+You have, or plan to buy, StorageGRID and do something more with it - such as some "AI stuff". To do that, you need an index with embeddings for your S3 bucket data used by AI.
 
 You can offload some of that work by using [managed OpenSearch by Instaclustr](https://www.instaclustr.com/platform/managed-opensearch/). It takes 15 minutes to start, after which you have a properly configured OpenSearch with TLS access.
 

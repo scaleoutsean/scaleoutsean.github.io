@@ -2796,7 +2796,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch",
-        "excerpt":"This is a multi-part post: PART 1 (this post): Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP) Introduction You have, or plan to buy, StorageGRID and do something more with it - such as some AI use cases....","categories": ["storage","s3","ai","analytics","projects","instaclustr"],
+        "excerpt":"This is a multi-part post: PART 1 (this post): Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch Part 2: Custom manual Kompromise pipeline for StorageGRID and Instaclustr OpenSearch (WIP) Introduction You have, or plan to buy, StorageGRID and do something more with it - such as some “AI stuff”. To...","categories": ["storage","s3","ai","analytics","projects","instaclustr"],
         "tags": ["s3","storagegrid","opensearch","embeddings","vectors","pipeline"],
         "url": "/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html",
         "teaser": null
@@ -2807,7 +2807,7 @@ var store = [{
         "url": "/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html",
         "teaser": null
       },{
-        "title": "Custom workflow for Instaclustr OpenSearch for StorageGRID using Kompromise",
+        "title": "Custom embeddings for StorageGRID with Instaclustr OpenSearch based on Kompromise",
         "excerpt":"PART 1: Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch Part 2 (this post): Custom Kompromise pipeline for StorageGRID and Instaclustr OpenSearch Introduction In Part 1 we saw how Instaclustr OpenSearch can easily and quickly create embeddings in an automated way. We also realized that, to integrate StorageGRID with this...","categories": ["storage","s3","analytics","instaclustr","ai"],
         "tags": ["s3","storagegrid","opensearch","kompromise"],
         "url": "/2026/10/14/kompromise-instaclustr-opensearch-workflow.html",
@@ -2826,7 +2826,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Custom workflow for Instaclustr OpenSearch for StorageGRID using Kompromise 2026-10-14 00:00 8 minute read How to connect StorageGRID with Instaclustr OpenSearch to create seamless AI pipeline for almost free Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem 2026-10-14 00:00 5 minute read If you won’t use S3 and want to...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Custom embeddings for StorageGRID with Instaclustr OpenSearch based on Kompromise 2026-10-14 00:00 9 minute read How to connect StorageGRID with Instaclustr OpenSearch to create seamless AI pipeline for almost free Dump Elasticsearch 9.5 snapshots to shared NetApp filesystem 2026-10-14 00:00 5 minute read If you won’t use S3 and want...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

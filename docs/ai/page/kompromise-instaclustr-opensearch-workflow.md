@@ -1,6 +1,6 @@
-# Custom workflow for Instaclustr OpenSearch for StorageGRID using Kompromise
+# Custom embeddings for StorageGRID with Instaclustr OpenSearch based on Kompromise
 
-Kompromise-based hybrid cloud AI pipeline for StorageGRID and Instaclustr OpenSearch
+Kompromise- and OpenSearch-based hybrid cloud AI pipeline for StorageGRID and Instaclustr OpenSearch
 
 - PART 1: [Auto-generate vector embeddings for StorageGRID using Instaclustr OpenSearch](/2026/10/13/storagegrid-instaclustr-opensearch-embeddings.html)
 - **Part 2  (this post):** Custom Kompromise pipeline for StorageGRID and Instaclustr OpenSearch
@@ -199,7 +199,7 @@ Response:
 }
 ```
 
-If we check the UI (see Part 1) or query the model (or [look it up](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)), we'll see it's game over as far as 768-dims are concerned.
+If we check the UI (see Part 1) or query the model (or [look it up on HF](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)), we'll see it's game over as far as getting 768-dims is concerned.
 
 ```json
 {
@@ -271,17 +271,23 @@ python consumer.py ... \
   --model nomic-embed-text
 ```
 
-Like in the recent post for Elasticsearch, the end result is we get Kompromise indexes *with embeddings* if we choose so (local- or OpenSearch-generated).
+Like in the recent post for Elasticsearch (screenshot below), the end result is we get Kompromise indexes *with embeddings* if we choose so (local- or OpenSearch-generated):
+- We're expected to have the same index layout (with `passage` instead of `text`, and with `passage_embeddings` instead of `embeddings`)
+- Chunking (step marked with `2`) has to be done for content longer than few hundred bytes, which makes each S3 object end up with a bunch of small entries (unavoidable, since we want to find the precise chunk, not just the S3 document URI)
 
 ![Kompromise index with embeddings](/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
+
+Save for the field names OpenSearch entries aren't expected to be different - that's the main point of having a recipe with conventions and defaults, being able to avoid reinventing these basics for every AI use case.
 
 ### Multi-modal embeddings
 
 I glossed over *what* is being vectorized. The assumption is "text", but if you start with videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
 
-That part is separate from either Kompromise or OpenSearch, though. [Chunking](/2026/10/03/kompromise-elasticsearch-storagegrid-search#search-results) of text is covered in a recent post, and [this walk-through](/2026/09/29/kompromise-storagegrid-search-processing#walk-through) shows how Kompromise can be used to prefetch videos and perform I/O-intensive processing out of box.
+That part is separate from either Kompromise or OpenSearch, though.
 
 Some AI models can be used to create embeddings for both text and non-text data. The trade-off is separate models may be better, but maybe you want one model rather than two, so that's up to you.
+
+[Chunking](/2026/10/03/kompromise-elasticsearch-storagegrid-search#search-results) of text is covered in a recent post, and [this walk-through](/2026/09/29/kompromise-storagegrid-search-processing#walk-through) shows how Kompromise can be used to prefetch videos or other large files and perform I/O-intensive processing out of box.
 
 ## What about SGII?
 
