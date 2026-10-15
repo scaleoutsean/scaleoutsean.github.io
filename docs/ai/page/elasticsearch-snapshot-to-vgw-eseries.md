@@ -25,6 +25,25 @@ I set some limits in order to not overwhelm the server, although that wasn't nec
 
 ![S3 repository details](/assets/images/elasticsearch-snapshot-vgw-01-repositories.png)
 
+Versity can go a lot faster. This was my initial setup, which I'd gradually increase to find the highest reliable speed.
+
+```json
+{
+  "vgw": {
+    "type": "s3",
+    "uuid": "rkVCe2MGSj6f_tP8mXI_qA",
+    "settings": {
+      "bucket": "elastic",
+      "client": "elastic",
+      "canned_acl": "public-read-write",
+      "chunk_size": "10mb",
+      "buffer_size": "5mb",
+      "max_snapshot_bytes_per_sec": "20mb"
+    }
+  }
+}
+```
+
 A snapshot was taken without issues:
 
 ![Snapshot to Versity S3 Gateway](/assets/images/elasticsearch-snapshot-vgw-02-bucket.png)
@@ -66,3 +85,5 @@ Note that VGW *can* scale-out on BeeGFS (it's stateless), but that's a separate 
 The demo shows ES and VGW, both snapshot and restore (I didn't try to restore BeeGFS, assuming it'd work).
 
 - [Elasticsearch 9 snapshots with Versity S3 Gateway 1.9.0 and NetApp EF-Series 12.1](https://rumble.com/v7gw0z2-elasticsearch-9.5-s3-snapshot-to-versity-s3-gateway-with-netapp-e-series.html) - 3m35s
+
+The demo shows both the early and final VGW settings in Dev Console. The JSON file above is the final version used to snapshot/restore.
