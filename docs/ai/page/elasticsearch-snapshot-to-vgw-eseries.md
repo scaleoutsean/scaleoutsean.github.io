@@ -4,7 +4,7 @@ Dump Elasticsearch 9 snapshots to Versity S3 Gateway with NetApp E-Series
 
 ## Introduction
 
-Barely a day after I discovered BeeGFS can serve as shared POSIX target for Elasticsearch 9 snapshots, Versity v1.9.0 came out.
+Barely a day after I discovered BeeGFS can serve as [shared POSIX target for Elasticsearch 9 snapshots](/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html), Versity v1.9.0 came out.
 
 I had that Elasticsearch still running, so...
 
@@ -46,7 +46,7 @@ You *could* even "scale out":
 | 3    | 09, 10, 11, 12 | DG1, DG2, DG3, DG4 |
 | 4    | 13, 14, 15, 16 | DG1, DG2, DG3, DG4 |
 
-In other words, MD RAID 0 across 2 or 4 RAID 6 LUNs. Then create 4 S3 repos in Elasticsearch. Downsides: you have to allocate and balance who uses which, and resize/grow a software RAID. But if you have "just" 200-300 hundred TB, you probably don't have a lot of them anyway. If you have just 1 huge index, you'd probably want to use one VGW for it and maybe a separate small VGW instance/disk for "system" type snapshots.
+In other words, MD RAID 0 across 2 or 4 RAID 6 LUNs. Then create 4 S3 repos in Elasticsearch. Downsides: you have to allocate and balance who uses which, and resize/grow a software RAID. But if you have "just" 200-300 TB, you probably don't have a lot of them anyway. If you have just one super-large index, you'd probably want to use one VGW instance for it and maybe a separate small VGW instance/disk for "system" type snapshots.
 
 Note that VGW *can* scale-out on BeeGFS (it's stateless), but that's a separate matter. If you have BeeGFS, it's probably better to [snapshot to BeeGFS](/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html) rather than play games with the hyper-sensitive Elasticsearch 9... 
 
