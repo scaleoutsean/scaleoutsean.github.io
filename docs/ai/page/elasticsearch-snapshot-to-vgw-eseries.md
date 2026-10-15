@@ -6,7 +6,7 @@ Dump Elasticsearch 9 snapshots to Versity S3 Gateway with NetApp E-Series
 
 Barely a day after I discovered BeeGFS can serve as [shared POSIX target for Elasticsearch 9 snapshots](/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html), Versity v1.9.0 came out.
 
-I had that Elasticsearch still running, so...
+I had Elasticsearch 9 still running, so...
 
 ## Workflow
 
@@ -29,7 +29,18 @@ A snapshot was taken without issues:
 
 ![Snapshot to Versity S3 Gateway](/assets/images/elasticsearch-snapshot-vgw-02-bucket.png)
 
-I also tested restore. I dumped the index (see Appendix A) and restored it. No issues.
+Filesystem showed around 400MB.
+
+![VGW filesystem view](/assets/images/elasticsearch-snapshot-vgw-03-vgw-filesystem.png)
+
+For a comparison, yesterday's snapshot (2, actually, but the second was tiny) plus some ES stack config files, to BeeGFS:
+
+```sh
+$ du -sh /mnt/beeond/elasticsearch/elastic-start-local/
+434M    /mnt/beeond/elasticsearch/elastic-start-local/
+```
+
+I also tested restore from that Versity S3 Gateway snapshot. I deleted the index (see Appendix A) and restored it. No issues and *very* quick!
 
 ## Conclusion
 

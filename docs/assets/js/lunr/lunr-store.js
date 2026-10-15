@@ -2814,7 +2814,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Elasticsearch 9.5 snapshots with Versity S3 and E-Series",
-        "excerpt":"Introduction Barely a day after I discovered BeeGFS can serve as shared POSIX target for Elasticsearch 9 snapshots, Versity v1.9.0 came out. I had that Elasticsearch still running, so… Workflow You don’t have to do anything special. My setup was: Bare metal server with Versity Gateway v1.9.0 (you can also...","categories": ["storage","analytics"],
+        "excerpt":"Introduction Barely a day after I discovered BeeGFS can serve as shared POSIX target for Elasticsearch 9 snapshots, Versity v1.9.0 came out. I had Elasticsearch 9 still running, so… Workflow You don’t have to do anything special. My setup was: Bare metal server with Versity Gateway v1.9.0 (you can also...","categories": ["storage","analytics"],
         "tags": ["snapshot","e-series","elasticsearch","elk","ilm","versity","vgw"],
         "url": "/2026/10/15/elasticsearch-snapshot-to-vgw-eseries.html",
         "teaser": null
