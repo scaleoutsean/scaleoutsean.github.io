@@ -35,6 +35,7 @@ Most of them are permissive OSS, but since 2026 I invest less in source code mai
 | [Longhorny](https://github.com/scaleoutsean/longhorny) | CLI tool for SolidFire replication management (Python) |
 | [OpenSharing Server](https://github.com/scaleoutsean/opensharing-server) | OpenSharing Server for NetApp StorageGRID and E-Series (with Versity S3 Gateway, incl. S3/RDMA). Binaries only. |
 | [PQCC](/2025/10/10/post-quantum-crypto-proxy-for-solidfire-eseries-api.html) | PQ HTTPS proxy for SolidFire and SANtricity API (NGINX, Vault, FastAPI, SIEM, metrics) - (source code available by request) |
+| [S2S3](https://github.com/scaleoutsean/s2s3) | Share-to-S3 (S2S3) - NFSv3 share inventory generation and migration to S3 (NetApp StorageGRID, Versity S3 Gateway with E-Series) (Go) |
 | [santricity-client](https://github.com/scaleoutsean/santricity-client) | Slim client library and CLI for Day 1+ automation of NetApp E-Series (Python) |
 | [santricity-go](https://github.com/scaleoutsean/santricity-go) | Client library, CLI for Day 1+ automation (Go); SANtricity LVM plug-in for Proxmox, Kubernetes CSI driver, Terraform Provider |
 | [santricity-powershell](https://github.com/scaleoutsean/santricity-powershell) | Slim client module for for Day 1+ automation of NetApp E-Series (PowerShell) and SANmox (SANtricity-Proxmox VE 9 TUI) |
