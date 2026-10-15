@@ -277,11 +277,11 @@ Like in the recent post for Elasticsearch (screenshot below), the end result is 
 
 ![Kompromise index with embeddings](/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
 
-Save for the field names OpenSearch entries aren't expected to be different - that's the main point of having a recipe with conventions and defaults, being able to avoid reinventing these basics for every AI use case.
+Save for the two field names, OpenSearch entries *aren't expected to be different* - that's the main point of having a recipe with conventions and sane defaults: being able to avoid making the same decisions for every routine AI use case.
 
 ### Multi-modal embeddings
 
-I glossed over *what* is being vectorized. The assumption is "text", but if you start with videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
+I glossed over *what* is being vectorized. The assumption is "documents with up to 200 bytes of text", but if you have videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
 
 That part is separate from either Kompromise or OpenSearch, though.
 

@@ -10,6 +10,67 @@ scaleoutSean is I create solutions.
 
 ## Posts
 
+### Elasticsearch 9.5 snapshots with Versity S3 and E-Series
+
+URL: https://blog.scaleoutsean.com/2026/10/15/elasticsearch-snapshot-to-vgw-eseries.html
+Date: 2026-10-15
+
+## Introduction
+
+Barely a day after I discovered BeeGFS can serve as shared POSIX target for Elasticsearch 9 snapshots, Versity v1.9.0 came out.
+
+I had that Elasticsearch still running, so...
+
+## Workflow
+
+You don't have to do anything special.
+
+My setup was:
+- Bare metal server with Versity Gateway v1.9.0 (you can also use Docker, Kubernetes, VMs - see my blog for all of these examples)
+- E-Series block storage (of course, any will do, but I know I get a few GB/s this way)
+- Elasticsearch 9.5.5
+
+I used HTTP because I didn't want to waste time on setting up TLS. A bucket was created for ES and after configuring the credentials and so on, I created another repository (S3, this time) for Elasticsearch snapshots and validation passed.
+
+![S3 repository test](/assets/images/elasticsearch-snapshot-vgw-00-pass.png)
+
+I set some limits in order to not overwhelm the server, although that wasn't necessary (I knew from the BeeGFS tests total backup size was going to be no more than 0.5 GB).
+
+![S3 repository details](/assets/images/elasticsearch-snapshot-vgw-01-repositories.png)
+
+A snapshot was taken without issues:
+
+![Snapshot to Versity S3 Gateway](/assets/images/elasticsearch-snapshot-vgw-02-bucket.png)
+
+I also tested restore. I dumped the index (see Appendix A) and restored it. No issues.
+
+## Conclusion
+
+I tested just one Elasticsearch node, but since S3 repository validation passed, I assume it would work the same way with several. 
+
+Obviously, you can't get nowhere near the BeeGFS performance using a single-host S3 gateway, but this seems good for small clusters up to 300-500 TB. I [know](/2026/08/17/versity-sequential-s3-put-test.html) 3 GB/s is possible, so 300 TB would land in 1.15 days - not even a full weekend. And it costs $0, although commercial users should consider buying support from Versity.
+
+You *could* even "scale out":
+
+| VGW Instance | E/EF Volume | E/EF R6 Disk Group |
+| ---- | ---- | ---- |
+| 1    | 01, 02, 03, 04 | DG1, DG2, DG3, DG4 |
+| 2    | 05, 06, 07, 08 | DG1, DG2, DG3, DG4 |
+| 3    | 09, 10, 11, 12 | DG1, DG2, DG3, DG4 |
+| 4    | 13, 14, 15, 16 | DG1, DG2, DG3, DG4 |
+
+In other words, MD RAID 0 across 2 or 4 RAID 6 LUNs. Then create 4 S3 repos in Elasticsearch. Downsides: you have to allocate and balance who uses which, and resize/grow a software RAID. But if you have "just" 200-300 hundred TB, you probably don't have a lot of them anyway. If you have just 1 huge index, you'd probably want to use one VGW for it and maybe a separate small VGW instance/disk for "system" type snapshots.
+
+Note that VGW *can* scale-out on BeeGFS (it's stateless), but that's a separate matter. If you have BeeGFS, it's probably better to [snapshot to BeeGFS](/2026/10/14/elasticsearch-dump-shared-filesystem-netapp.html) rather than play games with the hyper-sensitive Elasticsearch 9... 
+
+## Appendix A: Video demo
+
+The demo shows ES and VGW, both snapshot and restore (I didn't try to restore BeeGFS, assuming it'd work).
+
+- [Elasticsearch 9 snapshots with Versity S3 Gateway 1.9.0 and NetApp EF-Series 12.1](https://rumble.com/v7gw0z2-elasticsearch-9.5-s3-snapshot-to-versity-s3-gateway-with-netapp-e-series.html) - 3m35s
+
+---
+
 ### Custom embeddings for StorageGRID with Instaclustr OpenSearch based on Kompromise
 
 URL: https://blog.scaleoutsean.com/2026/10/14/kompromise-instaclustr-opensearch-workflow.html
@@ -290,11 +351,11 @@ Like in the recent post for Elasticsearch (screenshot below), the end result is 
 
 ![Kompromise index with embeddings](/assets/images/kompromise-storagegrid-search-indexing-02-elasticsearch-9-vectors.png)
 
-Save for the field names OpenSearch entries aren't expected to be different - that's the main point of having a recipe with conventions and defaults, being able to avoid reinventing these basics for every AI use case.
+Save for the two field names, OpenSearch entries *aren't expected to be different* - that's the main point of having a recipe with conventions and sane defaults: being able to avoid making the same decisions for every routine AI use case.
 
 ### Multi-modal embeddings
 
-I glossed over *what* is being vectorized. The assumption is "text", but if you start with videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
+I glossed over *what* is being vectorized. The assumption is "documents with up to 200 bytes of text", but if you have videos or PDF files, you'll need additional steps to get from videos to text that describes a scene (or embeddings for each frame).
 
 That part is separate from either Kompromise or OpenSearch, though.
 
@@ -338,9 +399,9 @@ In my opinion, S3 is the only valid choice for Elasticsearch snapshot destinatio
 
 Some users of on-premises Elasticsearch prefer to use a shared filesystem. Maybe they think the cost is lower (it's likely not), or don't want to have on-premises S3 (that's fine, but [there's no other place big data should go](/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html) and by delaying they just increase technical debt in their infrastructure).
 
-Do you think Elasticsearch serverless (in [Elastic Cloud](https://www.elastic.co/cloud)) or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that [Splunk SmartStore](/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html) does on-premises and in the cloud?
+Do you think Elasticsearch serverless (in [Elastic Cloud](https://www.elastic.co/cloud)) or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that [Splunk SmartStore](/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html) has been doing on-premises and in the cloud for over half a decade?
 
-In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/11/30/elasticsearch-ilm-netapp-eseries.html). This post is for the POSIX hold-outs: Elasticsearch 9 supports taking [snapshots to a shared POSIX filesystem](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository#filesystem-repository-settings), so here's how I'd do it if I had to use a shared POSIX filesystem.
+In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/11/30/elasticsearch-ilm-netapp-eseries.html). This post is for POSIX hold-outs: Elasticsearch 9 supports taking [snapshots to a shared POSIX filesystem](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository#filesystem-repository-settings), so here's how I'd do it if I had to use a shared POSIX filesystem.
 
 ## Workflow
 
@@ -348,7 +409,7 @@ In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/
 - [Verify compatibility](https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-snapshot-verify-repository) - this is so that you don't use an unsupported configuration
 - Snapshot and check
 
-Add a path on BeeGFS to Docker Compose mounts (or edit Elasticsearch configuration YAML for VMbare metal) on all nodes, and perform a rolling restart of Elasticsearch.
+Add a path on BeeGFS to Docker Compose mounts (or edit Elasticsearch configuration YAML for VM/bare metal) on all nodes, and perform a rolling restart of Elasticsearch.
 
 To configure:
 
@@ -1723,9 +1784,9 @@ New batch of JSONL is uploaded to `s3://incoming/`.
 
 ![StorageGRID incoming bucket](/assets/images/kompromise-quickwit-storagegrid-04-storagegrid-incoming-bucket.png)
 
-Kompromise kicks off the pipeline, forwards the notification to SQS server queue, and Quickwit polls that server periodically to find out what's new.
+StorageGRID sends an Object Put notification, Kompromise Webhook receives it, that kicks off the pipeline which consists of a worker instructing Quickwit to ingest the object. 
 
-When it sees a new object is ready, it downloads the object and adds to index in `s3://indexes//`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
+Quickwit downloads the object, ingests it and adds it to the specified index in `s3://indexes//`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads index data from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
 
 ![StorageGRID bucket with indexes](/assets/images/kompromise-quickwit-storagegrid-05-storagegrid-indexes-bucket.png)
 

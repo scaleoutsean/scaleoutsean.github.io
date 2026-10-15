@@ -8,9 +8,9 @@ In my opinion, S3 is the only valid choice for Elasticsearch snapshot destinatio
 
 Some users of on-premises Elasticsearch prefer to use a shared filesystem. Maybe they think the cost is lower (it's likely not), or don't want to have on-premises S3 (that's fine, but [there's no other place big data should go](/2026/08/02/data-sharing-problem-myth-onelake-storagegrid.html) and by delaying they just increase technical debt in their infrastructure).
 
-Do you think Elasticsearch serverless (in [Elastic Cloud](https://www.elastic.co/cloud)) or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that [Splunk SmartStore](/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html) does on-premises and in the cloud?
+Do you think Elasticsearch serverless (in [Elastic Cloud](https://www.elastic.co/cloud)) or AWS OpenSearch serverless use shared POSIX storage? Or could they be doing something that [Splunk SmartStore](/2023/11/06/netapp-eseries-sizing-for-splunk-smartstore.html) has been doing on-premises and in the cloud for over half a decade?
 
-In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/11/30/elasticsearch-ilm-netapp-eseries.html). This post is for the POSIX hold-outs: Elasticsearch 9 supports taking [snapshots to a shared POSIX filesystem](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository#filesystem-repository-settings), so here's how I'd do it if I had to use a shared POSIX filesystem.
+In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/11/30/elasticsearch-ilm-netapp-eseries.html). This post is for POSIX hold-outs: Elasticsearch 9 supports taking [snapshots to a shared POSIX filesystem](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/shared-file-system-repository#filesystem-repository-settings), so here's how I'd do it if I had to use a shared POSIX filesystem.
 
 ## Workflow
 
@@ -18,7 +18,7 @@ In 2023, I blogged about taking [Elasticsearch 8snapshots to StorageGRID](/2023/
 - [Verify compatibility](https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-snapshot-verify-repository) - this is so that you don't use an unsupported configuration
 - Snapshot and check
 
-Add a path on BeeGFS to Docker Compose mounts (or edit Elasticsearch configuration YAML for VMbare metal) on all nodes, and perform a rolling restart of Elasticsearch.
+Add a path on BeeGFS to Docker Compose mounts (or edit Elasticsearch configuration YAML for VM/bare metal) on all nodes, and perform a rolling restart of Elasticsearch.
 
 To configure:
 

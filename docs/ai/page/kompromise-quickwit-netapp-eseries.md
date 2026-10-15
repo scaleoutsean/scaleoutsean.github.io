@@ -75,9 +75,9 @@ New batch of JSONL is uploaded to `s3://incoming/<index-name>`.
 
 ![StorageGRID incoming bucket](/assets/images/kompromise-quickwit-storagegrid-04-storagegrid-incoming-bucket.png)
 
-Kompromise kicks off the pipeline, forwards the notification to SQS server queue, and Quickwit polls that server periodically to find out what's new.
+StorageGRID sends an Object Put notification, Kompromise Webhook receives it, that kicks off the pipeline which consists of a worker instructing Quickwit to ingest the object. 
 
-When it sees a new object is ready, it downloads the object and adds to index in `s3://indexes/<index-name>/`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
+Quickwit downloads the object, ingests it and adds it to the specified index in `s3://indexes/<index-name>/`. An additional index file was saved as a new object. (I've mentioned above, there's also a periodic "defrag" that downloads index data from S3, consolidates and writes back to S3, which is where Quickwit local disks get busy so you may want to keep those on EF-Series CSI on RAID 10.)
 
 ![StorageGRID bucket with indexes](/assets/images/kompromise-quickwit-storagegrid-05-storagegrid-indexes-bucket.png)
 
