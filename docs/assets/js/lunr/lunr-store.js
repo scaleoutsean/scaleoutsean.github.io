@@ -2819,6 +2819,12 @@ var store = [{
         "url": "/2026/10/15/elasticsearch-snapshot-to-vgw-eseries.html",
         "teaser": null
       },{
+        "title": "S2S3 - NAS Share to S3 copy utility",
+        "excerpt":"Objective You have a bunch of unstructured data scattered on dozens of NAS shares spread across several NAS clusters and want to put it to good use: Enable it for simple, secure and efficient WAN access over HTTPS from your other sites or public cloud (check out OpenSharing if you...","categories": ["storage","analytics","eseries","netapp","projects"],
+        "tags": ["nas","s3","storagegrid","versity","migration"],
+        "url": "/2026/10/22/s2s3-share-to-s3-tool.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2832,7 +2838,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Elasticsearch 9.5 snapshots with Versity S3 and E-Series 2026-10-15 00:00 2 minute read Few hundred TB and no money for scale-out S3? Not a problem, because VGW! Custom embeddings for StorageGRID with Instaclustr OpenSearch based on Kompromise 2026-10-14 00:00 9 minute read How to connect StorageGRID with Instaclustr OpenSearch to...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"S2S3 - NAS Share to S3 copy utility 2026-10-22 00:00 11 minute read S2S3 - what it is, what it does, how and why Elasticsearch 9.5 snapshots with Versity S3 and E-Series 2026-10-15 00:00 2 minute read Few hundred TB and no money for scale-out S3? Not a problem, because...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4570,6 +4576,12 @@ var store = [{
   },{
     "title": "kompromise",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/kompromise/"
+  },{
+    "title": "nas",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/nas/"
+  },{
+    "title": "migration",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/migration/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
