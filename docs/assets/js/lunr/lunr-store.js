@@ -2821,7 +2821,7 @@ var store = [{
       },{
         "title": "S2S3 - NAS Share to S3 copy utility",
         "excerpt":"Objective You have a bunch of unstructured data scattered on dozens of NAS shares spread across several NAS clusters and want to put it to good use: Enable it for simple, secure and efficient WAN access over HTTPS from your other sites or public cloud (check out OpenSharing if you...","categories": ["storage","analytics","eseries","netapp","projects"],
-        "tags": ["nas","s3","storagegrid","versity","migration"],
+        "tags": ["nas","s3","storagegrid","versity","migration","rclone"],
         "url": "/2026/10/22/s2s3-share-to-s3-tool.html",
         "teaser": null
       },{

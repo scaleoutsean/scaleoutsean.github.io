@@ -1,6 +1,6 @@
 # S2S3 - NAS Share to S3 copy utility
 
-Yet another tool to copy data from NAS shares to S3 easily (and for free)
+Yet another tool to copy data from NAS shares to S3 easily and for free
 
 ## Objective
 
@@ -168,9 +168,9 @@ My first suggestion is: don't use S2S3 if anything else works for you. There's n
 
 Commercial software: most apps for NFS-to-S3 migration work fine with StorageGRID. There are API headers and calls that aren't implemented, but those are documented and relatively less frequently used.
 
-If you're a freeloader, consider Rclone. S2S3 makes use of is as well.
+If you're a hardcore freeloader, consider Rclone. S2S3 makes use of it as well.
 
-Or, if you like Rclone, also take a look at S2S3. Unlike Rclone, which is more "transactional", S2S3 is for one-off or iterative copying for permanent migration: it tries to do not more, but less, than Rclone.
+Or, if you like Rclone, also take a look at S2S3. Unlike Rclone, which is more "transactional", S2S3 is for one-off or iterative copying for the purpose of permanent migration. It tries to do not more, but less, than Rclone.
 
 So, what does S2S3 actually do?
 
