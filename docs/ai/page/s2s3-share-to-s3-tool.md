@@ -185,7 +185,7 @@ $ s2s3 inventory nfs://nas.example/export \
 
 This gives us a list of files in a database I can query from S3S2 or elsewhere. I use that file list to copy with Rclone. After that, I can create another inventory to get another (full) up-to-date list with latest status, and do an *incremental* copy. 
 
-Other commands:
+Other commands from the initial v0.1.0 release:
 - export - exports file names, file paths, etc.
 - diff - diff two inventories, to see what would be copied and delete in next Rclone sync
 - verify - compares NAS and S3 inventory, or physical comparison for final switch-over to S3
