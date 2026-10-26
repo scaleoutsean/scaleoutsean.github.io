@@ -77,8 +77,8 @@ They're already space-efficient and initial implementation is rigid so there's n
 I used my StorageGRID and SGAC converter output to test:
 - Full raw S3 log (audit and access from StorageGRID 12)
 - Two SGAC logs derived from the raw StorageGRID log above:
-  - Audit (`AUDT` entries from S3 API, both management and data)
-  - Access (HTTP logs from StorageGRID 12 Load Balancer)
+  - Audit (`AUDT` entries from StorageGRID's S3 API, both management and data)
+  - Access logs (HTTP logs from StorageGRID 12 Load Balancer)
 
 ```sh
 $ ll /var/log/s3.log 
