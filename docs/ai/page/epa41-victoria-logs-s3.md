@@ -59,9 +59,9 @@ $ victoria-logs \
   ...
 ```
 
-`...` denotes the rest of your configuration options. 
+`...` denotes the rest of your configuration options. I actually used an offload period of `1d` so that I don't have to wait too long (remember that in the initial implementation you can't change this later, so don't try random stuff in production if you use this feature).
 
-What happens once logs partitions are over 30d (in this case) old, VL moves them to Versity Gateway (in this case).
+What happens once partitions have events that are over 30d (in my test case it's 1d) old, VL moves them to Versity S3 Gateway (in this case).
 
 They're already space-efficient and initial implementation is rigid so there's nothing else you need (or can) do. 
 
@@ -172,8 +172,8 @@ $ dstat -tcnd
 ```
 
 It's even better than it looks:
-- Query speeds went up just to 1ms. The reason is mostly VGW is also on NVMe, but the point is overheads are not significant
-- `dstat` output above shows not three, but **six* queries. The first (`26-10 08:41:14` sent 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`)
+- Query speeds went up just to 1ms. The reason is mostly VGW is also on NVMe, but the point is overheads are not significant. If VGW was on NL-SAS, it'd be slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
+- `dstat` output above shows not three, but **six** queries (two sets of 3 queries). The first (`26-10 08:41:14` sent 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`).
 
 VL Hot Tier and S3 cache are up from 8 to 56 MB now:
 
@@ -193,7 +193,9 @@ partitions/20260615/datadb/18E204973B1495FC/timestamps.bin
 partitions/20260615/partition.ready
 ```
 
-My main concern was too many objects per level. VL applies date prefixes, so that is not a problem. In my lab some days didn't have activity which resulted in 0-sized objects, but that's not a problem. Three objects per date prefix. Very nice! Even if we keep 3 years, it's still just 1K subdirectories on XFS.
+My main concern was too many objects per director level on filesystem.
+
+VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin<int>`), but that's not a problem. Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.
 
 ## SANtricity 12
 
