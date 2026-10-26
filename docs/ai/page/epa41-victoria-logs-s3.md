@@ -223,4 +223,4 @@ Kicking events and logs out of it was a great decision and Victoria Logs is reco
 
 While EPA, SGAC, SGII may have reference stacks, they are not entangled in them. They are stand-alone tools that are easily reused and combined into other stacks. That isn't by accident - it is the preferred, intended, and recommended approach.
 
-The UI in SANtricity 12 was a big step back for user experience and **especially** so when it comes to performance monitoring. EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.
+The UI in SANtricity 12 was a big step back for user experience and **especially** so when it comes to performance monitoring, EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.
