@@ -159,7 +159,7 @@ $ mc du s2s3/victoria-logs/
 96MiB   12124 objects   victoria-logs
 ```
 
-Best of all:
+Best of all, the VGW (object store) showed just one 26 MB egress:
 
 ```sh
 $ dstat -tcnd
@@ -185,17 +185,17 @@ $ dstat -tcnd
 ```
 
 It's even better than it looks:
-- Query times went up just to no longer than 1ms. The reason is mostly VGW data was also on NVMe, but the point is feature overheads are not that significant. Media and protocol overheads might be, but you have cache and you don't have to tier too aggressively. If VGW was on NL-SAS, it'd be surely slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
+- Query times went up just to no longer than 1ms. The reason is mostly VGW data was also on NVMe, but the point is the feature overhead is not *that* significant. Media and protocol overheads might be, but you have cache and you don't have to tier too aggressively. If VGW was on NL-SAS, non-cached queries would surely be slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
 - `dstat` output above shows not three, but **six** queries (two sets of 3 queries). The first (`26-10 08:41:14`) made VGW send 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`.
 
-VL Hot Tier and S3 cache are up from 8 to 56 MB now:
+VL Hot Tier and S3 cache are up from 8 to 56 MB now. We don't have to do anything about this - it just works.
 
 ```sh
 $ du -sh victoria-logs-data/
 56M     victoria-logs-data/
 ```
 
-S3 data remains until `retentionPeriod` is reached when it's gradually pruned.
+S3 data remains until `retentionPeriod` is reached when it's gradually pruned in whole UTC-day partitions.
 
 How does a cold day look like on S3?
 
