@@ -197,6 +197,17 @@ My main concern was too many objects per director level on filesystem.
 
 VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin<int>`), but that's not a problem. Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.
 
+```sh
+$ mc ls s2s3/victoria-logs/partitions/
+[2026-10-26 17:36:51 CST]     0B 20260615/
+[2026-10-26 17:36:51 CST]     0B 20260616/
+[2026-10-26 17:36:51 CST]     0B 20260617/
+[2026-10-26 17:36:51 CST]     0B 20260618/
+[2026-10-26 17:36:51 CST]     0B 20260619/
+[2026-10-26 17:36:51 CST]     0B 20260620/
+...
+```
+
 ## SANtricity 12
 
 EPA is the simplest and most lightweight performance metrics exporter for SANtricity 12 and follows [The Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy):
