@@ -22,6 +22,10 @@ There are just two direct dependencies: `requests` and Prometheus. When you upda
 
 If you look at some other monitoring projects, you may notice they have over 200,000 lines of code. And they keep adding logging and event features. EPA, on the other hand, kicked those *out* in 4.0; in my view, getting rid of those things was a feature. It also significantly reduced the amount of RAM required by Collector.
 
+By the way, some time ago I added volume metadata collection so that I can view Kubernetes (PVC) metadata in EPA. I accidentally stumbled across some LUNs created by NetApp's Ansible playbooks, which also set volume metadata. Those can be viewed as well.
+
+![Volumes](/assets/images/epa41_00_volume_md.png)
+
 ## Logging 
 
 [Victoria Logs](/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html) is recommended for logs and alerts, especially if you're one of few EPA 3 users and miss some of the events/MEL stuff removed from EPA 4.
@@ -42,15 +46,20 @@ For on-premises storage, [Versity S3 Gateway 1.9.0](/2026/10/15/elasticsearch-sn
 
 A preview of the S3-tiering VL can be obtained from Docker Hub: `docker pull victoriametrics/victoria-logs:heads-object-storage-0-g008977236`.
 
-We run this VL with:
+We run this VL build with:
 - Environment or args that pass AWS S3 keys to it
 - S3 endpoint, region and other details (for StorageGRID or Versity S3 Gateway (perfect if you have it attached to E-Series E4000 or Hybrid EF-Series with DDP or RAID 6))
 
 ```sh
-$ victoria-logs \
+$ docker run --rm -p 9428:9428 \
+  -v "$PWD/victoria-logs-data:/var/lib/victoria-logs" \
+  -e AWS_ACCESS_KEY_ID=<brandon> \
+  -e AWS_SECRET_ACCESS_KEY=<blah-blah> \
+  -e AWS_REGION=us-east-1 \
+  victoriametrics/victoria-logs:heads-object-storage-0-g008977236 \
   -storageDataPath=/var/lib/victoria-logs \
   -offload.cache.path=/var/lib/victoria-logs/cache \
-  -retentionPeriod=366d \
+  -retentionPeriod=180d \
   -offloadPeriod=30d \
   -offload.destination='s3://victoria-logs/' \
   -offload.s3.endpoint='http://192.168.1.194:7070' \
@@ -59,7 +68,7 @@ $ victoria-logs \
   ...
 ```
 
-`...` denotes the rest of your configuration options. I actually used an offload period of `1d` so that I don't have to wait too long (remember that in the initial implementation you can't change this later, so don't try random stuff in production if you use this feature).
+`...` denotes the rest of your configuration options. I *actually* used an offload period of `1d` so that I don't have to wait too long (remember that in the initial implementation you can't change this later, so don't try random stuff in production if you use this feature).
 
 What happens once partitions have events that are over 30d (in my test case it's 1d) old, VL moves them to Versity S3 Gateway (in this case).
 
@@ -80,7 +89,7 @@ $ ll ./sgac/
 -rw-rw-r-- 1 sean sean 299536114 Oct 26 15:50 sg-endpoint-2026-10-26.jsonl
 ```
 
-490, 176 and 299 MB (the second and third are basically copies, with wrapper and other junk stripped).
+490, 176 and 299 MB respectively. The second and third are basically copies of the first, with the syslog wrapper and other junk stripped.
 
 VL data directory before tiering to S3:
 
@@ -89,7 +98,7 @@ $ du -sh ./victoria-logs-data/
 173M    ./victoria-logs-data/
 
 $ mc ls s2s3/victoria-logs
-# nada, zippo, zilch, nuthin
+# nada, zippo, zilch, nuthin'
 ```
 
 Good, **3:1** efficiency (173/490 - 65% down; without cheating with the partially duplicate data from SGAC).
@@ -184,7 +193,7 @@ $ du -sh victoria-logs-data/
 
 S3 data remains until `retentionPeriod` is reached when it's gradually pruned in whole UTC-day partitions.
 
-How does a cold day look like on S3?
+How does a cold VL day look like on S3?
 
 ```sh
 partitions/20260615/datadb/18E204973B1495FC/bloom.bin0
@@ -195,7 +204,9 @@ partitions/20260615/partition.ready
 
 My main concern was too many objects per director level on filesystem.
 
-VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin<int>`), but that's not a problem. Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.
+VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin<int>`), but that's not a problem.
+
+Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.
 
 ```sh
 $ mc ls s2s3/victoria-logs/partitions/
@@ -208,13 +219,19 @@ $ mc ls s2s3/victoria-logs/partitions/
 ...
 ```
 
+From the above, we can conclude these are all valid options.
+
+![VL, EF,V GW, SG](/assets/images/epa41_01_vl-s3-tiering-sg.png)
+
 ## SANtricity 12
 
 EPA is the simplest and most lightweight performance metrics exporter for SANtricity 12 and follows [the Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy):
 
 > a set of cultural norms and philosophical approaches to minimalist, modular software development.
 
-Kicking events and logs out of it was a great decision and Victoria Logs is recommended for those who miss that feature from EPA 3. Victoria Logs can be added to EPA Docker Compose stack with truly minimum RAM resources. Soon, it will also lower its block storage requirements and with Versity S3 Gateway attached to E-Series, it's a cost effective and fast-performing object store for log retention. With Hybrid E-Series, you can get best of both worlds:
+Kicking events and logs out of it was a great decision and Victoria Logs is recommended for those who miss that feature from EPA 3. Victoria Logs can be added to EPA Docker Compose stack with truly minimum RAM resources. Soon, it will also lower its block storage requirements and with Versity S3 Gateway attached to E-Series, it's a cost effective and fast-performing object store for log retention.
+
+With Hybrid E-Series, you can get best of both worlds:
 - Compression by Victoria Metrics and Victoria Logs
 - Leading performance NVMe/RoCE or NVMe/FC for Hot Tier
 - Modern and fast-developing S3 gateway in Versity S3 Gateway (even Elasticsearch 9 can use it for S3 snapshots)
@@ -223,4 +240,4 @@ Kicking events and logs out of it was a great decision and Victoria Logs is reco
 
 While EPA, SGAC, SGII may have reference stacks, they are not entangled in them. They are stand-alone tools that are easily reused and combined into other stacks. That isn't by accident - it is the preferred, intended, and recommended approach.
 
-The UI in SANtricity 12 was a big step back for user experience and **especially** so when it comes to performance monitoring, EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.
+The UI in SANtricity 12 was a big step back for user experience and **especially** so when it comes to performance monitoring. EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.

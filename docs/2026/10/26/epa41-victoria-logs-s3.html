@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2156,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/epa41_00_volume_md.png","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2267,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,8 +99,8 @@
     <link href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700|PT+Serif:400,700,400italic" rel="stylesheet" type="text/css">
 
 
-  <link rel="ai:json" href="/ai/topic/epa41-victoria-logs-s3-html.json">
-<link rel="ai:yaml" href="/ai/topic/epa41-victoria-logs-s3-html.yml">
+  <link rel="ai:json" href="/ai/entity/netapp.json">
+<link rel="ai:yaml" href="/ai/entity/netapp.yml">
 <link rel="ai:markdown" href="/ai/page/epa41-victoria-logs-s3.md">
 </head>
 
@@ -187,7 +187,7 @@
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
     <meta itemprop="headline" content="New EPA 4.1 and Victoria Logs S3 tiering feature">
-    <meta itemprop="description" content="What is new in E-Series Performance Analyzer 4.1.0">
+    <meta itemprop="description" content="What is new in E-Series Performance Analyzer 4.1.0 and a look at Victoria Logs S3 tiering">
     <meta itemprop="datePublished" content="2026-10-26T00:00:00+08:00">
     
 
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          9 minute read
+          10 minute read
         
       </span>
     
@@ -261,6 +261,10 @@
 
 <p>If you look at some other monitoring projects, you may notice they have over 200,000 lines of code. And they keep adding logging and event features. EPA, on the other hand, kicked those <em>out</em> in 4.0; in my view, getting rid of those things was a feature. It also significantly reduced the amount of RAM required by Collector.</p>
 
+<p>By the way, some time ago I added volume metadata collection so that I can view Kubernetes (PVC) metadata in EPA. I accidentally stumbled across some LUNs created by NetApp's Ansible playbooks, which also set volume metadata. Those can be viewed as well.</p>
+
+<p><img src="/assets/images/epa41_00_volume_md.png" alt="Volumes" /></p>
+
 <h2 id="logging">Logging</h2>
 
 <p><a href="/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html">Victoria Logs</a> is recommended for logs and alerts, especially if you're one of few EPA 3 users and miss some of the events/MEL stuff removed from EPA 4.</p>
@@ -283,16 +287,21 @@
 
 <p>A preview of the S3-tiering VL can be obtained from Docker Hub: <code class="language-plaintext highlighter-rouge">docker pull victoriametrics/victoria-logs:heads-object-storage-0-g008977236</code>.</p>
 
-<p>We run this VL with:</p>
+<p>We run this VL build with:</p>
 <ul>
   <li>Environment or args that pass AWS S3 keys to it</li>
   <li>S3 endpoint, region and other details (for StorageGRID or Versity S3 Gateway (perfect if you have it attached to E-Series E4000 or Hybrid EF-Series with DDP or RAID 6))</li>
 </ul>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>victoria-logs <span class="se">\</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">--rm</span> <span class="nt">-p</span> 9428:9428 <span class="se">\</span>
+  <span class="nt">-v</span> <span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/victoria-logs-data:/var/lib/victoria-logs"</span> <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span>&lt;brandon&gt; <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span>&lt;blah-blah&gt; <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">AWS_REGION</span><span class="o">=</span>us-east-1 <span class="se">\</span>
+  victoriametrics/victoria-logs:heads-object-storage-0-g008977236 <span class="se">\</span>
   <span class="nt">-storageDataPath</span><span class="o">=</span>/var/lib/victoria-logs <span class="se">\</span>
   <span class="nt">-offload</span>.cache.path<span class="o">=</span>/var/lib/victoria-logs/cache <span class="se">\</span>
-  <span class="nt">-retentionPeriod</span><span class="o">=</span>366d <span class="se">\</span>
+  <span class="nt">-retentionPeriod</span><span class="o">=</span>180d <span class="se">\</span>
   <span class="nt">-offloadPeriod</span><span class="o">=</span>30d <span class="se">\</span>
   <span class="nt">-offload</span>.destination<span class="o">=</span><span class="s1">'s3://victoria-logs/'</span> <span class="se">\</span>
   <span class="nt">-offload</span>.s3.endpoint<span class="o">=</span><span class="s1">'http://192.168.1.194:7070'</span> <span class="se">\</span>
@@ -301,7 +310,7 @@
   ...
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">...</code> denotes the rest of your configuration options. I actually used an offload period of <code class="language-plaintext highlighter-rouge">1d</code> so that I don't have to wait too long (remember that in the initial implementation you can't change this later, so don't try random stuff in production if you use this feature).</p>
+<p><code class="language-plaintext highlighter-rouge">...</code> denotes the rest of your configuration options. I <em>actually</em> used an offload period of <code class="language-plaintext highlighter-rouge">1d</code> so that I don't have to wait too long (remember that in the initial implementation you can't change this later, so don't try random stuff in production if you use this feature).</p>
 
 <p>What happens once partitions have events that are over 30d (in my test case it's 1d) old, VL moves them to Versity S3 Gateway (in this case).</p>
 
@@ -326,7 +335,7 @@
 <span class="nt">-rw-rw-r--</span> 1 sean sean 299536114 Oct 26 15:50 sg-endpoint-2026-10-26.jsonl
 </code></pre></div></div>
 
-<p>490, 176 and 299 MB (the second and third are basically copies, with wrapper and other junk stripped).</p>
+<p>490, 176 and 299 MB respectively. The second and third are basically copies of the first, with the syslog wrapper and other junk stripped.</p>
 
 <p>VL data directory before tiering to S3:</p>
 
@@ -334,7 +343,7 @@
 173M    ./victoria-logs-data/
 
 <span class="nv">$ </span>mc <span class="nb">ls </span>s2s3/victoria-logs
-<span class="c"># nada, zippo, zilch, nuthin</span>
+<span class="c"># nada, zippo, zilch, nuthin'</span>
 </code></pre></div></div>
 
 <p>Good, <strong>3:1</strong> efficiency (173/490 - 65% down; without cheating with the partially duplicate data from SGAC).</p>
@@ -427,7 +436,7 @@
 
 <p>S3 data remains until <code class="language-plaintext highlighter-rouge">retentionPeriod</code> is reached when it's gradually pruned in whole UTC-day partitions.</p>
 
-<p>How does a cold day look like on S3?</p>
+<p>How does a cold VL day look like on S3?</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>partitions/20260615/datadb/18E204973B1495FC/bloom.bin0
 partitions/20260615/datadb/18E204973B1495FC/metadata.json
@@ -437,7 +446,9 @@ partitions/20260615/partition.ready
 
 <p>My main concern was too many objects per director level on filesystem.</p>
 
-<p>VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (<code class="language-plaintext highlighter-rouge">bloom.bin&lt;int&gt;</code>), but that's not a problem. Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.</p>
+<p>VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (<code class="language-plaintext highlighter-rouge">bloom.bin&lt;int&gt;</code>), but that's not a problem.</p>
+
+<p>Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s2s3/victoria-logs/partitions/
 <span class="o">[</span>2026-10-26 17:36:51 CST]     0B 20260615/
@@ -449,6 +460,10 @@ partitions/20260615/partition.ready
 ...
 </code></pre></div></div>
 
+<p>From the above, we can conclude these are all valid options.</p>
+
+<p><img src="/assets/images/epa41_01_vl-s3-tiering-sg.png" alt="VL, EF,V GW, SG" /></p>
+
 <h2 id="santricity-12">SANtricity 12</h2>
 
 <p>EPA is the simplest and most lightweight performance metrics exporter for SANtricity 12 and follows <a href="https://en.wikipedia.org/wiki/Unix_philosophy">the Unix philosophy</a>:</p>
@@ -457,7 +472,9 @@ partitions/20260615/partition.ready
   <p>a set of cultural norms and philosophical approaches to minimalist, modular software development.</p>
 </blockquote>
 
-<p>Kicking events and logs out of it was a great decision and Victoria Logs is recommended for those who miss that feature from EPA 3. Victoria Logs can be added to EPA Docker Compose stack with truly minimum RAM resources. Soon, it will also lower its block storage requirements and with Versity S3 Gateway attached to E-Series, it's a cost effective and fast-performing object store for log retention. With Hybrid E-Series, you can get best of both worlds:</p>
+<p>Kicking events and logs out of it was a great decision and Victoria Logs is recommended for those who miss that feature from EPA 3. Victoria Logs can be added to EPA Docker Compose stack with truly minimum RAM resources. Soon, it will also lower its block storage requirements and with Versity S3 Gateway attached to E-Series, it's a cost effective and fast-performing object store for log retention.</p>
+
+<p>With Hybrid E-Series, you can get best of both worlds:</p>
 <ul>
   <li>Compression by Victoria Metrics and Victoria Logs</li>
   <li>Leading performance NVMe/RoCE or NVMe/FC for Hot Tier</li>
@@ -468,7 +485,7 @@ partitions/20260615/partition.ready
 
 <p>While EPA, SGAC, SGII may have reference stacks, they are not entangled in them. They are stand-alone tools that are easily reused and combined into other stacks. That isn't by accident - it is the preferred, intended, and recommended approach.</p>
 
-<p>The UI in SANtricity 12 was a big step back for user experience and <strong>especially</strong> so when it comes to performance monitoring, EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.</p>
+<p>The UI in SANtricity 12 was a big step back for user experience and <strong>especially</strong> so when it comes to performance monitoring. EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.</p>
 
         
       </section>
