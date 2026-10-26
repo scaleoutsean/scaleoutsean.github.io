@@ -172,8 +172,8 @@ $ dstat -tcnd
 ```
 
 It's even better than it looks:
-- Query speeds went up just to 1ms. The reason is mostly VGW is also on NVMe, but the point is overheads are not significant. If VGW was on NL-SAS, it'd be slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
-- `dstat` output above shows not three, but **six** queries (two sets of 3 queries). The first (`26-10 08:41:14` sent 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`).
+- Query times went up just to no longer than 1ms. The reason is mostly VGW data was also on NVMe, but the point is feature overheads are not that significant. Media and protocol overheads might be, but you have cache and you don't have to tier too aggressively. If VGW was on NL-SAS, it'd be surely slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
+- `dstat` output above shows not three, but **six** queries (two sets of 3 queries). The first (`26-10 08:41:14`) made VGW send 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`.
 
 VL Hot Tier and S3 cache are up from 8 to 56 MB now:
 
