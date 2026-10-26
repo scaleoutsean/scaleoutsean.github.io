@@ -124,7 +124,11 @@ But I have this section anyway because - as illustrated in the [Parquet compacti
 
 That means - see my other posts about the Versity S3 Gateway - we can do cool things when that makes sense.
 
-For example, we normally shouldn't use S2S3 to copy data over S3 if we can mount the NFS share from the VM attached to E-Series and do something like: `cp -pr /mnt/nfs/ /mnt/vgw/ && versitygw ... posix /mnt/vgw`. No need for S2S3!
+For example, we normally shouldn't use S2S3 to copy data over S3 if we can mount the NFS share from the VM attached to E-Series and do something like: ```sh
+rsync /mnt/nfs_share /mnt/vgw/ && versitygw ... posix /mnt/vgw
+```
+
+No need for S2S3! You do need to pay attention to links or any unusual stuff, of course. `man rsync` to figure out how to deal with it.
 
 But, "it depends". Sometimes, we'd have to use Rclone or S2S3 or something else, and then we'd want it to work rather than stumble.
 

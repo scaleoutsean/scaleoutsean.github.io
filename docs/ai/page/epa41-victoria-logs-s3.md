@@ -210,7 +210,7 @@ $ mc ls s2s3/victoria-logs/partitions/
 
 ## SANtricity 12
 
-EPA is the simplest and most lightweight performance metrics exporter for SANtricity 12 and follows [The Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy):
+EPA is the simplest and most lightweight performance metrics exporter for SANtricity 12 and follows [the Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy):
 
 > a set of cultural norms and philosophical approaches to minimalist, modular software development.
 
