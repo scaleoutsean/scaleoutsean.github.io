@@ -10,6 +10,57 @@ scaleoutSean is I create solutions.
 
 ## Posts
 
+### New EPA 4.1 and Victoria Logs S3 tiering feature
+
+URL: https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html
+Date: 2026-10-26
+
+## EPA (E-Series Performance Analyzer) 4.1.0
+
+EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. Host performance figures are already "analyzed" i.e. averaged over minutes when we get them, but that's better than not having them at all. They let the storage administrator see how clients are doing performance-wise, which can help them with planning and troubleshooting. 
+
+It also fixes some annoying Grafana query bugs which turned correct data into wrong information.
+- For physical disks (not volumes or controllers), throughput in MB/s was wrong in Grafana.
+- For physical disks, I/O latency figures were also wrong in Grafana.
+- There is a fix for another Grafana bug that appeared due to the misleading Prometheus metric name (I gave it a bad name in Prometheus exporter, and did the right thing based on the misleading meaning/name, which result in incorrect Grafana metric).
+- There were various minor updates including Python dependencies, SANtricity client library, and Grafana.
+
+I spotted the Grafana bugs last month, as I had a chance to use EPA 4 with NL-SAS arrays, where the bugs were easy to spot (due to it, the latency figures Grafana was showing were fakely high). The bug summed up, instead of averaged, disk latency, so with SSD arrays that were not under stress, it was hard to see anything unusual, while the Prometheus metrics were correct... 
+
+That's what happens in one-person projects. I don't think more than five people use EPA, but I like EPA and it works the way I want. 
+
+EPA 4 still has less than 5,000 lines of code. The EPA 3 bloat present when I forked it from upstream has been eliminated. EPA can still run from the CLI and as `systemd` service (added after I forked it) and needs very little resources in general. I can be understood and edited by users.
+
+There are just two direct dependencies: `requests` and Prometheus. When you update OS or container, Python (and likely `requests`) get updated with it. Prometheus exporter shares data from a read only Web site. Because of that, there are few issues and CVEs.
+
+If you look at some other monitoring projects and see they have over 200,000 lines of code. And they keep adding log and event features. EPA, on the other hand, kicked those out in 4.0; in my view, getting rid of those things was a feature. It also significantly reduced the amount of RAM required by Collector.
+
+## Logging 
+
+[Victoria Logs](/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html) is recommended for logs and alerts, especially if you're one of few EPA 3 users and miss some of the events/MEL stuff removed from EPA 4.
+
+### Victoria Logs' S3 offload feature
+
+Victoria Logs compresses data very well, but still needs disk space. 
+
+Next month, they're expected to release S3 offload feature. It looks similar to searchable S3 snapshots in Elasticsearch. The initial implementation will have a rigid setting and behavior where *daily* partition data older than N days are moved to S3, and can be queried off S3.
+- `offload.destination` - point at S3 bucket
+- `offloadPeriod` - set to number of days to retain data on Hot Tier
+
+Partitions moved to S3 become immutable and main tiering parameters are fixed. They'll likely improve those later, but if you have a complex environment, it may be better to give it some time to improve.
+
+For on-premises storage, [Versity S3 Gateway 1.9.0](/2026/10/15/elasticsearch-snapshot-to-vgw-eseries.html) should be compatible with this, but we also need to check if Victoria Logs tiers all partitions in one flat path (which wouldn't be good for Versity S3 Gateway).
+
+## SANtricity 12
+
+EPA remains the simplest and most lightweight performance metrics exporter for SANtricity. 
+
+Kicking events and logs out of it was a great decision and Victoria Logs is recommended for that. It can be added to EPA Docker Compose stack with truly minimum RAM resources. Soon it will also lower its block storage requirements. 
+
+The UI in SANtricity 12 was a big step back for user experience and **especially** performance monitoring. EPA is a usable and customizable alternative for out-of-box gathering of SANtricity performance metrics without unnecessary bloat and risk.
+
+---
+
 ### S2S3 - NAS Share to S3 copy utility
 
 URL: https://blog.scaleoutsean.com/2026/10/22/s2s3-share-to-s3-tool.html
@@ -59,7 +110,7 @@ How's it work? As one might imagine: copy, sync-incremental (zero or more times)
 
 ![S2S3](/assets/images/s2s3-diagram.svg)
 
-If you can make your source read-only immediately and wait (e.g. you have only 10-20 TB to copy), you may be able start and finish a bucket in one day (Steps **1**, **3**, **4** and **5**).
+If you can make your source read-only before you start (that is, run Step **3** *before* Step **1** and skip Step **2**, which is practically the same as starting from Step **3**) and wait (e.g. you have only 10-20 TB to copy), you may be able start and finish a bucket in one day. If you want to run checks, do tests and whatnot over several days or weeks, then you need Step 2 and repeated inventory scans with incremental syncs in those iterations.
 
 If I have NFSv4 and don't have NFSv3 on source, I can enable v3 on existing NFS shares for the S2S3 client instances only.
 
@@ -99,7 +150,7 @@ We'd have to read 1 MiB files at 8,000 per second, which I can probably do with 
 
 And let's not forget: you probably have production workloads running 24x7 and will likely throttle your migration workload anyway. 
 
-I hope someone will tell me they have a PB-sized NAS share where data enumeration or copying needs help, but I don't think that will happen. I've seen problems, but the problems were because the NAS or object store weren't fast enough for Read and Put rates required.
+I hope someone will tell me they have a PB-sized NAS share where data enumeration or copying needs help, but I don't think that will happen. I've seen problems, but problems existed because the NAS or object store weren't fast enough for Read and Put rates required.
 
 What normally happens is: it's a storage performance problem (at the source, or destination, or both). *Consuming* resources is not difficult, especially in trivial (for the client) workloads such as share-to-S3 enumeration and copying.
 
@@ -150,18 +201,19 @@ We also have to be mindful of the fact that it's still POSIX underneath S3. Sinc
 ## More advanced automation
 
 One may wish to give a copy tool like this an "all-in-one" feel, and make it a full-featured migration utility. For example, automate steps in StorageGRID side of migration:
+
 - Create bucket in tenant account
 - Create dedicated account for S23, if it does not exist. Create a new set of S3 keys if none are available
 - Create or update traffic classification rules for S2S3 clients
 - Pick a canned ACL template (including limited read-only policy for non-tenant users, recommended until after final sync and verification)
 - Analyze file list and recommend ILM rules
-- Perform initial copy and the rest of things S2S3 does today
+- Perform the initial copy and do things S2S3 does today...
 
 None of that is hard, but how many users who use free tools actually have these problems?
 
 From what I've seen, there are users who need to migrate hundreds of NAS shares at once, but they use commercial software for that. It works, it has all of the features one can think of, and you get L2/L3 support and patches, so that you don't have to to have prepare three freeware tools for "just in case the main one gets stuck"
 
-Another reason for using commercial tools is you can *do more* than just migrate to S3. You can create embeddings, tags, check for the presence of PII and more all in a single pass, whereas S2S3 doesn't do any of that, so if you use freeware you may read the same 300 TB three times what Datadobi or Komprise do at once.
+Another reason for using commercial tools is you can *do more* than just migrate to S3. You can create embeddings, tags, check for the presence of PII and more - all in a single pass, whereas S2S3 doesn't do any of that - so if you use freeware you may read the same 300 TB data set three times to do what Datadobi or Komprise do at once.
 
 I *am* able to do this with S2S3 and [Kompromise](/2026/09/29/kompromise-storagegrid-search-processing.html) today, and this is why I wanted my own copy tool: not to overcome some imaginary performance bottleneck, but for technology and integration demos.
 
@@ -196,16 +248,16 @@ $ s2s3 inventory nfs://nas.example/export \
   --uid 1000 --gid 1000 --groups 1000,2000
 ```
 
-This gives us a list of files in a database I can query from S3S2 or elsewhere. I use that file list to copy with Rclone. After that, I can create another inventory to get another (full) up-to-date list with latest status, and do an *incremental* copy. 
+This gives us a list of files in a database I can query from S3S2 or elsewhere. I use that file list to copy with Rclone. After that, I can create another inventory to get another (full) up-to-date list with latest NAS share state and do an *incremental* copy. 
 
 Other commands from the initial v0.1.0 release:
 - export - exports file names, file paths, etc.
 - diff - diff two inventories, to see what would be copied and delete in next Rclone sync
 - verify - compares NAS and S3 inventory, or physical comparison for final switch-over to S3
 
-When I'm ready to switch over, I make the NAS share read-only, run one final inventory and sync followed by a report.
+When I'm ready to switch over, I make the NAS share read-only, run one final inventory and sync followed by a final pre-switch-over report generation.
 
-I can do all this with Rclone alone, but Rclone does million things, and all I want is just five fixed steps (for as long as I can resist using custom options).
+I can do all this with Rclone alone, but Rclone does a million things and all I want is just five fixed steps (for as long as I can resist using custom options).
 
 ## What not to migrate
 

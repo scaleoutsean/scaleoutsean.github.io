@@ -46,7 +46,7 @@ How's it work? As one might imagine: copy, sync-incremental (zero or more times)
 
 ![S2S3](/assets/images/s2s3-diagram.svg)
 
-If you can make your source read-only immediately and wait (e.g. you have only 10-20 TB to copy), you may be able start and finish a bucket in one day (Steps **1**, **3**, **4** and **5**).
+If you can make your source read-only before you start (that is, run Step **3** *before* Step **1** and skip Step **2**, which is practically the same as starting from Step **3**) and wait (e.g. you have only 10-20 TB to copy), you may be able start and finish a bucket in one day. If you want to run checks, do tests and whatnot over several days or weeks, then you need Step 2 and repeated inventory scans with incremental syncs in those iterations.
 
 If I have NFSv4 and don't have NFSv3 on source, I can enable v3 on existing NFS shares for the S2S3 client instances only.
 
@@ -86,7 +86,7 @@ We'd have to read 1 MiB files at 8,000 per second, which I can probably do with 
 
 And let's not forget: you probably have production workloads running 24x7 and will likely throttle your migration workload anyway. 
 
-I hope someone will tell me they have a PB-sized NAS share where data enumeration or copying needs help, but I don't think that will happen. I've seen problems, but the problems were because the NAS or object store weren't fast enough for Read and Put rates required.
+I hope someone will tell me they have a PB-sized NAS share where data enumeration or copying needs help, but I don't think that will happen. I've seen problems, but problems existed because the NAS or object store weren't fast enough for Read and Put rates required.
 
 What normally happens is: it's a storage performance problem (at the source, or destination, or both). *Consuming* resources is not difficult, especially in trivial (for the client) workloads such as share-to-S3 enumeration and copying.
 
@@ -137,18 +137,19 @@ We also have to be mindful of the fact that it's still POSIX underneath S3. Sinc
 ## More advanced automation
 
 One may wish to give a copy tool like this an "all-in-one" feel, and make it a full-featured migration utility. For example, automate steps in StorageGRID side of migration:
+
 - Create bucket in tenant account
 - Create dedicated account for S23, if it does not exist. Create a new set of S3 keys if none are available
 - Create or update traffic classification rules for S2S3 clients
 - Pick a canned ACL template (including limited read-only policy for non-tenant users, recommended until after final sync and verification)
 - Analyze file list and recommend ILM rules
-- Perform initial copy and the rest of things S2S3 does today
+- Perform the initial copy and do things S2S3 does today...
 
 None of that is hard, but how many users who use free tools actually have these problems?
 
 From what I've seen, there are users who need to migrate hundreds of NAS shares at once, but they use commercial software for that. It works, it has all of the features one can think of, and you get L2/L3 support and patches, so that you don't have to to have prepare three freeware tools for "just in case the main one gets stuck"
 
-Another reason for using commercial tools is you can *do more* than just migrate to S3. You can create embeddings, tags, check for the presence of PII and more all in a single pass, whereas S2S3 doesn't do any of that, so if you use freeware you may read the same 300 TB three times what Datadobi or Komprise do at once.
+Another reason for using commercial tools is you can *do more* than just migrate to S3. You can create embeddings, tags, check for the presence of PII and more - all in a single pass, whereas S2S3 doesn't do any of that - so if you use freeware you may read the same 300 TB data set three times to do what Datadobi or Komprise do at once.
 
 I *am* able to do this with S2S3 and [Kompromise](/2026/09/29/kompromise-storagegrid-search-processing.html) today, and this is why I wanted my own copy tool: not to overcome some imaginary performance bottleneck, but for technology and integration demos.
 
@@ -183,16 +184,16 @@ $ s2s3 inventory nfs://nas.example/export \
   --uid 1000 --gid 1000 --groups 1000,2000
 ```
 
-This gives us a list of files in a database I can query from S3S2 or elsewhere. I use that file list to copy with Rclone. After that, I can create another inventory to get another (full) up-to-date list with latest status, and do an *incremental* copy. 
+This gives us a list of files in a database I can query from S3S2 or elsewhere. I use that file list to copy with Rclone. After that, I can create another inventory to get another (full) up-to-date list with latest NAS share state and do an *incremental* copy. 
 
 Other commands from the initial v0.1.0 release:
 - export - exports file names, file paths, etc.
 - diff - diff two inventories, to see what would be copied and delete in next Rclone sync
 - verify - compares NAS and S3 inventory, or physical comparison for final switch-over to S3
 
-When I'm ready to switch over, I make the NAS share read-only, run one final inventory and sync followed by a report.
+When I'm ready to switch over, I make the NAS share read-only, run one final inventory and sync followed by a final pre-switch-over report generation.
 
-I can do all this with Rclone alone, but Rclone does million things, and all I want is just five fixed steps (for as long as I can resist using custom options).
+I can do all this with Rclone alone, but Rclone does a million things and all I want is just five fixed steps (for as long as I can resist using custom options).
 
 ## What not to migrate
 
