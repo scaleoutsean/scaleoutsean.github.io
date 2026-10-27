@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/epa41_00_volume_md.png","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2326,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/epa41_00_volume_md.png","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2337,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -314,7 +314,7 @@
 
 <p>What happens once partitions have events that are over 30d (in my test case it's 1d) old, VL moves them to Versity S3 Gateway (in this case).</p>
 
-<p>They're already space-efficient and initial implementation is rigid so there's nothing else you need (or can) do.</p>
+<p>They're already space-efficient and initial implementation is rigid so there's nothing else you need to (or can) do.</p>
 
 <p>I used my StorageGRID and SGAC converter output to test:</p>
 <ul>
@@ -337,7 +337,7 @@
 
 <p>490, 176 and 299 MB respectively. The second and third are basically copies of the first, with the syslog wrapper and other junk stripped.</p>
 
-<p>VL data directory before tiering to S3:</p>
+<p>VL data directory <strong>before</strong> tiering to S3:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">du</span> <span class="nt">-sh</span> ./victoria-logs-data/
 173M    ./victoria-logs-data/
@@ -346,7 +346,7 @@
 <span class="c"># nada, zippo, zilch, nuthin'</span>
 </code></pre></div></div>
 
-<p>Good, <strong>3:1</strong> efficiency (173/490 - 65% down; without cheating with the partially duplicate data from SGAC).</p>
+<p>Good, Victoria Logs gives me <strong>3:1</strong> efficiency (173/490 - 65% savings and that's without "cheating" with the partially duplicate data from SGAC audit and access logs).</p>
 
 <p>I tried several queries while the logs are still on local disk: up to 40ms (from query to result on host, not VL's own query).</p>
 
@@ -428,7 +428,7 @@
   <li><code class="language-plaintext highlighter-rouge">dstat</code> output above shows not three, but <strong>six</strong> queries (two sets of 3 queries). The first (<code class="language-plaintext highlighter-rouge">26-10 08:41:14</code>) made VGW send 26 MB to VL, but the second (repeated) set of queries did nothing, because of <code class="language-plaintext highlighter-rouge">offload.cache.path</code>.</li>
 </ul>
 
-<p>VL Hot Tier and S3 cache are up from 8 to 56 MB now. We don't have to do anything about this - it just works.</p>
+<p>VL Hot Tier <strong>and S3 cache</strong> are up from 8 to 56 MB now. We don't have to do anything about this - it just works!</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">du</span> <span class="nt">-sh</span> victoria-logs-data/
 56M     victoria-logs-data/
@@ -444,7 +444,7 @@ partitions/20260615/datadb/18E204973B1495FC/timestamps.bin
 partitions/20260615/partition.ready
 </code></pre></div></div>
 
-<p>My main concern was too many objects per director level on filesystem.</p>
+<p>My main concern was too many objects per directory level on filesystem.</p>
 
 <p>VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (<code class="language-plaintext highlighter-rouge">bloom.bin&lt;int&gt;</code>), but that's not a problem.</p>
 

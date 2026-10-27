@@ -85,7 +85,7 @@ $ docker run --rm -p 9428:9428 \
 
 What happens once partitions have events that are over 30d (in my test case it's 1d) old, VL moves them to Versity S3 Gateway (in this case).
 
-They're already space-efficient and initial implementation is rigid so there's nothing else you need (or can) do. 
+They're already space-efficient and initial implementation is rigid so there's nothing else you need to (or can) do. 
 
 I used my StorageGRID and SGAC converter output to test:
 - Full raw S3 log (audit and access from StorageGRID 12)
@@ -104,7 +104,7 @@ $ ll ./sgac/
 
 490, 176 and 299 MB respectively. The second and third are basically copies of the first, with the syslog wrapper and other junk stripped.
 
-VL data directory before tiering to S3:
+VL data directory **before** tiering to S3:
 
 ```sh
 $ du -sh ./victoria-logs-data/
@@ -114,7 +114,7 @@ $ mc ls s2s3/victoria-logs
 # nada, zippo, zilch, nuthin'
 ```
 
-Good, **3:1** efficiency (173/490 - 65% down; without cheating with the partially duplicate data from SGAC).
+Good, Victoria Logs gives me **3:1** efficiency (173/490 - 65% savings and that's without "cheating" with the partially duplicate data from SGAC audit and access logs).
 
 I tried several queries while the logs are still on local disk: up to 40ms (from query to result on host, not VL's own query).
 
@@ -197,7 +197,7 @@ It's even better than it looks:
 - Query times went up just to no longer than 1ms. The reason is mostly VGW data was also on NVMe, but the point is the feature overhead is not *that* significant. Media and protocol overheads might be, but you have cache and you don't have to tier too aggressively. If VGW was on NL-SAS, non-cached queries would surely be slower, but also 15x cheaper (based on recent SSD vs NL-SAS prices).
 - `dstat` output above shows not three, but **six** queries (two sets of 3 queries). The first (`26-10 08:41:14`) made VGW send 26 MB to VL, but the second (repeated) set of queries did nothing, because of `offload.cache.path`.
 
-VL Hot Tier and S3 cache are up from 8 to 56 MB now. We don't have to do anything about this - it just works.
+VL Hot Tier **and S3 cache** are up from 8 to 56 MB now. We don't have to do anything about this - it just works!
 
 ```sh
 $ du -sh victoria-logs-data/
@@ -215,7 +215,7 @@ partitions/20260615/datadb/18E204973B1495FC/timestamps.bin
 partitions/20260615/partition.ready
 ```
 
-My main concern was too many objects per director level on filesystem.
+My main concern was too many objects per directory level on filesystem.
 
 VL applies date prefixes, so that is not a problem. In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin`), but that's not a problem.
 
