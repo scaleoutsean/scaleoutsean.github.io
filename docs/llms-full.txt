@@ -403,7 +403,7 @@ Incidentally, client-side or object store-side throttling is usually necessary w
 
 We also have to be mindful of the fact that it's still POSIX underneath S3. Since you're migrating from POSIX (NFSv3) to POSIX (Versity S3 Gateway's filesystem), you probably don't need to worry about weird filesystem layouts, but you should still watch out for surprises - someone could have 10 million files in a directory and the miserable experience would be migrated to S3 together with that directory layout.
 
-## More advanced automation
+## Advanced automation
 
 One may wish to give a copy tool like this an "all-in-one" feel, and make it a full-featured migration utility. For example, automate steps in StorageGRID side of migration:
 
@@ -422,9 +422,15 @@ Another reason for using commercial tools is you can *do more* than just migrate
 
 I *am* able to do this with S2S3 and [Kompromise](/2026/09/29/kompromise-storagegrid-search-processing.html) today, and this is why I wanted my own copy tool: not to overcome some imaginary performance bottleneck, but for technology and integration demos.
 
+Another thing I can do is get fancy with Rclone: copy jobs can be submitted to Rclone server and job progress watched in Rclone GUI. You can see that in the demo video (Appendix A).
+
+![Rclone GUI](/assets/images/s2s3-04-s2s3-rclone-gui-api.png)
+
+Note that the UI doesn't work well (unless throttled) if you copy thousands of small files every second - it slows Rclone down to the point where it can't keep up. If you have a long running copy or sync operation with large files, this can be helpful.
+
 ## What about tiny files?
 
-They make S2S3's job easier.
+They make S2S3's job easier. For Rclone, that's not a problem as long as you don't use Rclone GUI, as explained above.
 
 Let's say you have 3.125 billion 64 KiB files in a 100 TB NAS share. At 8,000 files/s (basic NAS enumeration speed on S2S3), that takes 4.52 days to enumerate, and maybe just a day to compare that with previous inventory, calculate the changes and re-sync.
 
@@ -490,7 +496,7 @@ This lengthy demo goes through the workflow (plus some small extras) for **one-s
 - Make NFS share read-only
 - Build NFS inventory
 - Copy NFS share to S3 bucket
-- Verify (using several approaches)
+- Verify (using several approaches, both from S2S3 and Rclone)
 
 An iterative workflow would be even harder to demo, but after seeing this one you should be able to imagine how a more complex version looks like.
 
