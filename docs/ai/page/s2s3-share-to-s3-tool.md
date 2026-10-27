@@ -221,3 +221,13 @@ S2S3 is not meant to replace anything, it's just my take on data copying from su
 You don't have to [use S2S3](https://github.com/scaleoutsean/s2s3) in particular - I won't know either way - but if anyone uses it and it works better or cheaper for them than some other tool, that would be great.
 
 I know there are better and proven copy tools. Some may be costly, others may be hassle to download or use. Pick whichever works for you.
+
+## Appendix A: Demo
+
+This lengthy demo goes through the workflow (plus some small extras) for **one-shot** NFSv3 to S3 migration. Main steps:
+- Make NFS share read-only
+- Build NFS inventory
+- Copy NFS share to S3 bucket
+- Verify (using several approaches)
+
+- ![S2S3 walk-through](https://rumble.com/v7hgax0-s2s3-share-to-s3-a-tool-for-nas-to-s3-migration-for-storagegrid-and-vgw.html) - 8m52s

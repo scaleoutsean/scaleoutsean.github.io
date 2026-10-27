@@ -22,7 +22,7 @@ There are just two direct dependencies: `requests` and Prometheus. When you upda
 
 If you look at some other monitoring projects, you may notice they have over 200,000 lines of code. And they keep adding logging and event features. EPA, on the other hand, kicked those *out* in 4.0; in my view, getting rid of those things was a feature. It also significantly reduced the amount of RAM required by Collector.
 
-By the way, some time ago I added volume metadata collection so that I can view Kubernetes (PVC) metadata in EPA. I accidentally stumbled across some LUNs created by NetApp's Ansible playbooks, which also set volume metadata. Those can be viewed as well.
+By the way, some time ago I added volume metadata collection so that I can view Kubernetes (PVC) metadata injected by SANtricity CSI in EPA. Last week, I accidentally stumbled across some LUNs created by NetApp's Ansible playbooks, which also set volume metadata. Those can be viewed as well. Good to know.
 
 ![Volumes](/assets/images/epa41_00_volume_md.png)
 
