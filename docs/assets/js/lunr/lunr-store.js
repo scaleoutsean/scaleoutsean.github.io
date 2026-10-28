@@ -2826,7 +2826,7 @@ var store = [{
         "teaser": null
       },{
         "title": "New EPA 4.1 and Victoria Logs S3 tiering feature",
-        "excerpt":"EPA (E-Series Performance Analyzer) 4.1.0 EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. Host performance figures are already “analyzed” i.e. averaged over minutes when we get them, but that’s better than not having them at all. They let the storage...","categories": ["storage","analytics","eseries","netapp","projects"],
+        "excerpt":"EPA (E-Series Performance Analyzer) 4.1.0 EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. I didn’t put them in Grafana because the figures look funny. In SANtricity UI (host-facing network throughput): While I get this from RDMA-only host-side traffic monitor (and...","categories": ["storage","analytics","eseries","netapp","projects"],
         "tags": ["epa","s3","storagegrid","versity","victorialogs"],
         "url": "/2026/10/26/epa41-victoria-logs-s3.html",
         "teaser": null
@@ -2844,7 +2844,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"New EPA 4.1 and Victoria Logs S3 tiering feature 2026-10-26 00:00 10 minute read What is new in E-Series Performance Analyzer 4.1.0 and a look at Victoria Logs S3 tiering S2S3 - NAS Share to S3 copy utility 2026-10-22 00:00 12 minute read S2S3 - what it is, what it...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"New EPA 4.1 and Victoria Logs S3 tiering feature 2026-10-26 00:00 11 minute read What is new in E-Series Performance Analyzer 4.1.0 and a look at Victoria Logs S3 tiering S2S3 - NAS Share to S3 copy utility 2026-10-22 00:00 12 minute read S2S3 - what it is, what it...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

@@ -4,7 +4,26 @@ Fixes some bad Grafana panels and makes several other small improvements. Upcomi
 
 ## EPA (E-Series Performance Analyzer) 4.1.0
 
-EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. Host performance figures are already "analyzed" i.e. averaged over minutes when we get them, but that's better than not having them at all. They let the storage administrator see how clients are doing performance-wise, which can help them with planning and troubleshooting. 
+EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. I didn't put them in Grafana because the figures look funny. In SANtricity UI (host-facing *network* throughput):
+
+![SANtricity network MiB/s](/assets/images/epa41_02_santricity-host-network.png)
+
+While I get this from RDMA-only host-side traffic monitor (and I don't have other clients than NVMe/RoCE):
+
+![SANtricity network MiB/s](/assets/images/epa41_03_api-rdma-ui-network.png)
+
+```sql
+sum by(sys_name) (rate(eseries_rdma_receive_bytes_total{sys_name="netapp_01"}[$__rate_interval]))
+sum by(sys_name) (rate(eseries_rdma_transmit_bytes_total{sys_name="netapp_01"}[$__rate_interval]))
+```
+
+Even if I add these up, the peaks don't overlap so I still fall short by a lot. Maybe that's because averaging doesn't happen at the same time or the same way, so they're "out of sync", so to speak.
+
+Directionally, it looks fine. But it doesn't look reliable and I don't know what the throughput really was. I'll have to find time to figure this out.
+
+Host performance figures are also "analyzed" i.e. averaged over minutes by the time we get them, but that's better than not having them at all.
+
+They let the storage administrator see how clients are doing performance-wise, which can help them with planning and troubleshooting. 
 
 It also fixes some annoying Grafana query bugs which turned correct data into wrong information.
 - For physical disks (not volumes or controllers), throughput in MB/s was wrong in Grafana.
@@ -206,7 +225,7 @@ My main concern was too many objects per directory level on filesystem. VL appli
 
 In my lab, I didn't have activity on some days which resulted in 0-sized objects (`bloom.bin<int>`), but that's not a problem either.
 
-Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.
+Three objects per date prefix is very nice! Even if we keep 3 years on S3, it's still just barely 1.1K subdirectories on XFS.
 
 ```sh
 $ mc ls s2s3/victoria-logs/partitions/

@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/epa41_00_volume_md.png","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2338,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/10/26/epa41-victoria-logs-s3.html"},"headline":"New EPA 4.1 and Victoria Logs S3 tiering feature","description":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it.","datePublished":"2026-10-26T00:00:00+08:00","dateModified":"2026-10-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/epa41_00_volume_md.png","keywords":["epa","s3","storagegrid","versity","victorialogs"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"eseries"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2500,"articleBody":"Fixes some bad Grafana panels and makes several other small improvements. Upcoming S3 \"frozen\" tier in Victoria Logs helps with data retention costs if you decide to forward SANtricity logs to it."}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          10 minute read
+          11 minute read
         
       </span>
     
@@ -241,7 +241,25 @@
         
         <h2 id="epa-e-series-performance-analyzer-410">EPA (E-Series Performance Analyzer) 4.1.0</h2>
 
-<p>EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. Host performance figures are already "analyzed" i.e. averaged over minutes when we get them, but that's better than not having them at all. They let the storage administrator see how clients are doing performance-wise, which can help them with planning and troubleshooting.</p>
+<p>EPA 4.1.0 gathers selected additional or new metrics from SANtricity 12.1, related to NVMe, RoCE, and host performance. I didn't put them in Grafana because the figures look funny. In SANtricity UI (host-facing <em>network</em> throughput):</p>
+
+<p><img src="/assets/images/epa41_02_santricity-host-network.png" alt="SANtricity network MiB/s" /></p>
+
+<p>While I get this from RDMA-only host-side traffic monitor (and I don't have other clients than NVMe/RoCE):</p>
+
+<p><img src="/assets/images/epa41_03_api-rdma-ui-network.png" alt="SANtricity network MiB/s" /></p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sum</span> <span class="k">by</span><span class="p">(</span><span class="n">sys_name</span><span class="p">)</span> <span class="p">(</span><span class="n">rate</span><span class="p">(</span><span class="n">eseries_rdma_receive_bytes_total</span><span class="p">{</span><span class="n">sys_name</span><span class="o">=</span><span class="nv">"netapp_01"</span><span class="p">}[</span><span class="err">$</span><span class="n">__rate_interval</span><span class="p">]))</span>
+<span class="k">sum</span> <span class="k">by</span><span class="p">(</span><span class="n">sys_name</span><span class="p">)</span> <span class="p">(</span><span class="n">rate</span><span class="p">(</span><span class="n">eseries_rdma_transmit_bytes_total</span><span class="p">{</span><span class="n">sys_name</span><span class="o">=</span><span class="nv">"netapp_01"</span><span class="p">}[</span><span class="err">$</span><span class="n">__rate_interval</span><span class="p">]))</span>
+</code></pre></div></div>
+
+<p>Even if I add these up, the peaks don't overlap so I still fall short by a lot. Maybe that's because averaging doesn't happen at the same time or the same way, so they're "out of sync", so to speak.</p>
+
+<p>Directionally, it looks fine. But it doesn't look reliable and I don't know what the throughput really was. I'll have to find time to figure this out.</p>
+
+<p>Host performance figures are also "analyzed" i.e. averaged over minutes by the time we get them, but that's better than not having them at all.</p>
+
+<p>They let the storage administrator see how clients are doing performance-wise, which can help them with planning and troubleshooting.</p>
 
 <p>It also fixes some annoying Grafana query bugs which turned correct data into wrong information.</p>
 <ul>
@@ -448,7 +466,7 @@ partitions/20260615/partition.ready
 
 <p>In my lab, I didn't have activity on some days which resulted in 0-sized objects (<code class="language-plaintext highlighter-rouge">bloom.bin&lt;int&gt;</code>), but that's not a problem either.</p>
 
-<p>Three objects per date prefix is very nice! Even if we keep 3 years, it's still just barely 1K subdirectories on XFS.</p>
+<p>Three objects per date prefix is very nice! Even if we keep 3 years on S3, it's still just barely 1.1K subdirectories on XFS.</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mc <span class="nb">ls </span>s2s3/victoria-logs/partitions/
 <span class="o">[</span>2026-10-26 17:36:51 CST]     0B 20260615/
