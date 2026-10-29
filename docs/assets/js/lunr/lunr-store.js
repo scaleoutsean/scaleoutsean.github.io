@@ -2832,7 +2832,7 @@ var store = [{
         "teaser": null
       },{
         "title": "S2S3 v.3.0 adds native Windows x64 client with SMB 3 support",
-        "excerpt":"WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. What’s new: v0.3.0 (and v0.2.0 before that, but improvements were made since) native Windows client was added in v0.2.). s2s3.exe, baby! S2S3 for Windows can scan SMB 3 shares now … annnnd, the rest of...","categories": ["storage","analytics","eseries","netapp","projects"],
+        "excerpt":"WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. What’s new: with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 client is available. s2s3.exe, baby! S2S3 for Windows can scan SMB 3 shares … annnnd, the rest of it...","categories": ["storage","analytics","eseries","netapp","projects"],
         "tags": ["nas","s3","storagegrid","versity","migration","rclone"],
         "url": "/2026/10/29/s2s3-share-to-s3-tool-030.html",
         "teaser": null
