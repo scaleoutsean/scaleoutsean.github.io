@@ -208,6 +208,15 @@ When I'm ready to switch over, I make the NAS share read-only, run one final inv
 
 I can do all this with Rclone alone, but Rclone does a million things and all I want is just five fixed steps (for as long as I can resist using custom options).
 
+### S2S3 and other tools
+
+Maybe you have another tool (Aspera, etc.) or use several tools for different buckets. Or even the same bucket. 
+
+- Share A is SMB, and it needs to be copied to Bucket A on local StorageGRID cluster. You may want to use S2S3 and RClone for Windows for that
+- Share B is NFS and located in a branch office. You need to copy data to Bucket B over WAN. You may want to feed that list to a commercial utility that beats free ones in transfer speed
+- Share C is local NFS with encryption. Share/bucket owner needs to copy the files themselves. Upload the Parquet files to a StorageGRID bucket of theirs so that they can query it online and perform encryption and upload with AWS SDK-based client of their own
+- Data on Share D is used by two applications. It needs to be copied to s3://bucket/app1 and s3://bucket/app2, respectively. You create the inventory the same way or and filter by prefix while querying, and can copy/sync using different schedules
+
 ## What not to migrate
 
 There are workloads that suck on S3. Each year, they [suck](/2026/08/19/datalake-rag-netapp-storagegrid.html) [less](/2026/08/28/datalake-agentic-rag-netapp-storagegrid.html), but there are applications (especially closed source) that simply can't work with S3. What works well on NFS or can't even work elsewhere should likely stay where it is.
