@@ -56,7 +56,7 @@ Maybe you want to keep data on NAS, but develop new on-premises and cloud applic
 
 There could be other reasons.
 
-### Non-migration use case
+### Non-migration use cases
 
 S2S3 and S2S3 Feeder can help with an approach where legacy NAS clients and even multiple NAS vendors remain, and AI and analytics applications are developed for the modern S3 storage access.
 
@@ -91,6 +91,16 @@ One of the arguments in favor of doing everything on-premises is your data doesn
 But that doesn't mean it shouldn't be migrated or copied to S3, because being able to access it from anywhere after that also means you won't need to copy it to the public cloud or a branch office either. It's also cheaper to park it on S3 than keep it on NAS.
 
 It also doesn't mean all workflows has to be crated on premises from scratch. I intend to try Unstructured in this workflow because I want to evaluate a commercial service which is expected to work better. I tried doing OCR at home, but it sucks. I also hear that from users: "It's great, my data never leaves my premises! But my data is also stuck in poorly OCR'd output which makes it useless for AI". (Unstructured now has *on-premises*, too.)
+
+### Downsides of batch updates
+
+The first is that re-running S2S3 inventory rebuilds it - both initial and incremental inventory builds run a full re-scan; only re-sync can be incremental. With NAS source, that not suitable for large NAS shares.
+
+S2S3 Feeder isn't meant to be used for such use cases. Object stores offer easy-to-consume event notifications and if you need something near-real-time, migrate to S3 and use event notifications (which I do in Kompromise) or use [SGII](https://github.com/scaleoutsean/sg-cosi/blob/master/SGII.md#sgii), which allows you to incrementally refresh object lists by scanning (not copying!) just the changed objects (this uses StorageGRID bucket snapshots).
+
+You can't use this trick with NAS systems because snapshots let you see *all* share data. SGII takes "in between" snapshots, so if I take one at 6am and want to scope my incremental inventory build to only today's changes, I snapshot the bucket for the period between 0 and 6am UTC, and see only what changed during that period.
+
+The second is that, if NAS sources are updated, S2S3 Feeder should add the ability to use incremental inventory datasets to avoid copying the full share every time, which v1 currently doesn't do. This isn't hard to do, but it's not implemented. Using manual Rclone submission is a viable workaround for most situations until then: inventory scan remains full, but dataset is incremental which means that if a 10TB NAS share adds 10GB of new files, your Rclone copy job will run one job which runs for 1-2 minutes.
 
 ## Conclusion
 
