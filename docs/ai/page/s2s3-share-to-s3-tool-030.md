@@ -7,7 +7,7 @@ WTF is **S2S3**? See [here](/2026/10/22/s2s3-share-to-s3-tool.html).
 > It's a share-and-bucket inventory-related utility for NAS to S3 migrations.
 
 What's new:
-- with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 client is available. `s2s3.exe`, baby!
+- with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 executable is available. `s2s3.exe`, baby!
 - S2S3 for Windows can scan SMB 3 shares
 - ... annnnd, the rest of it still works
 

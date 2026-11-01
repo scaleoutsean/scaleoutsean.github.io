@@ -2832,9 +2832,15 @@ var store = [{
         "teaser": null
       },{
         "title": "S2S3 v.3.0 adds native Windows x64 client with SMB 3 support",
-        "excerpt":"WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. What’s new: with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 client is available. s2s3.exe, baby! S2S3 for Windows can scan SMB 3 shares … annnnd, the rest of it...","categories": ["storage","analytics","eseries","netapp","projects"],
+        "excerpt":"WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. What’s new: with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 executable is available. s2s3.exe, baby! S2S3 for Windows can scan SMB 3 shares … annnnd, the rest of it...","categories": ["storage","analytics","eseries","netapp","projects"],
         "tags": ["nas","s3","storagegrid","versity","migration","rclone"],
         "url": "/2026/10/29/s2s3-share-to-s3-tool-030.html",
+        "teaser": null
+      },{
+        "title": "S2S3 Feeder for distributed NAS to S3 copying",
+        "excerpt":"Introduction WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. In other words, S2S3 can’t copy on its own - it provides canned recipes, but leaves that choice to the user. See that post for more. After the initial release, a Windows-native S2S3 client...","categories": ["storage","analytics","netapp","projects"],
+        "tags": ["nas","s3","storagegrid","versity","migration","rclone","agentic-ai","rag","embeddings","unstructured.io"],
+        "url": "/2026/11/01/s2s3-feeder.html",
         "teaser": null
       },{
     "title": "About this site",
@@ -2850,7 +2856,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"S2S3 v.3.0 adds native Windows x64 client with SMB 3 support 2026-10-29 00:00 1 minute read S2S3 adds native Windows client with SMB 3 support New EPA 4.1 and Victoria Logs S3 tiering feature 2026-10-26 00:00 11 minute read What is new in E-Series Performance Analyzer 4.1.0 and a look...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"S2S3 Feeder for distributed NAS to S3 copying 2026-11-01 00:00 10 minute read S2S3 Feeder offloads some of the work managing Rclone replication for larger NAS shares. This post shows how I do it and a simple walk-through with NFSv3 as ... S2S3 v.3.0 adds native Windows x64 client with...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4597,6 +4603,12 @@ var store = [{
   },{
     "title": "victorialogs",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/victorialogs/"
+  },{
+    "title": "agentic-ai",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/agentic-ai/"
+  },{
+    "title": "unstructured.io",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/unstructured-io/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"

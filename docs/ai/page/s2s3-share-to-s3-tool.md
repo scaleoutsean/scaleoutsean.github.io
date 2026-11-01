@@ -210,7 +210,7 @@ I can do all this with Rclone alone, but Rclone does a million things and all I 
 
 ### S2S3 and other tools
 
-Maybe you have another tool (Aspera, etc.) or use several tools for different buckets. Or even the same bucket. 
+Maybe you have another tool (Aspera, etc.) or use several tools for different buckets. Or even for the same bucket. 
 
 - Share A is SMB, and it needs to be copied to Bucket A on local StorageGRID cluster. You may want to use S2S3 and RClone for Windows for that
 - Share B is NFS and located in a branch office. You need to copy data to Bucket B over WAN. You may want to feed that list to a commercial utility that beats free ones in transfer speed
