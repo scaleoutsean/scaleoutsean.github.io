@@ -30,22 +30,22 @@ It's not hard to scan 100 million files, and it's not hard to split tasks in bat
 
 S2S3 Feeder takes S2S3's share inventory in the Parquet format and gets to work:
 - Celery and RabbitMQ create and dispatch tasks to workers.
-- Each worker gets a job, which can be a tiny chunk of 1,000 files from that file list with 100 million files.
-- Each worker processes that list. The job description for S2S3 Feeder workers is "read the file from NAS and copy it to the S3 destination bucket". If a worker fails, the task gets assigned to another. If it completes, it comes back to the broker for more.
+- Each worker gets a job, which can be a tiny chunk of 1,000 files from that inventory with 100 million files.
+- Each worker contributes to processing. The job of a S2S3 Feeder worker is to read the file from NAS and copy it to the S3 destination bucket. If a worker fails, the batch gets assigned to another. If a worker completes a batch, it comes back to the broker for more.
 - We create any number of workers we want, but we should stop adding new workers if that overloads the object store and NAS.
 
 ![S2S3 Feeder](/assets/images/s2s3-08-s2s3-feeder.png)
 
-Even here, I default to Rclone, which is used in Feeder workers. But like with the manual S2S3 workflows, it's easy to use another tool.
+Even here, I default to using Rclone, which is built into Feeder container image. But like with the manual S2S3 workflows, it's easy to use another tool.
 
-This approach has no practical scaling limits. Of course, you may not be able to dispatch and complete 10,000 jobs per second. If each job contains a batch of 1,000 files, you'd need dozens of workers to process just a handful of jobs per second, and either the NAS or object store would slow down long before you get even close.
+This approach has no practical scaling limits. Of course, you may not be able to dispatch and complete 10,000 jobs per second. If each job contains a batch of 1,000 files, you'd need dozens of workers to process just a handful of jobs per second, and either the NAS or object store would slow down long before you got even close.
 
 What is not shown (because the diagrams are already too busy) is S2S3 Feeder stores job details in a restricted-access bucket located on S3. That means there's no database service as such, and yet there are no new requirements because this is a "to S3" project, so S3 is always available or else you have no S3 to copy to. It also means you can delete or reinstall S2S3 Feeder and pick where you left off.
 
 ## Other use cases for S2S3 Feeder
 
-In the first S2S3 post I mentioned simple copying isn't the only thing one can do
-- We can inject extra steps
+In the first S2S3 post I mentioned simple copying isn't the only thing one can do with Feeder:
+- We can inject extra steps in worker job description
 - We don't even have to migrate data from NAS
 
 ### Why not migrate
@@ -90,7 +90,7 @@ One of the arguments in favor of doing everything on-premises is your data doesn
 
 But that doesn't mean it shouldn't be migrated or copied to S3, because being able to access it from anywhere after that also means you won't need to copy it to the public cloud or a branch office either. It's also cheaper to park it on S3 than keep it on NAS.
 
-It also doesn't mean all workflows has to be crated on premises from scratch. I intend to try Unstructured in this workflow because I want to evaluate a commercial service which is expected to work better. I tried doing OCR at home, but it sucks. I also hear that from users: "It's great, my data never leaves my premises! But my data is also stuck in poorly OCR'd output which makes it useless for AI". (Unstructured now has *on-premises*, too.)
+It also doesn't mean all workflows has to be crated on premises from scratch. I intend to try Unstructured in this workflow because I want to evaluate a commercial service which is expected to work better. I tried doing OCR at home, but it sucks. I also hear that from users: "It's great, my data never leaves my premises! But my data is also stuck in poorly OCR'd output which makes it useless for AI". (Edit: as I tried to create an Unstructured account, I found they don't allow registration from non-business emails - even for pay-as-you-go accounts! So that idea is dead.)
 
 ### Downsides of batch updates
 

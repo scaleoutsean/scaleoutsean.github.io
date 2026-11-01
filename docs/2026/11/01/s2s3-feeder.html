@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/01/s2s3-feeder.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/01/s2s3-feeder.html"},"headline":"S2S3 Feeder for distributed NAS to S3 copying","description":"S2S3 Feeder takes care of NAS-to-S3 copying for one-shot migrations to StorageGRID and VGW","datePublished":"2026-11-01T00:00:00+08:00","dateModified":"2026-11-01T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/s2s3-08-s2s3-feeder.png","keywords":["nas","s3","storagegrid","versity","migration","rclone","agentic-ai","rag","embeddings","unstructured.io"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2929,"articleBody":"S2S3 Feeder takes care of NAS-to-S3 copying for one-shot migrations to StorageGRID and VGW"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/01/s2s3-feeder.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/01/s2s3-feeder.html"},"headline":"S2S3 Feeder for distributed NAS to S3 copying","description":"S2S3 Feeder takes care of NAS-to-S3 copying for one-shot migrations to StorageGRID and VGW","datePublished":"2026-11-01T00:00:00+08:00","dateModified":"2026-11-01T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/s2s3-08-s2s3-feeder.png","keywords":["nas","s3","storagegrid","versity","migration","rclone","agentic-ai","rag","embeddings","unstructured.io"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"analytics"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"}],"wordCount":2963,"articleBody":"S2S3 Feeder takes care of NAS-to-S3 copying for one-shot migrations to StorageGRID and VGW"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -272,24 +272,24 @@
 <p>S2S3 Feeder takes S2S3's share inventory in the Parquet format and gets to work:</p>
 <ul>
   <li>Celery and RabbitMQ create and dispatch tasks to workers.</li>
-  <li>Each worker gets a job, which can be a tiny chunk of 1,000 files from that file list with 100 million files.</li>
-  <li>Each worker processes that list. The job description for S2S3 Feeder workers is "read the file from NAS and copy it to the S3 destination bucket". If a worker fails, the task gets assigned to another. If it completes, it comes back to the broker for more.</li>
+  <li>Each worker gets a job, which can be a tiny chunk of 1,000 files from that inventory with 100 million files.</li>
+  <li>Each worker contributes to processing. The job of a S2S3 Feeder worker is to read the file from NAS and copy it to the S3 destination bucket. If a worker fails, the batch gets assigned to another. If a worker completes a batch, it comes back to the broker for more.</li>
   <li>We create any number of workers we want, but we should stop adding new workers if that overloads the object store and NAS.</li>
 </ul>
 
 <p><img src="/assets/images/s2s3-08-s2s3-feeder.png" alt="S2S3 Feeder" /></p>
 
-<p>Even here, I default to Rclone, which is used in Feeder workers. But like with the manual S2S3 workflows, it's easy to use another tool.</p>
+<p>Even here, I default to using Rclone, which is built into Feeder container image. But like with the manual S2S3 workflows, it's easy to use another tool.</p>
 
-<p>This approach has no practical scaling limits. Of course, you may not be able to dispatch and complete 10,000 jobs per second. If each job contains a batch of 1,000 files, you'd need dozens of workers to process just a handful of jobs per second, and either the NAS or object store would slow down long before you get even close.</p>
+<p>This approach has no practical scaling limits. Of course, you may not be able to dispatch and complete 10,000 jobs per second. If each job contains a batch of 1,000 files, you'd need dozens of workers to process just a handful of jobs per second, and either the NAS or object store would slow down long before you got even close.</p>
 
 <p>What is not shown (because the diagrams are already too busy) is S2S3 Feeder stores job details in a restricted-access bucket located on S3. That means there's no database service as such, and yet there are no new requirements because this is a "to S3" project, so S3 is always available or else you have no S3 to copy to. It also means you can delete or reinstall S2S3 Feeder and pick where you left off.</p>
 
 <h2 id="other-use-cases-for-s2s3-feeder">Other use cases for S2S3 Feeder</h2>
 
-<p>In the first S2S3 post I mentioned simple copying isn't the only thing one can do</p>
+<p>In the first S2S3 post I mentioned simple copying isn't the only thing one can do with Feeder:</p>
 <ul>
-  <li>We can inject extra steps</li>
+  <li>We can inject extra steps in worker job description</li>
   <li>We don't even have to migrate data from NAS</li>
 </ul>
 
@@ -339,7 +339,7 @@
 
 <p>But that doesn't mean it shouldn't be migrated or copied to S3, because being able to access it from anywhere after that also means you won't need to copy it to the public cloud or a branch office either. It's also cheaper to park it on S3 than keep it on NAS.</p>
 
-<p>It also doesn't mean all workflows has to be crated on premises from scratch. I intend to try Unstructured in this workflow because I want to evaluate a commercial service which is expected to work better. I tried doing OCR at home, but it sucks. I also hear that from users: "It's great, my data never leaves my premises! But my data is also stuck in poorly OCR'd output which makes it useless for AI". (Unstructured now has <em>on-premises</em>, too.)</p>
+<p>It also doesn't mean all workflows has to be crated on premises from scratch. I intend to try Unstructured in this workflow because I want to evaluate a commercial service which is expected to work better. I tried doing OCR at home, but it sucks. I also hear that from users: "It's great, my data never leaves my premises! But my data is also stuck in poorly OCR'd output which makes it useless for AI". (Edit: as I tried to create an Unstructured account, I found they don't allow registration from non-business emails - even for pay-as-you-go accounts! So that idea is dead.)</p>
 
 <h3 id="downsides-of-batch-updates">Downsides of batch updates</h3>
 
