@@ -32,7 +32,7 @@ Let's see about that in the narrow context of keeping documentation on StorageGR
 
 ## Ragdoll
 
-Ragdoll is my PoC project for a docs-to-RAG workflow. Its objective is to leverage S3 as much as possible, and the entire workflow should be effortless. I also want to be able to improve it.
+Ragdoll is my PoC project for a docs-to-RAG workflow. Its objective is to leverage S3 as much as possible, and the entire workflow should be effortless. I also want to be able to improve its search compared to what's available on the official NetApp Docs site.
 
 The NetApp docs are on Github. I get a few (e-series, e-series-santricity, storagegrid, storagegrid-appliances) and store them on NAS, in the `source` directory here:
 
