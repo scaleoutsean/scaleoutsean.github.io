@@ -36,7 +36,7 @@ S2S3 Feeder takes S2S3's share inventory in the Parquet format and gets to work:
 
 ![S2S3 Feeder](/assets/images/s2s3-08-s2s3-feeder.png)
 
-Even here, I default to using Rclone, which is built into Feeder worker's container image. But like with the manual S2S3 workflows, it's easy to use another tool.
+Even here, I default to using Rclone, which is built into Feeder worker's container image. But like with the manual S2S3 workflows, it's easy to use another copy tool.
 
 This approach has no practical scaling limits. Of course, you may not be able to dispatch and complete 10,000 jobs per second. If each job contains a batch of 1,000 files, you'd need dozens of workers to process just a handful of jobs per second, and either the NAS or object store would slow down long before you got even close.
 
@@ -94,6 +94,8 @@ It also doesn't mean all workflows has to be crated on premises from scratch. I 
 
 ### Downsides of batch updates
 
+In non-migration use cases, rescan-and-batch updates aren't always practical and may have downsides depending on use case.
+
 The first is that re-running S2S3 inventory operations is expensive - both initial and incremental inventory performs run a full directory re-scan; only re-sync can be incremental. With a NAS source, that not suitable for large NAS shares.
 
 S2S3 Feeder isn't meant to be used for such use cases. Object stores offer easy-to-consume event notifications and if you need something near-real-time, migrate to S3 and use event notifications (which I do in Kompromise) or use [SGII](https://github.com/scaleoutsean/sg-cosi/blob/master/SGII.md#sgii), which allows you to incrementally refresh object lists by scanning (not copying!) just the changed objects (this uses StorageGRID bucket snapshots).
@@ -116,6 +118,10 @@ For NFSv3 sources, we can run S2S3 Feeder natively or containerized (Docker or K
 Performance is yet again a non-issue. According to RabbitMQ benchmarks, tens of thousands of jobs can be dispatched per second. S2S3 Feeder jobs are not small (each individual job contains thousands of files), so processing just 8 or 16 per second would require a *lot* of very big workers.
 
 ## Appendix A: Walk-through
+
+- There's a Windows client for SMB 3, too, but we'll focus on the more popular NFSv3.
+
+![S2S3 Feeder on Windows](/assets/images/s2s3-12-s2s3-feeder-windows.png)
 
 - Linux NFSv3 share `192.168.1.194:/mnt/nfs-test` mounted on S2S3 Feeder client(s) using the same path:
 
