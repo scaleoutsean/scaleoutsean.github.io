@@ -220,8 +220,8 @@ After embeddings are created, there's very little I/O where content (Markdown) i
 
 And 80% of clicks will be cached in reverse HTTPS proxies, so you'll rarely ever hit StorageGRID even when you click on reference links.
 
-Web UI is fundamentally limited in what it can do on StorageGRID bucket (list, get) and you get SSO and end-to-end logging and [auditing](/2021/10/20/sgac-storagegrid-audit-log-converter-v0.2.1.html) without any effort. 
+Web UI is fundamentally limited in what it can do on StorageGRID bucket (list, get) and you get SSO and end-to-end logging and [full access auditing](/2026/09/20/sgac-storagegrid-audit-v030.html) without any effort.
 
 ![Ragdoll CLI search](/assets/images/ragdoll-07-rag-search-cli.png)
 
-In a future post we'll examine an agentic use cases.
+In a future post we'll examine an agentic use case with SurrealDB.
