@@ -12,25 +12,27 @@ It also has a practical example.
 
 ## Search is hard
 
-Good search was never easy. It's a long series of steps, each of which impact our final experience, and details matter. Someone needs to be specific here!
+Good search was never easy. There's a long series of steps from product information (not even documentation) to a searchable Web site, each of which impact our final experience, and details of each step matter.
 
 ![NetApp Docs - Be Specific](/assets/images/ragdoll-00-netappdocs.png)
 
-And in recent years then there's AI integration. Also hard! 
+> Someone needs to be specific here!
+
+And, in recent years, there's AI integration on top of that. Also hard!
 
 ![NetApp Docs AI - Be Specific](/assets/images/ragdoll-01-netappdocs-ai-bot.png)
 
 > Yeah, sure, my boss told me to get Hyper-V done by 5pm, but screw that - let me set up those remote volumes! Or maybe I'll buy myself a StorageGRID and do that third thing.
 
-If you want to give it a try, [here you go](https://docs.netapp.com/us-en/e-series/index.html).
+If you want to give it a try, [go here](https://docs.netapp.com/us-en/e-series/index.html).
 
-Anyway - you have some documentation (manuals, notes, etc.) that you may want to improve (make faster, better, etc.).
+Anyway - your place of work probably has some documentation (manuals, notes, etc.) where better or faster search results are desired or maybe it needs to be easily accessible from anywhere while staying secure and hosted on-premises.
 
-But then you must have heard how hard and complicated that is. Let's see about that in the narrow context of keeping documentation on StorageGRID.
+Let's see about that in the narrow context of keeping documentation on StorageGRID.
 
 ## Ragdoll
 
-Ragdoll is my PoC project for a docs-to-RAG workflow. The objective is to keep as much as I can on S3 and effortlessly run that entire workflow.
+Ragdoll is my PoC project for a docs-to-RAG workflow. Its objective is to leverage S3 as much as possible, and the entire workflow should be effortless. I also want to be able to improve it.
 
 The NetApp docs are on Github. I get a few (e-series, e-series-santricity, storagegrid, storagegrid-appliances) and store them on NAS, in the `source` directory here:
 
@@ -169,6 +171,19 @@ Applications can give you direct links to Markdown files, but you can also make 
 There's no need to keep small files on S3. It won't matter on SGF6212, you could keep billions per node, but you don't have to.
 
 My previous S3-only posts showed that files can be kept in highly efficient and compressed tables. If I put the objects in one big Parquet or Iceberg table, that would be the same as those other RAG demos. 
+
+## What's different
+
+I *don't know* how the NetApp Docs site does it, so I can't tell.
+
+In this case:
+- Conversion to Markdown: general open source libraries in Ragdoll
+- Upload: also the usual - Boto3 in Ragdoll
+- Embeddings: nomic-embed-text model called from Ragdoll and pushed to SurrealDB
+- Embeddings and indexes are stored in SurrealDB
+- Search is hybrid (semantic & lexical) - "classic" stuff
+
+There's no chatbot, but those are usually hosted by a 3rd party anyway. NetApp Docs' chatbot seems to be Azure-based.
 
 ## Is this search any better?
 
