@@ -22,7 +22,7 @@ And, in recent years, there's AI integration on top of that. Also hard!
 
 ![NetApp Docs AI - Be Specific](/assets/images/ragdoll-01-netappdocs-ai-bot.png)
 
-> Yeah, sure, my boss told me to get Hyper-V done by 5pm, but screw that - let me set up those remote volumes! Or maybe I'll buy myself a StorageGRID and do that third thing.
+> Yeah, sure, my boss told me to get Hyper-V done by 5pm, but forget about that - let me set up those Remote Storage Volumes, that seems way cooler! Or, maybe I'll order a StorageGRID and do that third thing.
 
 If you want to give it a try, [go here](https://docs.netapp.com/us-en/e-series/index.html).
 
