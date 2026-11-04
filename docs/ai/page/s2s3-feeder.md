@@ -324,3 +324,7 @@ $ mc ls pepsi/s2s3-dest
 
 - We can now go back to S2S3 and run the verify command for one final report before the destination bucket on StorageGRID is enabled for users
 - Technically, we could run multiple iterations with this approach as well, but copying would not be incremental as it is in the S2S3 incremental approach and there would be overlapping jobs for the same source-destination pair (not a problem for copying, but not convenient for inspecting and tracking later)
+
+## Appendix B: S2S3 Feeder demo
+
+- (S2S3 Feeder Demo)[https://rumble.com/v7hu27w-s2s3-feeder.html]

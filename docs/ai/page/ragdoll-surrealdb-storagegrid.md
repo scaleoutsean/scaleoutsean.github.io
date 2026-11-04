@@ -32,7 +32,7 @@ Let's see about that in the narrow context of keeping documentation on StorageGR
 
 ## Ragdoll
 
-Ragdoll is my PoC project for a docs-to-RAG workflow. Its objective is to leverage S3 as much as possible, and the entire workflow should be effortless. I also want to be able to improve its search compared to what's available on the official NetApp Docs site.
+Ragdoll is my PoC project for a docs-to-RAG workflow. Its objective is to leverage S3 as much as possible, and the entire workflow should be effortless. I also want to be able to improve its search compared to the official NetApp Docs site.
 
 The NetApp docs are on Github. I get a few (e-series, e-series-santricity, storagegrid, storagegrid-appliances) and store them on NAS, in the `source` directory here:
 
@@ -135,7 +135,7 @@ usr sys idl wai stl| read  writ| recv  send|  in   out | int   csw
 
 ```
 
-This represents the amount of writes to vector DB and one StorageGRID storage node (a VM; the other two VMs are located elsewhere). Insignificant!
+This represents the amount of writes to vector DB and one StorageGRID storage node (a VM; the other two Storage Node VMs are located elsewhere). Insignificant!
 
 The new product and dataset have been added to the S3 bucket *and* inserted into the vector database.
 
@@ -183,7 +183,7 @@ In this case:
 - Embeddings and indexes are stored in SurrealDB
 - Search is hybrid (semantic & lexical) - "classic" stuff
 
-There's no chatbot, but those are usually hosted by a 3rd party anyway. NetApp Docs' chatbot seems to be Azure-based.
+There's no chatbot, but those are usually hosted by a 3rd party anyway. NetApp Docs' chatbot seems to be Azure-hosted.
 
 ## Is this search any better?
 
@@ -212,7 +212,7 @@ Now, why isn't this better?
 It *is* better:
 - It's faster (the search, but especially if I were to serve the static site with documentation, too)
 - No unrelated results even on a "generic" search page
-- We haven't even added a non-generic AI chatbot
+- We haven't even added a non-generic AI chatbot which ought to work better
 
 It's not better (or worse) in terms of what it finds. It finds the stuff that's in the docs. 
 
@@ -221,6 +221,8 @@ But the search quality not *much* different, because the search works more or le
 To improve search quality, we'd have to do some work on the original documentation - not so much on the tasks done by Ragdoll. 
 
 How Ragdoll works could be improved, too, but as mentioned at the top, it's a long series of steps that leads to challenges in search. The challenge isn't in our embeddings model or how SurrealDB implements search - that part is more or less fixed.
+
+I'll blog again if I make any improvements in search quality.
 
 ## Conclusion
 
@@ -239,3 +241,7 @@ Web UI is fundamentally limited in what it can do on StorageGRID bucket (list, g
 ![Ragdoll CLI search](/assets/images/ragdoll-07-rag-search-cli.png)
 
 In a future post, we'll examine an agentic use case with SurrealDB.
+
+## Appendix A: Demo
+
+- [Ragdoll/SurrealDB/StorageGRID demo](https://rumble.com/v7hu2ru-ragdoll-an-evaluation-of-surrealdb-and-storagegrid-for-rag.html)
