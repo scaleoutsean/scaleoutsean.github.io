@@ -2849,6 +2849,12 @@ var store = [{
         "url": "/2026/11/03/ragdoll-surrealdb-storagegrid.html",
         "teaser": null
       },{
+        "title": "Semantic and lexical search with SereneDB and StorageGRID S3",
+        "excerpt":"Introduction My previous post demonstrated an approach to creating RAG-ready search index with documents in a StorageGRID bucket and indexes in a database. This post shows a different approach (to avoid repetition and highlight its differences) with SereneDB. Differences Examples in this post do not use chunking. Index (and results)...","categories": ["storage","ai","netapp","projects"],
+        "tags": ["s3","storagegrid","agentic-ai","rag","embeddings","serenedb","ragdoll"],
+        "url": "/2026/11/04/ragdoll-serenedb-storagegrid.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2862,7 +2868,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Ragdoll for RAG with SurrealDB and StorageGRID S3 2026-11-03 00:00 9 minute read We use a NetApp Docs data set to show a workflow that uses SurrealDB (database) and StorageGRID S3 (content) S2S3 Feeder for distributed NAS to S3 copying 2026-11-01 00:00 12 minute read S2S3 Feeder offloads some of...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 4 minute read Semantic and direct lexical search with SereneDB and StorageGRID S3 Markdown content Ragdoll for RAG with SurrealDB and StorageGRID S3 2026-11-03 00:00 9 minute read We use a NetApp Docs data set to show a workflow...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4618,6 +4624,12 @@ var store = [{
   },{
     "title": "surrealdb",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/surrealdb/"
+  },{
+    "title": "serenedb",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/serenedb/"
+  },{
+    "title": "ragdoll",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ragdoll/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
