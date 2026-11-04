@@ -175,6 +175,26 @@ ORDER BY matches DESC, 1;
 
 In this example SereneDB loses in search result count, but potentially wins on search relevance.
 
+## Backup and restore
+
+This is out of scope for a post on search, but also not enough for a dedicated one. To backup:
+
+```sql
+SELECT pg_backup_start('nightly') AS start_lsn;
+```
+
+Copy the SereneDB data directory to an Object Lock-enabled bucket on StorageGRID, e.g. something like `mc cp -r /data s3://backup///`.
+
+Resume:
+
+```sql
+SELECT lsn, labelfile FROM pg_backup_stop();
+``` 
+
+There's more, including restore steps, [in TFM](https://serenedb.com/docs/operations/backup).
+
+You can do that [in Kubernetes](/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html) as well.
+
 ## Conclusion
 
 In this workflow, my Ragdoll data preparation tool (or any other tool, including [S2S3](/2026/10/22/s2s3-share-to-s3-tool.html) and [S2S3 Feeder](/2026/11/01/s2s3-feeder.html) for NAS-to-S3 migration) copies Markdown documents to a StorageGRID bucket and SereneDB makes it searchable in no time. 

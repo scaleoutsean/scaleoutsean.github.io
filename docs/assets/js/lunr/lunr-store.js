@@ -2868,7 +2868,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 4 minute read Semantic and direct lexical search with SereneDB and StorageGRID S3 Markdown content Ragdoll for RAG with SurrealDB and StorageGRID S3 2026-11-03 00:00 9 minute read We use a NetApp Docs data set to show a workflow...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 5 minute read Semantic and direct lexical search with SereneDB and StorageGRID S3 Markdown content Ragdoll for RAG with SurrealDB and StorageGRID S3 2026-11-03 00:00 9 minute read We use a NetApp Docs data set to show a workflow...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
