@@ -138,7 +138,7 @@ LIMIT 5;
 Time: 1582.992 ms (00:01.583)
 ```
 
-It took a lot longer the first time, then quickly dropped to 50ms and finally 19ms the 3rd time.
+It took a lot longer the first time, then quickly dropped to 50ms and finally 19ms the third time.
 
 Provide semantic search for only some content, rather than across the board, is a good idea to avoid unnecessarily bloating SereneDB with junk. For example, we could create embeddings only for the sections most relevant to end users, e.g. `s3://docs/storagegrid/tenant` and `s3://docs/storagegrid/s3`.
 

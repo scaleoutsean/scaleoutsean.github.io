@@ -2855,6 +2855,12 @@ var store = [{
         "url": "/2026/11/04/ragdoll-serenedb-storagegrid.html",
         "teaser": null
       },{
+        "title": "TopoLVM CSI with NetApp E-Series for modern analytics and AI",
+        "excerpt":"Why NetApp Trident CSI dropped support for E-Series years ago, but demand for Kubernetes with E-Series must have tripled or quadrupled since. All major applications in the 20s manage own storage on their own and by 2026 everything what’s left has become can be managed by orchestrators, especially AI-assisted ones....","categories": ["storage","e-series","kubernetes"],
+        "tags": ["topolvm","netapp","csi","cybozu"],
+        "url": "/2026/11/06/topo-lvm-netapp-santricity-e-series.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2868,7 +2874,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 5 minute read Semantic and direct lexical search with SereneDB and StorageGRID S3 Markdown content Ragdoll for RAG with SurrealDB and StorageGRID S3 2026-11-03 00:00 9 minute read We use a NetApp Docs data set to show a workflow...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"TopoLVM CSI with NetApp E-Series for modern analytics and AI 2026-11-06 00:00 7 minute read What to pay attention to when using TopoLVM CSI with NetApp E-Series Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 5 minute read Semantic and direct lexical search with SereneDB and StorageGRID...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4631,6 +4637,9 @@ var store = [{
     "title": "ragdoll",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/ragdoll/"
   },{
+    "title": "cybozu",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cybozu/"
+  },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
   },{
@@ -4915,4 +4924,7 @@ var store = [{
   },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/page68/"
+  },{
+    "title": "Home",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/page69/"
   }]
