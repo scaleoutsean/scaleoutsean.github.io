@@ -39,6 +39,8 @@ I've [mentioned TopoLVM](/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseri
 - Deploy TopoLVM with Helm
 - Create a storage class and use it
 
+![TopoLVM with NetApp E-Series array](/assets/images/topolvm-00-with-e-series.png)
+
 This is mostly very generic, so I'll share my observations related to E-Series.
 
 Assuming you boot from local disk, your first TopoLVM disk will start from `/dev/sdb` or similar on NVMe. We use `vgcreate` to "enroll" the volume for TopoLVM. I would keep it simple and if you expect to resize often, perhaps consider DDP-based volumes (but this needs more disks). Otherwise use RAID-based, or see DDP/RAID-related posts on this blog before you decide.
@@ -134,7 +136,7 @@ NAME                  PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOW
 topolvm-provisioner   topolvm.io    Delete          WaitForFirstConsumer   true                   2m16s
 ```
 
-Take a look at the TopoLVM docs and create a `StorageClass` with desired options. I created `fast-raid10`, while the second one came with TopoLVM Helm chart. BY "raid10" I mean RAID 10 on E-Series, not on TopoLVM/LVM.
+Take a look at the TopoLVM docs and create a `StorageClass` with desired options. I created `fast-raid10`, while the second one came with TopoLVM Helm chart. By "raid10", I mean RAID 10 *on E-Series*, not on TopoLVM/LVM.
 
 ```sh
 $ cat topolvm-sc.yaml
@@ -170,7 +172,7 @@ I haven't extensively used TopoLVM because LVM is well known, so there isn't muc
 
 But, as a Kubernetes administrator, you do need to get into the DAS mindset and not assume you can just move or reassign LUNs around like we can do with [Proxmox](/2026/05/21/sanmox-updates.html) shared LVM. 
 
-## Applications
+### Applications
 
 Because TopoLVM isn't an HA CSI (see the post on [other CSI options](/2026/01/20/kubernetes-netapp-eseries-santricity-csi.html)), it's suitable for situations where CSI-provided HA for PVCs isn't needed. Those are many. Broadly:
 
