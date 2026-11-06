@@ -6,7 +6,7 @@ Kubernetes, TopoLVM CSI with NetApp E-Series
 
 NetApp Trident CSI dropped support for E-Series years ago, but demand for Kubernetes with E-Series must have tripled or quadrupled since.
 
-All major applications in the 20s manage own storage on their own and by 2026 everything what's left has become can be managed by orchestrators, especially AI-assisted ones.
+All major applications in the 20s manage own storage on their own and by 2026 everything what's left has become can be managed by orchestrators, especially [AI-assisted ones](https://www.alauda.io/products/hyperflux).
 
 Ten years ago, mainstream workloads were traditional DBs and message queues, often in brittle Active-Standby clusters. Applications needed "storage features".
 
@@ -168,9 +168,9 @@ The TopoLVM docs are good. See [this Pod/PVC example](https://github.com/topolvm
 
 ## Other stuff
 
-I haven't extensively used TopoLVM because LVM is well known, so there isn't much E-Series-specific here.
+I haven't extensively used TopoLVM because LVM is well known, so there isn't much E-Series-specific stuff here.
 
-But, as a Kubernetes administrator, you do need to get into the DAS mindset and not assume you can just move or reassign LUNs around like we can do with [Proxmox](/2026/05/21/sanmox-updates.html) shared LVM. 
+But, as a storage administrator for Kubernetes, you do need to get into the DAS mindset and not assume you can just move or reassign LUNs around like we can do with [Proxmox](/2026/05/21/sanmox-updates.html) shared LVM. (If you're a Kubernetes administrator, you're likely already used to dealing with DAS.)
 
 ### Applications
 
@@ -203,7 +203,7 @@ So, now backup and restore can both work fine.
 - [FSB](/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html)-style backup is always available so Kopia-to-S3 works. By the way, I did this FSB post with IBM Block Driver CSI, which has since received a minor update, and I patched it again but have not published because of lack of meaningful feedback. But with TopoLVM you'd rely on TopoLVM and Thin LVM snapshots - there's nothing E-Series-specific there
 - Use `ignoreDelayBinding: true` and `loadAffinity`
 - Use `WaitForFirstConsumer` storage classes. Create a parallel immediate-mode `StorageClass` (or use the `backupPVC` / `restorePVC` `storageClass` override in the node-agent `ConfigMap`) for Velero’s intermediate volumes only (issue 9343). Velero’s change-storage-class ConfigMap can also be used if you want the restored workload PVCs to land on a different class
-- **Use application backups** - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG) and similar multi-node applications all have replication and backup to S3 built-in (or loadable as plugins). Many applications have this as **the only supported way** (see Elasticsearch link above), so snapshot-based backup and restore should not be used with them.
+- **Use application backups** - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG), Splunk, YugabyteDB and similar multi-node applications all have replication and backup to S3 built-in (or loadable as plugins). Many applications have this as **the only supported way** (see Elasticsearch link above), so snapshot-based backup and restore should not be used with them.
 
 Velero 1.19 (I may blog about it when it comes out later this month) "introduces volume data in-place restore, allowing backup data to be restored directly into existing volumes", which can be useful for TopoLVM if the PV is still around. Just make sure your application supports such restores.
 
