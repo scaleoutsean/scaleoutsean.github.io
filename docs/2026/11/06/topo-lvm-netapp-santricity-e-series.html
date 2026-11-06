@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/06/topo-lvm-netapp-santricity-e-series.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/06/topo-lvm-netapp-santricity-e-series.html"},"headline":"TopoLVM CSI with NetApp E-Series for modern analytics and AI","description":"Kubernetes, TopoLVM CSI with NetApp E-Series","datePublished":"2026-11-06T00:00:00+08:00","dateModified":"2026-11-06T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/topolvm-01-ef-fake-news.png","keywords":["topolvm","netapp","csi","cybozu"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"e-series"},{"@type":"Thing","name":"kubernetes"}],"wordCount":1817,"articleBody":"Kubernetes, TopoLVM CSI with NetApp E-Series"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/06/topo-lvm-netapp-santricity-e-series.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/06/topo-lvm-netapp-santricity-e-series.html"},"headline":"TopoLVM CSI with NetApp E-Series for modern analytics and AI","description":"Kubernetes, TopoLVM CSI with NetApp E-Series","datePublished":"2026-11-06T00:00:00+08:00","dateModified":"2026-11-06T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/topolvm-01-ef-fake-news.png","keywords":["topolvm","netapp","csi","cybozu"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"e-series"},{"@type":"Thing","name":"kubernetes"}],"wordCount":1888,"articleBody":"Kubernetes, TopoLVM CSI with NetApp E-Series"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -425,7 +425,7 @@ Events:                &lt;none&gt;
 
 <p>The second item covers a lot of modern databases. For example, <a href="/2026/04/13/elasticsearch-eck-kuberntees-netapp-santricity-csi.html#is-santricity-csi-supported">Elasticsearch</a> explicitly calls out TopoLVM.</p>
 
-<p>You usually <em>don't need</em> an HA CSI driver for any of those. You may <em>want</em> it as a way to "save money with deduplication", but almost <a href="/2026/09/21/yugabytedb-netapp-storage-eseries.html">everyone knows</a> - maybe evne your superior - you'd be cutting corners by <strong>merging failure domains that application design takes for granted, and relies on for uptime, availability and data consistency</strong>.</p>
+<p>You usually <em>don't need</em> an HA CSI driver for any of those. You may <em>want</em> it as a way to "save money with deduplication", but almost <a href="/2026/09/21/yugabytedb-netapp-storage-eseries.html">everyone knows</a> - maybe even your superior, if not application owners - you'd be cutting corners by <strong>merging failure domains that application design takes for granted, and relies on for uptime, availability and data consistency</strong>.</p>
 
 <h3 id="velero">Velero</h3>
 
@@ -449,8 +449,10 @@ Events:                &lt;none&gt;
   <li><a href="/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html">FSB</a>-style backup is always available so Kopia-to-S3 works. By the way, I did this FSB post with IBM Block Driver CSI, which has since received a minor update, and I patched it again but have not published because of lack of meaningful feedback. But with TopoLVM you'd rely on TopoLVM and Thin LVM snapshots - there's nothing E-Series-specific there</li>
   <li>Use <code class="language-plaintext highlighter-rouge">ignoreDelayBinding: true</code> and <code class="language-plaintext highlighter-rouge">loadAffinity</code></li>
   <li>Use <code class="language-plaintext highlighter-rouge">WaitForFirstConsumer</code> storage classes. Create a parallel immediate-mode <code class="language-plaintext highlighter-rouge">StorageClass</code> (or use the <code class="language-plaintext highlighter-rouge">backupPVC</code> / <code class="language-plaintext highlighter-rouge">restorePVC</code> <code class="language-plaintext highlighter-rouge">storageClass</code> override in the node-agent <code class="language-plaintext highlighter-rouge">ConfigMap</code>) for Velero's intermediate volumes only (issue 9343). Velero's change-storage-class ConfigMap can also be used if you want the restored workload PVCs to land on a different class</li>
-  <li><strong>Use application backups</strong> - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG) and more all have replication and backup to S3. Many applications have this as <strong>the only supported way</strong> (see Elasticsearch link above).</li>
+  <li><strong>Use application backups</strong> - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG) and similar multi-node applications all have replication and backup to S3 built-in (or loadable as plugins). Many applications have this as <strong>the only supported way</strong> (see Elasticsearch link above), so snapshot-based backup and restore should not be used with them.</li>
 </ul>
+
+<p>Velero 1.19 (I may blog about it when it comes out later this month) "introduces volume data in-place restore, allowing backup data to be restored directly into existing volumes", which can be useful for TopoLVM if the PV is still around. Just make sure your application supports such restores.</p>
 
 <h3 id="other">Other</h3>
 
