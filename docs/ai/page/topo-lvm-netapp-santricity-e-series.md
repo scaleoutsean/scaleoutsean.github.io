@@ -29,13 +29,14 @@ I've [mentioned TopoLVM](/2022/12/09/directpv-topolvm-csi-lvm-das-k8s-with-eseri
 - Supported Linux distro for the protocol attached to E-Series
   - One or more LUNs per each Kubernetes worker
   - In SANtricity UI, you won't create "host clusters". You'll create just "hosts". Each host sees own stuff
-  - You can use any protocol - SAS, IB, FC, iSCSI. You need to pick an array that supports what you want, and you can't *mix* more than one at the same time. NVMe/ROCE and iSCSI are my personal favorites. New EF arrays can be hybrid (although NetApp hasn't had time to update the datasheet since early September - it's still outdated today as per this screenshot taken minutes ago) and can [have five hosts with NVMe/RoCE](/2026/03/21/netapp-ef-series-ef80-ef50.html) switchlessly attached to an very fast array which can be a nice storage backend for Kafka, NATS, CNPG, Elasticsearch and more
+  - You can use any protocol supported for your OS/SANtricity - SAS, IB, FC, iSCSI... You need to pick an array with HICs (host interface cards) that support what you want, and you can't *mix* more than one at the same time. NVMe/ROCE and iSCSI are my personal favorites. The new EF arrays can be hybrid NVMe/HDD (although NetApp hasn't had time to update the datasheet since early September - it's still outdated today as per this screenshot taken minutes ago) and can [have five hosts with NVMe/RoCE](/2026/03/21/netapp-ef-series-ef80-ef50.html) switchlessly attached to an very fast array which can be a nice storage backend for Kafka, NATS, CNPG, Elasticsearch and more
 
 ![EF50 and EF80 do have hybrid option](/assets/images/topolvm-01-ef-fake-news.png)
 
 - Install your distribution's LVM-related packages and Kubernetes
-- Head over to the repo
-- Deploy with Helm
+- Prepare at least one VG per CSI-enabled worker
+- Head over to the TopoLVM repo
+- Deploy TopoLVM with Helm
 - Create a storage class and use it
 
 This is mostly very generic, so I'll share my observations related to E-Series.
