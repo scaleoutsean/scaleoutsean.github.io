@@ -2861,20 +2861,32 @@ var store = [{
         "url": "/2026/11/06/topo-lvm-netapp-santricity-e-series.html",
         "teaser": null
       },{
+        "title": "CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE",
+        "excerpt":"Introduction CetraFS is on Github: kernel and userspace code for cetrafs, a clustered, shared-disk filesystem for Linux TFM is here. Disclaimer from the status section: Beta software Okay, that aside, if you run PVE with E-Series and want to kick tires on several LUNs, why the heck not? Setup I...","categories": ["storage","e-series","virtualization"],
+        "tags": ["ef-series","e-series","netapp","nvme","roce","rdma","trixie","debian","pve","proxmox","CetraFS"],
+        "url": "/2026/11/07/proxmox-pve-netapp-eseries-cetrafs.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
     "title": "Posts by Category",
     "excerpt":" ","url": "https://blog.scaleoutsean.com/categories/"
   },{
+    "title": "Docochat",
+    "excerpt":"    ","url": "https://blog.scaleoutsean.com/docochat/"
+  },{
+    "title": "Docosearch",
+    "excerpt":"    ","url": "https://blog.scaleoutsean.com/docosearch/"
+  },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/"
   },{
     "title": "Page Archive",
-    "excerpt":"About this site Posts by Category Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress nginx backup...","url": "https://blog.scaleoutsean.com/page-archive/"
+    "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"TopoLVM CSI with NetApp E-Series for modern analytics and AI 2026-11-06 00:00 8 minute read What to pay attention to when using TopoLVM CSI with NetApp E-Series Semantic and lexical search with SereneDB and StorageGRID S3 2026-11-04 00:00 5 minute read Semantic and direct lexical search with SereneDB and StorageGRID...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4 minute read CetraFS 0.4.3, PVE 9.2.6, SANtricity 12.1 TopoLVM CSI with NetApp E-Series for modern analytics and AI 2026-11-06 00:00 8 minute read What to pay attention to when using TopoLVM CSI with NetApp E-Series Semantic and lexical search with SereneDB...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4639,6 +4651,9 @@ var store = [{
   },{
     "title": "cybozu",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cybozu/"
+  },{
+    "title": "CetraFS",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/cetrafs/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"

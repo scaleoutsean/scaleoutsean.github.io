@@ -191,3 +191,65 @@ It's a very simple workflow even when your documents need preparation (in my cas
 Because this approach is so effective and StorageGRID can be easily accessed from remote locations, it is cheap to create and deploy SereneDB on premises and in your cloud instances for various use cases. Data lives on your object store and your cloud applications have nothing to replicate backup, or manage (storage-wise). SereneDB doesn't need to be nearby to index your StorageGRID content.
 
 If clients need access to documents, that works with native S3 clients and various ways to deliver that, including [OpenSharing](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html).
+
+**Update:** after AI chat evaluation, I consider this PoC successful. My chatbot is hosted uses hybrid search with "luxury" options. Because it does more, it's a lot slower, but I think it gives me much better results. Instead of three queries, I need one (and for now, have 1-2 quirks that are tolerable).
+
+## Appendix A: AI chat examples
+
+As the last step of this evaluation, I added own AI chatbot and compared it against the one on NetApp Docs ("Doc").
+
+As I've said before, I've no idea what they do, but I know what I do. And, there is cost to this stuff, plus it's fully open to public, so how much should be done and how is tricky: very good may also be very expensive.
+
+But that is also my starting premise: I need it to be very good, that's why I'm doing my own. I'd rather give it one query, wait 10 seconds, and get the correct answer.
+
+- **Question** about management actions in the StorageGRID audit log
+
+![Management messages in audit log by NetApp Docs](/assets/images/ragdoll-10-ai-chat-example-01n.png)
+
+Very academic.
+
+My chatbot:
+
+![ACL example by NetApp Docs](/assets/images/ragdoll-10-ai-chat-example-01dc.png)
+
+That's better. `MGAU` is what I was after.
+
+- **Question** about an ACL example for anonymous access to bucket:
+
+![ACL example by Docochat](/assets/images/ragdoll-10-ai-chat-example-02n.png)
+
+That is completely useless!
+
+My chatbot gave a less academic answer, which was great.
+
+![ACL example by Docochat - take one](/assets/images/ragdoll-10-ai-chat-example-02dc-alpha.png)
+
+But, it also wasn't correct.
+
+![ACL example by Docochat](/assets/images/ragdoll-10-ai-chat-example-02dc.png)
+
+That was good, once corrected. But if you did't know it was wrong... 
+
+It seems it mis-remembers and mixes up previous queries. For now, a "fix" is to start a new chat for a new topic.
+
+- **Sources** vs. NetApp sources
+
+It's a bit quirky as I sometimes need to ask for links to sources (the prompt says it should always provide them and it mostly works).
+
+![Links to sources](/assets/images/ragdoll-10-ai-chat-example-03-references-dc.png)
+
+My sources link directly to markdown files because I scrape markdown files on StorageGRID. Here's the first of those links:
+
+![Source in Markdown](/assets/images/ragdoll-10-ai-chat-example-04-references-dc-markdown.png)
+
+This is what I want.
+
+So, I picked the "luxury" option:
+- Good quality answers
+- Better UI
+
+Downsides I accepted:
+- Slower, because it works harder to produce better results
+- I nee
+
+I don't know how it fares against NetApp's cost-wise.
