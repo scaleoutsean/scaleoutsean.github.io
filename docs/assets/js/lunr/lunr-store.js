@@ -2877,7 +2877,7 @@ var store = [{
     "excerpt":"   This chat is only for NetApp StorageGRID software v12.1   Chat is very rate-limited to roughly 1 query/min. You’ll see 429 error if you hit it   Chat is slower, but more thorough   Start a new chat when changing topic of inquiry       ","url": "https://blog.scaleoutsean.com/docochat/"
   },{
     "title": "Docosearch",
-    "excerpt":"   Demo of hybrid search for StorageGRID 12.1   Markdown documentation       ","url": "https://blog.scaleoutsean.com/docosearch/"
+    "excerpt":"   Demo of hybrid search for StorageGRID 12.1   Source is in Markdown-formatted files on S3   Known limitation: search script does not redirect to the NetApp docs site (it can be done, but in my own search I have no need for it)         ","url": "https://blog.scaleoutsean.com/docosearch/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/"
