@@ -2874,10 +2874,10 @@ var store = [{
     "excerpt":" ","url": "https://blog.scaleoutsean.com/categories/"
   },{
     "title": "Docochat",
-    "excerpt":"    ","url": "https://blog.scaleoutsean.com/docochat/"
+    "excerpt":"   Chat is only for NetApp StorageGRID software v12.1   Chat is rate-limited to some 1 query per minute. You’ll see 429 error if you hit it   Chat is slower, but more thorough   Start a new chat when changing topic       ","url": "https://blog.scaleoutsean.com/docochat/"
   },{
     "title": "Docosearch",
-    "excerpt":"    ","url": "https://blog.scaleoutsean.com/docosearch/"
+    "excerpt":"     hide-branding=\"true\"   placeholder=\"Search StorageGRID software-only documentation for v12.1\"   ","url": "https://blog.scaleoutsean.com/docosearch/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/"
