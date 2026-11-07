@@ -9,7 +9,7 @@
 
 <chat-page-snippet
   api-url="https://70218073-6b2c-417e-8dd0-0c00e6afc14d.search.ai.cloudflare.com/"
-  placeholder=""
+  placeholder="Search StorageGRID 12.1 docs"
   hide-branding="true"
   style="display:block; height: calc(100vh - 12rem); min-height: 36rem;">
 </chat-page-snippet>
