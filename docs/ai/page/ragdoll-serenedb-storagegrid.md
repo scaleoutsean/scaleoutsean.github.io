@@ -234,15 +234,15 @@ It seems it mis-remembers and mixes up previous queries. For now, a "fix" is to 
 
 - **Sources** vs. NetApp sources
 
-It's a bit quirky as I sometimes need to ask for links to sources (the prompt says it should always provide them and it mostly works).
+It's a bit quirky as I sometimes need to ask for links to sources (the prompt says it should always provide them and it *mostly* works).
 
 ![Links to sources](/assets/images/ragdoll-10-ai-chat-example-03-references-dc.png)
 
-My sources link directly to markdown files because I scrape markdown files on StorageGRID. Here's the first of those links:
+My sources link directly to the Markdown files because I scrape markdown files on StorageGRID. Here's the first of those links:
 
 ![Source in Markdown](/assets/images/ragdoll-10-ai-chat-example-04-references-dc-markdown.png)
 
-This is what I want.
+This is what I wanted.
 
 So, I picked the "luxury" option:
 - Good quality answers
@@ -253,4 +253,4 @@ Downsides I accepted:
 - Self-hosted, so not free
 - Currently I have search on premises and chatbot in the cloud
 
-I don't know how it fares against NetApp's cost-wise, but I wasn't paying for NetApp's AI chatbot before.
+I don't know how it fares against NetApp's cost-wise, but I wasn't paying for NetApp's AI chatbot before. But I save time and effort this way.
