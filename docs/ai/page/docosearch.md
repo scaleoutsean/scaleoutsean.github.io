@@ -2,7 +2,7 @@
 
 - Demo of hybrid search for StorageGRID 12.1
 - Source is in Markdown-formatted files on S3
-- Known limitation: search script does not redirect to the NetApp docs site (it can be done, but in my own search I have no need for it)
+- Known limitation: search script does not redirect to the NetApp docs site (it can be done, but in my own internal search I have no need for it)
 
 <style>
   search-bar-snippet {

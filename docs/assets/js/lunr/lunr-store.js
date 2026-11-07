@@ -2874,10 +2874,10 @@ var store = [{
     "excerpt":" ","url": "https://blog.scaleoutsean.com/categories/"
   },{
     "title": "Docochat",
-    "excerpt":"   This chat is only for NetApp StorageGRID software v12.1   Chat is very rate-limited to roughly 1 query/min. You’ll see 429 error if you hit it   Chat is slower, but more thorough   Start a new chat when changing topic of inquiry       ","url": "https://blog.scaleoutsean.com/docochat/"
+    "excerpt":"   This chat is only for NetApp StorageGRID software v12.1   Chat is very rate-limited to roughly 1 query/min. You may get the 429 error after that.   Start a new chat when changing topic of inquiry       ","url": "https://blog.scaleoutsean.com/docochat/"
   },{
     "title": "Docosearch",
-    "excerpt":"   Demo of hybrid search for StorageGRID 12.1   Source is in Markdown-formatted files on S3   Known limitation: search script does not redirect to the NetApp docs site (it can be done, but in my own search I have no need for it)         ","url": "https://blog.scaleoutsean.com/docosearch/"
+    "excerpt":"   Demo of hybrid search for StorageGRID 12.1   Source is in Markdown-formatted files on S3   Known limitation: search script does not redirect to the NetApp docs site (it can be done, but in my own internal search I have no need for it)         ","url": "https://blog.scaleoutsean.com/docosearch/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/"
@@ -2886,7 +2886,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4 minute read CetraFS 0.4.3, PVE 9.2.6, SANtricity 12.1 TopoLVM CSI with NetApp E-Series for modern analytics and AI 2026-11-06 00:00 8 minute read What to pay attention to when using TopoLVM CSI with NetApp E-Series Semantic and lexical search with SereneDB...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4 minute read CetraFS 0.9.3 on PVE 9.2.6 with SANtricity 12.1 and NVMe/RoCE LUNs TopoLVM CSI with NetApp E-Series for modern analytics and AI 2026-11-06 00:00 8 minute read What to pay attention to when using TopoLVM CSI with NetApp E-Series Semantic...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

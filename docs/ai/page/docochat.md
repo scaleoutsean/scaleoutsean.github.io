@@ -1,8 +1,7 @@
 # Docochat
 
 - This chat is only for NetApp StorageGRID software v12.1
-- Chat is very rate-limited to roughly 1 query/min. You'll see `429` error if you hit it
-- Chat is slower, but more thorough
+- Chat is very rate-limited to roughly 1 query/min. You may get the `429` error after that.
 - Start a new chat when changing topic of inquiry
 
 <script type="module" src="https://70b18965-6ccb-40df-902d-313de9c5c89e.search.ai.cloudflare.com/assets/v0.0.40/search-snippet.es.js"></script>
