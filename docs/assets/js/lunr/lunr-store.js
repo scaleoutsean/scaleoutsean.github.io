@@ -2874,10 +2874,10 @@ var store = [{
     "excerpt":" ","url": "https://blog.scaleoutsean.com/categories/"
   },{
     "title": "Docochat",
-    "excerpt":"   This chat is only for NetApp StorageGRID software v12.1   Chat is very rate-limited to roughly 1 query per minute. You’ll see 429 error if you hit it   Chat is slower, but thorough   Start a new chat when changing topic of conversation       ","url": "https://blog.scaleoutsean.com/docochat/"
+    "excerpt":"   This chat is only for NetApp StorageGRID software v12.1   Chat is very rate-limited to roughly 1 query/min. You’ll see 429 error if you hit it   Chat is slower, but more thorough   Start a new chat when changing topic of inquiry       ","url": "https://blog.scaleoutsean.com/docochat/"
   },{
     "title": "Docosearch",
-    "excerpt":"  \u0026lt;chat-page-snippet   api-url=”https://70218073-6b2c-417e-8dd0-0c00e6afc14d.search.ai.cloudflare.com/”   placeholder=”Search StorageGRID 12.1 docs”   hide-branding=”true” \u0026lt;/chat-page-snippet\u0026gt;  ","url": "https://blog.scaleoutsean.com/docosearch/"
+    "excerpt":"   Demo of hybrid search for StorageGRID 12.1   Markdown documentation       ","url": "https://blog.scaleoutsean.com/docosearch/"
   },{
     "title": "Home",
     "excerpt":"","url": "https://blog.scaleoutsean.com/"
