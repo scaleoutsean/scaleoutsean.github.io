@@ -2831,7 +2831,7 @@ var store = [{
         "url": "/2026/10/26/epa41-victoria-logs-s3.html",
         "teaser": null
       },{
-        "title": "S2S3 v.3.0 adds native Windows x64 client with SMB 3 support",
+        "title": "S2S3 v0.3.0 adds native Windows x64 client with SMB 3 support",
         "excerpt":"WTF is S2S3? See here. It’s a share-and-bucket inventory-related utility for NAS to S3 migrations. What’s new: with v0.3.0 (and v0.2.0 before that, but minor improvements happened since), native Windows x64 executable is available. s2s3.exe, baby! S2S3 for Windows can scan SMB 3 shares … annnnd, the rest of it...","categories": ["storage","analytics","eseries","netapp","projects"],
         "tags": ["nas","s3","storagegrid","versity","migration","rclone"],
         "url": "/2026/10/29/s2s3-share-to-s3-tool-030.html",
@@ -2892,7 +2892,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 4 minute read We have StorageGRID and we have the tools - we just need to use them CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4 minute read CetraFS 0.9.3 on PVE 9.2.6 with SANtricity...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 4 minute read We have StorageGRID and we have all the tools we need - we just need to use them to get our sitemap.xml CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4 minute read...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

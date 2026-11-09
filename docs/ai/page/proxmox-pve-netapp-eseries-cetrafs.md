@@ -65,7 +65,7 @@ Fri Nov  6 03:05:14 PM CST 2026
 
 Since that went fine as well, I used that filesystem to create a data store on Proxmox, move a VM from a Shared LVM data store to CetraFS, boot it, update it, and it just worked.
 
-![CetraFS on E-Series](/assets/images/CetraFS-proxmox-eseries-00-cli.png)
+![CetraFS on E-Series](/assets/images/cetrafs-proxmox-eseries-00-cli.png)
 
 ## Limits and gotchas
 

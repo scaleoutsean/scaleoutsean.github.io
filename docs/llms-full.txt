@@ -93,15 +93,17 @@ $ python3 data-prep.py \
   --output SITEMAP
 ```
 
-- In step (3) above, Approver has the ability to apply ACLs on the bucket, and push Web server configuration to deploy
+- In step (3) above, Approver has the ability to apply ACLs on the bucket, and push Web server configuration to deploy. We'd use a canned template for ACLs.
 
 This makes the URL and sitemap accessible to your scanner in the cloud. 
 
 ![Scan from the cloud](/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png)
 
-It reads objects, creates indexes and uses them for the AI stuff as I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could).
+We could package steps 1-3 in a simple API server for these stages of our workflow.
 
-After scanning is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
+In the last step, some kind of indexer reads sitemap.xml, gets listed objects, creates embeddings and indexes and uses them the same way I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could) - AI-assisted search, RAG, chat...
+
+After download (from the cloud) is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
 
 In a less secure workflow we can manually create writable StorageGRID snapshots, but I'm not interested in such "pet" approaches because I don't believe that they should exist outside of datalake or similarly comprehensive management workflows.
 
@@ -187,7 +189,7 @@ Fri Nov  6 03:05:14 PM CST 2026
 
 Since that went fine as well, I used that filesystem to create a data store on Proxmox, move a VM from a Shared LVM data store to CetraFS, boot it, update it, and it just worked.
 
-![CetraFS on E-Series](/assets/images/CetraFS-proxmox-eseries-00-cli.png)
+![CetraFS on E-Series](/assets/images/cetrafs-proxmox-eseries-00-cli.png)
 
 ## Limits and gotchas
 
@@ -356,9 +358,9 @@ So, now backup and restore can both work fine.
 - [FSB](/2026/04/30/velero-csi-data-mover-backup-santricity-kubernetes.html)-style backup is always available so Kopia-to-S3 works. By the way, I did this FSB post with IBM Block Driver CSI, which has since received a minor update, and I patched it again but have not published because of lack of meaningful feedback. But with TopoLVM you'd rely on TopoLVM and Thin LVM snapshots - there's nothing E-Series-specific there
 - Use `ignoreDelayBinding: true` and `loadAffinity`
 - Use `WaitForFirstConsumer` storage classes. Create a parallel immediate-mode `StorageClass` (or use the `backupPVC` / `restorePVC` `storageClass` override in the node-agent `ConfigMap`) for Velero’s intermediate volumes only (issue 9343). Velero’s change-storage-class ConfigMap can also be used if you want the restored workload PVCs to land on a different class
-- **Use application backups** - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG), Splunk, YugabyteDB and similar multi-node applications all have replication and backup to S3 built-in (or loadable as plugins). Many applications have this as **the only supported way** (see Elasticsearch link above), so snapshot-based backup and restore should not be used with them.
+- **Use application backups** - Elasticsearch, Qdrant, Milvus, PostgreSQL (CNPG), Splunk, YugabyteDB and similar multi-node applications all have replication and backup to S3 built-in (or loadable as plugins). Many applications have this as **the only supported way** (see the Elasticsearch link above), so snapshot-based backup and restore should not be used with them.
 
-Velero 1.19 (I may blog about it when it comes out later this month) "introduces volume data in-place restore, allowing backup data to be restored directly into existing volumes", which can be useful for TopoLVM if the PV is still around. Just make sure your application supports such restores.
+Velero v1.19 (I may blog about it when it comes out later this month) "introduces volume data in-place restore, allowing backup data to be restored directly into existing volumes", which can be useful for TopoLVM if the PV is still around. Just make sure your application supports such restores.
 
 ### Other
 
@@ -1244,7 +1246,7 @@ $ mc ls pepsi/s2s3-dest
 
 ---
 
-### S2S3 v.3.0 adds native Windows x64 client with SMB 3 support
+### S2S3 v0.3.0 adds native Windows x64 client with SMB 3 support
 
 URL: https://blog.scaleoutsean.com/2026/10/29/s2s3-share-to-s3-tool-030.html
 Date: 2026-10-29

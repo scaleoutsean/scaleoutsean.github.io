@@ -1,6 +1,6 @@
 # Use SGII and sg-cosi to provide access to AI in public cloud
 
-This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no "storage admins"
+This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no "storage admins" in the workflow
 
 ## Introduction 
 
@@ -80,15 +80,17 @@ $ python3 data-prep.py \
   --output SITEMAP
 ```
 
-- In step (3) above, Approver has the ability to apply ACLs on the bucket, and push Web server configuration to deploy
+- In step (3) above, Approver has the ability to apply ACLs on the bucket, and push Web server configuration to deploy. We'd use a canned template for ACLs.
 
 This makes the URL and sitemap accessible to your scanner in the cloud. 
 
 ![Scan from the cloud](/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png)
 
-It reads objects, creates indexes and uses them for the AI stuff as I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could).
+We could package steps 1-3 in a simple API server for these stages of our workflow.
 
-After scanning is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
+In the last step, some kind of indexer reads sitemap.xml, gets listed objects, creates embeddings and indexes and uses them the same way I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could) - AI-assisted search, RAG, chat...
+
+After download (from the cloud) is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
 
 In a less secure workflow we can manually create writable StorageGRID snapshots, but I'm not interested in such "pet" approaches because I don't believe that they should exist outside of datalake or similarly comprehensive management workflows.
 

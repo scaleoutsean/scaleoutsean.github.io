@@ -1,4 +1,4 @@
-# S2S3 v.3.0 adds native Windows x64 client with SMB 3 support
+# S2S3 v0.3.0 adds native Windows x64 client with SMB 3 support
 
 SMB 3 support added. Migrate at will!
 
