@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html"},"headline":"Tier WEKA NeuralMesh to NetApp StorageGRID S3","description":"High-level overview of WEKA tiering with NetApp StorageGRID","datePublished":"2026-07-25T00:00:00+08:00","dateModified":"2026-07-25T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/weka-storagegrid-00-tiering.png","keywords":["tiering","storagegrid","weka"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"s3"}],"wordCount":1706,"articleBody":"High-level overview of WEKA tiering with NetApp StorageGRID"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/07/25/weka-io-tier-cold-to-netapp-storagegrid.html"},"headline":"Tier WEKA NeuralMesh to NetApp StorageGRID S3","description":"High-level overview of WEKA tiering with NetApp StorageGRID","datePublished":"2026-07-25T00:00:00+08:00","dateModified":"2026-07-25T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/weka-storagegrid-00-tiering.png","keywords":["tiering","storagegrid","weka"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"ai"},{"@type":"Thing","name":"s3"}],"wordCount":2047,"articleBody":"High-level overview of WEKA tiering with NetApp StorageGRID"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          8 minute read
+          9 minute read
         
       </span>
     
@@ -234,7 +234,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#benefits">Benefits</a></li><li><a href="#how-does-it-work">How does it work?</a><ul><li><a href="#weka-front-end">WEKA front end</a></li><li><a href="#storagegrid-back-end">StorageGRID back end</a></li></ul></li><li><a href="#compatibility">Compatibility</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#benefits">Benefits</a></li><li><a href="#how-does-it-work">How does it work?</a><ul><li><a href="#weka-front-end">WEKA front end</a></li><li><a href="#storagegrid-back-end">StorageGRID back end</a></li></ul></li><li><a href="#compatibility">Compatibility</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#appendix-a-api-and-cli">Appendix A: API and CLI</a></li></ul>
             </nav>
           </aside>
         
@@ -367,6 +367,50 @@ image  regular    102.39 MB  0 B                            0 B                 
 <p>No matter which all-flash high-performance storage solution one uses, sometime it makes sense to offload warm or cold data to a lower-cost object store, especially if it's NL-SAS-based. Object stores often don't provide the same storage protocols and interfaces, so front-end high-performance storage clusters such as WEKA make the consumption of S3 seamless.</p>
 
 <p>WEKA and StorageGRID users get the benefits of both products the same time and any additional (deep learning, cold archive, Hadoop, whatever) applications can directly consume whichever system's S3 service makes more sense from a performance, security, governance, features, cost and other perspective. Tiering-to-S3 isn't mandatory. It a value-add which helps users get more out of the combination.</p>
+
+<h2 id="appendix-a-api-and-cli">Appendix A: API and CLI</h2>
+
+<ul>
+  <li>Create a bucket (e.g. <code class="language-plaintext highlighter-rouge">weka-tier</code>) and S3 keys for the tenant
+    <ul>
+      <li>Use ACLs to restrict access to the WEKA cluster</li>
+      <li>Use <a href="https://docs.netapp.com/us-en/storagegrid/tenant/understanding-tenant-management-api.html#operation-details">tenant management API</a></li>
+      <li>Required: in addition to Put/Get/ListV2, add <code class="language-plaintext highlighter-rouge">s3:PutObjectTagging</code> and <code class="language-plaintext highlighter-rouge">s3:DeleteObjectTagging</code> actions</li>
+      <li>There's no CLI, so do this with Ansible, API or UI</li>
+    </ul>
+  </li>
+  <li>Configure tiering for a WekA FS. For version 6.0, <a href="https://docs.weka.io/6.0/weka-filesystems-and-object-stores/managing-object-stores/managing-object-stores-1">see TFM here</a></li>
+</ul>
+
+<p>In this example from TFM, StorageGRID-related options with made up values are at the top. Those are followed by various client-side performance throttling settings. StorageGRID offers STS AssumeRole, but I don't know if WEKA's can work with that.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># weka fs tier s3</span>
+weka fs tier s3 add <span class="k">${</span><span class="nv">NAME</span><span class="k">}</span> <span class="se">\</span>
+  <span class="nt">--auth-method</span> AWSSignature4 <span class="se">\</span>
+  <span class="nt">--hostname</span> weka.sg.s3.com <span class="nt">--port</span> 10443 <span class="nt">--region</span> us-east-1 <span class="se">\</span>
+  <span class="nt">--access-key-id</span> blah <span class="nt">--secret-key</span> blah-bla-blah <span class="se">\</span>
+  <span class="nt">--protocol</span> HTTPS <span class="se">\</span>
+  <span class="nt">--bucket</span> weka-tier <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--prefetch-mib</span> &lt;uint16&gt;] <span class="o">[</span><span class="nt">--prefetch-size</span> &lt;capacity&gt;] <span class="se">\ </span> 
+  <span class="o">[</span><span class="nt">--remove-bandwidth</span> &lt;uint&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--max-concurrent-downloads</span> &lt;uint8&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--max-concurrent-removals</span> &lt;uint8&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--max-concurrent-uploads</span> &lt;uint8&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--bandwidth</span> &lt;uint&gt;] <span class="se">\ </span>
+  <span class="o">[</span><span class="nt">--upload-bandwidth</span> &lt;uint&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--download-bandwidth</span> &lt;uint&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--sts-operation-type</span> &lt;sts-operation&gt;] <span class="o">[</span><span class="nt">--sts-role-arn</span> &lt;string&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--sts-role-session-name</span> &lt;string&gt;] <span class="o">[</span><span class="nt">--sts-session-duration</span> &lt;duration&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--enable-upload-tags</span><span class="o">]</span> <span class="se">\ </span> 
+  <span class="o">[</span><span class="nt">--obs-name</span> &lt;string&gt;] <span class="o">[</span><span class="nt">--obs-type</span> &lt;obs-type&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--site</span> &lt;obs-site&gt;] <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--verbose-errors</span><span class="o">]</span> <span class="se">\</span>
+  <span class="o">[</span><span class="nt">--dry-run</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>There's no <code class="language-plaintext highlighter-rouge">--prefix</code> option, which is safer from collisions and typos, which means cluster-to-bucket relationship is 1:1. There's <code class="language-plaintext highlighter-rouge">--site</code> which may mean each site can have different tiering settings. I don't know because I haven't used it.</p>
+
+<p>Finally, if you want to automate via the API, you can look it up <a href="https://api.docs.weka.io/#/Object%20store%20bucket">here</a>. StorageGRID's Swagger is in the Web UI.</p>
 
         
       </section>

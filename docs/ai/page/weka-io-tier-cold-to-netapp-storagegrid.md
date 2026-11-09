@@ -115,3 +115,43 @@ I understand the recent versions of WEKA (4.x) and StorageGRID (12.1, 12.0, and 
 No matter which all-flash high-performance storage solution one uses, sometime it makes sense to offload warm or cold data to a lower-cost object store, especially if it's NL-SAS-based. Object stores often don't provide the same storage protocols and interfaces, so front-end high-performance storage clusters such as WEKA make the consumption of S3 seamless. 
 
 WEKA and StorageGRID users get the benefits of both products the same time and any additional (deep learning, cold archive, Hadoop, whatever) applications can directly consume whichever system's S3 service makes more sense from a performance, security, governance, features, cost and other perspective. Tiering-to-S3 isn't mandatory. It a value-add which helps users get more out of the combination.
+
+## Appendix A: API and CLI
+
+- Create a bucket (e.g. `weka-tier`) and S3 keys for the tenant
+  - Use ACLs to restrict access to the WEKA cluster
+  - Use [tenant management API](https://docs.netapp.com/us-en/storagegrid/tenant/understanding-tenant-management-api.html#operation-details)
+  - Required: in addition to Put/Get/ListV2, add `s3:PutObjectTagging` and `s3:DeleteObjectTagging` actions
+  - There's no CLI, so do this with Ansible, API or UI
+- Configure tiering for a WekA FS. For version 6.0, [see TFM here](https://docs.weka.io/6.0/weka-filesystems-and-object-stores/managing-object-stores/managing-object-stores-1)
+
+In this example from TFM, StorageGRID-related options with made up values are at the top. Those are followed by various client-side performance throttling settings. StorageGRID offers STS AssumeRole, but I don't know if WEKA's can work with that.
+
+```sh
+# weka fs tier s3
+weka fs tier s3 add ${NAME} \
+  --auth-method AWSSignature4 \
+  --hostname weka.sg.s3.com --port 10443 --region us-east-1 \
+  --access-key-id blah --secret-key blah-bla-blah \
+  --protocol HTTPS \
+  --bucket weka-tier \
+  [--prefetch-mib <uint16>] [--prefetch-size <capacity>] \  
+  [--remove-bandwidth <uint>] \
+  [--max-concurrent-downloads <uint8>] \
+  [--max-concurrent-removals <uint8>] \
+  [--max-concurrent-uploads <uint8>] \
+  [--bandwidth <uint>] \ 
+  [--upload-bandwidth <uint>] \
+  [--download-bandwidth <uint>] \
+  [--sts-operation-type <sts-operation>] [--sts-role-arn <string>] \
+  [--sts-role-session-name <string>] [--sts-session-duration <duration>] \
+  [--enable-upload-tags] \  
+  [--obs-name <string>] [--obs-type <obs-type>] \
+  [--site <obs-site>] \
+  [--verbose-errors] \
+  [--dry-run]
+```
+
+There's no `--prefix` option, which is safer from collisions and typos, which means cluster-to-bucket relationship is 1:1. There's `--site` which may mean each site can have different tiering settings. I don't know because I haven't used it.
+
+Finally, if you want to automate via the API, you can look it up [here](https://api.docs.weka.io/#/Object%20store%20bucket). StorageGRID's Swagger is in the Web UI.
