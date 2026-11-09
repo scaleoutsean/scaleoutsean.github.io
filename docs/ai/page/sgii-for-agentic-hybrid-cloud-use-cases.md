@@ -1,4 +1,4 @@
-# Use SGII and sg-cosi to provide access to buckets to public cloud AI
+# Use SGII and sg-cosi to provide access to AI in public cloud
 
 This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no "storage admins"
 
