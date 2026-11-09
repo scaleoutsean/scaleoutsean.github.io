@@ -59,12 +59,12 @@ Here's what I do:
 
 What's the difference?
 
-- Kubernetes-based - it only creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to apply extra ACLs and create a sitemap by yourself.
-- SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten ACLs before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.
+- Kubernetes-based: `sg-cosi` creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to apply extra ACLs and create a sitemap by yourself.
+- Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten ACLs before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.
 
 Depending on workflow, you could use `sg-cosi` to create a snapshot **and** SGII (container-packaged, it can run in Kubernetes as well) to take care of indexing, query filtering and snapshot deletion.
 
-I have not crammed these "extras" into `sg-cosi`'s Snapshot Lease function because they aren't supposed to be in it.
+I have not crammed these "extras" into `sg-cosi`'s Snapshot Lease feature because they aren't supposed to be in it.
 
 Additionally, now that NetApp Trident 2026.10 supports COSI, you aren't supported to run two COSI drivers for StorageGRID at the same time, so if you use NetApp Trident COSI, then `sg-cosi` component cannot be used - you'd have to use Trident COSI or own scripts for that part, so SGII is stand-alone.
 
@@ -100,6 +100,12 @@ This makes the URL and sitemap accessible to your scanner in the cloud.
 ![Scan from the cloud](/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png)
 
 It reads objects, creates indexes and uses them for the AI stuff as I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could).
+
+After scanning is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
+
+In a less secure workflow we can manually create writable StorageGRID snapshots, but I'm not interested in such "pet" approaches because I don't believe that they should exist outside of datalake or similarly comprehensive management workflows.
+
+If I have a datalake, then I keep my object lists in a table, and can use it to create [OpenSharing](/2026/09/07/opensharing-iceberg-netapp-eseries-storagegrid.html) "file" shares on the fly.
 
 ## Conclusion
 
