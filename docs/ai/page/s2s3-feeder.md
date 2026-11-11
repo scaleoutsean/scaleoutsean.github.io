@@ -327,4 +327,4 @@ $ mc ls pepsi/s2s3-dest
 
 ## Appendix B: S2S3 Feeder demo
 
-- (S2S3 Feeder Demo)[https://rumble.com/v7hu27w-s2s3-feeder.html]
+- [S2S3 Feeder Demo](https://rumble.com/v7hu27w-s2s3-feeder.html)

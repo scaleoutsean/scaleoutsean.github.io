@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html"},"headline":"Use SGII and sg-cosi to provide access to AI in public cloud","description":"This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no \"storage admins\" in the workflow","datePublished":"2026-11-09T00:00:00+08:00","dateModified":"2026-11-09T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/ssgii-hybrid-cloud-workflow-00-workflow.png","keywords":["s3","storagegrid","rag","cloud","cosi","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1301,"articleBody":"This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no \"storage admins\" in the workflow"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html"},"headline":"Use SGII and sg-cosi to provide access to AI in public cloud","description":"This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no \"storage admins\" in the workflow","datePublished":"2026-11-09T00:00:00+08:00","dateModified":"2026-11-09T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/ssgii-hybrid-cloud-workflow-00-workflow.png","keywords":["s3","storagegrid","rag","cloud","cosi","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1303,"articleBody":"This post showcases a workflow for AI in hybrid cloud that is free of storage management and requires no \"storage admins\" in the workflow"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -270,7 +270,7 @@
 
 <p>If we wanted something more serious, we'd have multiple stakeholders, not just the initiator, but also an approver, possibly multiple.</p>
 
-<p>StorageGRID is very flexible, so it <em>can</em> be made more complex than this, but at the very least, there would be two guys involved: the AI guy and the approver guy.</p>
+<p>StorageGRID is very flexible, so it <em>can</em> be made more complex than this, but at the very least, there would be two guys involved: the AI user and the AI approver guy.</p>
 
 <p><img src="/assets/images/sgii-hybrid-cloud-workflow-00-workflow.png" alt="SGII and sg-cosi in hybrid cloud" /></p>
 
@@ -294,7 +294,7 @@
 
 <ul>
   <li>Kubernetes-based: <code class="language-plaintext highlighter-rouge">sg-cosi</code> creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to tighten bucket policies and create a sitemap by yourself if you are concerned about access to some data in the bucket.</li>
-  <li>Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten ACLs before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.</li>
+  <li>Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten the snapshot bucket policy before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.</li>
 </ul>
 
 <p>Depending on workflow, you could use <code class="language-plaintext highlighter-rouge">sg-cosi</code> to create a snapshot <strong>and</strong> SGII (container-packaged, it can run in Kubernetes as well) to take care of indexing, query filtering and snapshot deletion.</p>
@@ -303,7 +303,7 @@
 
 <p>Additionally, now that NetApp Trident 2026.10 supports COSI, you aren't supported to run two COSI drivers for StorageGRID at the same time, so if you use NetApp Trident COSI, then <code class="language-plaintext highlighter-rouge">sg-cosi</code> component cannot be used - you'd have to use Trident COSI or own scripts for that part, so SGII is stand-alone.</p>
 
-<p>The workflow details (examples, sample ACLs, and more) will be posted in the <code class="language-plaintext highlighter-rouge">sg-cosi</code> examples in coming days, but to make this post less ambiguous:</p>
+<p>Workflow details (examples, sample bucket policy, and more) have been shared in the <code class="language-plaintext highlighter-rouge">sg-cosi</code> examples, but to make this post less ambiguous:</p>
 
 <ul>
   <li>(1) Use SGII to create a snapshot, then SGII query to dump desired file list to a JSONL file:</li>
@@ -353,7 +353,7 @@
 <span class="nt">&lt;/urlset&gt;</span>
 </code></pre></div></div>
 
-<p>And then a cloud AI or indexer reads this sitemap and indexes its content. The bucket policy allows the S3 keys used by our Web proxy to access only <code class="language-plaintext highlighter-rouge">s3://&lt;snapshot-bucket&gt;/public_blog</code> using GetObject action.</p>
+<p>And then a cloud AI or indexer reads this sitemap and indexes its content. The bucket policy allows the S3 keys used by our Web proxy to access only <code class="language-plaintext highlighter-rouge">s3://&lt;snapshot-bucket&gt;/public_blog</code> using proxy's GetObject action.</p>
 
 <p><img src="/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png" alt="Scan from the cloud" /></p>
 

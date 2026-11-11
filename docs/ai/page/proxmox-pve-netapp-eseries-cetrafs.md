@@ -67,6 +67,8 @@ Since that went fine as well, I used that filesystem to create a data store on P
 
 ![CetraFS on E-Series](/assets/images/cetrafs-proxmox-eseries-00-cli.png)
 
+There's a [plugin](https://scaleoutsean.github.io/2026/11/07/proxmox-pve-netapp-eseries-cetrafs.html), too. I haven't tried it.
+
 ## Limits and gotchas
 
 Don't forget to check out the page with [limitations](https://cetrafs.com/docs/reference/limits/) - there it says that, if the test (that doesn't work on NVMe yet) doesn't pass, then filesystem is single-host only. So I was lucky that I couldn't get anything done on the first box (Ubuntu 26.04) as that would have meant the second (more important PVE host) wouldn't have been able to mount the same LUN.

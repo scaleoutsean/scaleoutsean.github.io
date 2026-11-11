@@ -31,7 +31,7 @@ But, seeing that hilarious "solution" mentioned at the top, I thought about form
 
 If we wanted something more serious, we'd have multiple stakeholders, not just the initiator, but also an approver, possibly multiple.
 
-StorageGRID is very flexible, so it *can* be made more complex than this, but at the very least, there would be two guys involved: the AI guy and the approver guy.
+StorageGRID is very flexible, so it *can* be made more complex than this, but at the very least, there would be two guys involved: the AI user and the AI approver guy.
 
 ![SGII and sg-cosi in hybrid cloud](/assets/images/sgii-hybrid-cloud-workflow-00-workflow.png)
 
@@ -50,7 +50,7 @@ That's all. Here's how I do it:
 What's the difference?
 
 - Kubernetes-based: `sg-cosi` creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to tighten bucket policies and create a sitemap by yourself if you are concerned about access to some data in the bucket.
-- Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten ACLs before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.
+- Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten the snapshot bucket policy before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.
 
 Depending on workflow, you could use `sg-cosi` to create a snapshot **and** SGII (container-packaged, it can run in Kubernetes as well) to take care of indexing, query filtering and snapshot deletion.
 
@@ -58,7 +58,7 @@ I have not crammed these "extras" into `sg-cosi`'s Snapshot Lease feature becaus
 
 Additionally, now that NetApp Trident 2026.10 supports COSI, you aren't supported to run two COSI drivers for StorageGRID at the same time, so if you use NetApp Trident COSI, then `sg-cosi` component cannot be used - you'd have to use Trident COSI or own scripts for that part, so SGII is stand-alone.
 
-The workflow details (examples, sample ACLs, and more) will be posted in the `sg-cosi` examples in coming days, but to make this post less ambiguous:
+Workflow details (examples, sample bucket policy, and more) have been shared in the `sg-cosi` examples, but to make this post less ambiguous:
 
 - (1) Use SGII to create a snapshot, then SGII query to dump desired file list to a JSONL file:
 
@@ -105,7 +105,7 @@ How does that look like? It's just a sitemap. Using the URL from above and my ow
 </urlset>
 ```
 
-And then a cloud AI or indexer reads this sitemap and indexes its content. The bucket policy allows the S3 keys used by our Web proxy to access only `s3://<snapshot-bucket>/public_blog` using GetObject action.
+And then a cloud AI or indexer reads this sitemap and indexes its content. The bucket policy allows the S3 keys used by our Web proxy to access only `s3://<snapshot-bucket>/public_blog` using proxy's GetObject action.
 
 ![Scan from the cloud](/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png)
 
