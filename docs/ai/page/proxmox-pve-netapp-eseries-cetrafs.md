@@ -69,7 +69,7 @@ Since that went fine as well, I used that filesystem to create a data store on P
 
 ## Limits and gotchas
 
-Don't forget to check out the page with [limitations](https://cetrafs.com/docs/reference/limits/) - there it says that, if the test (that doesn't work on NVMe yet) doesn't pass, then filesystem is single-host only. So I was lucky that I couldn't get anything done on the first box (Ubuntu 26.04) as that would have meant the second wouldn't work.
+Don't forget to check out the page with [limitations](https://cetrafs.com/docs/reference/limits/) - there it says that, if the test (that doesn't work on NVMe yet) doesn't pass, then filesystem is single-host only. So I was lucky that I couldn't get anything done on the first box (Ubuntu 26.04) as that would have meant the second (more important PVE host) wouldn't have been able to mount the same LUN.
 
 Notice that, even on E-Series EF models, there is [Fibre Channel support](/2026/03/21/netapp-ef-series-ef80-ef50.html), including SCSI variants. E-Series E4000 models are mostly SCSI. So, your E-Series environment may let you run these tests with a different outcome. I don't know what it's going to be, but E-Series supports VMFS, which isn't quite the same compatibility test as with CetraFS, but it's similar enough so the CetraFS check is more likely to pass than not.
 

@@ -17,9 +17,14 @@ Date: 2026-11-09
 
 ## Introduction 
 
-Recently I saw a pretty funny workflow-come-book for "solving" data access for AI in a hybrid cloud scenario where "AI" is in the cloud.
+Recently I saw a pretty funny workflow-come-book for "solving" data access for AI in a hybrid cloud scenario where "AI" is in the cloud. Similar to my [previous post](/2026/11/04/ragdoll-serenedb-storagegrid.html#appendix-a-ai-chat-examples):
+- documents used to create embeddings are accessed from the cloud
+- embeddings are created in the cloud (vector DB is in the cloud)
+- there's no requirement to write modifications back to source share/bucket
 
-I've said countless times by now, on-premises S3 storage solved that "challenge" 10 years ago, so that "solution" is *fundamentally flawed* and on top of that almost guarantees a [DMV-like](https://noai.duckduckgo.com/?q=dmv+jokes) experience.
+Essentially, save for the grounding links, after embeddings have been created, cloud-based AI can work without continued access to sources, save for the grounding links.
+
+I've said several times: on-premises S3 storage solved that "challenge" 10 years ago, so a "solution" that copies data to the cloud to be ingested faster (how is that even helpful!?) is *fundamentally flawed* and on top of that almost guarantees a [DMV-like](https://noai.duckduckgo.com/?q=dmv+jokes) experience.
 
 Can we do better with StorageGRID? Probably, but if you look it up, NetApp StorageGRID lacks any recipes, solutions or best practices for such workflows, as if it works out-of-the-box. It doesn't.
 
@@ -51,15 +56,13 @@ We don't need anything new:
 - StorageGRID supports bucket snapshots
 - You can roll your own script or workflow
 
-That's all.
-
-Here's what I do:
+That's all. Here's how I do it:
 - Kubernetes-based bucket snapshot workflow: I can create snapshots with `sg-cosi` [as explained here](/2026/09/18/storagegrid-s3-cosi-snapshot-leases.html) and 
 - Non-Kubernetes based snapshot workflow: I use SGII, StorageGRID Incremental Inventory tool, [described here](/2026/10/08/kompromise-storagegrid-instaclustr-opensearch.html#whats-the-role-of-sgii-again)
 
 What's the difference?
 
-- Kubernetes-based: `sg-cosi` creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to apply extra ACLs and create a sitemap by yourself.
+- Kubernetes-based: `sg-cosi` creates a read-only snapshot that auto-expires, which is perfect for situations where you want to delete it anyway after indexing is done. But, you may have objects that you don't want indexers or AIs to read. So you need to tighten bucket policies and create a sitemap by yourself if you are concerned about access to some data in the bucket.
 - Non-Kubernetes: SGII creates a snapshot and builds a bucket inventory. With that, we use SGII query to create a prefix- and extension-filtered object list. That is used to create a "scoped-down" sitemap.xml and then we tighten ACLs before getting approvals and starting a proxy to expose it to the cloud. We need to remember to tear that snapshot down later, as SGII isn't a service and doesn't manage stuff like Kubernetes COSI does.
 
 Depending on workflow, you could use `sg-cosi` to create a snapshot **and** SGII (container-packaged, it can run in Kubernetes as well) to take care of indexing, query filtering and snapshot deletion.
@@ -75,7 +78,7 @@ The workflow details (examples, sample ACLs, and more) will be posted in the `sg
 ```sh
 $ sgi query objects \
   --manifest s3://sgi/scans///manifest.json \
-  --prefix web/ \
+  --prefix public_blog/ \
   --latest-only \
   --sample 0 \
   --format jsonl \
@@ -93,29 +96,45 @@ $ python3 data-prep.py \
   --output SITEMAP
 ```
 
-- In step (3) above, Approver has the ability to apply ACLs on the bucket, and push Web server configuration to deploy. We'd use a canned template for ACLs.
+- In step (3) above, Approver has the ability to apply bucket policy on the snapshot bucket, and push Web server configuration to deploy. We'd use a canned template for bucket policy.
 
-This makes the URL and sitemap accessible to your scanner in the cloud. 
+That makes the sitemap and content accessible to scanner in the cloud. 
+
+We could package the steps 1-3 in a simple API server for these stages of our workflow.
+
+How does that look like? It's just a sitemap. Using the URL from above and my own blog posts posted to a bucket, and after filtering on `public_blog` prefix, I expect to have a sitemap such as this one:
+
+```xml
+
+  https://proj1a2b3c.public.company.com/public_blog/2024-04-02-storagegrid-networking.md
+  2026-11-09T04:59:51.846000Z
+
+  https://proj1a2b3c.public.company.com/public_blog/2026-07-25-weka-io-tier-cold-to-netapp-storagegrid.md
+  2026-11-09T04:59:50.490000Z
+
+```
+
+And then a cloud AI or indexer reads this sitemap and indexes its content. The bucket policy allows the S3 keys used by our Web proxy to access only `s3:///public_blog` using GetObject action.
 
 ![Scan from the cloud](/assets/images/sgii-hybrid-cloud-workflow-02-sitemap-scan.png)
 
-We could package steps 1-3 in a simple API server for these stages of our workflow.
+In the last step, some kind of indexer reads sitemap.xml, gets listed objects, creates embeddings and indexes and uses them the same way I do in that screenshot at the top - for AI-assisted search, RAG, chat...
 
-In the last step, some kind of indexer reads sitemap.xml, gets listed objects, creates embeddings and indexes and uses them the same way I do in that screenshot above (where I do not provide fancy URLs to on-prem StorageGRID URLs, but I could) - AI-assisted search, RAG, chat...
+After download (from the cloud) is done, you can remove the proxy and the snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded on the reverse Web proxy.
 
-After download (from the cloud) is done, you can remove the proxy and snapshot bucket. The read-only nature of SGII makes it impossible to "update" the snapshot with new documents, although sitemap.xml could be updated and - after another approval - reloaded.
+This workflow is available on my Github.
 
-In a less secure workflow we can manually create writable StorageGRID snapshots, but I'm not interested in such "pet" approaches because I don't believe that they should exist outside of datalake or similarly comprehensive management workflows.
+In a less secure workflow we can manually create writable StorageGRID snapshots, but I'm not interested in such "pet snapshot" approaches because I don't believe that they should exist outside of datalake or similarly comprehensive management workflows.
 
 If I have a datalake, then I keep my object lists in a table, and can use it to create [OpenSharing](/2026/09/07/opensharing-iceberg-netapp-eseries-storagegrid.html) "file" shares on the fly.
 
 ## Conclusion
 
-My SGII-enabled workflow is convenient, fast, secure and works correctly.
+My SGII-enabled [workflow](https://github.com/scaleoutsean/sg-cosi/tree/master/examples/sgii) is convenient, fast, secure and works correctly.
 
-Time required to create a SGII inventory table is variable and depends on bucket object count, but can be seconds for buckets with 100K objects. With such buckets, you can have AI accessing your content in single-digit minutes, excluding turn-around time required for approvals or compliance checks.
+Time required to create a SGII inventory table is variable and depends on bucket object count, but can be under 60 seconds for buckets with 100K objects. With such buckets, you can have AI accessing your content in single-digit minutes, excluding turn-around time required for approvals or compliance checks.
 
-For best experience and automation both `sg-cosi` and SGII can be used together, although stand-alone SGII is sufficient for what you see in the diagram (tear-down has to be taken care of in a reverse workflow and SGII doesn't delete buckets, objects/data or snapshot buckets).
+For best experience and full automation both `sg-cosi` and SGII can be used together, although stand-alone SGII is sufficient for what you see in the diagram (tear-down has to be taken care of in a reverse workflow and SGII doesn't delete buckets, objects/data or snapshot buckets).
 
 `sg-cosi` - when Trident COSI isn't used - adds value with automated tear-down of snapshot bucket, proving its design, scope, and value beyond the [ridiculous COSI idea and specification](/2026/06/07/cosi-v1alpha1-is-garbage.html).
 
@@ -193,7 +212,7 @@ Since that went fine as well, I used that filesystem to create a data store on P
 
 ## Limits and gotchas
 
-Don't forget to check out the page with [limitations](https://cetrafs.com/docs/reference/limits/) - there it says that, if the test (that doesn't work on NVMe yet) doesn't pass, then filesystem is single-host only. So I was lucky that I couldn't get anything done on the first box (Ubuntu 26.04) as that would have meant the second wouldn't work.
+Don't forget to check out the page with [limitations](https://cetrafs.com/docs/reference/limits/) - there it says that, if the test (that doesn't work on NVMe yet) doesn't pass, then filesystem is single-host only. So I was lucky that I couldn't get anything done on the first box (Ubuntu 26.04) as that would have meant the second (more important PVE host) wouldn't have been able to mount the same LUN.
 
 Notice that, even on E-Series EF models, there is [Fibre Channel support](/2026/03/21/netapp-ef-series-ef80-ef50.html), including SCSI variants. E-Series E4000 models are mostly SCSI. So, your E-Series environment may let you run these tests with a different outcome. I don't know what it's going to be, but E-Series supports VMFS, which isn't quite the same compatibility test as with CetraFS, but it's similar enough so the CetraFS check is more likely to pass than not.
 
