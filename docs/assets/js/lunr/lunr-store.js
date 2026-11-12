@@ -2892,7 +2892,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 5 minute read We have StorageGRID and all the tools we need - we just need to use them to share sitemap.xml and data to cloud indexers CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 6 minute read We have StorageGRID and all the tools we need - we just need to use them to share sitemap.xml and data to cloud indexers CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
