@@ -131,6 +131,6 @@ For best experience and full automation both `sg-cosi` and SGII can be used toge
 
 ## Appendix A: Demo
 
-This video shows the entire workflow. It's fast-forwarded in places, but for a small bucket with 10-20 thousand files, on-premises part of the workflow takes just 2-3 minutes to execute.
+This video shows the entire workflow. It's fast-forwarded in places, but for a small bucket with 10-20 thousand files, the on-premises part of the workflow takes just 2-3 minutes to execute.
 
 - [Use SGII to integrate on-premises StorageGRID with cloud-based AI chat](https://rumble.com/v7i8ihq-use-sgii-for-workflows-with-on-premises-storagegrid-and-ai-chat-in-public-c.html) - 3m35s

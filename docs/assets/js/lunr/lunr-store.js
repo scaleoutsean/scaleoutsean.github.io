@@ -1824,7 +1824,7 @@ var store = [{
         "teaser": null
       },{
         "title": "What is MinIO up to these days?",
-        "excerpt":"“Adjustments” Latest and greatest: “breaking changes” Are you telling me there’s a chance? Thoughts Risk and commercial issues Technical side Alternatives Risk of forks Conclusion “Adjustments” Last summer MinIO made an attempt to annoy us freeloaders, but I doubt that did them much good. But that was just one of...","categories": ["storage"],
+        "excerpt":"“Adjustments” Latest and greatest: “breaking changes” Are you telling me there’s a chance? Thoughts Risk and commercial issues Technical side Alternatives Risk of forks Conclusion Appendix A: viable forks “Adjustments” Last summer MinIO made an attempt to annoy us freeloaders, but I doubt that did them much good. But that...","categories": ["storage"],
         "tags": ["aistor","minio","s3"],
         "url": "/2025/06/06/whats-minio-up-to.html",
         "teaser": null
@@ -2873,6 +2873,12 @@ var store = [{
         "url": "/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html",
         "teaser": null
       },{
+        "title": "Windows Server 2028 (Preview) with NetApp SolidFire",
+        "excerpt":"Introduction Unlike most people in customer-facing roles, I always look after products I recommend to customers and I do it for as long as I can. SolidFire Collector (old NetApp HCI Collector) is still around and maintained SolidFire Ansible collection is still around and maintained SolidFire CSI driver was released...","categories": ["storage","solidfire"],
+        "tags": ["2025","iscsi","netapp","server","solidfire","windows"],
+        "url": "/2026/11/18/windows-2028-preview-netapp-solidfire.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2892,7 +2898,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 6 minute read We have StorageGRID and all the tools we need - we just need to use them to share sitemap.xml and data to cloud indexers CetraFS, Proxmox and NetApp EF-Series NVMe/RoCE 2026-11-07 00:00 4...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Windows Server 2028 (Preview) with NetApp SolidFire 2026-11-18 00:00 2 minute read Windows Server 2028 iSCSI client with SolidFire 12.5 Use SGII and sg-cosi to provide access to AI in public cloud 2026-11-09 00:00 6 minute read We have StorageGRID and all the tools we need - we just need...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

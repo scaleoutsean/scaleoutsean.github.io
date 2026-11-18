@@ -18,6 +18,7 @@ Most of them are permissive OSS, but since 2026 I invest less in source code mai
 | [above-and-beeond](https://github.com/scaleoutsean/above-and-beeond) | Smarter BeeOND deployer (Bash) |
 | [All-in-One BeeGFS stack](https://github.com/scaleoutsean/netapp-eseries-beegfs-all-in-one) | All-in-One BeeGFS stack with BeeGFS, NFSv4, Versity S3 Gateway (Docker Compose) |
 | [Awesome Solidfire](https://github.com/scaleoutsean/awesome-solidfire) | SolidFire-related resources (docs, curation, simple scripts) |
+| [caddy-s3-proxy](https://github.com/scaleoutsean/caddy-s3-proxy) | One-off "fork & update" of community plugin for Caddy for StorageGRID in hybrid cloud. (Go)|
 | [Charm for SolidFire Cinder](https://github.com/scaleoutsean/charm-cinder-solidfire) | Juju charm for SolidFire Cinder driver (Python) |
 | [community.solidfire](https://github.com/scaleoutsean/netapp.solidfire) | Fork of the `netapp.elementsw` collection (Ansible) abandoned by NetApp |
 | [Eke](https://github.com/scaleoutsean/eke) | An opinionated wrapper for storage tiering and analytics with BeeGFS 8.4 and 8.3 with E-Series (Go; binary-only release) |

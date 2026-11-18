@@ -11,6 +11,7 @@ MinIO's attempts to monetize aren't stopping
   - [Alternatives](#alternatives)
   - [Risk of forks](#risk-of-forks)
 - [Conclusion](#conclusion)
+- [Appendix A: viable forks](#appendix-a-viable-forks)
 
 ## "Adjustments"
 
@@ -192,3 +193,11 @@ Because the recent uncrippled versions were already "license crippleware" (OSS, 
 But a recent version could be forked by the freeloader community that doesn't mind the crappy [GNU Alfero GPL](https://github.com/minio/object-browser/blob/master/LICENSE). They just need to keep the features that MinIO had had. Some Tier 2/Tier 3 storage provides may be interested in contributing, so that they can include it as a free add-on.
 
 Like me, most of those users run single node configurations and in that regard MinIO is pretty much feature-complete. This would work well for SOHO/SMB businesses as well (single VM node on generic iSCSI protected storage, for example).
+
+## Appendix A: viable forks
+
+Personally, I prefer Versity S3 Gateway for the use cases where I used MinIO (in part because for large scale I tend to recommend NetApp StorageGRID), but by November 2026 I think is Silo has emerged as a viable "generic" alternative to MinIO Server. 
+
+- [Silo](https://github.com/pgsty/silo)
+
+They also have a client (a fork of `mc`), although I don't use that either (I use own MinIO Client [fork](https://github.com/scaleoutsean/minio-client) which I maintain just enough to have it work for own needs).
