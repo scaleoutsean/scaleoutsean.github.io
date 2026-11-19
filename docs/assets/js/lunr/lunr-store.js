@@ -2880,7 +2880,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Use SGII to for easy periodic indexing in Elasticsearch",
-        "excerpt":"Introduction Yesterday I realized I accidentally uploaded SHA checksum files instead of binaries to SGII Releases. I corrected that mistake, so SGII binaries are available for download. While doing that, I realized I should probably do another SGII post about a simple indexing workflow. The post about SGII with OpenSearch...","categories": ["storage","netapp","projects","ai"],
+        "excerpt":"Introduction Yesterday I realized I accidentally uploaded SHA checksum files instead of binaries to SGII Releases for v0.1.3. I corrected that mistake, so SGII binaries for that version are available for download. While doing that, I realized I should probably do another SGII post about a simple indexing workflow. The...","categories": ["storage","netapp","projects","ai"],
         "tags": ["s3","storagegrid","rag","elasticsearch","sgii"],
         "url": "/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html",
         "teaser": null
