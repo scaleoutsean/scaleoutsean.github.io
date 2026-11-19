@@ -16,6 +16,8 @@ This post shows a similar scenario, with the following differences:
 
 ![SGII with Elasticsearch](/assets/images/sgii-elasticsearch-00-diagram.png)
 
+There's another post about [near real-time indexing of SG in Elasticsearch using Kompromise](/2026/10/03/kompromise-elasticsearch-storagegrid-search.html), but that is a different use case although SGII can be used for periodic reconcilliation (e.g. weekly) if any discrepancies are discovered.
+
 ## How it works
 
 It works the same way as the previous post, and as SGII has always worked.
