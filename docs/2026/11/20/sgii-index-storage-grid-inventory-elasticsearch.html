@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html"},"headline":"Use SGII to for easy periodic indexing in Elasticsearch","description":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes.","datePublished":"2026-11-20T00:00:00+08:00","dateModified":"2026-11-20T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/sgii-elasticsearch-01-current.png","keywords":["s3","storagegrid","rag","elasticsearch","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1303,"articleBody":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes."}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html"},"headline":"Use SGII to for easy periodic indexing in Elasticsearch","description":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes.","datePublished":"2026-11-20T00:00:00+08:00","dateModified":"2026-11-20T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/sgii-elasticsearch-01-current.png","keywords":["s3","storagegrid","rag","elasticsearch","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1626,"articleBody":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes."}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          5 minute read
+          7 minute read
         
       </span>
     
@@ -234,7 +234,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#how-it-works">How it works</a></li><li><a href="#refresh">Refresh</a></li><li><a href="#whats-good-about-this">What's good about this</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#how-it-works">How it works</a></li><li><a href="#refresh">Refresh</a></li><li><a href="#management-and-other-considerations">Management and other considerations</a></li><li><a href="#whats-good-about-this">What's good about this</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -351,6 +351,28 @@ indexed history documents=4 current operations=3 buckets=1
 <p>Currency is maintained with incremental SGII snapshots which drive deletions of removed or stale objects from Elasticsearch current index for the bucket. Notice "3 Deleted" on the right:</p>
 
 <p><img src="/assets/images/sgii-elasticsearch-06-sgii-esgee-indexe-current-deleted.png" alt="SGII maintains currency" /></p>
+
+<h2 id="management-and-other-considerations">Management and other considerations</h2>
+
+<p>SGII needs API access to StorageGRID's tenant administration API to take (or delete) a snapshot. In order to create bucket listing, it also needs to be able to list objects, get tags, and more.</p>
+
+<p>That means that, in order to centrally manage indexing for a tenant, you need the tenant admin role.</p>
+
+<p>If you want non-admin tenant groups to each manage buckets they own, you need a two-step workflow:</p>
+<ul>
+  <li>To create and delete snapshots: tenant admin or other user with tenant root access permission. "Manage all buckets" permission isn't enough!</li>
+  <li>To read object names, versions, tags: bucket owner to create a bucket policy for himself or designated SGII user</li>
+</ul>
+
+<p>How does one protect Elasticsearch indexes? But Elasticsearch can control them on index, document and even field level. See about that <a href="https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level">here</a>, so you could use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (snapshots) and S3 keys that allow it to edit bucket policy to read objects.</p>
+
+<p>It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket.</p>
+
+<p>Compared to a packaged solution, these steps are slightly more involved, but they also create no barrier between you and your data.</p>
+
+<p>How about enrichment and other Elasticsearch features?</p>
+
+<p>Like in the previous posts (linked near the top), you can create elaborate workflows, not just "upload this list to create an index". Having the list that's inexpensive to update is the key. The rest is just several extra functions: create embeddings and NER (or set up pipelines and let Elasticsearch create them), etc.</p>
 
 <h2 id="whats-good-about-this">What's good about this</h2>
 
