@@ -122,13 +122,13 @@ If you want non-admin tenant groups to each manage buckets they own, you need a 
 - To create and delete snapshots: tenant admin or other user with tenant root access permission. Despite what the documentation says, "Manage all buckets" permission isn't enough in v12.1 [as far as I can tell](https://github.com/NetAppDocs/storagegrid/issues/99) 
 - To read object names, versions, tags: bucket owner to create a bucket policy for himself or designated SGII user
 
-How does one protect Elasticsearch indexes? But Elasticsearch can control them on index, document and even field level. See about that [here](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level), so you could use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (snapshots) and S3 keys that allow it to edit bucket policy to read objects.
+How does one control access to these Elasticsearch indexes? Elasticsearch can control access on index, document and even field level. See about that [here](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level). You can use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (for snapshots) and S3 keys that allow it to edit bucket policy to read objects.
 
 It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket.
 
-Compared to a packaged solution, these steps are slightly more involved, but they also create no barrier between you and your data.
+Compared to a packaged solution, these steps are slightly more involved, but they also create no barrier between you and your data. Since StorageGRID now supports very many buckets, a way to keep things simple is to use smaller buckets.
 
-How about enrichment and other Elasticsearch features?
+How about integrating enrichment, embeddings and other Elasticsearch features?
 
 Like in the previous posts (linked near the top), you can create elaborate workflows, not just "upload this list to create an index". Having the list that's inexpensive to update is the key. The rest is just several extra functions: create embeddings and NER (or set up pipelines and let Elasticsearch create them), etc.
 
