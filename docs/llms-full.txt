@@ -10,7 +10,7 @@ scaleoutSean is I create solutions.
 
 ## Posts
 
-### Tag-on-upload with Kompromise Lite
+### S3 Tag-on-Upload with Kompromise Lite and StorageGRID
 
 URL: https://blog.scaleoutsean.com/2026/11/21/kompromise-lite-s3-tag-on-upload.html
 Date: 2026-11-21
@@ -57,7 +57,7 @@ That was before NetApp had any official MCP stuff (so not much awareness existed
 
 `tldr;` I haven't done any MCP stuff for these products because it seemed useless, and I'm *not going to* because it *still* seems useless. But I'm interested in trying those other use cases.
 
-## Tag-on-upload
+## S3 Tag-on-Upload
 
 As you can see in [the second "anti-virus scanning for StorageGRID" post](/2024/01/29/antivirus-scanning-for-on-premises-s3.html), it's not a trivial topic and while "post v2" was better, I wasn't happy with the outcome.
 
@@ -133,19 +133,21 @@ The last image is tagged with `adult=true`.
 ### Considerations 
 
 - The possibility of tagging objects was mentioned in that AV post v2. I finally explored it in an automated way
-- Anti-virus scanning tool I used here is generic (actually, not even generic - it detects just Eicar and nothing else). I do have automated API callers for ClamAV and Virus Total, but everyone has a different one anyway (StrikeForce, Trend AI, etc.)
-- Adult content detection model was another freeware. Again, you can get good ones and call them the same way, but not everyone has a good one. I won't even recommend it because it did not work well.
+- Anti-virus scanning tool I used here is generic (actually, not even generic - it detects just Eicar and nothing else). I do have automated API callers for ClamAV from the BeeGFS AV-related posts and Virus Total (in CI), but everyone has a different one anyway (StrikeForce, Trend AI, etc.) so it's just a distraction
+- Adult content detection model was another freeware. Like with AV, you can get very good ones and call them the same way, but these things differ in subtle ways so everyone prefers a slightly different approach. I won't even recommend this one, because it did not work well.
 
 Let's see:
 
-- `nsfw-ish-naked-painting.jpg` was not flagged as adult, although it was the "worst" (it was an art piece, oil on canvas from the 1800s).
-- `nsfw-anime-milfs.jpg` *was* flagged as adult, although there's nothing adult about it. It's an anime cartoon screenshot with absolutely no nudity. It is suggestive, but there's no nudity.
+- `nsfw-ish-naked-painting.jpg` was not flagged as adult, although it was the "worst" (it was an art piece, oil on canvas from the 1800s). Even that wasn't unsafe for workplace - you could probably find similar paintings in a nearby museum or art gallery. I first used this in the hope I could trigger detection without storing pornographic content on disk.
+- `nsfw-anime-milfs.jpg` *was* flagged as adult, although there's nothing adult about it. It's an anime cartoon screenshot with absolutely no nudity. It is suggestive, but there's no nudity in it.
 - `pumping-iron.png` from detection example B, *was* flagged as porn. 
 ![MCP agent-tagged item pumping-iron.png](/assets/images/kompromise-lite-tag-on-upload-11-pumping-iron.png)
 
+The oil painting could potentially be tagged in some cases (not in most museums, art galleries, etc.), but some models tolerate nudity in paintings, so that outcome was overwhelmingly correct. The anime cartoon and the photo should not have been tagged. Adult content detection failed in over 50% of cases (although sample size was very small)!
+
 I know I can adjust sensitivity, change parameters, or even "use a better model", but that's not the point. The points are:
 - it's not good for production, as you'd waste time of fiddling with the model. Get a proper model if you need it to work right. Use crappy freeware and deal with support escalations or compliance issues.
-- MCP agent just uses returned results, so this isn't really a big problem, it's just an interesting aspect of buy vs. build. You can build (or assemble) a NSFW model, as well as the entire stack, but even commercial stacks work the same way
+- MCP agent just uses returned results, so this isn't really a big problem, it's just an interesting aspect of buy vs. build. You can build (or assemble) a NSFW model, as well as the entire stack, but even commercial stacks work the same way.
 
 Malware detection worked well because it was a straightforward hash match and didn't use heuristics to detect "novel" or "previously unknown" viruses. It could detect Eicar, it saw Eicar, and it tagged the file.
 
