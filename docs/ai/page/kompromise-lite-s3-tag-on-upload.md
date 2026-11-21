@@ -132,11 +132,11 @@ Let's see:
 
 The oil painting could potentially be tagged in some cases (not in most museums, art galleries, etc.), but some models tolerate nudity in paintings, so that outcome was overwhelmingly correct. The anime cartoon and the photo should not have been tagged. Adult content detection failed in over 50% of cases (although sample size was very small)!
 
-I know I can adjust detection sensitivity, change parameters, or even "use a better model", but that's not the point. The points are:
-- it's not good for production, as you'd waste time of fiddling with the model. Get a proper model if you need it to work right. Use crappy freeware and deal with support escalations or compliance issues.
-- MCP agent just uses returned results, so this isn't really a big problem, it's just an interesting aspect of buy vs. build. You can build (or assemble) a NSFW model, as well as the entire stack, but even commercial stacks work the same way.
+I know I can adjust detection sensitivity, tune parameters, or even "use a better model", but that's not the point. The points are:
+- it's not good for production, as you'd waste time of fiddling with the model. Get the proper model if you need it to work right and focus on where you can add value. Use a crappy freeware model and you'll waste time dealing with support escalations, compliance and legal "situations".
+- MCP agent just uses returned results, so the poor detection results aren't a big problem for this demonstration - it's just an interesting aspect of buy vs. build. You can build (or assemble) a NSFW model, as well as the entire stack, but even commercial stacks work the same way.
 
-Malware detection worked well because it was a straightforward hash match and didn't use heuristics to detect "novel" or "previously unknown" viruses. It could detect Eicar, it saw Eicar, and it tagged the file.
+Malware detection worked well because it was a straightforward hash match and didn't use heuristics to detect "novel" or "previously unknown" viruses. It could detect Eicar, it saw Eicar, and it tagged the object.
 
 Image (and/or video) detection is harder, but we should focus on what we can improve. There's nothing I can possibly add to the topics of AV and content detection, but related to StorageGRID and S3 in general:
 - image tagging looks like a very good choice. Applications can filter on tags and drop serving suspected viruses and not show (or show pixelated) images
@@ -161,9 +161,11 @@ I am much more interested Human-in-the-Loop because that concerns StorageGRID ma
 
 Agentic workflows with StorageGID are interesting and useful.
 
-Kompromise Lite makes them easier because notifications are better than plain StorageGRID notifications. But you could use "plain" StorageGRID notifications as well. I didn't need Kompromise for my agentic workflow - I used Kompromise Lite in order to make sure it can work (since I haven't heard of anyone giving it a try) and because I wanted the rich option rather than being limited in what I can get from S3 notifications.
+Kompromise Lite makes them easier because notifications are better than plain StorageGRID notifications. 
 
-We can do these things easily because it's not block or file, but S3. Did you notice I did not do any "admin stuff" on StorageGRID? I didn't need to. It's an API-driven storage service. I simply tagged the object and solved the problem. I could have deleted the object without doing anything else, because it would have remained as a non-current version. How would I do that with LUNs attached to hosts I don't control, or file shares? I could run agents on all those servers and have another agent that tells them what to do, but that'd be worse, not better. It can't be done better than with S3.
+But we could use "plain" StorageGRID notifications as well. I didn't need Kompromise for this agentic workflow. I used Kompromise Lite in order to make sure it can work (since I haven't heard of anyone who tried to use it) and because I wanted richer S3 notifications (which I will need in future demos).
+
+We can do create nice workflows easily because it's not block or file, but S3. Did you notice I did not do any "admin stuff" on StorageGRID? I didn't need to. It's an API-driven storage service. I simply tagged the object and solved the problem. I could have deleted the object without doing anything else, because it would have remained as a non-current version. How would I do that with LUNs attached to hosts I don't control, or file shares? I could run agents on all those servers and have another agent that tells them what to do, but that'd be worse, not better. It can't be done better than with S3.
 
 I think I've improved this workflow compared to the AV post v2 thanks (in part) to Kompromise and MCP and the improvements make it easier to integrate StorageGRID in agentic workflows (which is something that isn't a pressing concern for a stand-alone demo, but needs to be mentioned because it's one of those "sensitive" data workflows - it's not a backup job that can fail today because it will succeed tomorrow).
 
