@@ -111,3 +111,18 @@ Other developments:
 - SAntricity client library in Python
 - SANtricity PowerShell modules
   - SANmox - Proxmox TUI for SANtricity
+
+### 2026/11/22
+
+This isn't an update of recent progress, but the last updates of Updates:
+
+- [OpenSharing server for Versity S3 Gateway](/2026/07/22/opensharing-volumes-tables-versity-vgw-netapp-storagegrid.html) that turns E-Series into capable S3 storage for edge was created in July 2026
+- [EKE](/2026/08/02/eke-update.html) CLI wrapper for tiering management of BeeGFS with Hybrid E-Series
+
+The stuff created earlier is still maintained, although most of it is Open Source so some of you who cloned it probably maintain by themselves.
+
+Considering the visibility of E-Series and complete absence of, getting 10-20 unique visitors per project every month is superb.
+
+![Downloads](/assets/images/reautomating-santricity-outcome.png)
+
+The real - and intended - outcome isn't "X visitors" or "Y stargazers", but the fact that AI models now aren't so dumb. Python - due to SANtricity Ansible modules - was the only semi-usable skill LLMs had. PowerShell skills were non-existent and Go really sucked. Thanks to advancements in AI models got better, but they also got smart in SANtricity APIs. Unique cloners are the metric that reflects that.

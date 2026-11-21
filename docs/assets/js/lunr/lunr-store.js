@@ -2885,6 +2885,12 @@ var store = [{
         "url": "/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html",
         "teaser": null
       },{
+        "title": "Tag-on-upload with Kompromise Lite",
+        "excerpt":"Introduction This is the second time I’m saying this - the second half of 2026 has been more interesting because I blew the first half on fixing potholes and couldn’t do only the things I wanted to do. The second half has been mostly about what I wanted to do...","categories": ["storage","netapp","projects","ai"],
+        "tags": ["s3","storagegrid","kompromise","mcp","kafka","antivirus","malware","scanning","milf"],
+        "url": "/2026/11/21/kompromise-lite-s3-tag-on-upload.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2904,7 +2910,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Use SGII to for easy periodic indexing in Elasticsearch 2026-11-20 00:00 8 minute read Use SGII to snapshot and enumerate buckets, and a Python script to ingest to Elasticsearch Windows Server 2028 (Preview) with NetApp SolidFire 2026-11-18 00:00 2 minute read Windows Server 2028 iSCSI client with SolidFire 12.5 Use...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Tag-on-upload with Kompromise Lite 2026-11-21 00:00 9 minute read Use Kompromise Webhook server, Kafka and MCP to flag viruses and unsafe-for-work images Use SGII to for easy periodic indexing in Elasticsearch 2026-11-20 00:00 8 minute read Use SGII to snapshot and enumerate buckets, and a Python script to ingest to...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4675,6 +4681,9 @@ var store = [{
   },{
     "title": "sgii",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/sgii/"
+  },{
+    "title": "milf",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/milf/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
