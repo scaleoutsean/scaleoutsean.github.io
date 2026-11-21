@@ -129,15 +129,23 @@ Currency is maintained with incremental SGII snapshots which drive deletions of 
 
 SGII needs API access to StorageGRID's tenant administration API to take (or delete) a snapshot. In order to create bucket listing, it also needs to be able to list objects, get tags, and more. 
 
-That means that, in order to centrally manage indexing for a tenant, you need the tenant admin role. 
+That means that, in order to centrally manage indexing for a tenant, you need to use an account with the tenant Root role. 
 
 If you want non-admin tenant groups to each manage buckets they own, you need a two-step workflow:
 - To create and delete snapshots: tenant admin or other user with tenant root access permission. Despite what the documentation says, "Manage all buckets" permission isn't enough in v12.1 [as far as I can tell](https://github.com/NetAppDocs/storagegrid/issues/99) 
 - To read object names, versions, tags: bucket owner to create a bucket policy for himself or designated SGII user
 
-How does one control access to these Elasticsearch indexes? Elasticsearch can control access on index, document and even field level. See about that [here](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level). You can use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (for snapshots) and S3 keys that allow it to edit bucket policy to read objects.
+How does one control access to these Elasticsearch indexes? 
 
-It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket.
+Elasticsearch can control access on index, document and even field level - see [the Elasticsearch documentation](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level) for the details. You can use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (for snapshots) and S3 keys that allow it to edit bucket policy to read objects.
+
+It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket. StorageGRID 12.1 supports 100,000 buckets per grid and 20,000 [per tenant](https://docs.netapp.com/us-en/storagegrid-121/release-notes/whats-new.html#maximum-number-of-buckets), so having several tenants with hundreds of buckets isn't a problem. 
+
+SGII's incremental snapshot and scan are faster on a smaller bucket, so right-sizing may be highly desirable in some scenarios: easier access control management on S3 and search index, faster scans, faster turnaround (and more frequent updates). Elsewhere, that may not work as well. With SGII:
+- Unlike with traditional indexing solutions for S3 that don't use StorageGRID snapshots, SGII lets you run scheduled hourly updates of hundreds of buckets and that costs almost nothing in terms of resources.
+- Unlike with traditional NAS, using hundreds of related right-sized buckets isn't a problem [because I can snapshot 200 buckets at the exact same point in time with milisecond precision](/2026/01/30/storagegrid-branch-buckets-snapshots.html). I don't have to snapshot them all at once. I just need to snapshot them at any time and specify the same Point-in-Time in order to get a "group" snapshot. We're not talking about snapshotting a datalake, but snapshotting a bunch of Web shop product catalogs, product pictures, and product videos for a consistent search of your entire site. For a shop with 100 product categories, that can be 300 buckets. You can't do that with NAS or block unless Consistency Group supports hundreds of volumes (they [usually don't](/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html), but check the documentation for your own product to find if its maximums).
+
+### SGII vs integrated stacks
 
 Compared to a packaged solution, these steps are slightly more involved, but they also create no barrier between you and your data. Since StorageGRID now supports very many buckets, a way to keep things simple is to use smaller buckets.
 
@@ -7668,7 +7676,7 @@ The above was the "core" stuff.
 
 lakeFS can now do more. For example, you can work with Parquet files directly from the UI. Here I query `lakefs://scaleoutsean/main/lakes.parquet` without leaving the UI:
 
-![work with Parquet files](/assets/images/storagegrid-lakefs-07-datalake-integration.png)
+![Work with Parquet files](/assets/images/storagegrid-lakefs-08-datalake-files.png)
 
 In my RAG demo application, I use Parquet files. Step Two converts raw data (blog posts) to a structured table with blog posts.
 

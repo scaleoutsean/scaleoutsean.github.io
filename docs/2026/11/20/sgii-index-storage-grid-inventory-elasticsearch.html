@@ -77,7 +77,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html"},"headline":"Use SGII to for easy periodic indexing in Elasticsearch","description":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes.","datePublished":"2026-11-20T00:00:00+08:00","dateModified":"2026-11-20T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/sgii-elasticsearch-01-current.png","keywords":["s3","storagegrid","rag","elasticsearch","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1662,"articleBody":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes."}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html"},"headline":"Use SGII to for easy periodic indexing in Elasticsearch","description":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes.","datePublished":"2026-11-20T00:00:00+08:00","dateModified":"2026-11-20T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"image":"https://blog.scaleoutsean.com/assets/images/sgii-elasticsearch-01-current.png","keywords":["s3","storagegrid","rag","elasticsearch","sgii"],"about":[{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"ai"}],"wordCount":1912,"articleBody":"This post showcases efficient bucket enumeration and content indexing from StorageGRID using SGII and Elasticsearch. Unlike notifications-driven Kompromise, this approach is for point-in-time indexes."}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -219,7 +219,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          7 minute read
+          8 minute read
         
       </span>
     
@@ -234,7 +234,7 @@
           <aside class="sidebar__right sticky">
             <nav class="toc">
               <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
-              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#how-it-works">How it works</a></li><li><a href="#refresh">Refresh</a></li><li><a href="#management-and-other-considerations">Management and other considerations</a></li><li><a href="#whats-good-about-this">What's good about this</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
+              <ul class="toc__menu"><li><a href="#introduction">Introduction</a></li><li><a href="#how-it-works">How it works</a></li><li><a href="#refresh">Refresh</a></li><li><a href="#management-and-other-considerations">Management and other considerations</a><ul><li><a href="#sgii-vs-integrated-stacks">SGII vs integrated stacks</a></li></ul></li><li><a href="#whats-good-about-this">What's good about this</a></li><li><a href="#conclusion">Conclusion</a></li></ul>
             </nav>
           </aside>
         
@@ -356,7 +356,7 @@ indexed history documents=4 current operations=3 buckets=1
 
 <p>SGII needs API access to StorageGRID's tenant administration API to take (or delete) a snapshot. In order to create bucket listing, it also needs to be able to list objects, get tags, and more.</p>
 
-<p>That means that, in order to centrally manage indexing for a tenant, you need the tenant admin role.</p>
+<p>That means that, in order to centrally manage indexing for a tenant, you need to use an account with the tenant Root role.</p>
 
 <p>If you want non-admin tenant groups to each manage buckets they own, you need a two-step workflow:</p>
 <ul>
@@ -364,9 +364,19 @@ indexed history documents=4 current operations=3 buckets=1
   <li>To read object names, versions, tags: bucket owner to create a bucket policy for himself or designated SGII user</li>
 </ul>
 
-<p>How does one control access to these Elasticsearch indexes? Elasticsearch can control access on index, document and even field level. See about that <a href="https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level">here</a>. You can use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (for snapshots) and S3 keys that allow it to edit bucket policy to read objects.</p>
+<p>How does one control access to these Elasticsearch indexes?</p>
 
-<p>It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket.</p>
+<p>Elasticsearch can control access on index, document and even field level - see <a href="https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level">the Elasticsearch documentation</a> for the details. You can use federated authentication on both sides (StorageGRID and Elasticsearch). SGII needs API access to tenant management API (for snapshots) and S3 keys that allow it to edit bucket policy to read objects.</p>
+
+<p>It is possible to make this workflow even more granular and use STS AssumeRole so that SGII can create snaphots and then obtain access for different groups, so that each group gets access to different objects from the same snapshot bucket, and creates different indexes on Elasticsearch. This makes it possible to create any number of "custom" (content, authorization, access control) indexes from the same base bucket. StorageGRID 12.1 supports 100,000 buckets per grid and 20,000 <a href="https://docs.netapp.com/us-en/storagegrid-121/release-notes/whats-new.html#maximum-number-of-buckets">per tenant</a>, so having several tenants with hundreds of buckets isn't a problem.</p>
+
+<p>SGII's incremental snapshot and scan are faster on a smaller bucket, so right-sizing may be highly desirable in some scenarios: easier access control management on S3 and search index, faster scans, faster turnaround (and more frequent updates). Elsewhere, that may not work as well. With SGII:</p>
+<ul>
+  <li>Unlike with traditional indexing solutions for S3 that don't use StorageGRID snapshots, SGII lets you run scheduled hourly updates of hundreds of buckets and that costs almost nothing in terms of resources.</li>
+  <li>Unlike with traditional NAS, using hundreds of related right-sized buckets isn't a problem <a href="/2026/01/30/storagegrid-branch-buckets-snapshots.html">because I can snapshot 200 buckets at the exact same point in time with milisecond precision</a>. I don't have to snapshot them all at once. I just need to snapshot them at any time and specify the same Point-in-Time in order to get a "group" snapshot. We're not talking about snapshotting a datalake, but snapshotting a bunch of Web shop product catalogs, product pictures, and product videos for a consistent search of your entire site. For a shop with 100 product categories, that can be 300 buckets. You can't do that with NAS or block unless Consistency Group supports hundreds of volumes (they <a href="/2023/10/05/snapshots-and-consistency-groups-with-netapp-e-series.html">usually don't</a>, but check the documentation for your own product to find if its maximums).</li>
+</ul>
+
+<h3 id="sgii-vs-integrated-stacks">SGII vs integrated stacks</h3>
 
 <p>Compared to a packaged solution, these steps are slightly more involved, but they also create no barrier between you and your data. Since StorageGRID now supports very many buckets, a way to keep things simple is to use smaller buckets.</p>
 

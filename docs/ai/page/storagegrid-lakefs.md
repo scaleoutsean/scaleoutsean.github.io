@@ -131,7 +131,7 @@ The above was the "core" stuff.
 
 lakeFS can now do more. For example, you can work with Parquet files directly from the UI. Here I query `lakefs://scaleoutsean/main/lakes.parquet` without leaving the UI:
 
-![work with Parquet files](/assets/images/storagegrid-lakefs-07-datalake-integration.png)
+![Work with Parquet files](/assets/images/storagegrid-lakefs-08-datalake-files.png)
 
 In my RAG demo application, I use Parquet files. Step Two converts raw data (blog posts) to a structured table with blog posts.
 
