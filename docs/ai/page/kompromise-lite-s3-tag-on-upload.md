@@ -147,9 +147,9 @@ MCP seems useful here. I could write Python code that uses the same rules to do 
 
 ![Kompromise Lite with MCP Events](/assets/images/kompromise-lite-tag-on-upload-12-diagram.png)
 
-- Step (5) are checks that MCP performs with MCP tools
-- Step (6) is tagging (in this demo, by default, conditional)
-- Step (7) is next steps
+- Step (5) are the configurable checks that MCP performs with MCP tools
+- Step (6) is the object tagging step (in this demo, by default, conditional)
+- Step (7) are possible next steps
 
 ### Possible next steps
 
@@ -181,4 +181,4 @@ My likely next steps in this area involve Human-in-the-Loop for possible Storage
 
 ## Appendix A: Demo
 
-![S3 Tag on Upload](https://rumble.com/v7ipxi6-storagegrid-s3-tag-on-upload.html) - 4m16s
+- [S3 Tag on Upload](https://rumble.com/v7ipxi6-storagegrid-s3-tag-on-upload.html) - 4m16s
