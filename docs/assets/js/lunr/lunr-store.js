@@ -2910,7 +2910,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"S3 Tag-on-Upload with Kompromise Lite and StorageGRID 2026-11-21 00:00 10 minute read Use Kompromise Webhook server, Kafka and MCP to flag viruses and unsafe-for-work images Use SGII to for easy periodic indexing in Elasticsearch 2026-11-20 00:00 8 minute read Use SGII to snapshot and enumerate buckets, and a Python script...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"S3 Tag-on-Upload with Kompromise Lite and StorageGRID 2026-11-21 00:00 11 minute read Use Kompromise Webhook server, Kafka and MCP to flag viruses and unsafe-for-work images Use SGII to for easy periodic indexing in Elasticsearch 2026-11-20 00:00 8 minute read Use SGII to snapshot and enumerate buckets, and a Python script...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

@@ -48,7 +48,7 @@ That was before NetApp had any official MCP stuff (so not much awareness existed
 
 As you can see in [the second "anti-virus scanning for StorageGRID" post](/2024/01/29/antivirus-scanning-for-on-premises-s3.html), it's not a trivial topic and while "post v2" was better, I wasn't happy with the outcome.
 
-So... anti-virus, MCP, agents. 
+So... anti-virus, MCP, agents.
 
 ### Walk-through
 
@@ -143,11 +143,15 @@ Image (and/or video) detection is harder, but we should focus on what we can imp
 - we can add multiple actions, such as auto-removal of certain content, such as viruses, when confidence is very high, for example, or when buckets are used in public-facing services for which there may be fines
 - because these buckets/objects may need fiddling with, versioning should usually be enabled
 
-MCP seems useful here. I could write Python node that uses the same rules to do the same thing. It'd harder to adjust, but more reliable. What MCP gives me is more flexibility; for example, I can add extra tools very easily.
+MCP seems useful here. I could write Python code that uses the same rules to do the same thing. It'd be harder to modify, but more reliable and predictable. What MCP gives us is more flexibility; for example, we can add extra tools very easily.
+
+![Kompromise Lite with MCP Events](/assets/images/kompromise-lite-tag-on-upload-12-diagram.png)
 
 ### Possible next steps
 
-There's a bunch of extra things that can be done to explore these integrations further and improve the workflow:
+Kompromise Lite does the same thing as before. MCP watches Kafka, uses tools and makes changes and notifies if appropriate. Next steps are up to us.
+
+There's a bunch of extra things that can be done to explore these integrations further and improve that workflow:
 
 - Additional skills and tools for this workflow
 - Human-in-the-Loop as an option for "re-instantiation" or final removal
