@@ -17,7 +17,7 @@ This is not a full implementation of everything. It's not a toy either.
 What you get now is:
 
 - Split-horizon MCP server for secure local and remote use
-- **Remote**: MCP HTTP server ([the API endpoint, not for human use, is here](https://solidfire.mcp.scaleoutsean.com/mcp) with SolidFire 12.7 API documentation
+- **Remote**: MCP HTTP server ([the API endpoint, not for human access, is here](https://solidfire.mcp.scaleoutsean.com/mcp)) with SolidFire 12.7 API documentation
 - **Local**: `stdio` server (modern implementation, NodeJS) with several **read-only** tools
 
 What's cool about this:
@@ -35,7 +35,7 @@ What it does and doesn't do:
 
 Security and privacy are first priorities, so I'm not rushing with anything that can modify your storage. If you do need it, please try adding those on your own *or* let me know in Github issues and I may try adding them.
 
-Let's watch some screenshot pr0n.
+Let's check out some (console) screenshot pr0n.
 
 ## HTTP
 
