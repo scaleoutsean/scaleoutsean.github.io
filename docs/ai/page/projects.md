@@ -42,6 +42,7 @@ Most of them are permissive OSS, but since 2026 I invest less in source code mai
 | [santricity-powershell](https://github.com/scaleoutsean/santricity-powershell) | Slim client module for for Day 1+ automation of NetApp E-Series (PowerShell) and SANmox (SANtricity-Proxmox VE 9 TUI) |
 | [SFC](https://github.com/scaleoutsean/sfc) | Metrics and visualizations for SolidFire (Python, InfluxDB, Grafana, containers)|
 | [SolidFire API Gateway](https://github.com/scaleoutsean/solidfire-wac-gateway) | SolidFire API Gateway (and client) for Windows Admin Center (ASP.NET)|
+| [SolidFire MCP Server](https://github.com/scaleoutsean/solidfire-mcp-server) | SolidFire MCP server (NodeJS) |
 | [santricity-csi](https://github.com/scaleoutsean/santricity-go/tree/master/csi) | Community E-Series CSI driver and Go client library (Go language)|
 | [solidfire-csi](https://github.com/scaleoutsean/solidfire-csi/) | Community SolidFire CSI driver (Go language) |
 | [solidfire-go](https://github.com/scaleoutsean/solidfire-go/) | SolidFire Go SDK (Go language) |
@@ -60,3 +61,9 @@ Some repos with documentation and curated external content:
 | [Linux on SolidFire](https://github.com/scaleoutsean/solidfire-linux)   | Notes on SolidFire with Linux (curation) |
 | [Windows on SolidFire](https://github.com/scaleoutsean/solidfire-windows) | Notes on SolidFire with Windows, including Hyper-V (PowerShell) |
 | [Kubernetes on SolidFire](https://solidfire-kubernetes.pages.dev) | My Kubernetes-with-SolidFire notes (docs, curation) |
+
+## MCP servers
+
+| Name        |  URL          | Description  |
+| :---        |  :---         | :---         |
+| SolidFire   |  https://solidfire.mcp.scaleoutsean.com/mcp | SolidFire API documentation server for v12.7 |
