@@ -65,6 +65,10 @@ This one is a bit special: it's a "Test" command. **If** your client has access 
 
 ![Local MCP tool that tests SVIP access](/assets/images/solidfire-mcp-04-tools-svip-reachability-check.png)
 
+Local configuration may be tricky. This is mine, with DNS resolution for MVIP and NVIP, SolidFire password in environment variable, and MCP server executed from the repository/build location. There's more in the README on Github.
+
+![Local MCP server configuration](/assets/images/solidfire-mcp-06-stdio-configuration.png)
+
 ### Use cases and customization
 
 This is deliberate, to remind you that you can use these tools in infrastructure troubleshooting.
