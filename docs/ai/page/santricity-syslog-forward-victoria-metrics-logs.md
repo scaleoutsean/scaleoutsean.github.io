@@ -55,8 +55,9 @@ Two important points:
 
 - SANtricity uses only UDP
 - I used RFC3164 in "Configure All Syslog Servers". Victoria Logs should accept RFC5424 without any changes, but it didn't in my case. RFC3164 worked.
+  - **Update (2026/11):** RFC5424 also works (tested with 12.1). The reason I didn't see it because the stupid arrays default to "obtain NTP servers from DHCP". Of course, they didn't do that so the entries were going in, but completely out of range due to the huge drift. I noticed that only later, so the actual fix for "quirkiness" is to correctly configure NTP before trying logging...
 
-You won't see any syslog messages in your Victoria Logs (unless they're set to debug, perhaps?). Watch in the UI or tail Victoria Logs using their CLI tool.
+You won't see any syslog messages in your Victoria Logs. Watch in the UI or tail Victoria Logs using their CLI tool.
 
 Assuming you're watching Victoria Logs UI, you should see the test alert and whatever other stuff comes your way in it. 
 
@@ -64,7 +65,7 @@ I kicked out a disk from a storage pool to get some extra "real life"-like messa
 
 ![Test syslog forwarding](/assets/images/victoria-logs-santricity-01-test.png)
 
-Here's a nicer screenshot with several test alets and one "real" message.
+Here's a nicer screenshot with several test alerts and one "real" message.
 
 ![Test syslog forwarding](/assets/images/victoria-logs-santricity-02-monitor.png)
 
@@ -74,4 +75,4 @@ MEL was dropped from EPA 4 because it should have never been there in the first 
 
 Victoria Logs is one of the best out there. Due to SANtricity's quirkiness (or bad luck, or network issues), it took me almost 20 minutes to get this to work. So, it's worth starting with the above options to get logs flowing first, and then set up other options including log compression and whatnot.
 
-I also recommend another Victoria product, Victoria Metrics, as a Prometheus-compatible scraper for EPA metrics, which is why I included it in EPA reference stack. If you add Victoria Log metrics to EPA Compose, you can have complete log monitoring in less RAM than MEL processing required (seriously - Victoria Logs needs less RAM than MEL log processing alone required in EPA 3). You'll also save disk space and have a proper tool for log monitoring.
+I also recommend another Victoria product, Victoria Metrics, as a Prometheus-compatible scraper for EPA metrics, which is why I included it in the EPA reference stack. If you add Victoria Log metrics to EPA Compose, you can have complete log monitoring in less RAM than MEL processing required (seriously - Victoria Logs needs less RAM than MEL log processing alone required in EPA 3). You'll also save disk space and have a proper tool for log monitoring.

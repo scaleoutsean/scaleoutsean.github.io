@@ -2903,6 +2903,12 @@ var store = [{
         "url": "/2026/11/24/the-other-netapp-ef80l.html",
         "teaser": null
       },{
+        "title": "Optional Victoria Logs in EPA stack",
+        "excerpt":"Introduction Since I removed MEL in EPA 4.0.0 beta 1, a separate how-to was created for the proper way to handle that, with instructions for a leading logging application (Forward E-Series SANtricity logs to Victoria Logs syslog receiver). Since Victoria Logs works well and can meet a variety of needs...","categories": ["storage","e-series","monitoring"],
+        "tags": ["netapp","santricity","logs","epa","syslog","victoria-logs","soar","siem"],
+        "url": "/2026/11/25/epa-optional-victoria-logs.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2922,7 +2928,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"The other NetApp EF80L 2026-11-24 00:00 less than 1 minute read The other EF80L Keep going with NetApp SolidFire MCP server 2026-11-23 00:00 4 minute read Use mine or run your own API documentation server. Run your own SolidFire MCP tools (stdio-style) S3 Tag-on-Upload with Kompromise Lite and StorageGRID 2026-11-21...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Optional Victoria Logs in EPA stack 2026-11-25 00:00 4 minute read Victoria Logs is ready to go and can be enabled on demand in EPA 4 The other NetApp EF80L 2026-11-24 00:00 less than 1 minute read The other EF80L Keep going with NetApp SolidFire MCP server 2026-11-23 00:00 4...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"
@@ -4702,6 +4708,12 @@ var store = [{
   },{
     "title": "lustre",
     "excerpt":"","url": "https://blog.scaleoutsean.com/tags/lustre/"
+  },{
+    "title": "soar",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/soar/"
+  },{
+    "title": "siem",
+    "excerpt":"","url": "https://blog.scaleoutsean.com/tags/siem/"
   },{
     "title": "projects",
     "excerpt":"","url": "https://blog.scaleoutsean.com/categories/projects/"
