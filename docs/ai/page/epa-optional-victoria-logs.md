@@ -48,7 +48,9 @@ These fire and forget.
 
 I set both audit log and alerts to `15514/udp` to match the Victoria Logs' defaults in the EPA stack.
 
-There's no TLS here. EPA already gets alerts via the API, so Alerts may be useful in only rare cases. These are very few and don't take up significant space, so there's no harm in leaving them enabled.
+There's no TLS or TCP here.
+
+EPA already gets active alerts via the API, so these Alerts may be useful in only rare cases. These are very few and don't take up significant space, so there's no harm in leaving them enabled.
 
 ### Other weirdness
 
