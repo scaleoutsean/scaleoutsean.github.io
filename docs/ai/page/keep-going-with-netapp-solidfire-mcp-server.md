@@ -18,7 +18,7 @@ What you get now is:
 
 - Split-horizon MCP server for secure local and remote use
 - **Remote**: MCP HTTP server ([the API endpoint, not for human access, is here](https://solidfire.mcp.scaleoutsean.com/mcp)) with SolidFire 12.7 API documentation
-- **Local**: `stdio` server (modern implementation, NodeJS) with several **read-only** tools
+- **Local**: MCP `stdio` server (modern implementation compared to before, NodeJS) with several **read-only** tools
 
 What's cool about this:
 
@@ -81,7 +81,7 @@ Remember to **not** create tools for GetAccount, ListAccounts, GetAccountByID an
 
 I think this version is usable for development and secure operations that don't need to change storage configuration.
 
-I don't have big plans for this MCP server since I never get any feedback, so I don't think I'll change it much. I do have some cool ideas for it (related to backup to S3 and more), as always. 
+I don't have big plans for this MCP server since I never get any feedback, so I don't think I'll change it much. I do have some cool ideas for it (related to backup to S3 and more), as always.
 
 You're welcome to [hack away](https://github.com/scaleoutsean/solidfire-mcp-server), submit enhancement requests or report bugs.
 
