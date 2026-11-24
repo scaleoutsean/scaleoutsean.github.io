@@ -70,9 +70,9 @@ What was the problem that caused it? I used the SANtricity API to create a very 
 
 ## Appendix A: MEL for Automatic Load Balancing (ALB)
  
-The [ALB TR](https://www.netapp.com/pdf.html?item=/media/17144-tr4737.pdf) (TR-4737) is an example of the joys of PDFs. Because it's a PDF and because the events are given in a user-hostile form, I had to manually copy-paste each to make use of the list. Yeah, maybe I could have used an AI, but maybe also this should have been available in the JSON or markdown format on Github in the first place.
+The [ALB TR](https://www.netapp.com/pdf.html?item=/media/17144-tr4737.pdf) (TR-4737) is an example of the joys of PDFs. Because it's a PDF and because the events are given in a user-hostile form, I had to manually copy-paste each to make use of the list. Yeah, maybe I could have used AI, but maybe also this should have been available in the JSON or markdown format on Github in the first place.
 
-```raw
+```sh
 event,event_id
 MEL_EV_LOAD_BALANCING_VD_TRANSFER,0x2044
 MEL_EV_IMPLICIT_FAILBACK_VD_TRANSFER,0x2049

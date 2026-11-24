@@ -2904,7 +2904,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Optional Victoria Logs in EPA stack",
-        "excerpt":"Introduction Since I removed MEL in EPA 4.0.0 beta 1, a separate how-to was created for the proper way to handle that, with instructions for a leading logging application (Forward E-Series SANtricity logs to Victoria Logs syslog receiver). Since Victoria Logs works well and can meet a variety of needs...","categories": ["storage","e-series","monitoring"],
+        "excerpt":"Introduction Since I removed MEL codes in EPA 4.0.0 beta 1, a separate how-to was created for the proper way to handle that, with instructions for a leading logging application (Forward E-Series SANtricity logs to Victoria Logs syslog receiver). Since Victoria Logs works well and can meet a variety of...","categories": ["storage","e-series","monitoring"],
         "tags": ["netapp","santricity","logs","epa","syslog","victoria-logs","soar","siem"],
         "url": "/2026/11/25/epa-optional-victoria-logs.html",
         "teaser": null

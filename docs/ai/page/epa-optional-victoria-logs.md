@@ -4,7 +4,7 @@ How to configure SANtricity audit and alert forwarding to Victoria Logs in EPA 4
 
 ## Introduction 
 
-Since I removed MEL in [EPA 4.0.0 beta 1](/2026/04/23/epa_400_beta.html), a separate how-to was created for the proper way to handle that, with instructions for a leading logging application ([Forward E-Series SANtricity logs to Victoria Logs syslog receiver](/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html)).
+Since I removed [MEL](/2022/12/13/eseries-santricity-mel-forwarding.html) codes in [EPA 4.0.0 beta 1](/2026/04/23/epa_400_beta.html), a separate how-to was created for the proper way to handle that, with instructions for a leading logging application ([Forward E-Series SANtricity logs to Victoria Logs syslog receiver](/2026/04/26/santricity-syslog-forward-victoria-metrics-logs.html)).
 
 Since Victoria Logs works well and can meet a variety of needs (more on that later), it was added as an optional service to E-Series Performance Analyzer Docker Compose. You may, but you don't have to, enable it.
 
@@ -42,7 +42,7 @@ I have UDP selected, but other options include TCP and TLS (which you may want t
 
 Why on earth this needs another section in the already bloated top-level menu remains to be seen.
 
-These fire and forget.
+These fire and forget and don't get sent repeatedly.
 
 ![SANtricity alerts](/assets/images/epa-victoria-logs-03-alerts.png)
 
@@ -50,14 +50,14 @@ I set both audit log and alerts to `15514/udp` to match the Victoria Logs' defau
 
 There's no TLS or TCP here. The format is RFC3164.
 
-EPA already gets active alerts via the API, so these Alerts may be useful in only rare cases. These are very few and don't take up significant space, so there's no harm in leaving them enabled.
-
 Example:
 
 ```sh
 myarray1;4011;Critical;Volume not on preferred path due to AVT/RDAC failover
-# <array-name>;<mel-code>;<severity>;<message>
+# <array-name>;<event-id>;<severity>;<message>
 ```
+
+EPA already gets active alerts via the API, so these Alerts may be useful in only rare cases. These are very few and don't take up significant space, so there's no harm in leaving them enabled.
 
 ### Other weirdness
 
