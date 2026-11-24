@@ -50,7 +50,7 @@ I set both audit log and alerts to `15514/udp` to match the Victoria Logs' defau
 
 There's no TLS or TCP here. The format is RFC3164.
 
-Example:
+Message content example:
 
 ```sh
 myarray1;4011;Critical;Volume not on preferred path due to AVT/RDAC failover
