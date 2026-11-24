@@ -8,9 +8,9 @@ How about this?
 
 - An EF80L where L stands for Linux with the optional small Kubernetes distribution such as [k0rdent k0](/2026/03/02/netapp-santricity-csi-with-k0rdent-k0s.html)?
 - [TopoLVM](/2026/11/06/topo-lvm-netapp-santricity-e-series.html) or my SANtricity CSI
-- [Rook with EF Series](/2026/05/22/ceph-kubernetes-eseries.html) (Ceph on Kubernetes) or just Ceph on Bare metal if you don't want Kubernetes
+- [Rook (Ceph on Kubernetes) with EF Series](/2026/05/22/ceph-kubernetes-eseries.html) or just Ceph on bare metal, if you don't want Ceph on Kubernetes
 - Rook Storage Classes with RAID 0 or RAID 6 for data that works okay with RF3 and Erasure Coding. SCs on RAID10 for natively-replicated databases ([CNPG](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), etc.)
-- Lightweight [compression](/2024/02/26/zfs-deduplication-netapp-eseries.html#compression) to avoid waste created by inefficient data
+- Lightweight [compression](/2024/02/26/zfs-deduplication-netapp-eseries.html#compression) in Ceph and other filesystems to avoid waste created by inefficient data
 - Containers, VMs, light databases, S3, and more
 - Velero for backup/restore, including built-in Change Block Tracking [once they figure it out](https://x.com/ScaleoutSean/status/2118029361303708016?a=qcKTM20SMz3nrQKhZIc&s=20)
 

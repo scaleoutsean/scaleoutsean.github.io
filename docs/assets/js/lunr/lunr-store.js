@@ -2898,7 +2898,7 @@ var store = [{
         "teaser": null
       },{
         "title": "The other NetApp EF80L",
-        "excerpt":"Here’s the NetApp EF80L, in which “L” means Lustre. How about this? An EF80L where L stands for Linux with the optional small Kubernetes distribution such as k0rdent k0? TopoLVM or my SANtricity CSI Rook with EF Series (Ceph on Kubernetes) or just Ceph on Bare metal if you don’t...","categories": ["storage","e-series","kubernetes"],
+        "excerpt":"Here’s the NetApp EF80L, in which “L” means Lustre. How about this? An EF80L where L stands for Linux with the optional small Kubernetes distribution such as k0rdent k0? TopoLVM or my SANtricity CSI Rook (Ceph on Kubernetes) with EF Series or just Ceph on bare metal, if you don’t...","categories": ["storage","e-series","kubernetes"],
         "tags": ["topolvm","netapp","csi","cybozu","ef80l","lustre"],
         "url": "/2026/11/24/the-other-netapp-ef80l.html",
         "teaser": null
