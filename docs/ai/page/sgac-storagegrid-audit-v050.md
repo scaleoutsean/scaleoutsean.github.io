@@ -32,7 +32,7 @@ Even other queries on the bucket would not be able to distinguish keys by versio
 
 This query example is from the SGAC README, by the way.
 
-Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole  month. Might be useful to know in either case.
+Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole  month. It might be useful to know in either case.
 
 Then there are some interesting consequences for [SGII](https://github.com/scaleoutsean/sg-cosi), my StorageGRID incremental (bucket) inventory tool, too. There are "edge" cases where you may rely on a snapshot - which SGII does - or [use SGII output](/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html) [in a workflow](/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html) that needs to access an object, but the object is not there due to the tenant admin force-deleting it from the base bucket.
 
@@ -42,4 +42,4 @@ As a regular user, you'd probably consult the SIEM team for security-related mat
 
 Normally, I recommend StorageGRID audit logs to a log management system.
 
-But, many StorageGRID users don't have one or they're not allowed to use it. I don't have one either - I forward logs to a syslog server. I have the logs, but no good way to query them. It may take days to get response to low-priority asks, and SGAC may be able to help.
+But, many StorageGRID users don't have one or they're not allowed to use it. Or, it takes days to get response to low-priority asks not related to security incidents. I don't have a log system for StorageGRID either - I forward logs to a syslog server. I have the logs, but no good way to query them. In cases like these, SGAC may be able to help.
