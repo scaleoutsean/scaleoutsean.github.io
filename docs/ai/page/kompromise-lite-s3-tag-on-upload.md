@@ -128,6 +128,7 @@ Let's see:
 - `nsfw-ish-naked-painting.jpg` was not flagged as adult, although it was the "worst" (it was an art piece, oil on canvas from the 1800s). Even that wasn't unsafe for workplace - you could probably find similar paintings in a nearby museum or art gallery. I first used this in the hope I could trigger detection without storing pornographic content on disk.
 - `nsfw-anime-milfs.jpg` *was* flagged as adult, although there's nothing adult about it. It's an anime cartoon screenshot with absolutely no nudity. It is suggestive, but there's no nudity in it.
 - `pumping-iron.png` from detection example B, *was* flagged as porn. 
+
 ![MCP agent-tagged item pumping-iron.png](/assets/images/kompromise-lite-tag-on-upload-11-pumping-iron.png)
 
 The oil painting could potentially be tagged in some cases (not in most museums, art galleries, etc.), but some models tolerate nudity in paintings, so that outcome was overwhelmingly correct. The anime cartoon and the photo should not have been tagged. Adult content detection failed in over 50% of cases (although sample size was very small)!

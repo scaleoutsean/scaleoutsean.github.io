@@ -2909,6 +2909,12 @@ var store = [{
         "url": "/2026/11/25/epa-optional-victoria-logs.html",
         "teaser": null
       },{
+        "title": "StorageGRID Audit-log Converter (SGAC) v0.5.0",
+        "excerpt":"SGAC v0.5.0 makes small changes to the table schema. New columns are version_id, delete_marker_version_id, and request_user_urn. With that, we can search by S3 object version ID. While I may have several keys named cat.mp4, I may care only about one particular version of it. SGAC Go didn’t extract that detail...","categories": ["projects","storage","netapp","storagegrid","s3"],
+        "tags": ["audit","log","sgac","compliance","access"],
+        "url": "/2026/11/25/sgac-storagegrid-audit-v050.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2928,7 +2934,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"Optional Victoria Logs in EPA stack 2026-11-25 00:00 4 minute read Victoria Logs is ready to go and can be enabled on demand in EPA 4 The other NetApp EF80L 2026-11-24 00:00 less than 1 minute read The other EF80L Keep going with NetApp SolidFire MCP server 2026-11-23 00:00 4...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"StorageGRID Audit-log Converter (SGAC) v0.5.0 2026-11-25 00:00 2 minute read Small but useful changes in v0.5.0 schema Optional Victoria Logs in EPA stack 2026-11-25 00:00 4 minute read Victoria Logs is ready to go and can be enabled on demand in EPA 4 The other NetApp EF80L 2026-11-24 00:00 less...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

@@ -55,7 +55,7 @@ Two important points:
 
 - SANtricity uses only UDP
 - I used RFC3164 in "Configure All Syslog Servers". Victoria Logs should accept RFC5424 without any changes, but it didn't in my case. RFC3164 worked.
-  - **Update (2026/11):** RFC5424 also works (tested with 12.1). The reason I didn't see it because the arrays default to "obtain NTP servers from DHCP". Of course, they didn't do that so messages were coming in, but completely out of time range I was looking at due to the huge drift. I noticed that only later, so the actual fix for "quirkiness" is to correctly configure NTP before trying logging...
+  - **Update (2026/11):** RFC5424 also works (tested with 12.1). The reason I didn't see it because the arrays default to "obtain NTP servers from DHCP". Of course, it didn't get anything so messages were coming in, but completely out of the time range I was looking at due to the huge drift. I noticed that only later, so the actual fix for "quirkiness" is to correctly configure NTP before trying logging...
 
 You won't see any syslog messages in your Victoria Logs. Watch in the UI or tail Victoria Logs using their CLI tool.
 
