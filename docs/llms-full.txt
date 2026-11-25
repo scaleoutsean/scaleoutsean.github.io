@@ -10,6 +10,46 @@ scaleoutSean is I create solutions.
 
 ## Posts
 
+### Proxmox 9.3.1 and SolidFire Plugin for PVE 9.3 (Firemox)
+
+URL: https://blog.scaleoutsean.com/2026/11/26/promox-93-netapp-solidfire-plugin.html
+Date: 2026-11-26
+
+## PVE 9.3.1 and new Firemox
+
+Proxmox 9.3.1 has been released.
+
+Among noteworthy changes:
+- Improved (but not much) storage plugin API
+- NVMe/TCP is built in now (which was an annoyance for E-Series NVMe/RoCE, as `nvme` had to be installed manually and NVMe/RoCE wasn't officially supported)
+- "Preview" shared LVM functionality is now fully supported, which affects both SANtricity and SolidFire.
+
+## SolidFire (Firemox)
+
+I've only updated the SolidFire (Firemox) repo so far, since I like that one.
+
+I've [added](https://github.com/scaleoutsean/firemox/commit/127175994a0d385690dc44d033dde2a8164da944) SolidFire Perl plugin to the Firemox repo and now SolidFire users can provision SolidFire LUNs as per README.
+
+PVE view:
+
+![SolidFire Perl Plugin for PVE 9.3](/assets/images/firemox-09-pve93-perl.png)
+
+SolidFire view:
+
+![SolidFire Perl Plugin for PVE 9.3](/assets/images/firemox-10-pve93-solidfire.png)
+
+The API is 17 (latest), but it doesn't really do anything. I think Firemox PowerShell TUI is still better and you may in fact need it (or something like it) for QoS and other details.
+
+## SANtricity (SANmox)
+
+Everything should work like in [this post from March 2026](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html), but you no longer need to `apt install nvme`.
+
+I may update the [SANtricity plugin (SANmox)](/2026/05/21/sanmox-updates.html), although - given the low value of PVE's plugin features - it's probably not necessary and the old one may work just as well. SANmox can be downloaded [here](https://github.com/scaleoutsean/santricity-powershell), just remember it doesn't do that much and I haven't tested it with Proxmox 9.3 yet, although - reading the docs - there's no reason why it shouldn't work.
+
+Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
+
+---
+
 ### StorageGRID Audit-log Converter (SGAC) v0.5.0
 
 URL: https://blog.scaleoutsean.com/2026/11/25/sgac-storagegrid-audit-v050.html
@@ -23,7 +63,7 @@ With that, we can search by S3 object version ID. While I may have several keys 
 
 SGAC Go didn't extract that detail before, so we could end up with many results for a bucket/key, and then have to filter by date or size.
 
-Even other queries on the bucket would not be able to distinguish keys by version, so if you looked for most abused objects (by number of requests - GET/PUT/DEL - since forever), you'd not know which particular version of the key is hammered by `SGET`s.
+Even other queries on the bucket would not be able to distinguish keys by version, so if you looked for the most abused objects in a bucket (by number of requests - GET/PUT/DEL - since forever), you'd not know which particular version of the key is hammered by `SGET`.
 
 ```sql
 ┌──────────────────────────┬─────────┬──────────┬─────────────┐
@@ -43,17 +83,17 @@ Even other queries on the bucket would not be able to distinguish keys by versio
 ...
 ```
 
-This query example is from the SGAC README, by the way.
+This query example comes from the SGAC README, by the way.
 
-Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole  month. It might be useful to know in either case.
+Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole month, for example. It might be useful to know in either case.
 
 Then there are some interesting consequences for [SGII](https://github.com/scaleoutsean/sg-cosi), my StorageGRID incremental (bucket) inventory tool, too. There are "edge" cases where you may rely on a snapshot - which SGII does - or [use SGII output](/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html) [in a workflow](/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html) that needs to access an object, but the object is not there due to the tenant admin force-deleting it from the base bucket.
 
-If, for whatever reason, you can't find a file in a snapshot, SGAC (or tenant admin using it on your behalf) can quickly find out why and what happened with that particular object key and version. 
+If, for whatever reason, you can't find a file in a snapshot, SGAC (or tenant admin using it on your behalf) can quickly find out why and what happened with that particular object key and version.
 
 As a regular user, you'd probably consult the SIEM team for security-related matters. But for other (unexpected or missing content due to a buggy data pipeline, or other unusual situations) issues, you may not have a canned solution where you can get this answered the same day.
 
-Normally, I recommend forwarding of StorageGRID audit logs to a log management system.
+Normally, I recommend forwarding StorageGRID audit logs to a log management system.
 
 But, many StorageGRID users don't have one or they're not allowed to use it. Or, it takes days to get response to low-priority asks not related to security incidents. I don't have a log system for StorageGRID either - I forward logs to a syslog server. I have the logs, but no good way to query them. In cases like these, SGAC may be able to help.
 
@@ -175,7 +215,7 @@ How about this?
 - Rook Storage Classes with RAID 0 or RAID 6 for data that works okay with RF3 and Erasure Coding. SCs on RAID10 for natively-replicated databases ([CNPG](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), etc.)
 - Lightweight [compression](/2024/02/26/zfs-deduplication-netapp-eseries.html#compression) in Ceph and other filesystems to avoid waste created by inefficient data
 - Containers, VMs, light databases, S3, and more
-- Velero for backup/restore, including built-in Change Block Tracking [once they figure it out](https://x.com/ScaleoutSean/status/2118029361303708016?a=qcKTM20SMz3nrQKhZIc&s=20)
+- Velero for backup/restore, including built-in Changed Block Tracking [once they figure it out](https://x.com/ScaleoutSean/status/2118029361303708016?a=qcKTM20SMz3nrQKhZIc&s=20), as it's not even clear after v1.19 which CSI is supported (if any)
 
 ![The other EF80L](/assets/images/ef80l-01-the-other-one.png)
 

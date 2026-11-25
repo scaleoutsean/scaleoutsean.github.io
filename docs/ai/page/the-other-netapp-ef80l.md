@@ -12,7 +12,7 @@ How about this?
 - Rook Storage Classes with RAID 0 or RAID 6 for data that works okay with RF3 and Erasure Coding. SCs on RAID10 for natively-replicated databases ([CNPG](/2026/06/01/cloud-native-postgres-kuberntes-netapp-eseries-perf.html), etc.)
 - Lightweight [compression](/2024/02/26/zfs-deduplication-netapp-eseries.html#compression) in Ceph and other filesystems to avoid waste created by inefficient data
 - Containers, VMs, light databases, S3, and more
-- Velero for backup/restore, including built-in Change Block Tracking [once they figure it out](https://x.com/ScaleoutSean/status/2118029361303708016?a=qcKTM20SMz3nrQKhZIc&s=20)
+- Velero for backup/restore, including built-in Changed Block Tracking [once they figure it out](https://x.com/ScaleoutSean/status/2118029361303708016?a=qcKTM20SMz3nrQKhZIc&s=20), as it's not even clear after v1.19 which CSI is supported (if any)
 
 ![The other EF80L](/assets/images/ef80l-01-the-other-one.png)
 

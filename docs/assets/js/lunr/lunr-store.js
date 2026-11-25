@@ -2915,6 +2915,12 @@ var store = [{
         "url": "/2026/11/25/sgac-storagegrid-audit-v050.html",
         "teaser": null
       },{
+        "title": "Proxmox 9.3.1 and SolidFire Plugin for PVE 9.3 (Firemox)",
+        "excerpt":"PVE 9.3.1 and new Firemox Proxmox 9.3.1 has been released. Among noteworthy changes: Improved (but not much) storage plugin API NVMe/TCP is built in now (which was an annoyance for E-Series NVMe/RoCE, as nvme had to be installed manually and NVMe/RoCE wasn’t officially supported) “Preview” shared LVM functionality is now...","categories": ["projects","storage","netapp","solidfire","virtualization"],
+        "tags": ["pve","iscsi","plugin","proxmox","firemox"],
+        "url": "/2026/11/26/promox-93-netapp-solidfire-plugin.html",
+        "teaser": null
+      },{
     "title": "About this site",
     "excerpt":"About me I create solutions. The blog title and motto come from the theory of human action (praxeology). Disclaimer The content of this site and opinions expressed on it are personal. The site does not provide technical or other advice to my employer’s customers or other people out there. Content...","url": "https://blog.scaleoutsean.com/about/"
   },{
@@ -2934,7 +2940,7 @@ var store = [{
     "excerpt":"About this site Posts by Category Docochat Docosearch Home Page Archive Post Archive Projects Posts by Tag Posts by Year hci kubernetes netapp rancher solidfire github dark mode certificate postman devops plugin provider terraform hcc log logging powershell qos e-series eseries fc fibre channel iscsi performance api python f5 ingress...","url": "https://blog.scaleoutsean.com/page-archive/"
   },{
     "title": "Post Archive",
-    "excerpt":"StorageGRID Audit-log Converter (SGAC) v0.5.0 2026-11-25 00:00 2 minute read Small but useful changes in v0.5.0 schema Optional Victoria Logs in EPA stack 2026-11-25 00:00 4 minute read Victoria Logs is ready to go and can be enabled on demand in EPA 4 The other NetApp EF80L 2026-11-24 00:00 less...","url": "https://blog.scaleoutsean.com/archive/"
+    "excerpt":"Proxmox 9.3.1 and SolidFire Plugin for PVE 9.3 (Firemox) 2026-11-26 00:00 1 minute read Firemox adds support for PVE 9.3 StorageGRID Audit-log Converter (SGAC) v0.5.0 2026-11-25 00:00 2 minute read Small but useful changes in v0.5.0 schema Optional Victoria Logs in EPA stack 2026-11-25 00:00 4 minute read Victoria Logs...","url": "https://blog.scaleoutsean.com/archive/"
   },{
     "title": "Projects",
     "excerpt":"Presentations This is a recent and experimental section added in April 2026. I manually create simple, accessible presentation-like notes in the HTML format for the situations where sharing in the browser is better overall. Presentation Description NetApp E-Series in Proxmox Ecosystem Presentation on NetApp E-Series with Proxmox (PVE, PBS) NetApp...","url": "https://blog.scaleoutsean.com/projects.html"

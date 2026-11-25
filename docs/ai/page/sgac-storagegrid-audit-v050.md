@@ -10,7 +10,7 @@ With that, we can search by S3 object version ID. While I may have several keys 
 
 SGAC Go didn't extract that detail before, so we could end up with many results for a bucket/key, and then have to filter by date or size.
 
-Even other queries on the bucket would not be able to distinguish keys by version, so if you looked for most abused objects (by number of requests - GET/PUT/DEL - since forever), you'd not know which particular version of the key is hammered by `SGET`s.
+Even other queries on the bucket would not be able to distinguish keys by version, so if you looked for the most abused objects in a bucket (by number of requests - GET/PUT/DEL - since forever), you'd not know which particular version of the key is hammered by `SGET`.
 
 ```sql
 ┌──────────────────────────┬─────────┬──────────┬─────────────┐
@@ -30,9 +30,9 @@ Even other queries on the bucket would not be able to distinguish keys by versio
 ...
 ```
 
-This query example is from the SGAC README, by the way.
+This query example comes from the SGAC README, by the way.
 
-Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole  month. It might be useful to know in either case.
+Now, the same query can show which versions are heavily used, or the opposite - which versions no one accessed this whole month, for example. It might be useful to know in either case.
 
 Then there are some interesting consequences for [SGII](https://github.com/scaleoutsean/sg-cosi), my StorageGRID incremental (bucket) inventory tool, too. There are "edge" cases where you may rely on a snapshot - which SGII does - or [use SGII output](/2026/11/09/sgii-for-agentic-hybrid-cloud-use-cases.html) [in a workflow](/2026/11/20/sgii-index-storage-grid-inventory-elasticsearch.html) that needs to access an object, but the object is not there due to the tenant admin force-deleting it from the base bucket.
 
@@ -40,6 +40,6 @@ If, for whatever reason, you can't find a file in a snapshot, SGAC (or tenant ad
 
 As a regular user, you'd probably consult the SIEM team for security-related matters. But for other (unexpected or missing content due to a buggy data pipeline, or other unusual situations) issues, you may not have a canned solution where you can get this answered the same day.
 
-Normally, I recommend forwarding of StorageGRID audit logs to a log management system.
+Normally, I recommend forwarding StorageGRID audit logs to a log management system.
 
 But, many StorageGRID users don't have one or they're not allowed to use it. Or, it takes days to get response to low-priority asks not related to security incidents. I don't have a log system for StorageGRID either - I forward logs to a syslog server. I have the logs, but no good way to query them. In cases like these, SGAC may be able to help.
