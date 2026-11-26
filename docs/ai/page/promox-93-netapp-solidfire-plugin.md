@@ -1,6 +1,6 @@
-# Proxmox 9.3.1 and SolidFire Plugin for PVE 9.3 (Firemox)
+# Storage plugins for Proxmox 9.3 with NetApp SolidFire (Firemox) and E-Series (SANmox)
 
-Post describes latest update to Firemox
+Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)
 
 ## PVE 9.3.1 and new Firemox
 
@@ -43,10 +43,6 @@ Then I powered it on, and that datastore came up too.
 
 So, PVE 9.3.1 works fine with SANtricity 12.1.
 
-I may update the [SANtricity plugin (SANmox)](/2026/05/21/sanmox-updates.html), although - given the low value of PVE's plugin features - it's probably not necessary and the old one may work just as well. SANmox can be downloaded [here](https://github.com/scaleoutsean/santricity-powershell), just remember it doesn't do that much and I haven't tested it with Proxmox 9.3 yet, although - reading the docs - there's no reason why it shouldn't work.
-
-Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
-
 ### Disappointing RoCE support
 
 I just realized that it is only NVMe/TCP that is supported. That is medieval!
@@ -59,14 +55,20 @@ In 9.3.1, `nvme` is included, so we just configure RoCE, configure NVMe the same
 
 Since I've done presenting already, I could use SANmox to create a datastore from the CLI, but if you use it from the UI, you can see the same fields that `sanmox_lvm` requires.
 
-![No RoCE support but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
+![No RoCE support, but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
 
-So, long story short:
+So, long story short: **the only thing you no longer have to do is `apt install -y nvme`. The rest remains the same.
+
 - We still need to create LUNs with SANmox TUI (PowerShell)
-- We no longer need to manually install the `nvme` CLI utility
-- We need to configure RoCE
-- `sanmox_lvm` still works the same way, after SANmox TUI steps are done
+- We need to configure RoCE when configuring network
+- We can do the rest manually or with SANmox TUI and `sanmox_lvm`
 
-If you're using one of the block protocols listed in the wizard (e.g iSCSI), just create LUNs and use them.
+## Conclusion
 
-Lame update as far as NVMe/RoCE is concerned.
+This is a lame update, as far as NVMe/RoCE is concerned.
+
+If you're using one of the block protocols listed in the PVE Web wizard (e.g iSCSI), just create LUNs, present to PVE cluster, and use them.
+
+[SANmox TUI](/2026/05/21/sanmox-updates.html) hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
+
+I have [updated](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) the Perl storage plugin because now you have places to paste things into (in the storage wizard). Sadly, that doesn't do much, so I don't recommend it: it's just last of several steps and the same thing that you can get done with `sanmox_lvm`, but slower and more annoying, because you use it in the Web UI rather than from the shell.
