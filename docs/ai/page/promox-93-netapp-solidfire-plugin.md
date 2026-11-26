@@ -50,7 +50,7 @@ Then I powered it on, and that datastore came up too.
 
 So, PVE 9.3.1 works fine with SANtricity 12.1.
 
-### Disappointing RoCE support
+### NVMe support circus
 
 I just realized that it is only NVMe/TCP that is supported. That is medieval!!!
 
@@ -64,11 +64,65 @@ Since I've done presenting already, I could use SANmox to create a datastore fro
 
 ![No RoCE support, but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
 
-So, long story short: **the only thing you no longer have to do is `apt install -y nvme`. The rest remains the same.
+A `santricity_lvm` example (`saferemove 1` is not used in this example):
 
-- We still need to create LUNs with SANmox TUI (PowerShell)
-- We need to configure RoCE when configuring network
+```sh
+$ pvesm add santricity_lvm pve93 \
+  --vgname pve93 --array_serial 952103002724 \
+  --shared 1 --nodes h3 --content images \
+  --santricity_namespace_eui eui.000016186b07f66dd039ea0000493a26 \
+  --santricity_initialize 1
+```
+
+And the rest in your storage config would be:
+
+```sh
+santricity_lvm: pve93
+        array_serial 952103002724
+        shared 1
+        vgname pve93
+        content rootdir,images
+        host_group pve-dc1
+        saferemove 1
+        santricity_initialize 1
+        santricity_namespace_eui eui.000016186b07f66dd039ea0000493a26
+        snapshot-as-volume-chain 1
+```
+
+Most absurdly, there's nothing else to do.
+
+![NVMe-of-RoCE](/assets/images/sanmox_v2_08_pve93-storage-nvme-of-roce.png)
+
+But hey, NVMe/RoCE n0T sUporRtEd because reasons!
+
+The UI even correctly identifies the devices and NVMe/RoCE.
+
+![NVMe-of-RoCE devices](/assets/images/sanmox_v2_09_pve93-storage-nvme-of-roce-devices.png)
+
+VM test:
+
+![NVMe/RoCE test with VM](/assets/images/sanmox_v2_10_pve93-storage-nvme-of-roce-vm-test.png)
+
+CT test:
+
+![NVMe/RoCE test with VM](/assets/images/sanmox_v2_11_pve93-storage-nvme-of-roce-ct-test.png)
+
+### Gotchas
+
+Even after deploying the new plugin, my browser initially showed the old add storage UI wizard (from the old Perl plugin). Restarting related services didn't help, so I rebooted PVE and hit F5 a few times.
+
+## Recap and download links
+
+So, long story short: NVMe/RoCE users no longer have to do is `apt install -y nvme`. The rest remains the same as it was:
+
+- We need to configure RoCE when configuring PVE storage network
+- We still need to create LUNs, PVE host group and present to host/cluster (use SANmox TUI (PowerShell) or other tool)
 - We can do the rest manually or with SANmox TUI and `sanmox_lvm`
+
+Download links (both are in the same repository):
+
+- [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShel 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
+- [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) -  "Add storage" wizard is recommended for NVMe/RoCE only and CLI is recommended over GUI, because you can avoid browser-based copy-pate of the EUI string. Officially supported protocols can use standard PVE 9.3 "Add storage" wizard.
 
 ## Conclusion
 
@@ -76,8 +130,8 @@ Storage plugin improvements in 9.3 are minimal. There is *still* no reason to us
 
 And this is a very lame update, as far as NVMe/RoCE is concerned.
 
-If you're using one of the block protocols listed in the PVE Web wizard (e.g iSCSI), just create LUNs, present to PVE cluster, and use them.
+If you're using one of the block protocols listed in the PVE Web wizard (e.g iSCSI), just create LUNs, present them to your PVE cluster and use them without `santricity_lvm`.
 
 [SANmox TUI](/2026/05/21/sanmox-updates.html) hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
 
-I have [updated](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) the Perl storage plugin because now you have places to paste things into (in the storage wizard). Sadly, that doesn't do much, so I don't recommend it: it's just last of several steps and the same thing that you can get done with `sanmox_lvm`, but slower and more annoying, because you use it in the Web UI rather than from the shell.
+`santricity_lvm` (Perl storage plugin) has been updated because now you have a form that lets you paste things into (in the storage wizard for `santricity_lvm`). Sadly, that doesn't do much, so I don't recommend it: it's just the last of several steps and the same thing that you can get done with `sanmox_lvm`, but slower and more annoying, because you use it in the Web UI rather than from the shell. But, if UIs are your thing, it's there to be used!
