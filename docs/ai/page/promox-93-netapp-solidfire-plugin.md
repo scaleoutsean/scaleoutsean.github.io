@@ -122,16 +122,14 @@ So, long story short: NVMe/RoCE users no longer have to do is `apt install -y nv
 Download links (both are in the same repository):
 
 - [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShel 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
-- [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) -  "Add storage" wizard is recommended for NVMe/RoCE only and CLI is recommended over GUI, because you can avoid browser-based copy-pate of the EUI string. Officially supported protocols can use standard PVE 9.3 "Add storage" wizard.
+-[`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) -  "Add storage" wizard is recommended for NVMe/RoCE only and CLI (`pvesm add santricity_lvm`) is recommended over UI storage wizard because you can avoid browser-based copy-pasting of the EUI string. E-Series users with the officially supported protocols can use standard PVE 9.3 "Add storage" wizard once PVE cluster can see disks.
 
 ## Conclusion
 
-Storage plugin improvements in 9.3 are minimal. There is *still* no reason to use them.
+Storage plugin improvements in 9.3 are minimal. There is *still* no reason to use them unless you do most of your management in the browser.
 
 And this is a very lame update, as far as NVMe/RoCE is concerned.
 
-If you're using one of the block protocols listed in the PVE Web wizard (e.g iSCSI), just create LUNs, present them to your PVE cluster and use them without `santricity_lvm`.
-
-[SANmox TUI](/2026/05/21/sanmox-updates.html) hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
+[SANmox TUI](/2026/05/21/sanmox-updates.html) hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs it, or the few people who do use it just fork and vibe code the rest
 
 `santricity_lvm` (Perl storage plugin) has been updated because now you have a form that lets you paste things into (in the storage wizard for `santricity_lvm`). Sadly, that doesn't do much, so I don't recommend it: it's just the last of several steps and the same thing that you can get done with `sanmox_lvm`, but slower and more annoying, because you use it in the Web UI rather than from the shell. But, if UIs are your thing, it's there to be used!
