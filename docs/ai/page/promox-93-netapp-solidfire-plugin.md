@@ -14,11 +14,23 @@ Among noteworthy changes that I care about professionally:
 
 ## SolidFire (Firemox)
 
-I've only updated the SolidFire (Firemox) repo so far, since I like that one.
+- Firemox has **no news/updates**. It is expected to work the same as it did with PVE 9.2 and 9.1.
+- [SolidFire plugin has been added](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md) to the Firemox repo and now SolidFire users can provision SolidFire LUNs as per the plugin's [documentation](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md).
 
-I've [added](https://github.com/scaleoutsean/firemox/commit/127175994a0d385690dc44d033dde2a8164da944) a SolidFire Perl plugin to the Firemox repo and now SolidFire users can provision SolidFire LUNs as per the README (meaning, you need to create LUNs and let PVE nodes see them, and from there on you can use the storage plugin and do the rest from the PVE Web UI).
+Do you need the plugin?
 
-PVE view:
+- If you use Firemox TUI, just do everything there. There's no need to use the plugin.
+- If you use this Plugin or Web UI in general, maybe you'll like the plugin
+
+The plugin in PVE 9.3's "Add storage" wizard:
+
+![SolidFire Plugin for PVE 9.3 - add storage](/assets/images/firemox-11-pve93-solidfire.png)
+
+The details:
+
+![SolidFire Plugin for PVE 9.3 - add SolidFire LUN](/assets/images/firemox-12-pve93-create-solidfire-volume-details.png)
+
+All it does is create a volume. PVE view of the volume:
 
 ![SolidFire Perl Plugin for PVE 9.3](/assets/images/firemox-09-pve93-perl.png)
 
@@ -26,13 +38,13 @@ SolidFire view:
 
 ![SolidFire Perl Plugin for PVE 9.3](/assets/images/firemox-10-pve93-solidfire.png)
 
-The SolidFire plugin uses the API 17 (latest), but it doesn't really do anything special.
+Then you need to create LVM, VG, datastore using built-in PVE Web UI features for Shared LVM on iSCSI. You can see the rest at the plugin link above.
+
+The new SolidFire plugin uses the API 17 (latest). It takes a lot of data to key in, but the CLI version command is a little easier.
+
+Why even bother? If you work mostly in the Web UI, it might be OK. It won't be if you create and delete a lot of LUNs every day, or if you need to edit them (there are limitations regarding updates of edited configuration details).
 
 I think Firemox PowerShell TUI is still better - it lets you do everything in a fast shell interface - and you may in fact need it (or something like it) for QoS and other details even if you use the new Perl plugin for the final step.
-
-You could also use [SolidFire Ansible](https://github.com/scaleoutsean/netapp.solidfire) instead of my PowerShell TUI, and then the SolidFire storage plugin, but you could also use Firemox TUI and Ansible for everything and avoid Proxmox Plugin Circus.
-
-Very modest value add from the storage plugin, even in 9.3.1.
 
 ## SANtricity (SANmox)
 
@@ -64,7 +76,7 @@ Since I've done presenting already, I could use SANmox to create a datastore fro
 
 ![No RoCE support, but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
 
-A `santricity_lvm` example (`saferemove 1` is not used in this example):
+A `santricity_lvm` example (`saferemove 1` is not used in this particular example):
 
 ```sh
 $ pvesm add santricity_lvm pve93 \
@@ -74,7 +86,7 @@ $ pvesm add santricity_lvm pve93 \
   --santricity_initialize 1
 ```
 
-And the rest in your storage config would be:
+And, in your storage config files, you'd see something like this:
 
 ```sh
 santricity_lvm: pve93
@@ -89,7 +101,7 @@ santricity_lvm: pve93
         snapshot-as-volume-chain 1
 ```
 
-Most absurdly, there's nothing else to do.
+Most absurdly, there's nothing else to do!
 
 ![NVMe-of-RoCE](/assets/images/sanmox_v2_08_pve93-storage-nvme-of-roce.png)
 
@@ -126,9 +138,7 @@ Download links (both are in the same repository):
 
 ## Conclusion
 
-Storage plugin improvements in 9.3 are minimal. There is *still* no reason to use them unless you do most of your management in the browser.
-
-And this is a very lame update, as far as NVMe/RoCE is concerned.
+Storage plugin improvements in 9.3 are minimal. There is *still* no reason to use them unless you do most of your management in the browser. And this is a very lame update, as far as NVMe/RoCE is concerned.
 
 [SANmox TUI](/2026/05/21/sanmox-updates.html) hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs it, or the few people who do use it just fork and vibe code the rest
 
