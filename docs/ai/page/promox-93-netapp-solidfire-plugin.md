@@ -7,8 +7,8 @@ Post describes latest update to Firemox
 Proxmox 9.3.1 has been released.
 
 Among noteworthy changes:
-- Improved (but not much) storage plugin API
-- NVMe/TCP is built in now (which was an annoyance for E-Series NVMe/RoCE, as `nvme` had to be installed manually and NVMe/RoCE wasn't officially supported)
+- An improved (but not by much) storage plugin API
+- NVMe/TCP is built in now (the lack of `nvme` was an annoyance for E-Series NVMe/RoCE, as `nvme` had to be installed manually and NVMe/RoCE wasn't officially supported)
 - "Preview" shared LVM functionality is now fully supported, which affects both SANtricity and SolidFire.
 
 ## SolidFire (Firemox)
@@ -29,8 +29,44 @@ The API is 17 (latest), but it doesn't really do anything. I think Firemox Power
 
 ## SANtricity (SANmox)
 
-Everything should work like in [this post from March 2026](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html), but you no longer need to `apt install nvme`.
+Everything should still work like in [this post from March 2026](/2026/03/11/proxmox-pve-nfs-rdma-netapp-eseries.html), but you no longer need to `apt install nvme`.
+
+I just upgraded and rebooted. NVMe wasn't set to auto-connect so I had to do that from shell, but after that, everything came up including the volume used for [CetraFS](/2026/11/07/proxmox-pve-netapp-eseries-cetrafs.html). 
+
+![SANmox with PVE 9.3.1](/assets/images/sanmox_v2_04_pve93-santricity_volumes.png)
+
+The one that was down was `pbs421`, which was a backup datastore that lived on Proxmox Backup Server 4.2 (powered off).
+
+Then I powered it on, and that datastore came up too.
+
+![SANmox with PVE 9.3.1](/assets/images/sanmox_v2_05_pve93-santricity_volumes-cetrafs.png)
+
+So, PVE 9.3.1 works fine with SANtricity 12.1.
 
 I may update the [SANtricity plugin (SANmox)](/2026/05/21/sanmox-updates.html), although - given the low value of PVE's plugin features - it's probably not necessary and the old one may work just as well. SANmox can be downloaded [here](https://github.com/scaleoutsean/santricity-powershell), just remember it doesn't do that much and I haven't tested it with Proxmox 9.3 yet, although - reading the docs - there's no reason why it shouldn't work.
 
 Also, I haven't received any feedback, so I guess either nobody needs one, or the few people who do use it just fork and vibe code the rest.
+
+### Disappointing RoCE support
+
+I just realized that it is only NVMe/TCP that is supported. That is medieval!
+
+![No RoCE support](/assets/images/sanmox_v2_06_pve93-storage-add-wizard-00.png)
+
+Just as before, we don't have to care if you don't use NVMe/RoCE. 
+
+In 9.3.1, `nvme` is included, so we just configure RoCE, configure NVMe the same way it's done for NVMe/TCP (only for RoCE), create block devices and rescan.
+
+Since I've done presenting already, I could use SANmox to create a datastore from the CLI, but if you use it from the UI, you can see the same fields that `sanmox_lvm` requires.
+
+![No RoCE support but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
+
+So, long story short:
+- We still need to create LUNs with SANmox TUI (PowerShell)
+- We no longer need to manually install the `nvme` CLI utility
+- We need to configure RoCE
+- `sanmox_lvm` still works the same way, after SANmox TUI steps are done
+
+If you're using one of the block protocols listed in the wizard (e.g iSCSI), just create LUNs and use them.
+
+Lame update as far as NVMe/RoCE is concerned.

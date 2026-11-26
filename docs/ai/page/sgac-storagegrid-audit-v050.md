@@ -43,3 +43,5 @@ As a regular user, you'd probably consult the SIEM team for security-related mat
 Normally, I recommend forwarding StorageGRID audit logs to a log management system.
 
 But, many StorageGRID users don't have one or they're not allowed to use it. Or, it takes days to get response to low-priority asks not related to security incidents. I don't have a log system for StorageGRID either - I forward logs to a syslog server. I have the logs, but no good way to query them. In cases like these, SGAC may be able to help.
+
+Many free and [commercial](https://www.elastic.co/search-labs/blog/query-amazon-s3-esql-data-federation) databases can query Parquet on S3 (even [SQL Server](/2023/08/28/sql-server-polybase-s3.html), so once you get Parquet files on S3, you can query them from SGII/SGAC or from your usual database).
