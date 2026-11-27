@@ -127,7 +127,7 @@ CT test:
 
 ![NVMe/RoCE test with VM](/assets/images/sanmox_v2_11_pve93-storage-nvme-of-roce-ct-test.png)
 
-In contrast, SANmox just takes care of the E-Series side, as well as passwordless SSH-driven PVE host operations. This is enough if you don't use NVMe/RoCE. Example of one submenu:
+In contrast, SANmox also takes care of the E-Series side, passwordless SSH-driven PVE host operations to rescan and login, and PVE API to create a datastore. Example of one submenu:
 
 ![SANMox for volumes](/assets/images/sanmox_v2_12_pve93-sanmox-tui.png)
 
@@ -141,12 +141,14 @@ So, long story short: NVMe/RoCE users no longer have to do is `apt install -y nv
 
 - We need to configure RoCE when configuring PVE storage network
 - We still need to create LUNs, PVE host group and present to host/cluster (use SANmox TUI (PowerShell) or other tool)
-- We can do the rest manually or with SANmox TUI and `sanmox_lvm`
+- We can do the rest manually or with SANmox TUI and `sanmox_lvm`. PVE "Add storage" wizard with `santricity_lvm` is recommended only for NVMe/RoCE. And CLI (`pvesm add santricity_lvm`) is recommended over UI, because you avoid browser-based copy-pasting of the EUI and serial.
+
+E-Series users with the officially supported protocols (FC, iSCSI...) can use SANMox with standard PVE 9.3 "Add storage" wizards once PVE cluster can see disks.
 
 Download links (both are in the same repository):
 
 - [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShel 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
-- [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin) - "Add storage" wizard is recommended for NVMe/RoCE only and CLI (`pvesm add santricity_lvm`) is recommended over UI storage wizard because you can avoid browser-based copy-pasting of the EUI string. E-Series users with the officially supported protocols can use standard PVE 9.3 "Add storage" wizard once PVE cluster can see disks.
+- [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin)
 
 If you dislike PowerShell, you can use other tools libraries to build your own automation of the storage side: my Go library or Python (both the official Ansible (meh warning) and my client library).
 
