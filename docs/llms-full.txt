@@ -22,14 +22,14 @@ Proxmox 9.3.1 has been released.
 Among the noteworthy changes that I care about professionally:
 
 - An improved (but not by much) storage plugin API
-- NVMe/TCP is built in now (the lack of `nvme` was an annoyance for E-Series NVMe/RoCE, as `nvme` had to be installed manually and NVMe/RoCE wasn't officially supported)
-- Shared LVM functionality is now fully supported - it used to be a "tech preview" - which affects both SANtricity and SolidFire.
+- NVMe/TCP is built in now. Until 9.3, the `nvme` package wasn't installed by default and NVMe wasn't officially supported
+- Shared LVM functionality is now fully supported - it used to be a "tech preview" - which affects both SANtricity and SolidFire from a support perspective
 
 I have two highly unpopular integrations for PVE 9:
 - Firemox TUI for NetApp SolidFire
 - SANmox TUI for NetApp E-Series
 
-I've updated neither because nothing in 9.3 is expected to break them, but then there are Proxmox plugins. It's complicated...
+I've updated neither because nothing in 9.3 is expected to break them, but then there are Proxmox plugins. Why TUIs *and* plugins? It's complicated...
 
 ## SolidFire (Firemox)
 
@@ -67,11 +67,13 @@ This plugin could be improved so that there's centrally stored configuration, th
 - People end up with more bugs. PVE is updated, more bugs. Array software is updated, new bugs. Unexpected network design appears and can't be parsed, even more bugs.
 - Array management password is stored on all PVE boxes (but they aren't in Firemox!)
 
-### Firemox vs. native plugin
+### Firemox vs. native SolidFire plugin
 
 I think Firemox PowerShell TUI is still better - it lets you do everything in a fast shell interface - and you may in fact need it (or something like it) for QoS and other details even if you use the new Perl plugin for the final step.
 
 It doesn't store anything on PVE nodes. Storage resources are created directly and configuration pushed to PVE. PVE does not manage storage.
+
+A good PVE plugin would work like TUIs do, but PVE doesn't work like that. I'm not unwilling to use PVE storage plugins, but I don't want to create a plugin that takes compromises that PVE requires. So, I still like my TUIs better.
 
 ## SANtricity (SANmox)
 
@@ -95,9 +97,9 @@ I just realized that it is only NVMe/TCP that is supported. That is medieval!!!
 
 ![No RoCE support](/assets/images/sanmox_v2_06_pve93-storage-add-wizard-00.png)
 
-Just as before, we don't have to care if you don't use NVMe/RoCE. 
+Just as in 9.2 and 9.1, we don't have to care if we don't use NVMe/RoCE. If you have NVMe/RoCE and must care, what then? That depends if you care about PVE's official stance.
 
-In 9.3.1, `nvme` is included, so we just configure RoCE, configure NVMe the same way it's done for NVMe/TCP (but use RoCE), create block devices on EF arrays, rescan and connect to NVMe targets from PVE nodes.
+In 9.3.1, the `nvme` package is included, so we can just configure RoCE, configure NVMe the same way it's done for NVMe/TCP (but use RoCE), create block devices on EF arrays, rescan and connect to NVMe targets from PVE nodes.
 
 Since I've done all pre-PVE tasks, I can now create a datastore from the UI, or continue with CLI (`sanmox_lvm` requires the same inputs).
 
@@ -176,7 +178,7 @@ E-Series users with the officially supported protocols (FC, iSCSI...) can use SA
 
 Download links (both are in the same repository):
 
-- [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShel 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
+- [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShell 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
 - [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin)
 
 If you dislike PowerShell, you can use other tools libraries to build your own automation of the storage side: my Go library or Python (both the official Ansible (meh warning) and my Python client library).

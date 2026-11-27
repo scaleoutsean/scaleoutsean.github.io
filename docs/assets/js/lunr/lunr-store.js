@@ -2916,7 +2916,7 @@ var store = [{
         "teaser": null
       },{
         "title": "Storage plugins for Proxmox 9.3 with NetApp SolidFire (Firemox) and E-Series (SANmox)",
-        "excerpt":"PVE 9.3.1 Proxmox 9.3.1 has been released. Among the noteworthy changes that I care about professionally: An improved (but not by much) storage plugin API NVMe/TCP is built in now (the lack of nvme was an annoyance for E-Series NVMe/RoCE, as nvme had to be installed manually and NVMe/RoCE wasn’t...","categories": ["projects","storage","netapp","solidfire","virtualization"],
+        "excerpt":"PVE 9.3.1 Proxmox 9.3.1 has been released. Among the noteworthy changes that I care about professionally: An improved (but not by much) storage plugin API NVMe/TCP is built in now. Until 9.3, the nvme package wasn’t installed by default and NVMe wasn’t officially supported Shared LVM functionality is now fully...","categories": ["projects","storage","netapp","solidfire","virtualization"],
         "tags": ["pve","iscsi","plugin","proxmox","firemox"],
         "url": "/2026/11/26/promox-93-netapp-solidfire-plugin.html",
         "teaser": null
