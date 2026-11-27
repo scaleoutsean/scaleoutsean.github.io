@@ -79,7 +79,7 @@
 
   <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Acting Technologist Feed">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/26/promox-93-netapp-solidfire-plugin.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/26/promox-93-netapp-solidfire-plugin.html"},"headline":"Storage plugins for Proxmox 9.3 with NetApp SolidFire (Firemox) and E-Series (SANmox)","description":"Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)","datePublished":"2026-11-26T00:00:00+08:00","dateModified":"2026-11-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"keywords":["pve","iscsi","plugin","proxmox","firemox"],"about":[{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"solidfire"},{"@type":"Thing","name":"virtualization"}],"wordCount":1504,"articleBody":"Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)"}]}
+{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","@id":"https://blog.scaleoutsean.com/2026/11/26/promox-93-netapp-solidfire-plugin.html#article","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.scaleoutsean.com/2026/11/26/promox-93-netapp-solidfire-plugin.html"},"headline":"Storage plugins for Proxmox 9.3 with NetApp SolidFire (Firemox) and E-Series (SANmox)","description":"Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)","datePublished":"2026-11-26T00:00:00+08:00","dateModified":"2026-11-26T00:00:00+08:00","author":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"publisher":{"@type":"Person","@id":"https://blog.scaleoutsean.com/#scaleoutsean"},"isPartOf":{"@id":"https://blog.scaleoutsean.com/#website"},"keywords":["pve","iscsi","plugin","proxmox","firemox"],"about":[{"@type":"Thing","name":"projects"},{"@type":"Thing","name":"storage"},{"@type":"Thing","name":"netapp"},{"@type":"Thing","name":"solidfire"},{"@type":"Thing","name":"virtualization"}],"wordCount":1565,"articleBody":"Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)"}]}
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -351,7 +351,7 @@ lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-NetApp_E-Series_6000_952103002724_
 lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-eui.00000f996a0e75efd039ea0000493a9c -&gt; ../../nvme1n9
 </code></pre></div></div>
 
-<p>Most absurdly, there's nothing else to do! It works out of the box, unchanged from 9.2 and 9.1 (where it also wasn't supported).</p>
+<p>Most absurdly, there's nothing else to do! It works out of the box, unchanged from 9.2 and 9.1 (where it also worked, and also wasn't supported).</p>
 
 <p><img src="/assets/images/sanmox_v2_08_pve93-storage-nvme-of-roce.png" alt="NVMe-of-RoCE" /></p>
 
@@ -369,7 +369,9 @@ lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-eui.00000f996a0e75efd039ea0000493a
 
 <p><img src="/assets/images/sanmox_v2_11_pve93-storage-nvme-of-roce-ct-test.png" alt="NVMe/RoCE test with VM" /></p>
 
-<p>In contrast, SANmox also takes care of the E-Series side, passwordless SSH-driven PVE host operations to rescan and login, and PVE API to create a datastore. Example of one submenu:</p>
+<p>In contrast, SANmox also takes care of the E-Series side, passwordless SSH-driven PVE host operations to rescan and login, and PVE API to create a datastore. Passwordless SSH can't be helped because PVE refuses to support NVMe/RoCE, so - unlike with other protocols - we have to rescan and connect when NVMe/RoCE is involved.</p>
+
+<p>Example of one SANmox submenu:</p>
 
 <p><img src="/assets/images/sanmox_v2_12_pve93-sanmox-tui.png" alt="SANMox for volumes" /></p>
 
@@ -384,10 +386,10 @@ lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-eui.00000f996a0e75efd039ea0000493a
 <ul>
   <li>We need to configure RoCE when configuring PVE storage network</li>
   <li>We still need to create LUNs, PVE host group and present to host/cluster (use SANmox TUI (PowerShell) or other tool)</li>
-  <li>We can do the rest manually or with SANmox TUI and <code class="language-plaintext highlighter-rouge">sanmox_lvm</code>. PVE "Add storage" wizard with <code class="language-plaintext highlighter-rouge">santricity_lvm</code> is recommended only for NVMe/RoCE. And CLI (<code class="language-plaintext highlighter-rouge">pvesm add santricity_lvm</code>) is recommended over UI, because you avoid browser-based copy-pasting of the EUI and serial.</li>
+  <li>We can do the rest manually or with SANmox TUI (<code class="language-plaintext highlighter-rouge">nvme</code> rescan, connect) and <code class="language-plaintext highlighter-rouge">sanmox_lvm</code>. PVE "Add storage" wizard with <code class="language-plaintext highlighter-rouge">santricity_lvm</code> is therefore recommended only for NVMe/RoCE. And CLI (<code class="language-plaintext highlighter-rouge">pvesm add santricity_lvm</code>) is recommended over using the Web UI, because you avoid browser-based copy-pasting of the EUI and serial.</li>
 </ul>
 
-<p>E-Series users with the officially supported protocols (FC, iSCSI…) can use SANMox with standard PVE 9.3 "Add storage" wizards once PVE cluster can see disks.</p>
+<p>E-Series users with the officially supported protocols (FC, iSCSI…) can use SANMox with standard PVE 9.3 "Add storage" wizards once PVE cluster can see disks. That doesn't need the passwordless SSH steps, as PVE can rescan and login/connect with supported storage protocols.</p>
 
 <p>Download links (both are in the same repository):</p>
 
@@ -396,11 +398,11 @@ lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-eui.00000f996a0e75efd039ea0000493a
   <li><a href="https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin"><code class="language-plaintext highlighter-rouge">santricity_lvm</code></a></li>
 </ul>
 
-<p>If you dislike PowerShell, you can use other tools libraries to build your own automation of the storage side: my Go library or Python (both the official Ansible (meh warning) and my client library).</p>
+<p>If you dislike PowerShell, you can use other tools libraries to build your own automation of the storage side: my Go library or Python (both the official Ansible (meh warning) and my Python client library).</p>
 
 <h2 id="data-protection-and-dr">Data protection and DR</h2>
 
-<p>This isn't related to the plugins, but in order to pre-empt whataboutism:</p>
+<p>This isn't related to the plugins, but in order to preempt whataboutism:</p>
 <ul>
   <li>With Shared LVM, you can take CT and VM snapshots without storage array support. That is why neither of these plugins or TUIs attempt to do anything with snapshots (which both arrays support)</li>
   <li>Default data protection method is PBS - see an example in the <a href="/2026/03/08/proxmox-backup-server-with-netapp-eseries.html">Proxmox Backup Server (PBS)</a> post. Or use some of the commercial solutions such as <a href="/2026/03/14/veeam-proxmox-netapp-eseries.html">Veeam for Proxmox</a></li>
@@ -421,7 +423,7 @@ lrwxrwxrwx 1 root root   13 Nov 26 03:18 nvme-eui.00000f996a0e75efd039ea0000493a
 
 <p>It's a multi-dimensional problem and approaches are flexible, but you may consider something like this.</p>
 
-<p><img src="/assets/images/sanmox_v2_13_pve93-sanmox-decision-flow.png" alt="Decision tree" /></p>
+<p><img src="/assets/images/sanmox_v2_13_pve93-sanmox-decision-flow.png" alt="Possible PVE decision tree" /></p>
 
         
       </section>
