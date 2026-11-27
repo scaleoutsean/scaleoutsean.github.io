@@ -2,20 +2,26 @@
 
 Quick look at the latest update to Proxmox PVE 9.3 and how that impacts Firemox and SANmox, my plugins and TUIs for SolidFire and E-Series (SANtricity)
 
-## PVE 9.3.1 and new Firemox
+## PVE 9.3.1
 
 Proxmox 9.3.1 has been released.
 
-Among noteworthy changes that I care about professionally:
+Among the noteworthy changes that I care about professionally:
 
 - An improved (but not by much) storage plugin API
 - NVMe/TCP is built in now (the lack of `nvme` was an annoyance for E-Series NVMe/RoCE, as `nvme` had to be installed manually and NVMe/RoCE wasn't officially supported)
-- "Preview" shared LVM functionality is now fully supported, which affects both SANtricity and SolidFire.
+- Shared LVM functionality is now fully supported - it used to be a "tech preview" - which affects both SANtricity and SolidFire.
+
+I have two highly unpopular integrations for PVE 9:
+- Firemox TUI for NetApp SolidFire
+- SANmox TUI for NetApp E-Series
+
+I've updated neither because nothing in 9.3 is expected to break them, but then there are Proxmox plugins. It's complicated...
 
 ## SolidFire (Firemox)
 
 - Firemox has **no news/updates**. It is expected to work the same as it did with PVE 9.2 and 9.1.
-- [SolidFire plugin has been added](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md) to the Firemox repo and now SolidFire users can provision SolidFire LUNs as per the plugin's [documentation](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md).
+- [SolidFire plugin for Proxmox has been added](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md) to the Firemox repo and now SolidFire users can provision SolidFire LUNs as per the plugin's [documentation](https://github.com/scaleoutsean/firemox/blob/master/SOLIDFIRE-PLUGIN-PROXMOX.md).
 
 Do you need the plugin?
 
@@ -44,7 +50,15 @@ The new SolidFire plugin uses the API 17 (latest). Because each LUN is independe
 
 Why even bother? If you work mostly in the Web UI, it might be OK (especially the CLI version). It won't be okay if you create and delete a lot of LUNs every day, or if you need to edit them (there are known limitations regarding updates of edited configuration details in this minimal initial version).
 
+This plugin could be improved so that there's centrally stored configuration, that changes for existing resources are pushed back to array, but:
+- People end up with more bugs. PVE is updated, more bugs. Array software is updated, new bugs. Unexpected network design appears and can't be parsed, even more bugs.
+- Array management password is stored on all PVE boxes (but they aren't in Firemox!)
+
+### Firemox vs. native plugin
+
 I think Firemox PowerShell TUI is still better - it lets you do everything in a fast shell interface - and you may in fact need it (or something like it) for QoS and other details even if you use the new Perl plugin for the final step.
+
+It doesn't store anything on PVE nodes. Storage resources are created directly and configuration pushed to PVE. PVE does not manage storage.
 
 ## SANtricity (SANmox)
 
@@ -70,13 +84,13 @@ I just realized that it is only NVMe/TCP that is supported. That is medieval!!!
 
 Just as before, we don't have to care if you don't use NVMe/RoCE. 
 
-In 9.3.1, `nvme` is included, so we just configure RoCE, configure NVMe the same way it's done for NVMe/TCP (only for RoCE), create block devices and rescan.
+In 9.3.1, `nvme` is included, so we just configure RoCE, configure NVMe the same way it's done for NVMe/TCP (but use RoCE), create block devices on EF arrays, rescan and connect to NVMe targets from PVE nodes.
 
-Since I've done the LUN presenting already, I could use SANmox to create a datastore from the CLI, but if you use it from the UI, you can see the same fields that `sanmox_lvm` requires.
+Since I've done all pre-PVE tasks, I can now create a datastore from the UI, or continue with CLI (`sanmox_lvm` requires the same inputs).
 
 ![No RoCE support, but OK](/assets/images/sanmox_v2_07_pve93-storage-add-wizard-01-sanmox-lvm.png)
 
-A `santricity_lvm` example (`saferemove 1` is not used in this particular example):
+A `santricity_lvm` CLI example (`saferemove 1` is not used in this particular example):
 
 ```sh
 $ pvesm add santricity_lvm pve93 \
@@ -101,7 +115,7 @@ santricity_lvm: pve93
         snapshot-as-volume-chain 1
 ```
 
-You can get the EUI and serial from `ls /dev/disk/by-id` and you can also get the serial from `nvme list`. Or from SANtricity PowerShell cmdlets from the same repository.
+You can get the EUI and array serial from `ls /dev/disk/by-id` and you can also get the serial from `nvme list`. Or from SANtricity PowerShell cmdlets from the same repository.
 
 ```sh
 # ls -lat /dev/disk/by-id/
@@ -149,7 +163,7 @@ E-Series users with the officially supported protocols (FC, iSCSI...) can use SA
 
 Download links (both are in the same repository):
 
-- [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShel 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
+- [SANmox TUI](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox) - PowerShell 7 TUI for storage prep-steps (iSCSI, NVMe/RoCE, maybe FC (submit bugs if any doesn't work))
 - [`santricity_lvm`](https://github.com/scaleoutsean/santricity-powershell/tree/master/sanmox/proxmox_plugin)
 
 If you dislike PowerShell, you can use other tools libraries to build your own automation of the storage side: my Go library or Python (both the official Ansible (meh warning) and my Python client library).
