@@ -168,3 +168,9 @@ PVEs' storage plugin improvements in 9.3 are minimal. There is *still* no reason
 [SANmox TUI](/2026/05/21/sanmox-updates.html) for SANtricity hasn't been updated, as it still needs to do the same thing - take care of provisioning. It's probably not necessary to touch it, unless someone reports a bug. Also, I haven't received any feedback, so I guess either nobody needs it, or the few people who do use it just fork and vibe code the rest
 
 `santricity_lvm` (Perl storage plugin) has been updated because now you have a form that lets you paste things into (in the storage wizard for `santricity_lvm`). Sadly, that only helps you overcome the NVMe/RoCE nonsense and not much else, so I don't recommend it: it's just the last of several steps and the same thing that you can get done with `sanmox_lvm`, but slower and more annoying, because you use it in the Web UI rather than from the shell. But, if UIs are your thing, it's there to be used!
+
+## Appendix A: possible flow for SANtricity
+
+It's a multi-dimensional problem and approaches are flexible, but you may consider something like this.
+
+![Decision tree](/assets/images/sanmox_v2_13_pve93-sanmox-decision-flow.png)
